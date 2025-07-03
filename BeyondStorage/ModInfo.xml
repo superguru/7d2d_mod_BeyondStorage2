@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <Name value="BeyondStorage2"/>
+  <DisplayName value="Beyond Storage 2"/>
+  <Version value="2.0.1"/>
+  <Description
+    value="Utilize resources from distant storage for crafting, upgrading, and more! Originally BeyondStorage by unv_Annihilator, and before that, Really Originally 'CraftFromContainers' by aedenthorn."/>
+  <Author value="aedenthorn, unv_Annihilator, gazorper"/>
+  <Website value="https://github.com/superguru/7d2d_mod_BeyondStorage2"/>
+</xml>
