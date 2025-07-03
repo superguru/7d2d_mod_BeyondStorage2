@@ -22,3 +22,4 @@ The compiled and packaged mod is available from https://www.nexusmods.com/7dayst
 
 The mod can be configured by editing the `config.json` file in the `Mods/BeyondStorage2/Config` folder.
 
+Please refer to the mod description on Nexus Mods for details of the configuration options.
