@@ -8,7 +8,8 @@ using HarmonyLib;
 namespace BeyondStorage.Item.Craft;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public class XUiMPlayerInventoryCraftPatches {
+public class XUiMPlayerInventoryCraftPatches
+{
     // Used for:
     //          Item Crafting (has items only, does not handle remove)
     [HarmonyTranspiler]
@@ -16,16 +17,23 @@ public class XUiMPlayerInventoryCraftPatches {
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_HasItems_Patch(IEnumerable<CodeInstruction> instructions) {
+    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_HasItems_Patch(IEnumerable<CodeInstruction> instructions)
+    {
         var targetMethodString = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.HasItems)}";
         LogUtil.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var set = false;
-        for (var i = 0; i < codes.Count; i++) {
+        for (var i = 0; i < codes.Count; i++)
+        {
             if (i <= 0 || i >= codes.Count - 1 || codes[i].opcode != OpCodes.Ldc_I4_0 || codes[i + 1].opcode != OpCodes.Ret)
+            {
                 continue;
+            }
 
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
 
             List<CodeInstruction> newCode = [
                 // _itemStacks
@@ -47,9 +55,13 @@ public class XUiMPlayerInventoryCraftPatches {
         }
 
         if (!set)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

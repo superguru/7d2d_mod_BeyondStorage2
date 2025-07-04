@@ -4,14 +4,25 @@ using static ModEvents;
 
 namespace BeyondStorage.Scripts.Common;
 
-public static class EventsUtil {
-    public static void GameStartDone(ref SGameStartDoneData data) {
-        if (LogUtil.IsDebug()) LogUtil.DebugLog("Game Start: Initializing...");
+public static class EventsUtil
+{
+    public static void GameStartDone(ref SGameStartDoneData data)
+    {
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog("Game Start: Initializing...");
+        }
+
         ContainerUtils.Init();
     }
 
-    public static void GameShutdown(ref SGameShutdownData data) {
-        if (LogUtil.IsDebug()) LogUtil.DebugLog("Game Shutdown: Cleaning up...");
+    public static void GameShutdown(ref SGameShutdownData data)
+    {
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog("Game Shutdown: Cleaning up...");
+        }
+
         ContainerUtils.Cleanup();
     }
 

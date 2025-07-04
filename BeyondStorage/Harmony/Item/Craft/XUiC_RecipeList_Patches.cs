@@ -48,9 +48,14 @@ public class XUiCRecipeListPatches
             // IL_008d: call         instance void XUiC_RecipeList::BuildRecipeInfosList(class [mscorlib]System.Collections.Generic.List`1<class ItemStack>)
             if (i <= 2 || codes[i].opcode != OpCodes.Call || (MethodInfo)codes[i].operand !=
                 AccessTools.Method(typeof(XUiC_RecipeList), nameof(XUiC_RecipeList.BuildRecipeInfosList)))
+            {
                 continue;
+            }
 
-            if (LogUtil.IsDebug()) LogUtil.DebugLog("Adding method to add items from all storages");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog("Adding method to add items from all storages");
+            }
 
             found = true;
             // IL_008b: ldarg.0      // this [Label 4]
@@ -68,9 +73,13 @@ public class XUiCRecipeListPatches
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

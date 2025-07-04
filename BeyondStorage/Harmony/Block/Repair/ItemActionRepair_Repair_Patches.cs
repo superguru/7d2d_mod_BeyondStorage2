@@ -52,11 +52,15 @@ public class ItemActionRepairPatches
 
         if (targetIndex > -1)
         {
-            if (LogUtil.IsDebug()) LogUtil.DebugLog("Adding method to count items from all storages");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog("Adding method to count items from all storages");
+            }
 
             List<CodeInstruction> newCode = [];
             // == New ==
             var newLabel = generator.DefineLabel();
+
             // New jump to our new section of code if the previous check failed
             newCode.Add(new CodeInstruction(OpCodes.Blt_S, newLabel));
             // else
@@ -81,12 +85,6 @@ public class ItemActionRepairPatches
                 AccessTools.Field(typeof(ItemStack), nameof(ItemStack.count))));
             codes.InsertRange(targetIndex + 3, newCode);
             // == End New ==
-
-            // == Old - Called even if not needed (enough items in inventory) ==
-            // newCode.Add(new CodeInstruction(OpCodes.Ldarg_2));
-            // newCode.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ContainerUtils), nameof(ContainerUtils.AddAllStoragesCountItemStack))));
-            // codes.InsertRange(i + 1, newCode);
-            // == End Old ==
 
             LogUtil.Info($"Successfully patched {targetMethodString}");
         }
@@ -117,10 +115,15 @@ public class ItemActionRepairPatches
         {
             if (codes[i].opcode != OpCodes.Callvirt ||
                 (MethodInfo)codes[i].operand != AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
+            {
                 continue;
+            }
 
             found = true;
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
 
             List<CodeInstruction> newCode = [
                 // _itemStack
@@ -134,9 +137,13 @@ public class ItemActionRepairPatches
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

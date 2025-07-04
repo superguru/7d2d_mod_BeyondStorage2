@@ -9,14 +9,21 @@ using HarmonyLib;
 namespace BeyondStorage.Item;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public class XUiMPlayerInventoryCommonPatches {
+public class XUiMPlayerInventoryCommonPatches
+{
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
-    private static void XUiM_PlayerInventory_RemoveItems_Prefix(IList<ItemStack> _itemStacks, int _multiplier) {
-        if (!LogUtil.IsDebug()) return;
+    private static void XUiM_PlayerInventory_RemoveItems_Prefix(IList<ItemStack> _itemStacks, int _multiplier)
+    {
+        if (!LogUtil.IsDebug())
+        {
+            return;
+        }
+
         var targetMethodStr = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.RemoveItems)} PREFIX";
 
-        foreach (var itemStack in _itemStacks) {
+        foreach (var itemStack in _itemStacks)
+        {
             var num = itemStack.count * _multiplier;
             LogUtil.DebugLog($"{targetMethodStr} | Need {num} {itemStack.itemValue.ItemClass.GetItemName()}");
         }
@@ -30,18 +37,25 @@ public class XUiMPlayerInventoryCommonPatches {
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_RemoveItems_Patch(IEnumerable<CodeInstruction> instructions) {
+    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_RemoveItems_Patch(IEnumerable<CodeInstruction> instructions)
+    {
         var targetMethodString = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.RemoveItems)}";
         LogUtil.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var set = false;
-        for (var i = 0; i < codes.Count; i++) {
+        for (var i = 0; i < codes.Count; i++)
+        {
             if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand !=
                 AccessTools.Method(typeof(Inventory), nameof(Inventory.DecItem)))
+            {
                 continue;
+            }
 
             set = true;
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
 
             List<CodeInstruction> newCode = [
                 // ldarg.1      // _itemStacks
@@ -66,9 +80,13 @@ public class XUiMPlayerInventoryCommonPatches {
         }
 
         if (!set)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

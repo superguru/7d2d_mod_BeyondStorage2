@@ -1,17 +1,18 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System.IO;
 using BeyondStorage.Scripts.Server;
 using BeyondStorage.Scripts.Utils;
 using Newtonsoft.Json;
 
 namespace BeyondStorage.Scripts.Configuration;
 
-public static class ModConfig {
+public static class ModConfig
+{
     private const string ConfigFileName = "config.json";
     public static BsConfig ClientConfig { get; private set; }
     public static BsConfig ServerConfig { get; } = new();
 
-    public static void LoadConfig(BeyondStorage context) {
+    public static void LoadConfig(BeyondStorage context)
+    {
         var path = Path.Combine(FileUtil.GetConfigPath(true), ConfigFileName);
         LogUtil.DebugLog($"Loading config from {path}");
         var config = !File.Exists(path)
@@ -24,112 +25,153 @@ public static class ModConfig {
         LogUtil.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
     }
 #if DEBUG
-    private static bool UsingServerConfig() {
+    private static bool UsingServerConfig()
+    {
         // if we don't have a server config don't try and use it
-        if (!ServerUtils.HasServerConfig) return false;
+        if (!ServerUtils.HasServerConfig)
+        {
+            return false;
+        }
         // If server skip as the config we're using is the server config
-        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer) return false;
+        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+        {
+            return false;
+        }
         // If singleplayer use client config, otherwise we're a client on a server
         return !SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer;
     }
 #endif
-    public static bool EnableForBlockRepair() {
+    public static bool EnableForBlockRepair()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForBlockRepair}; server {ServerConfig.enableForBlockRepair}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForBlockRepair : ClientConfig.enableForBlockRepair;
     }
 
-    public static bool EnableForBlockUpgrade() {
+    public static bool EnableForBlockUpgrade()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForBlockUpgrade}; server {ServerConfig.enableForBlockUpgrade}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForBlockUpgrade : ClientConfig.enableForBlockUpgrade;
     }
 
-    public static bool EnableForGeneratorRefuel() {
+    public static bool EnableForGeneratorRefuel()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForGeneratorRefuel}; server {ServerConfig.enableForGeneratorRefuel}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForGeneratorRefuel : ClientConfig.enableForGeneratorRefuel;
     }
 
-    public static bool EnableForItemRepair() {
+    public static bool EnableForItemRepair()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForItemRepair}; server {ServerConfig.enableForItemRepair}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForItemRepair : ClientConfig.enableForItemRepair;
     }
 
-    public static bool EnableForReload() {
+    public static bool EnableForReload()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog($"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForReload}; server {ServerConfig.enableForReload}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForReload : ClientConfig.enableForReload;
     }
 
-    public static bool EnableForVehicleRefuel() {
+    public static bool EnableForVehicleRefuel()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForVehicleRefuel}; server {ServerConfig.enableForVehicleRefuel}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForVehicleRefuel : ClientConfig.enableForVehicleRefuel;
     }
 
-    public static bool EnableForVehicleRepair() {
+    public static bool EnableForVehicleRepair()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.enableForVehicleRepair}; server {ServerConfig.enableForVehicleRepair}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.enableForVehicleRepair : ClientConfig.enableForVehicleRepair;
     }
 
-    public static bool IsDebug() {
+    public static bool IsDebug()
+    {
         return ClientConfig.isDebug;
     }
 
-    public static bool OnlyStorageCrates() {
+    public static bool OnlyStorageCrates()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.onlyStorageCrates}; server {ServerConfig.onlyStorageCrates}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.onlyStorageCrates : ClientConfig.onlyStorageCrates;
     }
 
-    public static bool PullFromVehicleStorage() {
+    public static bool PullFromVehicleStorage()
+    {
 #if DEBUG
         if (LogUtil.IsDebug())
+        {
             LogUtil.DebugLog(
                 $"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.pullFromVehicleStorage}; server {ServerConfig.pullFromVehicleStorage}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.pullFromVehicleStorage : ClientConfig.pullFromVehicleStorage;
     }
 
-    public static bool ServerSyncConfig() {
+    public static bool ServerSyncConfig()
+    {
         return ClientConfig.serverSyncConfig;
     }
 
-    public static float Range() {
+    public static float Range()
+    {
 #if DEBUG
-        if (LogUtil.IsDebug()) LogUtil.DebugLog($"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.range}; server {ServerConfig.range}");
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog($"using server config: {ServerUtils.HasServerConfig}; usingServer {UsingServerConfig()}; client {ClientConfig.range}; server {ServerConfig.range}");
+        }
 #endif
         return ServerUtils.HasServerConfig ? ServerConfig.range : ClientConfig.range;
     }
 
     // TODO: Update NetPackageBeyondStorageConfig if new settings added and should be synced between server/client
-    public class BsConfig {
+    public class BsConfig
+    {
         // if set true nearby containers will be used for block repairs
         public bool enableForBlockRepair = true;
 

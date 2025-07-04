@@ -52,7 +52,10 @@ public class ItemActionRepairUpgradePatches
 
         if (targetIndex > -1)
         {
-            if (LogUtil.IsDebug()) LogUtil.DebugLog("Adding method to count items from all storages");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog("Adding method to count items from all storages");
+            }
 
             var newLabel = generator.DefineLabel();
             // ldloc.s  _itemValue [newLabel]
@@ -75,18 +78,12 @@ public class ItemActionRepairUpgradePatches
             codes.InsertRange(targetIndex + 2, newCode);
             // == END 'Proper' Code ==
 
-            // == Quick Hook / Called even if inventory has enough already ==
-            // newCode.Add(new CodeInstruction(codes[i - 4].opcode, codes[i - 4].operand));
-            // newCode.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ContainerUtils), nameof(ContainerUtils.GetItemCount2))));
-            // codes.InsertRange(i + 1, newCode);
-            // == END Quick Hook ==
-
             LogUtil.Info($"Successfully patched {targetMethodString}");
         }
         else
         {
             LogUtil.Error($"Failed to patch {targetMethodString}");
-        }            
+        }
 
         return codes.AsEnumerable();
     }
@@ -110,9 +107,14 @@ public class ItemActionRepairUpgradePatches
             // if (data.holdingEntity.bag.DecItem(_itemValue, result) != result)
             if (codes[i].opcode != OpCodes.Callvirt ||
                 (MethodInfo)codes[i].operand != AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
+            {
                 continue;
+            }
 
-            if (LogUtil.IsDebug()) LogUtil.DebugLog("Adding method to remove items from all storages");
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog("Adding method to remove items from all storages");
+            }
 
             found = true;
             List<CodeInstruction> newCode = [
@@ -130,9 +132,13 @@ public class ItemActionRepairUpgradePatches
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

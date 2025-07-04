@@ -9,7 +9,8 @@ using HarmonyLib;
 namespace BeyondStorage.Item.Craft;
 
 [HarmonyPatch(typeof(XUiC_IngredientEntry))]
-public class XUiCIngredientEntryPatches {
+public class XUiCIngredientEntryPatches
+{
     // Used for:
     //      Item Crafting (shows item count available in crafting window(s))
     [HarmonyTranspiler]
@@ -18,16 +19,25 @@ public class XUiCIngredientEntryPatches {
     [HarmonyDebug]
 #endif
     private static IEnumerable<CodeInstruction> XUiC_IngredientEntry_GetBindingValue_Patch(
-        IEnumerable<CodeInstruction> instructions) {
+        IEnumerable<CodeInstruction> instructions)
+    {
         var targetMethodString = $"{typeof(XUiC_IngredientEntry)}.{nameof(XUiC_IngredientEntry.GetBindingValue)}";
         LogUtil.Info($"Transpiling {targetMethodString}");
+
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
-        for (var i = 0; i < codes.Count; i++) {
-            if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand != AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)]))
-                continue;
 
-            if (LogUtil.IsDebug()) LogUtil.DebugLog("Adding method to add item counts from all storages");
+        for (var i = 0; i < codes.Count; i++)
+        {
+            if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand != AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)]))
+            {
+                continue;
+            }
+
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog("Adding method to add item counts from all storages");
+            }
 
             found = true;
             List<CodeInstruction> newCode = [
@@ -40,9 +50,13 @@ public class XUiCIngredientEntryPatches {
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

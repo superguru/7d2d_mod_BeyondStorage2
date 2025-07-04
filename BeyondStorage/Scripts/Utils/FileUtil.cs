@@ -20,7 +20,7 @@ internal static class FileUtil
         if (string.IsNullOrEmpty(s_mod_assembly_path))
         {
             s_mod_assembly_path = Assembly.GetExecutingAssembly().Location ?? throw new InvalidOperationException("no assembly");
-            s_mod_assembly_path = Path.GetDirectoryName(s_mod_assembly_path) ?? throw new InvalidOperationException("no path");  
+            s_mod_assembly_path = Path.GetDirectoryName(s_mod_assembly_path) ?? throw new InvalidOperationException("no path");
         }
 
         if (string.IsNullOrEmpty(s_mod_assembly_path))

@@ -9,21 +9,31 @@ using UniLinq;
 namespace BeyondStorage.PowerSource.Refuel;
 
 [HarmonyPatch(typeof(XUiC_PowerSourceStats))]
-public class XUiCPowerSourceStatsPatches {
+public class XUiCPowerSourceStatsPatches
+{
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_PowerSourceStats.BtnRefuel_OnPress))]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_PowerSourceStats_BtnRefuel_OnPress_Transpiler(IEnumerable<CodeInstruction> instructions) {
+    private static IEnumerable<CodeInstruction> XUiC_PowerSourceStats_BtnRefuel_OnPress_Transpiler(IEnumerable<CodeInstruction> instructions)
+    {
         var targetMethodString = $"{typeof(XUiC_PowerSourceStats)}.{nameof(XUiC_PowerSourceStats.BtnRefuel_OnPress)}";
         LogUtil.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
-        for (var i = 0; i < codes.Count; i++) {
+        for (var i = 0; i < codes.Count; i++)
+        {
             if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand != AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
+            {
                 continue;
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
+
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
+
             found = true;
             List<CodeInstruction> newCode = [
                 // ldloc.s      _itemValue
@@ -44,9 +54,13 @@ public class XUiCPowerSourceStatsPatches {
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

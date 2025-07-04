@@ -3,18 +3,21 @@ using BeyondStorage.Scripts.Common;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Server;
 using HarmonyLib;
+
 #if DEBUG
 using HarmonyLib.Tools;
 #endif
 
 namespace BeyondStorage;
 
-public class BeyondStorage : IModApi {
+public class BeyondStorage : IModApi
+{
     private static BeyondStorage _context;
 
     internal static Mod ModInstance;
 
-    public void InitMod(Mod modInstance) {
+    public void InitMod(Mod modInstance)
+    {
         _context = this;
         ModConfig.LoadConfig(_context);
         ModInstance = modInstance;

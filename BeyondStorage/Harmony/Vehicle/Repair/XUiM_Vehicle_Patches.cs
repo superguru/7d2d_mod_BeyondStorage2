@@ -25,8 +25,15 @@ public class XUiMVehiclePatches
         {
             // loop until we hit missing item error sound
             if (codes[i].opcode != OpCodes.Ldstr || codes[i].operand as string != "misc/missingitemtorepair")
+            {
                 continue;
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
+
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Patching {targetMethodString}");
+            }
+
             found = true;
             // define new lable
             var newLabel = generator.DefineLabel();
@@ -57,9 +64,13 @@ public class XUiMVehiclePatches
         }
 
         if (!found)
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
+        }
         else
+        {
             LogUtil.Info($"Successfully patched {targetMethodString}");
+        }
 
         return codes.AsEnumerable();
     }

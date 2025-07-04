@@ -1,23 +1,36 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using BeyondStorage.Scripts.Server;
-using BeyondStorage.Scripts.Utils;
 using HarmonyLib;
+
+#if DEBUG
+using BeyondStorage.Scripts.Utils;
+#endif
 
 namespace BeyondStorage.Server;
 
 [HarmonyPatch]
-public class GameManagerPatches {
+public class GameManagerPatches
+{
 #if DEBUG
     [HarmonyPrepare]
-    private static void Prepare(MethodBase original) {
-        if (original == null) return;
-        if (LogUtil.IsDebug()) LogUtil.DebugLog($"Adding Postfix to {typeof(GameManager)}.{original.Name} | {original}");
+    private static void Prepare(MethodBase original)
+    {
+        if (original == null)
+        {
+            return;
+        }
+
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog($"Adding Postfix to {typeof(GameManager)}.{original.Name} | {original}");
+        }
     }
 #endif
 
     [HarmonyTargetMethods]
-    private static IEnumerable<MethodBase> TargetMethods() {
+    private static IEnumerable<MethodBase> TargetMethods()
+    {
         // , [typeof(PlatformUserIdentifierAbs), typeof(List<BlockChangeInfo>)]);
         yield return AccessTools.Method(typeof(GameManager), nameof(GameManager.ChangeBlocks));
         // , [typeof(int)]);
@@ -36,11 +49,18 @@ public class GameManagerPatches {
     }
 
     [HarmonyPostfix]
-    private static void Postfix() {
+    private static void Postfix()
+    {
         // Skip if we're not a server
-        if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer) return;
+        if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+        {
+            return;
+        }
         // Skip if single player
-        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer) return;
+        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer)
+        {
+            return;
+        }
         // Otherwise update our locked TE list
         ServerUtils.LockedTEsUpdate();
     }

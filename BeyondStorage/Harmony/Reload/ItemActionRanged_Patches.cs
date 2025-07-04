@@ -8,7 +8,8 @@ using HarmonyLib;
 namespace BeyondStorage.Reload;
 
 [HarmonyPatch(typeof(ItemActionRanged))]
-public class ItemActionRangedPatches {
+public class ItemActionRangedPatches
+{
     // Used For:
     //          Weapon Reload (check if allowed to reload)
     [HarmonyTranspiler]
@@ -16,13 +17,18 @@ public class ItemActionRangedPatches {
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> ItemActionRanged_CanReload_Patch(IEnumerable<CodeInstruction> instructions) {
+    private static IEnumerable<CodeInstruction> ItemActionRanged_CanReload_Patch(IEnumerable<CodeInstruction> instructions)
+    {
         var targetMethodString = $"{typeof(ItemActionRanged)}.{nameof(ItemActionRanged.CanReload)}";
         var codeInstructions = new List<CodeInstruction>(instructions);
         var lastBgt = codeInstructions.FindLastIndex(instruction => instruction.opcode == OpCodes.Bgt);
         LogUtil.Info($"Transpiling {targetMethodString}");
-        if (lastBgt != -1) {
-            if (LogUtil.IsDebug()) LogUtil.DebugLog($"Last BGT Index: {lastBgt}");
+        if (lastBgt != -1)
+        {
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"Last BGT Index: {lastBgt}");
+            }
             // if (Ranged.CanReloadFromStorage(_itemValue) > 0)
             List<CodeInstruction> newCode = [
                 // new CodeInstruction(OpCodes.Ldarg_0),
@@ -38,7 +44,9 @@ public class ItemActionRangedPatches {
             // Insert right below last BGT
             codeInstructions.InsertRange(lastBgt + 1, newCode);
             LogUtil.Info($"Successfully patched {targetMethodString}");
-        } else {
+        }
+        else
+        {
             LogUtil.Error($"Failed to patch {targetMethodString}");
         }
 
