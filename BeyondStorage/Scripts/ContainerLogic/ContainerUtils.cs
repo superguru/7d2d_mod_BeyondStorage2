@@ -143,20 +143,28 @@ public static class ContainerUtils
                 continue;
             }
 
+            // Skip if not player storage
+            if (!tileEntityLootable.bPlayerStorage)
+            {
+                continue;
+            }
+
+            // Skip empty TEL
+            if (tileEntityLootable.IsEmpty())
+            {
+                continue;
+            }
+
             // Skip if not a storage crate AND config set to only use Storage crates
             if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
             {
                 continue;
             }
 
-            // Skip if not player storage
-            if (!tileEntityLootable.bPlayerStorage)
-            {
-                continue;
-            }
 #if DEBUG
             LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
 #endif
+
             // If we have locked entities
             if (LockedTileEntities.Count > 0)
             {
@@ -170,17 +178,12 @@ public static class ContainerUtils
             // check if storage is lockable
             if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
             {
-                // If storage can be locked, is locked, and the player doesn't have access
+                // If storage can be locked, then
+                // If it is locked, and the player doesn't have access
                 if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
                 {
                     continue;
                 }
-            }
-
-            // Skip empty TEL
-            if (tileEntityLootable.IsEmpty())
-            {
-                continue;
             }
 
             // If entity is in range (or range is set infinite)
