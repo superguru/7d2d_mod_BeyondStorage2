@@ -22,3 +22,17 @@ The compiled and packaged mod is available from https://www.nexusmods.com/7dayst
 
 The mod can be configured by editing the `config.json` file in the `Mods/BeyondStorage2/Config` folder.
 
+Please refer to the mod description on Nexus Mods for details of the configuration options.
+
+## License
+This mod is licensed under the MIT License. See the LICENSE file in the root of the repository for details.
+
+## Credits
+- [aedenthorn](https://github.com/aedenthorn) for the original mod
+- [unv-annihilator](https://github.com/unv-annihilator) for the 7 Days to Die v1 fork
+- [superguru](https://github.com/superguru) for the 7 Days to Die v2 refactor
+- [gazorper](https://next.nexusmods.com/profile/gazorper/mods) for the Beyond Storage 2 mod
+- The 7 Days to Die community for their support and contributions
+
+
+

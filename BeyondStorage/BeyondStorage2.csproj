@@ -53,7 +53,7 @@
     <MakeDir Directories="$(ModPackageUploadsDir);$(ModPackageDir);$(ModPackageConfigDir)" />
     <Move SourceFiles="$(TargetDir)\$(ProjectName).dll;" DestinationFolder="$(ModPackageDir)" />
     <Delete Files="$(TargetDir)\$(ProjectName).pdb;" />
-    <Copy SourceFiles="$(TargetDir)\README.md;$(TargetDir)\ModInfo.xml;" DestinationFolder="$(ModPackageDir)" />
+    <Copy SourceFiles="$(TargetDir)\..\README.md;$(TargetDir)\ModInfo.xml;" DestinationFolder="$(ModPackageDir)" />
     <Copy SourceFiles="$(TargetDir)\config.json;" DestinationFolder="$(ModPackageConfigDir)" />
     <ZipDirectory SourceDirectory="$(ModPackageStagingDir)" DestinationFile="$(ModPackageUploadsDir)\$(ModPackageName).zip" Overwrite="true" />
     <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
@@ -130,7 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config.json" />
-    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
