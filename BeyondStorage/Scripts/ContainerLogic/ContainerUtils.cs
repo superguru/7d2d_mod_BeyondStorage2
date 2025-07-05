@@ -245,6 +245,8 @@ public static class ContainerUtils
 
     public static int RemoveRemaining(ItemValue itemValue, int requiredAmount, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
+        const string d_method_name = "ContainerUtils.RemoveRemaining";
+
         // return early if we already have enough items removed
         if (requiredAmount <= 0)
         {
@@ -253,7 +255,7 @@ public static class ContainerUtils
 
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"RemoveRemaining | Trying to remove {requiredAmount} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Trying to remove {requiredAmount} {itemValue.ItemClass.GetItemName()}");
         }
 
         var originalAmountNeeded = requiredAmount;
@@ -284,7 +286,7 @@ public static class ContainerUtils
         var difference = originalAmountNeeded - requiredAmount;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"RemoveRemaining | Containers | Removed {difference} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {difference} {itemValue.ItemClass.GetItemName()}");
         }
         // if we already have enough return
         if (requiredAmount <= 0)
@@ -299,36 +301,39 @@ public static class ContainerUtils
         // == start vehicle code ==
         // get current vehicle storages
         var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
+
         // update to new list if null
         vehicleStorages ??= new List<EntityVehicle>().AsEnumerable();
+
         // check vehicle storages
         foreach (var vehicle in vehicleStorages)
         {
             // try and remove items from vehicle storage
             var newRequiredAmount = RemoveItems(vehicle.bag.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
+
             // if we took something, set the vehicle storage as modified
             if (newRequiredAmount != requiredAmount)
             {
                 vehicle.SetBagModified();
             }
+
             // update required amount
             requiredAmount = newRequiredAmount;
-            // continue if we still need more
-            if (requiredAmount > 0)
+
+            // break if we've done enough
+            if (requiredAmount <= 0)
             {
-                continue;
+                break;
             }
-            // otherwise return early
-            break;
         }
 
         // check difference
         difference = originalAmountNeeded - requiredAmount - difference;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"RemoveRemaining | Vehicles | Removed {difference} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {difference} {itemValue.ItemClass.GetItemName()}");
         }
-        // return originalCountNeeded - newRequiredAmount
+
         return originalAmountNeeded - requiredAmount;
     }
 }
