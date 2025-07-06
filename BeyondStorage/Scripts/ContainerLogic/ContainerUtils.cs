@@ -52,6 +52,7 @@ public static class ContainerUtils
         // == start vehicle code ==
         // init vehicleResults
         var vehicleResults = new List<ItemStack>().AsEnumerable();
+
         // get available vehicle storage
         var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
 
@@ -198,9 +199,7 @@ public static class ContainerUtils
     {
         for (var index = 0; requiredAmount > 0 && index < items.Length; ++index)
         {
-            if (items[index].itemValue.type != desiredItem.type || ignoreModdedItems &&
-                items[index].itemValue.HasModSlots &&
-                items[index].itemValue.HasMods())
+            if (items[index].itemValue.type != desiredItem.type || (ignoreModdedItems && items[index].itemValue.HasModSlots && items[index].itemValue.HasMods()))
             {
                 continue;
             }
@@ -259,28 +258,31 @@ public static class ContainerUtils
         }
 
         var originalAmountNeeded = requiredAmount;
+
         // capture container storage
         var containerStorage = GetAvailableStorages();
+
         // update storage if it's null to empty list
         containerStorage ??= new List<ITileEntityLootable>().AsEnumerable();
         foreach (var tileEntityLootable in containerStorage)
         {
             // Remove items from TEL
             var newRequiredAmount = RemoveItems(tileEntityLootable.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
+
             // check if we took items from the TEL, if so set modified
             if (requiredAmount != newRequiredAmount)
             {
                 tileEntityLootable.SetModified();
             }
+
             // update required amount
             requiredAmount = newRequiredAmount;
-            // continue if we still need more
-            if (requiredAmount > 0)
+
+            // break if we've done enough
+            if (requiredAmount <= 0)
             {
-                continue;
+                break;
             }
-            // otherwise return early
-            break;
         }
 
         var difference = originalAmountNeeded - requiredAmount;
@@ -288,16 +290,19 @@ public static class ContainerUtils
         {
             LogUtil.DebugLog($"{d_method_name} | Containers | Removed {difference} {itemValue.ItemClass.GetItemName()}");
         }
+
         // if we already have enough return
         if (requiredAmount <= 0)
         {
             return originalAmountNeeded - requiredAmount;
         }
+
         // return if we're not checking vehicle storages
         if (!ModConfig.PullFromVehicleStorage())
         {
             return originalAmountNeeded - requiredAmount;
         }
+
         // == start vehicle code ==
         // get current vehicle storages
         var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();

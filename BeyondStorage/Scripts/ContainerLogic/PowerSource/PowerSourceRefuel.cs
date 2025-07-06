@@ -9,18 +9,14 @@ public static class PowerSourceRefuel
     {
         const string d_method_name = "PowerSourceRefuel.RefuelRemoveRemaining";
 
-        if (!ModConfig.EnableForGeneratorRefuel())
+        // return if we already have enough
+        if (lastRemoved == totalNeeded)
         {
             return lastRemoved;
         }
 
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"{d_method_name}");
-        }
-
-        // return early if we already have enough
-        if (lastRemoved == totalNeeded)
+        // check if we should enable for generator refuel
+        if (!ModConfig.EnableForGeneratorRefuel())
         {
             return lastRemoved;
         }
