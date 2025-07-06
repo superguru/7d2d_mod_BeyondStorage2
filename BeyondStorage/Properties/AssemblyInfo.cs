@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("BeyondStorage2")]
-[assembly: AssemblyDescription("Utilize resources from distant storage for crafting, upgrading, and more! Originally 'CraftFromContainers' by aedenthorn.")]
+[assembly: AssemblyDescription("Mod for 7 Days to Die that finds required items from nearby containers")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("aedenthorn, unv_Annihilator, gazorper")]
-[assembly: AssemblyProduct("BeyondStorage2")]
+[assembly: AssemblyProduct("BeyondStorage2.Properties")]
 [assembly: AssemblyCopyright("MIT License")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
