@@ -9,29 +9,36 @@ public static class PowerSourceRefuel
     {
         const string d_method_name = "PowerSourceRefuel.RefuelRemoveRemaining";
 
-        // return if we already have enough
-        if (lastRemoved == totalNeeded)
+        if (totalNeeded <= 0)
+        {
+            return 0;
+        }
+
+        if (lastRemoved >= totalNeeded)
         {
             return lastRemoved;
         }
 
-        // check if we should enable for generator refuel
         if (!ModConfig.EnableForGeneratorRefuel())
         {
             return lastRemoved;
         }
 
-        // update new required amount count removing last removed from total needed
-        var newReqCount = totalNeeded - lastRemoved;
-
-        // attempt to remove items from storage
-        var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, newReqCount);
-        if (LogUtil.IsDebug())
+        int amountToRemove = totalNeeded - lastRemoved;
+        if (amountToRemove <= 0)
         {
-            LogUtil.DebugLog($"{d_method_name} - item {itemValue.ItemClass.GetItemName()}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; newReqCount {newReqCount}; removedFromStorage {removedFromStorage}; updated result {lastRemoved + removedFromStorage}");
+            return lastRemoved;
         }
 
-        // add what removed from storage to last removed count
-        return lastRemoved + removedFromStorage;
+        int removed = ContainerUtils.RemoveRemaining(itemValue, amountToRemove);
+
+        int result = lastRemoved + removed;
+
+        if (LogUtil.IsDebug() && removed > 0)
+        {
+            LogUtil.DebugLog($"{d_method_name} - item {itemValue.ItemClass.GetItemName()}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
+        }
+
+        return result;
     }
 }
