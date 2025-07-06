@@ -25,7 +25,6 @@ public static class ContainerUtils
         LockedTileEntities?.Clear();
     }
 
-    // Client Update
     public static void UpdateLockedTEs(Dictionary<Vector3i, int> lockedTileEntities)
     {
         LockedTileEntities = new ConcurrentDictionary<Vector3i, int>(lockedTileEntities);
@@ -37,90 +36,59 @@ public static class ContainerUtils
 
     public static IEnumerable<ItemStack> GetItemStacks()
     {
-        // get container storage
         var containerStorage = GetAvailableStorages();
+        var containerResults = containerStorage?.SelectMany(lootable => lootable.items) ?? Enumerable.Empty<ItemStack>();
 
-        // get results if storage was not null; otherwise return empty list
-        var containerResults = containerStorage == null ? new List<ItemStack>().AsEnumerable() : containerStorage.SelectMany(lootable => lootable.items);
-
-        // return container results if we're not pulling from vehicles
         if (!ModConfig.PullFromVehicleStorage())
         {
             return containerResults;
         }
 
-        // == start vehicle code ==
-        // init vehicleResults
-        var vehicleResults = new List<ItemStack>().AsEnumerable();
-
-        // get available vehicle storage
         var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+        var vehicleResults = vehicleStorage?.SelectMany(vehicle => vehicle.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()) ?? Enumerable.Empty<ItemStack>();
 
-        // check if we got any vehicle storage results
-        if (vehicleStorage != null) // set results if we found any storage to pull from
-        {
-            vehicleResults = vehicleStorage.SelectMany(vehicle => vehicle.bag?.GetSlots());
-        }
-
-        // return a concat of both results
         return containerResults.Concat(vehicleResults);
     }
 
     public static bool HasItem(ItemValue itemValue)
     {
-        // capture container storage
         var containerStorage = GetAvailableStorages();
+        bool containerHas = containerStorage != null &&
+            containerStorage.SelectMany(lootable => lootable.items)
+                            .Any(stack => stack.itemValue.type == itemValue.type);
 
-        // return false if no storage, otherwise return if any is found
-        var containerHas = containerStorage != null && containerStorage.Select(lootable => lootable.items).Any(itemStacks => itemStacks.Any(stack => stack.itemValue.type == itemValue.type));
-
-        // return early if container has
         if (containerHas)
         {
             return true;
         }
 
-        // return false if container didn't have and not set to pull from vehicles
         if (!ModConfig.PullFromVehicleStorage())
         {
             return false;
         }
 
-        // == start vehicle code ==
-        // get vehicle storage
         var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-
-        // check vehicles storage if it exists, otherwise return false
-        return vehicleStorage != null && vehicleStorage.Select(vehicle => vehicle.bag.items).Any(itemStacks => itemStacks.Any(stack => stack.itemValue.type == itemValue.type));
+        return vehicleStorage != null &&
+            vehicleStorage.SelectMany(vehicle => vehicle.bag?.items ?? Enumerable.Empty<ItemStack>())
+                          .Any(stack => stack.itemValue.type == itemValue.type);
     }
 
     public static int GetItemCount(ItemValue itemValue)
     {
-        // capture container storages
+        static int CountItems(IEnumerable<ItemStack> stacks, int type)
+            => stacks?.Where(stack => stack.itemValue.type == type).Sum(stack => stack.count) ?? 0;
+
         var containerStorage = GetAvailableStorages();
+        int containerCount = CountItems(containerStorage?.SelectMany(lootable => lootable.items), itemValue.type);
 
-        // 0 if no storage, otherwise count the number of items found
-        var containerCount = containerStorage == null
-            ? 0
-            : (from tileEntityLootable in containerStorage from itemStack in tileEntityLootable.items where itemStack.itemValue.type == itemValue.type select itemStack.count).Sum();
-
-        // return early if we're not pulling from vehicles
         if (!ModConfig.PullFromVehicleStorage())
         {
             return containerCount;
         }
 
-        // == start vehicle code ==
-        // get vehicle storages
         var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+        int vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle.bag?.items ?? Enumerable.Empty<ItemStack>()), itemValue.type);
 
-        // count from vehicle storage
-        var vehicleCount = vehicleStorage == null
-            ? 0
-            : vehicleStorage.Select(vehicle => vehicle.bag.items).SelectMany(stacks => stacks).Where(itemStack => itemStack.itemValue.type == itemValue.type).Select(itemStack => itemStack.count)
-                .Sum();
-
-        // return combo result
         return containerCount + vehicleCount;
     }
 
@@ -132,31 +100,20 @@ public static class ContainerUtils
         var configOnlyCrates = ModConfig.OnlyStorageCrates();
         var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
 
-        // Get a copy of the current chunk cache
         var chunkCacheCopy = GameManager.Instance.World.ChunkCache.GetChunkArrayCopySync();
 
-        // Get a list of tile entities from chunk if not null
         foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
         {
-            // Skip if not a lootable
             if (!tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
             {
                 continue;
             }
 
-            // Skip if not player storage
-            if (!tileEntityLootable.bPlayerStorage)
+            if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
             {
                 continue;
             }
 
-            // Skip empty TEL
-            if (tileEntityLootable.IsEmpty())
-            {
-                continue;
-            }
-
-            // Skip if not a storage crate AND config set to only use Storage crates
             if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
             {
                 continue;
@@ -166,28 +123,23 @@ public static class ContainerUtils
             LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
 #endif
 
-            // If we have locked entities
             if (LockedTileEntities.Count > 0)
             {
-                // Skip if player already accessing the storage
-                if (LockedTileEntities.ContainsKey(tileEntityLootable.ToWorldPos()) && LockedTileEntities[tileEntityLootable.ToWorldPos()] != player.entityId)
+                var pos = tileEntityLootable.ToWorldPos();
+                if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != player.entityId)
                 {
                     continue;
                 }
             }
 
-            // check if storage is lockable
             if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
             {
-                // If storage can be locked, then
-                // If it is locked, and the player doesn't have access
                 if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
                 {
                     continue;
                 }
             }
 
-            // If entity is in range (or range is set infinite)
             if (configRange <= 0 || Vector3.Distance(playerPos, tileEntity.ToWorldPos()) < configRange)
             {
                 yield return tileEntityLootable;
@@ -199,42 +151,42 @@ public static class ContainerUtils
     {
         for (var index = 0; requiredAmount > 0 && index < items.Length; ++index)
         {
-            if (items[index].itemValue.type != desiredItem.type || (ignoreModdedItems && items[index].itemValue.HasModSlots && items[index].itemValue.HasMods()))
+            var stack = items[index];
+            if (stack.itemValue.type != desiredItem.type ||
+                (ignoreModdedItems && stack.itemValue.HasModSlots && stack.itemValue.HasMods()))
             {
                 continue;
             }
 
-            if (ItemClass.GetForId(items[index].itemValue.type).CanStack())
+            if (ItemClass.GetForId(stack.itemValue.type).CanStack())
             {
-                var itemCount = items[index].count;
-                var countToRemove = itemCount >= requiredAmount ? requiredAmount : itemCount;
+                var countToRemove = Mathf.Min(stack.count, requiredAmount);
 #if DEBUG
                 if (LogUtil.IsDebug())
                 {
-                    // LogUtil.DebugLog($"Loc: {tileEntityLootable.ToWorldPos()}, Value: {tileEntityLootable}");
-                    LogUtil.DebugLog($"Item Count: {itemCount} Count To Remove: {countToRemove}");
-                    LogUtil.DebugLog($"Item Count Before: {items[index].count}");
+                    LogUtil.DebugLog($"Item Count: {stack.count} Count To Remove: {countToRemove}");
+                    LogUtil.DebugLog($"Item Count Before: {stack.count}");
                 }
 #endif
-                removedItems?.Add(new ItemStack(items[index].itemValue.Clone(), countToRemove));
-                items[index].count -= countToRemove;
+                removedItems?.Add(new ItemStack(stack.itemValue.Clone(), countToRemove));
+                stack.count -= countToRemove;
                 requiredAmount -= countToRemove;
 #if DEBUG
                 if (LogUtil.IsDebug())
                 {
-                    LogUtil.DebugLog($"Item Count After: {items[index].count}");
+                    LogUtil.DebugLog($"Item Count After: {stack.count}");
                     LogUtil.DebugLog($"Required After: {requiredAmount}");
                 }
 #endif
-                if (items[index].count <= 0)
+                if (stack.count <= 0)
                 {
-                    items[index].Clear();
+                    stack.Clear();
                 }
             }
             else
             {
-                removedItems?.Add(items[index].Clone());
-                items[index].Clear();
+                removedItems?.Add(stack.Clone());
+                stack.Clear();
                 --requiredAmount;
             }
         }
@@ -245,11 +197,9 @@ public static class ContainerUtils
     public static int RemoveRemaining(ItemValue itemValue, int requiredAmount, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_method_name = "ContainerUtils.RemoveRemaining";
-
-        // return early if we already have enough items removed
         if (requiredAmount <= 0)
         {
-            return requiredAmount;
+            return 0;
         }
 
         if (LogUtil.IsDebug())
@@ -258,87 +208,56 @@ public static class ContainerUtils
         }
 
         var originalAmountNeeded = requiredAmount;
+        var containerStorage = GetAvailableStorages() ?? Enumerable.Empty<ITileEntityLootable>();
 
-        // capture container storage
-        var containerStorage = GetAvailableStorages();
-
-        // update storage if it's null to empty list
-        containerStorage ??= new List<ITileEntityLootable>().AsEnumerable();
         foreach (var tileEntityLootable in containerStorage)
         {
-            // Remove items from TEL
             var newRequiredAmount = RemoveItems(tileEntityLootable.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
-
-            // check if we took items from the TEL, if so set modified
             if (requiredAmount != newRequiredAmount)
             {
                 tileEntityLootable.SetModified();
             }
 
-            // update required amount
             requiredAmount = newRequiredAmount;
-
-            // break if we've done enough
             if (requiredAmount <= 0)
             {
                 break;
             }
         }
 
-        var difference = originalAmountNeeded - requiredAmount;
+        var removedFromContainers = originalAmountNeeded - requiredAmount;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {difference} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {removedFromContainers} {itemValue.ItemClass.GetItemName()}");
         }
 
-        // if we already have enough return
-        if (requiredAmount <= 0)
+        if (requiredAmount <= 0 || !ModConfig.PullFromVehicleStorage())
         {
-            return originalAmountNeeded - requiredAmount;
+            return removedFromContainers;
         }
 
-        // return if we're not checking vehicle storages
-        if (!ModConfig.PullFromVehicleStorage())
-        {
-            return originalAmountNeeded - requiredAmount;
-        }
-
-        // == start vehicle code ==
-        // get current vehicle storages
-        var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
-
-        // update to new list if null
-        vehicleStorages ??= new List<EntityVehicle>().AsEnumerable();
-
-        // check vehicle storages
+        var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages() ?? Enumerable.Empty<EntityVehicle>();
         foreach (var vehicle in vehicleStorages)
         {
-            // try and remove items from vehicle storage
             var newRequiredAmount = RemoveItems(vehicle.bag.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
-
-            // if we took something, set the vehicle storage as modified
             if (newRequiredAmount != requiredAmount)
             {
                 vehicle.SetBagModified();
             }
 
-            // update required amount
             requiredAmount = newRequiredAmount;
-
-            // break if we've done enough
             if (requiredAmount <= 0)
             {
                 break;
             }
         }
 
-        // check difference
-        difference = originalAmountNeeded - requiredAmount - difference;
+        var totalRemoved = originalAmountNeeded - requiredAmount;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {difference} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {totalRemoved - removedFromContainers} {itemValue.ItemClass.GetItemName()}");
         }
 
-        return originalAmountNeeded - requiredAmount;
+        return totalRemoved;
     }
 }
