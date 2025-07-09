@@ -9,6 +9,6 @@
   "enableForReload": true,
   "enableForVehicleRefuel": true,
   "enableForVehicleRepair": true,
-  "serverSyncConfig": true
-  "isDebug": false,
+  "serverSyncConfig": true,
+  "isDebug": false
 }
