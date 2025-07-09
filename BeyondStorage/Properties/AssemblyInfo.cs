@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("BeyondStorage2")]
 [assembly: AssemblyDescription("Mod for 7 Days to Die that finds required items from nearby containers")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("aedenthorn, unv_Annihilator, gazorper")]
+[assembly: AssemblyCompany("aedenthorn, unv_Annihilator, superguru, gazorper")]
 [assembly: AssemblyProduct("BeyondStorage2.Properties")]
 [assembly: AssemblyCopyright("MIT License")]
 [assembly: AssemblyTrademark("")]
@@ -28,5 +28,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("2.0.2.*")]
-[assembly: AssemblyFileVersion("2.0.2")]
+[assembly: AssemblyVersion("2.0.3.*")]
+[assembly: AssemblyFileVersion("2.0.3")]

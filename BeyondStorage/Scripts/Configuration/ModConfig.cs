@@ -172,6 +172,18 @@ public static class ModConfig
     // TODO: Update NetPackageBeyondStorageConfig if new settings added and should be synced between server/client
     public class BsConfig
     {
+        // ========== Source selection / eligibility =========
+        // How far to pull from (-1 is infinite range, only limited by chunks loaded)
+        public float range = -1;
+
+        // if set to true it will ignore tile entities that aren't Storage Containers (crates)
+        // otherwise will check all lootable containers placed by player(s)
+        public bool onlyStorageCrates = false;
+
+        // if set to true it will try and pull items from nearby vehicle storages
+        public bool pullFromVehicleStorage = true;
+
+        // ========== Functionality =========
         // if set true nearby containers will be used for block repairs
         public bool enableForBlockRepair = true;
 
@@ -179,7 +191,7 @@ public static class ModConfig
         public bool enableForBlockUpgrade = true;
 
         // if set true will allow refueling generators
-        public bool enableForGeneratorRefuel = false;
+        public bool enableForGeneratorRefuel = true;
 
         // if set true nearby containers will be used for item repairs
         // disable if you experience lag
@@ -189,25 +201,17 @@ public static class ModConfig
         public bool enableForReload = true;
 
         // if set true will allow refueling vehicles from nearby storage
-        public bool enableForVehicleRefuel = false;
+        public bool enableForVehicleRefuel = true;
 
         // if set true will allow repairing vehicles from nearby storage
-        public bool enableForVehicleRepair = false;
+        public bool enableForVehicleRepair = true;
 
-        // if set true additional logging will be printed to logs/console
-        public bool isDebug = false;
-
-        // if set to true it will ignore tile entities that aren't Storage Containers (crates)
-        // otherwise will check all lootable containers placed by player(s)
-        public bool onlyStorageCrates = false;
-
-        // if set to true it will try and pull items from nearby vehicle storages
-        public bool pullFromVehicleStorage = false;
-
-        // How far to pull from (-1 is infinite range, only limited by chunks loaded)
-        public float range = -1;
-
+        // ========== Multiplayer =========
         // if set true on a server it will force all clients to use server settings for Beyond Storage
         public bool serverSyncConfig = true;
+
+        // ========== Housekeeping =========
+        // if set true additional logging will be printed to logs/console
+        public bool isDebug = false;
     }
 }

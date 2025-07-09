@@ -1,14 +1,14 @@
 {
     "enableForBlockRepair": true,
     "enableForBlockUpgrade": true,
-    "enableForGeneratorRefuel": false,
+    "enableForGeneratorRefuel": true,
     "enableForItemRepair": true,
     "enableForReload": true,
-    "enableForVehicleRefuel": false,
-    "enableForVehicleRepair": false,
+    "enableForVehicleRefuel": true,
+    "enableForVehicleRepair": true,
     "isDebug": false,
     "onlyStorageCrates": false,
-    "pullFromVehicleStorage": false,
+    "pullFromVehicleStorage": true,
     "range": -1.0,
     "serverSyncConfig": true
 }
