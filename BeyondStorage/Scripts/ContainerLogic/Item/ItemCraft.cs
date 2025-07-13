@@ -12,15 +12,20 @@ public class ItemCraft
     //          Item Crafting - gets max craftable amount
     public static List<ItemStack> ItemCraftMaxGetAllStorageStacks(List<ItemStack> items)
     {
-        if (LogUtil.IsDebug())
+        // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
+        if (items != null)
         {
-            LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount before {items.Count}");
-        }
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount before {items.Count}");
+            }
 
-        items.AddRange(ContainerUtils.GetItemStacks());
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount after {items.Count}");
+            items.AddRange(ContainerUtils.GetItemStacks());
+
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount after {items.Count}");
+            }
         }
 
         return items;
@@ -65,7 +70,10 @@ public class ItemCraft
     public static int HasItemGetItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
     {
 #if DEBUG
-        if (LogUtil.IsDebug()) LogUtil.DebugLog($"HasItemGetItemCount {itemStacks}; {i}; {numLeft}");
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog($"HasItemGetItemCount {itemStacks}; {i}; {numLeft}");
+        }
 #endif
         if (numLeft <= 0)
         {
