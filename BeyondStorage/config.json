@@ -10,5 +10,5 @@
   "enableForVehicleRefuel": true,
   "enableForVehicleRepair": true,
   "serverSyncConfig": true,
-  "isDebug": false
+  "isDebug": false,
 }

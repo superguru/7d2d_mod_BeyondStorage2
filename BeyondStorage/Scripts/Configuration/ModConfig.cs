@@ -15,15 +15,49 @@ public static class ModConfig
     {
         var path = Path.Combine(FileUtil.GetConfigPath(true), ConfigFileName);
         LogUtil.DebugLog($"Loading config from {path}");
-        var config = !File.Exists(path)
-            ? new BsConfig()
-            : JsonConvert.DeserializeObject<BsConfig>(File.ReadAllText(path));
-        File.WriteAllText(path,
-            JsonConvert.SerializeObject(config, Formatting.Indented));
-        ClientConfig = config;
 
-        LogUtil.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
+        bool config_loaded = false;
+
+        if (File.Exists(path))
+        {
+            try
+            {
+                ClientConfig = JsonConvert.DeserializeObject<BsConfig>(File.ReadAllText(path));
+                config_loaded = true;
+                LogUtil.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
+
+                ValidateConfig();
+            }
+            catch (JsonException e)
+            {
+                LogUtil.Error($"Failed to load config from {path}: {e.Message}");
+            }
+        }
+
+        if (!config_loaded)
+        {
+            LogUtil.Warning($"Config file {path} not found or invalid, using default config.");
+            ClientConfig = new BsConfig();
+
+            // No need to write the default config back to file, as the config file is packaged with the mod as of 2.0.1.
+            // If we reach this point, it means the config file was either deleted or corrupted, but that is not our concern, we can just work on dfaults.
+        }
     }
+
+    private static void ValidateConfig()
+    {
+        ValidateRangeOption();
+    }
+
+    private static void ValidateRangeOption()
+    {
+        if (ClientConfig.range <= 0.0f)
+        {
+            LogUtil.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0f (infinite range).");
+            ClientConfig.range = -1.0f;
+        }
+    }
+
 #if DEBUG
     private static bool UsingServerConfig()
     {
@@ -174,7 +208,7 @@ public static class ModConfig
     {
         // ========== Source selection / eligibility =========
         // How far to pull from (-1 is infinite range, only limited by chunks loaded)
-        public float range = -1;
+        public float range = -1.0f;
 
         // if set to true it will ignore tile entities that aren't Storage Containers (crates)
         // otherwise will check all lootable containers placed by player(s)
