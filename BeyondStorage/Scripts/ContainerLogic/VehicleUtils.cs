@@ -8,10 +8,9 @@ public static class VehicleUtils
 {
     public static IEnumerable<EntityVehicle> GetAvailableVehicleStorages()
     {
-        // foreach (var vehicle in VehicleManager.Instance.vehiclesActive) {
         var player = GameManager.Instance.World.GetPrimaryPlayer();
         var playerPos = player.position;
-        var rangeConfig = ModConfig.Range();
+        var configRange = ModConfig.Range();
 
         foreach (var entity in GameManager.Instance.World.Entities.list)
         {
@@ -21,20 +20,9 @@ public static class VehicleUtils
                 continue;
             }
 
-            // skip vehicles without storage
-            if (!vehicle.hasStorage())
-            {
-                continue;
-            }
-
-            // skip vehicles locked for the player
-            if (vehicle.IsLockedForLocalPlayer(player))
-            {
-                continue;
-            }
-
             // skip vehicles outside of range
-            if (rangeConfig > 0 && Vector3.Distance(playerPos, vehicle.position) > rangeConfig)
+            bool isInRange = (configRange <= 0 || Vector3.Distance(playerPos, vehicle.position) < configRange);
+            if (!isInRange)
             {
                 continue;
             }
@@ -47,6 +35,18 @@ public static class VehicleUtils
 
             // skip if empty
             if (vehicle.bag.IsEmpty())
+            {
+                continue;
+            }
+
+            // skip vehicles without storage
+            if (!vehicle.hasStorage())
+            {
+                continue;
+            }
+
+            // skip vehicles locked for the player
+            if (vehicle.IsLockedForLocalPlayer(player))
             {
                 continue;
             }
