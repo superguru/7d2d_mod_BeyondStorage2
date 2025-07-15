@@ -2,6 +2,7 @@
 using System.Linq;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Utils;
+using Platform;
 using UnityEngine;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
@@ -13,8 +14,14 @@ public static class WorkstationUtils
         var player = GameManager.Instance.World.GetPrimaryPlayer();
         var playerPos = player.position;
         var configRange = ModConfig.Range();
-        var chunkCacheCopy = GameManager.Instance.World.ChunkCache.GetChunkArrayCopySync();
+        var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
 
+        var chunkCacheCopy = GameManager.Instance.World.ChunkCache.GetChunkArrayCopySync();
+        if (chunkCacheCopy == null)
+        {
+            LogUtil.Error("GetAvailableWorkstationOutputs: chunkCacheCopy is null");
+            yield break;
+        }
         LogUtil.DebugLog("Starting GetAvailableWorkstationOutputs()");
 
         foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
@@ -45,32 +52,37 @@ public static class WorkstationUtils
             }
 #endif
 
-            // isPlayerPlaced
-            // OutputEmpty
+            if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+            {
+                if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                {
+                    continue;
+                }
+            }
 
-            //// verify bag isn't null
-            //if (vehicle.bag == null)
-            //{
-            //    continue;
-            //}
+            if (!workstation.IsPlayerPlaced)
+            {
+                // Skip non player-placed workstations
+                continue;
+            }
 
-            //// skip if empty
-            //if (vehicle.bag.IsEmpty())
-            //{
-            //    continue;
-            //}
+            if (workstation.output == null || workstation.output.Count() == 0)
+            {
+                // Skip workstations without output
+                continue;
+            }
 
-            //// skip vehicles without storage
-            //if (!vehicle.hasStorage())
-            //{
-            //    continue;
-            //}
+            if (workstation.OutputEmpty())
+            {
+                // Skip workstations with empty output
+                continue;
+            }
 
-            //// skip vehicles locked for the player
-            //if (vehicle.IsLockedForLocalPlayer(player))
-            //{
-            //    continue;
-            //}
+            if (workstation.IsRemoving)
+            {
+                // Skip locked workstations for the player
+                continue;
+            }
 
             yield return workstation;
         }

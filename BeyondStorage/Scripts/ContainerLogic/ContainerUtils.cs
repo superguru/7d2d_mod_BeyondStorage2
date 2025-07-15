@@ -41,16 +41,18 @@ public static class ContainerUtils
 
         if (ModConfig.PullFromVehicleStorage())
         {
-            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages() ?? [];
             var vehicleResults = vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()) ?? [];
 
             results.Concat(vehicleResults);
         }
 
-        // TODO: Add workstation outputs
         if (ModConfig.PullFromWorkstationOutputs())
         {
+            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs() ?? [];
+            var workstationResults = workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()) ?? [];
 
+            results = results.Concat(workstationResults);
         }
 
         return results;
@@ -92,7 +94,15 @@ public static class ContainerUtils
 
         if (ModConfig.PullFromWorkstationOutputs())
         {
-            // TODO: Add workstation outputs
+            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
+            bool workstationHas = workstationOutputs != null &&
+                workstationOutputs.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>())
+                                  .Any(stack => stack?.itemValue?.type == itemValue.type);
+
+            if (workstationHas)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -153,23 +163,23 @@ public static class ContainerUtils
 
         if (ModConfig.PullFromWorkstationOutputs())
         {
-            int workstationOutputCount = 0;
+            int workstationOutputsCount = 0;
 #if DEBUG
             if (ModConfig.IsDebug())
             {
                 LogUtil.DebugLog("Will try to pull from Workstation Outputs");
             }
 #endif
-            var workstationOutput = WorkstationUtils.GetAvailableWorkstationOutputs();
-            workstationOutputCount = 0; // TODO: Add workstation outputs
+            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
+            workstationOutputsCount = CountItems(workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()), itemValue.type);
 
 #if DEBUG
             if (ModConfig.IsDebug())
             {
-                LogUtil.DebugLog($"Workstation Output count is {workstationOutputCount}");
+                LogUtil.DebugLog($"Workstation Output count is {workstationOutputsCount}");
             }
 #endif
-            totalCount += workstationOutputCount;
+            totalCount += workstationOutputsCount;
         }
 
         return totalCount;
@@ -396,6 +406,36 @@ public static class ContainerUtils
         // TODO: Add workstation outputs
         if (ModConfig.PullFromWorkstationOutputs())
         {
+            int beforeWorkstationOutputs = stillNeeded;
+            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs() ?? [];
+            foreach (var workstation in workstationOutputs)
+            {
+                var newRequiredAmount = RemoveItems(workstation.Output, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+                if (stillNeeded != newRequiredAmount)
+                {
+                    workstation.SetModified();
+                }
+
+                stillNeeded = newRequiredAmount;
+                if (stillNeeded == 0)
+                {
+                    break;
+                }
+            }
+#if DEBUG
+            if ((stillNeeded < 0) && LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"{d_method_name} | stillNeeded after WorkstationOutputs should not be negative, but is {stillNeeded}");
+                return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
+            }
+#endif
+
+            int workstationOutputsRemoved = beforeWorkstationOutputs - stillNeeded;
+            totalRemoved = originalAmountNeeded - stillNeeded;
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"{d_method_name} | WorkstationOutputs | Removed {workstationOutputsRemoved} {itemName}, stillNeeded {stillNeeded}");
+            }
         }
 
         return totalRemoved;
