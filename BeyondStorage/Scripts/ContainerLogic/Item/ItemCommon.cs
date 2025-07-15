@@ -15,8 +15,7 @@ public static class ItemCommon
         var stillNeeded = totalRequiredAmount - originalResult;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog(
-                $"ItemRemoveRemaining | item: {itemValue.ItemClass.GetItemName()}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
+            LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemValue.ItemClass.GetItemName()}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
         }
 
         // If we don't need anything else return the original result

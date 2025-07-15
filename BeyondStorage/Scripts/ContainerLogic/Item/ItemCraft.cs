@@ -36,15 +36,20 @@ public class ItemCraft
     //          Item Crafts - shown as available in the list
     public static void ItemCraftGetAllStorageStacks(List<ItemStack> items)
     {
-        if (LogUtil.IsDebug())
+        // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
+        if (items != null)
         {
-            LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count before {items.Count}");
-        }
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count before {items.Count}");
+            }
 
-        items.AddRange(ContainerUtils.GetItemStacks());
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count after {items.Count}");
+            items.AddRange(ContainerUtils.GetItemStacks());
+
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count after {items.Count}");
+            }
         }
     }
 

@@ -14,6 +14,7 @@ public static class Ranged
         {
             return false;
         }
+
         // otherwise look for ammo
         var canReloadFromStorage = ContainerUtils.HasItem(itemValue);
         if (LogUtil.IsDebug())
@@ -38,6 +39,8 @@ public static class Ranged
     //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - Remove Items For Reload)
     public static int RemoveAmmoForReload(ItemValue ammoType, bool isPerMag, int maxMagSize, int currentAmmo)
     {
+        // This is also called when refuelling something like an augur when there is nothing in the player inventory
+
         // return 0 if not enabled for reloading
         if (!ModConfig.EnableForReload())
         {
@@ -48,7 +51,7 @@ public static class Ranged
         var ammoRemovedFromStorage = ContainerUtils.RemoveRemaining(ammoType, ammoRequired);
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{ammoType.ItemClass.GetItemName()} {isPerMag} {maxMagSize} {currentAmmo} {ammoRemovedFromStorage}");
+            LogUtil.DebugLog($"RemoveAmmoForReload {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
         }
 
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;

@@ -7,15 +7,18 @@ public static class PowerSourceRefuel
 {
     public static int RefuelRemoveRemaining(ItemValue itemValue, int lastRemoved, int totalNeeded)
     {
-        const string d_method_name = "PowerSourceRefuel.RefuelRemoveRemaining";
+        const string d_method_name = "RefuelRemoveRemaining";
+        var itemName = itemValue.ItemClass.GetItemName();
 
         if (totalNeeded <= 0)
         {
+            LogUtil.DebugLog($"{d_method_name} - item {itemName}; totalNeeded {totalNeeded} <= 0, returning early"); // TODO: Remove once done debugging
             return 0;
         }
 
         if (lastRemoved >= totalNeeded)
         {
+            LogUtil.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: Remove once done debugging
             return lastRemoved;
         }
 
@@ -36,7 +39,7 @@ public static class PowerSourceRefuel
 
         if (LogUtil.IsDebug() && removed > 0)
         {
-            LogUtil.DebugLog($"{d_method_name} - item {itemValue.ItemClass.GetItemName()}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
+            LogUtil.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
         }
 
         return result;

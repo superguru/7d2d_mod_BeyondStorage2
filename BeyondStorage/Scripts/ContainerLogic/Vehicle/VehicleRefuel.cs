@@ -7,26 +7,30 @@ public static class VehicleRefuel
 {
     public static int VehicleRefuelRemoveRemaining(ItemValue itemValue, int lastRemovedCount, int totalRequired)
     {
-        // skip if not enabled
-        if (!ModConfig.EnableForVehicleRefuel())
-        {
-            return lastRemovedCount;
-        }
-#if DEBUG
-        if (LogUtil.IsDebug()) LogUtil.DebugLog("VehicleRefuelRemoveRemaining");
-#endif
         // skip if already at required amount
         if (lastRemovedCount == totalRequired)
         {
             return lastRemovedCount;
         }
 
+        // skip if we don't need to remove anything
+        if (totalRequired <= 0)
+        {
+            return lastRemovedCount;
+        }
+
+        // skip if not enabled
+        if (!ModConfig.EnableForVehicleRefuel())
+        {
+            return lastRemovedCount;
+        }
+
+        var itemName = itemValue.ItemClass.GetItemName();
         var newRequiredCount = totalRequired - lastRemovedCount;
         var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, newRequiredCount);
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog(
-                $"VehicleRefuelRemoveRemaining - item {itemValue.ItemClass.GetItemName()}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
+            LogUtil.DebugLog($"VehicleRefuelRemoveRemaining - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
         }
         // return new refueled count
         return lastRemovedCount + removedFromStorage;
@@ -34,9 +38,6 @@ public static class VehicleRefuel
 
     public static bool CanRefuel(EntityVehicle vehicle, bool originalResult)
     {
-#if DEBUG
-        if (LogUtil.IsDebug()) LogUtil.DebugLog("VehicleRefuel.CanRefuel");
-#endif
         // return early if already able to refuel from inventory
         if (originalResult)
         {

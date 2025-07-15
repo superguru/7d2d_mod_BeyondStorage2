@@ -6,10 +6,10 @@ namespace BeyondStorage.Scripts.Server;
 
 public class NetPackageBeyondStorageConfig : NetPackage
 {
-    private const ushort ConfigVersion = 1;
+    private const ushort ConfigVersion = 2;
 
     // TODO: Update number if more options being sent
-    private const ushort BoolCount = 9;
+    private const ushort BoolCount = 10;
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
 
@@ -32,6 +32,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(BoolCount);
         // #endif
 
+        // do not change the order of these
         binaryWriter.Write(ModConfig.ClientConfig.range);
         binaryWriter.Write(ModConfig.ClientConfig.enableForBlockRepair);
         binaryWriter.Write(ModConfig.ClientConfig.enableForBlockUpgrade);
@@ -42,6 +43,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.enableForVehicleRepair);
         binaryWriter.Write(ModConfig.ClientConfig.onlyStorageCrates);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
+        binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
 
         // #if DEBUG
         //         // testing backwards compatibility if we are sending more than expecting to receive (EX: newer config sent by server to client running older mod version)
@@ -75,6 +77,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         }
 
         // update server config (or set if it's first time)
+        // do not change the order of these
         ModConfig.ServerConfig.range = reader.ReadSingle();
         ModConfig.ServerConfig.enableForBlockRepair = reader.ReadBoolean();
         ModConfig.ServerConfig.enableForBlockUpgrade = reader.ReadBoolean();
@@ -85,6 +88,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModConfig.ServerConfig.enableForVehicleRepair = reader.ReadBoolean();
         ModConfig.ServerConfig.onlyStorageCrates = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromVehicleStorage = reader.ReadBoolean();
+        ModConfig.ServerConfig.pullFromWorkstationOutputs = reader.ReadBoolean();
+
         // Set HasServerConfig = true
         ServerUtils.HasServerConfig = true;
 
@@ -93,6 +98,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
             for (var i = 0; i < sentBoolCount - BoolCount; i++)
             {
                 // read/discard remaining booleans if more than expected
+                // this is for older clients
                 reader.ReadBoolean();
             }
         }
@@ -103,6 +109,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
             LogUtil.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
             LogUtil.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
             LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
+            LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
 
             LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
             LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
@@ -125,7 +132,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
 
     public override int GetLength()
     {
-        //  save room for 6 more bytes (future boolean options)
+        // save room for 6 more bytes (future boolean options)
+        // kept it 6 after introducing pullFromWorkstationOutputs
         const int futureReservedSpace = 6;
         const int ushortSize = 2;
         const int floatSize = 4;

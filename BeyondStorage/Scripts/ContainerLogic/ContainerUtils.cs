@@ -36,63 +36,146 @@ public static class ContainerUtils
 
     public static IEnumerable<ItemStack> GetItemStacks()
     {
-        var containerStorage = GetAvailableStorages();
-        var containerResults = containerStorage?.SelectMany(lootable => lootable.items) ?? Enumerable.Empty<ItemStack>();
+        var containerStorage = GetAvailableContainerStorages();
+        var results = containerStorage?.SelectMany(lootable => lootable?.items) ?? [];
 
-        if (!ModConfig.PullFromVehicleStorage())
+        if (ModConfig.PullFromVehicleStorage())
         {
-            return containerResults;
+            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+            var vehicleResults = vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()) ?? [];
+
+            results.Concat(vehicleResults);
         }
 
-        var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-        var vehicleResults = vehicleStorage?.SelectMany(vehicle => vehicle.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()) ?? Enumerable.Empty<ItemStack>();
+        // TODO: Add workstation outputs
+        if (ModConfig.PullFromWorkstationOutputs())
+        {
 
-        return containerResults.Concat(vehicleResults);
+        }
+
+        return results;
     }
 
     public static bool HasItem(ItemValue itemValue)
     {
-        var containerStorage = GetAvailableStorages();
+        if (itemValue == null || itemValue.IsEmpty())
+        {
+#if DEBUG
+            LogUtil.DebugLog($"HasItem Item is null or Empty");
+#endif
+            return false;
+        }
+
+        var containerStorage = GetAvailableContainerStorages();
         bool containerHas = containerStorage != null &&
-            containerStorage.SelectMany(lootable => lootable.items)
-                            .Any(stack => stack.itemValue.type == itemValue.type);
+            containerStorage.SelectMany(lootable => lootable?.items)
+                            .Any(stack => stack?.itemValue?.type == itemValue.type);
 
         if (containerHas)
         {
             return true;
         }
 
-        if (!ModConfig.PullFromVehicleStorage())
+        if (ModConfig.PullFromVehicleStorage())
         {
-            return false;
+
+            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+            bool vehicleHas = vehicleStorage != null &&
+                vehicleStorage.SelectMany(vehicle => vehicle?.bag?.items ?? Enumerable.Empty<ItemStack>())
+                              .Any(stack => stack?.itemValue?.type == itemValue.type);
+
+            if (vehicleHas)
+            {
+                return true;
+            }
         }
 
-        var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-        return vehicleStorage != null &&
-            vehicleStorage.SelectMany(vehicle => vehicle.bag?.items ?? Enumerable.Empty<ItemStack>())
-                          .Any(stack => stack.itemValue.type == itemValue.type);
+        if (ModConfig.PullFromWorkstationOutputs())
+        {
+            // TODO: Add workstation outputs
+        }
+
+        return false;
     }
 
     public static int GetItemCount(ItemValue itemValue)
     {
-        static int CountItems(IEnumerable<ItemStack> stacks, int type)
-            => stacks?.Where(stack => stack.itemValue.type == type).Sum(stack => stack.count) ?? 0;
-
-        var containerStorage = GetAvailableStorages();
-        int containerCount = CountItems(containerStorage?.SelectMany(lootable => lootable.items), itemValue.type);
-
-        if (!ModConfig.PullFromVehicleStorage())
+        if (itemValue == null || itemValue.IsEmpty())
         {
-            return containerCount;
+#if DEBUG
+            LogUtil.DebugLog($"GetItemCount Item is null or Empty");
+#endif
+            return 0;
         }
 
-        var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-        int vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle.bag?.items ?? Enumerable.Empty<ItemStack>()), itemValue.type);
+        static int CountItems(IEnumerable<ItemStack> stacks, int type)
+            => stacks?.Where(stack => stack?.itemValue?.type == type).Sum(stack => stack?.count) ?? 0;
 
-        return containerCount + vehicleCount;
+        var containerStorage = GetAvailableContainerStorages();
+        int containerCount = CountItems(containerStorage?.SelectMany(lootable => lootable?.items), itemValue.type);
+#if DEBUG
+        if (ModConfig.IsDebug())
+        {
+            LogUtil.DebugLog($"Container Storage count is {containerCount}");
+        }
+#endif
+        int totalCount = containerCount;
+
+        if (ModConfig.PullFromVehicleStorage())
+        {
+            int vehicleCount = 0;
+#if DEBUG
+            if (ModConfig.IsDebug())
+            {
+                LogUtil.DebugLog("Will try to pull from Vehicle Storage");
+            }
+#endif
+            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+            LogUtil.DebugLog("after getting vehicle storages");
+            vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.items ?? Enumerable.Empty<ItemStack>()), itemValue.type);
+            LogUtil.DebugLog("after getting vehicle storages count");
+
+#if DEBUG
+            if (ModConfig.IsDebug())
+            {
+                LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
+            }
+#endif
+
+#if DEBUG
+            if (ModConfig.IsDebug())
+            {
+                LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
+            }
+#endif
+            totalCount += vehicleCount;
+        }
+
+        if (ModConfig.PullFromWorkstationOutputs())
+        {
+            int workstationOutputCount = 0;
+#if DEBUG
+            if (ModConfig.IsDebug())
+            {
+                LogUtil.DebugLog("Will try to pull from Workstation Outputs");
+            }
+#endif
+            var workstationOutput = WorkstationUtils.GetAvailableWorkstationOutputs();
+            workstationOutputCount = 0; // TODO: Add workstation outputs
+
+#if DEBUG
+            if (ModConfig.IsDebug())
+            {
+                LogUtil.DebugLog($"Workstation Output count is {workstationOutputCount}");
+            }
+#endif
+            totalCount += workstationOutputCount;
+        }
+
+        return totalCount;
     }
 
-    private static IEnumerable<ITileEntityLootable> GetAvailableStorages()
+    private static IEnumerable<ITileEntityLootable> GetAvailableContainerStorages()
     {
         var player = GameManager.Instance.World.GetPrimaryPlayer();
         var playerPos = player.position;
@@ -104,6 +187,12 @@ public static class ContainerUtils
 
         foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
         {
+            bool isInRange = (configRange <= 0 || Vector3.Distance(playerPos, tileEntity.ToWorldPos()) < configRange);
+            if (!isInRange)
+            {
+                continue;
+            }
+
             if (!tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
             {
                 continue;
@@ -120,7 +209,8 @@ public static class ContainerUtils
             }
 
 #if DEBUG
-            LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
+            // TODO: Temporarily commented out while debugging adding new feature
+            // LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
 #endif
 
             if (LockedTileEntities.Count > 0)
@@ -140,27 +230,43 @@ public static class ContainerUtils
                 }
             }
 
-            if (configRange <= 0 || Vector3.Distance(playerPos, tileEntity.ToWorldPos()) < configRange)
-            {
-                yield return tileEntityLootable;
-            }
+            yield return tileEntityLootable;
         }
     }
 
-    private static int RemoveItems(ItemStack[] items, ItemValue desiredItem, int requiredAmount, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    private static int RemoveItems(ItemStack[] items, ItemValue desiredItem, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-        for (var index = 0; requiredAmount > 0 && index < items.Length; ++index)
+        if (desiredItem == null || desiredItem.IsEmpty() || stillNeeded <= 0)
         {
-            var stack = items[index];
-            if (stack.itemValue.type != desiredItem.type ||
-                (ignoreModdedItems && stack.itemValue.HasModSlots && stack.itemValue.HasMods()))
+            return stillNeeded;
+        }
+
+        foreach (var stack in items)
+        {
+            if (stillNeeded <= 0)
+            {
+                break;
+            }
+
+            if (stack == null)
             {
                 continue;
             }
 
-            if (ItemClass.GetForId(stack.itemValue.type).CanStack())
+            var itemValue = stack.itemValue;
+            if (itemValue == null || itemValue.type != desiredItem.type)
             {
-                var countToRemove = Mathf.Min(stack.count, requiredAmount);
+                continue;
+            }
+
+            if (ignoreModdedItems && itemValue.HasModSlots && itemValue.HasMods())
+            {
+                continue;
+            }
+
+            if (ItemClass.GetForId(itemValue.type).CanStack())
+            {
+                var countToRemove = Mathf.Min(stack.count, stillNeeded);
 #if DEBUG
                 if (LogUtil.IsDebug())
                 {
@@ -168,14 +274,14 @@ public static class ContainerUtils
                     LogUtil.DebugLog($"Item Count Before: {stack.count}");
                 }
 #endif
-                removedItems?.Add(new ItemStack(stack.itemValue.Clone(), countToRemove));
+                removedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
                 stack.count -= countToRemove;
-                requiredAmount -= countToRemove;
+                stillNeeded -= countToRemove;
 #if DEBUG
                 if (LogUtil.IsDebug())
                 {
                     LogUtil.DebugLog($"Item Count After: {stack.count}");
-                    LogUtil.DebugLog($"Required After: {requiredAmount}");
+                    LogUtil.DebugLog($"Required After: {stillNeeded}");
                 }
 #endif
                 if (stack.count <= 0)
@@ -187,75 +293,109 @@ public static class ContainerUtils
             {
                 removedItems?.Add(stack.Clone());
                 stack.Clear();
-                --requiredAmount;
+                --stillNeeded;
             }
         }
 
-        return requiredAmount;
+        return stillNeeded;
     }
 
-    public static int RemoveRemaining(ItemValue itemValue, int requiredAmount, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    public static int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-        const string d_method_name = "ContainerUtils.RemoveRemaining";
-        if (requiredAmount <= 0)
+        const string d_method_name = "RemoveRemaining";
+
+        if (itemValue == null || itemValue.IsEmpty() || stillNeeded <= 0)
         {
+#if DEBUG
+            LogUtil.DebugLog($"{d_method_name} | Null or empty item; stillNeeded {stillNeeded}; null is {itemValue == null}");
+#endif
             return 0;
         }
 
+        var itemName = itemValue.ItemClass.GetItemName();
+
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_method_name} | Trying to remove {requiredAmount} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Trying to remove {stillNeeded} {itemName}");
         }
 
-        var originalAmountNeeded = requiredAmount;
-        var containerStorage = GetAvailableStorages() ?? Enumerable.Empty<ITileEntityLootable>();
+        int originalAmountNeeded = stillNeeded;
+        int totalRemoved = 0;
+
+        var containerStorage = GetAvailableContainerStorages() ?? [];
 
         foreach (var tileEntityLootable in containerStorage)
         {
-            var newRequiredAmount = RemoveItems(tileEntityLootable.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
-            if (requiredAmount != newRequiredAmount)
+            var newRequiredAmount = RemoveItems(tileEntityLootable.items, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+            if (stillNeeded != newRequiredAmount)
             {
                 tileEntityLootable.SetModified();
             }
 
-            requiredAmount = newRequiredAmount;
-            if (requiredAmount <= 0)
+            stillNeeded = newRequiredAmount;
+            if (stillNeeded == 0)
             {
                 break;
             }
         }
 
-        var removedFromContainers = originalAmountNeeded - requiredAmount;
+#if DEBUG
+        if ((stillNeeded < 0) && LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog($"{d_method_name} | stillNeeded after Containers should not be negative, but is {stillNeeded}");
+            return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
+        }
+#endif
+
+        totalRemoved = originalAmountNeeded - stillNeeded;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {removedFromContainers} {itemValue.ItemClass.GetItemName()}");
+            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {totalRemoved} {itemName}, stillNeeded {stillNeeded}");
         }
 
-        if (requiredAmount <= 0 || !ModConfig.PullFromVehicleStorage())
+        if (stillNeeded == 0)
         {
-            return removedFromContainers;
+            return totalRemoved;
         }
 
-        var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages() ?? Enumerable.Empty<EntityVehicle>();
-        foreach (var vehicle in vehicleStorages)
+        if (ModConfig.PullFromVehicleStorage())
         {
-            var newRequiredAmount = RemoveItems(vehicle.bag.items, itemValue, requiredAmount, ignoreModdedItems, removedItems);
-            if (newRequiredAmount != requiredAmount)
+            int neededBeforeVehicles = stillNeeded;
+            var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages() ?? [];
+            foreach (var vehicle in vehicleStorages)
             {
-                vehicle.SetBagModified();
+                var newRequiredAmount = RemoveItems(vehicle.bag.items, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+                if (stillNeeded != newRequiredAmount)
+                {
+                    vehicle.SetBagModified();
+                }
+
+                stillNeeded = newRequiredAmount;
+                if (stillNeeded == 0)
+                {
+                    break;
+                }
             }
 
-            requiredAmount = newRequiredAmount;
-            if (requiredAmount <= 0)
+#if DEBUG
+            if ((stillNeeded < 0) && LogUtil.IsDebug())
             {
-                break;
+                LogUtil.DebugLog($"{d_method_name} | stillNeeded after Vehicles should not be negative, but is {stillNeeded}");
+                return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
+            }
+#endif
+
+            int vehiclesRemoved = neededBeforeVehicles - stillNeeded;
+            totalRemoved = originalAmountNeeded - stillNeeded;
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {vehiclesRemoved} {itemName}, stillNeeded {stillNeeded}");
             }
         }
 
-        var totalRemoved = originalAmountNeeded - requiredAmount;
-        if (LogUtil.IsDebug())
+        // TODO: Add workstation outputs
+        if (ModConfig.PullFromWorkstationOutputs())
         {
-            LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {totalRemoved - removedFromContainers} {itemValue.ItemClass.GetItemName()}");
         }
 
         return totalRemoved;

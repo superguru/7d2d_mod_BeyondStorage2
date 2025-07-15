@@ -30,6 +30,8 @@ public class BlockUpgrade
     //          Block Upgrade - Remove items
     public static int BlockUpgradeRemoveRemaining(int currentCount, ItemValue itemValue, int requiredCount)
     {
+        var itemName = itemValue.ItemClass.GetItemName();
+
         // skip if not enabled
         if (!ModConfig.EnableForBlockUpgrade())
         {
@@ -45,7 +47,7 @@ public class BlockUpgrade
 
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; requiredCount {requiredCount}");
+            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
         }
 
         var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, requiredCount - currentCount);
@@ -54,7 +56,7 @@ public class BlockUpgrade
         var result = currentCount + removedFromStorage;
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemValue.ItemClass.GetItemName()}; removed {removedFromStorage}; new result {result}");
+            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; removed {removedFromStorage}; new result {result}");
         }
 
         return result;

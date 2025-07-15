@@ -18,8 +18,7 @@ public class XUiCIngredientEntryPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_IngredientEntry_GetBindingValue_Patch(
-        IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> XUiC_IngredientEntry_GetBindingValue_Patch(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(XUiC_IngredientEntry)}.{nameof(XUiC_IngredientEntry.GetBindingValue)}";
         LogUtil.Info($"Transpiling {targetMethodString}");

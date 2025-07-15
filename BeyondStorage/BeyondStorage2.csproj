@@ -89,6 +89,7 @@
     <Compile Include="Scripts\ContainerLogic\Item\ItemRepair.cs" />
     <Compile Include="Scripts\ContainerLogic\PowerSource\PowerSourceRefuel.cs" />
     <Compile Include="Scripts\ContainerLogic\Ranged\Ranged.cs" />
+    <Compile Include="Scripts\ContainerLogic\WorkstationUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\VehicleUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRefuel.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRepair.cs" />
