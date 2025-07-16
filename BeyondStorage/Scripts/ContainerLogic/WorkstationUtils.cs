@@ -22,8 +22,9 @@ public static class WorkstationUtils
             LogUtil.Error("GetAvailableWorkstationOutputs: chunkCacheCopy is null");
             yield break;
         }
+#if DEBUG
         LogUtil.DebugLog("Starting GetAvailableWorkstationOutputs()");
-
+#endif
         foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
         {
             if (tileEntity is not TileEntityWorkstation workstation)
@@ -31,26 +32,12 @@ public static class WorkstationUtils
                 continue;
             }
 
-#if DEBUG
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Found Workstation of type {workstation.GetType().Name}");
-            }
-#endif
-
             // skip workstations outside of range
             bool isInRange = (configRange <= 0 || Vector3.Distance(playerPos, workstation.ToWorldPos()) < configRange);
             if (!isInRange)
             {
                 continue;
             }
-
-#if DEBUG
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Found Workstation of type {workstation.GetType().Name} in range");
-            }
-#endif
 
             if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
             {

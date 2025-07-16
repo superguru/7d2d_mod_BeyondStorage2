@@ -141,9 +141,7 @@ public static class ContainerUtils
             }
 #endif
             var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-            LogUtil.DebugLog("after getting vehicle storages");
             vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.items ?? Enumerable.Empty<ItemStack>()), itemValue.type);
-            LogUtil.DebugLog("after getting vehicle storages count");
 
 #if DEBUG
             if (ModConfig.IsDebug())
@@ -219,7 +217,7 @@ public static class ContainerUtils
             }
 
 #if DEBUG
-            // TODO: Temporarily commented out while debugging adding new feature
+            // TODO: You might want to comment the following line out while debugging new features
             // LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
 #endif
 
@@ -403,7 +401,6 @@ public static class ContainerUtils
             }
         }
 
-        // TODO: Add workstation outputs
         if (ModConfig.PullFromWorkstationOutputs())
         {
             int beforeWorkstationOutputs = stillNeeded;
@@ -411,9 +408,16 @@ public static class ContainerUtils
             foreach (var workstation in workstationOutputs)
             {
                 var newRequiredAmount = RemoveItems(workstation.Output, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+
+                if (LogUtil.IsDebug())
+                {
+                    LogUtil.DebugLog($"{d_method_name} | Workstation stillNeeded {stillNeeded} newRequiredAmount {newRequiredAmount}");
+                }
+
                 if (stillNeeded != newRequiredAmount)
                 {
-                    workstation.SetModified();
+                    LogUtil.DebugLog($"{d_method_name} | Marking Workstation {workstation.GetType().Name} as modified");
+                    MarkWorkstationModified(workstation);
                 }
 
                 stillNeeded = newRequiredAmount;
@@ -439,5 +443,54 @@ public static class ContainerUtils
         }
 
         return totalRemoved;
+    }
+
+    private static void MarkWorkstationModified(TileEntityWorkstation workstation)
+    {
+#if DEBUG
+        if (workstation == null)
+        {
+            LogUtil.Error("MarkWorkstationModified: workstation is null");
+            return;
+        }
+#endif
+        workstation.SetChunkModified();
+        workstation.SetModified();
+
+        string blockName = GameManager.Instance.World.GetBlock(workstation.ToWorldPos()).Block.GetBlockName();
+        WorkstationData workstationData = CraftingManager.GetWorkstationData(blockName);
+        if (workstationData != null)
+        {
+            string text = ((workstationData.WorkstationWindow != "") ? workstationData.WorkstationWindow : $"workstation_{blockName}");
+#if DEBUG
+            if (LogUtil.IsDebug())
+            {
+                LogUtil.DebugLog($"MarkWorkstationModified: blockName {blockName}, text {text}");
+            }
+#endif
+            var player = GameManager.Instance.World.GetPrimaryPlayer();
+
+            if (player.windowManager.HasWindow(text))
+            {
+#if DEBUG
+                if (LogUtil.IsDebug())
+                {
+                    LogUtil.DebugLog($"MarkWorkstationModified: Found window for {text}");
+                }
+#endif
+                var workstation_windowgroup = ((XUiC_WorkstationWindowGroup)((XUiWindowGroup)player.windowManager.GetWindow(text)).Controller);
+
+                workstation_windowgroup.syncUIfromTE();
+
+                if (LogUtil.IsDebug())
+                {
+                    LogUtil.DebugLog($"MarkWorkstationModified: Synced UI from TE for {text}");
+                }
+            }
+        }
+        else
+        {
+            LogUtil.Error($"MarkWorkstationModified: No WorkstationData found for block '{blockName}'");
+        }
     }
 }

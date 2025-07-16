@@ -65,6 +65,12 @@ public class ItemCraft
             LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; initialCount {count}; storageCount {storageCount}");
         }
 
+        if (storageCount > 0)
+        {
+            LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; adding storage count {storageCount} to count {count} and setting the window controller IsDirty = true");
+            entry.windowGroup.Controller.IsDirty = true;
+        }
+
         return count + storageCount;
     }
 

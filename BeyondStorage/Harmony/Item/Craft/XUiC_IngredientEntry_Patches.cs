@@ -25,6 +25,7 @@ public class XUiCIngredientEntryPatches
 
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
+        var patchCount = 0;
 
         for (var i = 0; i < codes.Count; i++)
         {
@@ -35,7 +36,7 @@ public class XUiCIngredientEntryPatches
 
             if (LogUtil.IsDebug())
             {
-                LogUtil.DebugLog("Adding method to add item counts from all storages");
+                LogUtil.DebugLog($"XUiC_IngredientEntry_GetBindingValue_Patch: Adding method to add item counts from all storages (patch #{++patchCount})");
             }
 
             found = true;
