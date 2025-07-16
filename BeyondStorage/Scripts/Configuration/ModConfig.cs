@@ -55,9 +55,9 @@ public static class ModConfig
 
     private static void ValidateRangeOption()
     {
-        if (ClientConfig.range <= 0.0f)
+        if (ClientConfig.range <= 0.0f && ClientConfig.range != -1.0f)
         {
-            LogUtil.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0f (infinite range).");
+            LogUtil.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
             ClientConfig.range = -1.0f;
         }
     }
@@ -223,7 +223,7 @@ public static class ModConfig
     public static bool IsDebugLogSettingsAccess()
 
     {
-        return ClientConfig.isDebugLogSettingsAccess;
+        return ClientConfig.isDebug && ClientConfig.isDebugLogSettingsAccess;
     }
 
     public static bool ServerSyncConfig()
