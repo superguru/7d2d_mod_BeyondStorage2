@@ -6,6 +6,7 @@ public static class WorkstationRecipe
 {
 #if DEBUG
     static int s_bg_calls = 0;
+    static int s_curr_calls = 0;
 #endif
     public static void BackgroundWorkstationCraftCompleted()
     {
@@ -18,6 +19,24 @@ public static class WorkstationRecipe
             LogUtil.DebugLog($"{d_MethodName} called {++s_bg_calls} times");
         }
 #endif
+        RefreshOpenWorkstationWindows(d_MethodName, s_bg_calls);
+    }
+    public static void CurrentWorkstationCraftCompleted()
+    {
+        // This is called when the recipe finishes crafting on the currently opened workstation window
+        string d_MethodName = "CurrentWorkstationCraftCompleted";
+
+#if DEBUG
+        if (LogUtil.IsDebug())
+        {
+            LogUtil.DebugLog($"{d_MethodName} called {++s_curr_calls} times");
+        }
+#endif
+        RefreshOpenWorkstationWindows(d_MethodName, s_curr_calls);
+    }
+
+    private static void RefreshOpenWorkstationWindows(string d_MethodName, int debugCallCount)
+    {
         var player = GameManager.Instance.World?.GetPrimaryPlayer();
         if (player == null)
         {
@@ -37,7 +56,7 @@ public static class WorkstationRecipe
                         if (wg?.Controller is XUiC_WorkstationWindowGroup workstationWindowGroup)
                         {
 #if DEBUG
-                            LogUtil.DebugLog($"{d_MethodName} found open workstation window in call {s_bg_calls}. Refreshing the recipes.");
+                            LogUtil.DebugLog($"{d_MethodName} found open workstation window in call {debugCallCount}. Refreshing the recipes.");
 #endif
                             var recipeList = workstationWindowGroup.recipeList;
                             recipeList?.RefreshRecipes();
