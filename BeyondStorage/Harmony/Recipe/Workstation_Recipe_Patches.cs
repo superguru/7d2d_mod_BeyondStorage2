@@ -17,7 +17,7 @@ public class WorkstationRecipePatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_WorkstationWindowGroup_Update_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> TileEntityWorkstation_AddCraftComplete_Patch(IEnumerable<CodeInstruction> instructions)
     {
         // This is called when the recipe finishes crafting on a NON-visible window
         var targetMethodString = $"{typeof(TileEntityWorkstation)}.{nameof(TileEntityWorkstation.AddCraftComplete)}";
