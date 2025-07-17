@@ -5,8 +5,6 @@ namespace BeyondStorage.Scripts.ContainerLogic.Item;
 
 public class ItemCraft
 {
-    internal static bool IngredientListShown { get; set; }
-
     // Used By:
     //      XUiC_RecipeCraftCount.calcMaxCraftable
     //          Item Crafting - gets max craftable amount

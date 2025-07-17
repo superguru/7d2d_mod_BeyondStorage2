@@ -28,7 +28,6 @@ public class ItemActionEntryRepairPatches
 
         if (startIndex != -1)
         {
-            // if (LogUtil.IsDebug()) LogUtil.DebugLog($"Patching {targetMethodString}");
             LogUtil.Info($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [

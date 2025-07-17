@@ -447,6 +447,7 @@ public static class ContainerUtils
 
     private static void MarkWorkstationModified(TileEntityWorkstation workstation)
     {
+        // This happens when items are removed from a workstation's output, such as when pulling items from the workstation
 #if DEBUG
         if (workstation == null)
         {
@@ -479,18 +480,24 @@ public static class ContainerUtils
                 }
 #endif
                 var workstation_windowgroup = ((XUiC_WorkstationWindowGroup)((XUiWindowGroup)player.windowManager.GetWindow(text)).Controller);
+                if (workstation_windowgroup == null)
+                {
+                    LogUtil.Error($"MarkWorkstationModified: workstation_windowgroup is null for {text}");
+                    return;
+                }
 
                 workstation_windowgroup.syncUIfromTE();
-
+#if DEBUG
                 if (LogUtil.IsDebug())
                 {
                     LogUtil.DebugLog($"MarkWorkstationModified: Synced UI from TE for {text}");
                 }
+#endif
             }
-        }
-        else
-        {
-            LogUtil.Error($"MarkWorkstationModified: No WorkstationData found for block '{blockName}'");
+            else
+            {
+                LogUtil.Error($"MarkWorkstationModified: No WorkstationData found for block '{blockName}'");
+            }
         }
     }
 }

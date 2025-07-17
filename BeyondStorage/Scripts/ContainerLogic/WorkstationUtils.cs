@@ -25,11 +25,11 @@ public static class WorkstationUtils
 #if DEBUG
         LogUtil.DebugLog("Starting GetAvailableWorkstationOutputs()");
 #endif
-        foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
+        foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list.Where(item => item is TileEntityWorkstation)))
         {
             if (tileEntity is not TileEntityWorkstation workstation)
             {
-                continue;
+                continue;  // Interesting...
             }
 
             // skip workstations outside of range
