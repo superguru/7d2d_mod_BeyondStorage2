@@ -4,19 +4,19 @@ using BeyondStorage.Scripts.Utils;
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
 public static class WorkstationRecipe
 {
-#if DEBUG
     static int s_bg_calls = 0;
     static int s_curr_calls = 0;
-#endif
+
     public static void BackgroundWorkstationCraftCompleted()
     {
         // This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
         string d_MethodName = "BackgroundWorkstationCraftComplete";
+        s_bg_calls++;
 
 #if DEBUG
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_MethodName} called {++s_bg_calls} times");
+            LogUtil.DebugLog($"{d_MethodName} called {s_bg_calls} times");
         }
 #endif
         RefreshOpenWorkstationWindows(d_MethodName, s_bg_calls);
@@ -25,22 +25,23 @@ public static class WorkstationRecipe
     {
         // This is called when the recipe finishes crafting on the currently opened workstation window
         string d_MethodName = "CurrentWorkstationCraftCompleted";
+        s_curr_calls++;
 
 #if DEBUG
         if (LogUtil.IsDebug())
         {
-            LogUtil.DebugLog($"{d_MethodName} called {++s_curr_calls} times");
+            LogUtil.DebugLog($"{d_MethodName} called {s_curr_calls} times");
         }
 #endif
         RefreshOpenWorkstationWindows(d_MethodName, s_curr_calls);
     }
 
-    private static void RefreshOpenWorkstationWindows(string d_MethodName, int debugCallCount)
+    private static void RefreshOpenWorkstationWindows(string d_MethodName, int callCount)
     {
         var player = GameManager.Instance.World?.GetPrimaryPlayer();
         if (player == null)
         {
-            LogUtil.Error($"{d_MethodName}: primary player is null");
+            LogUtil.Error($"{d_MethodName}: primary player is null in call {callCount}");
             return;
         }
 
@@ -58,13 +59,13 @@ public static class WorkstationRecipe
 #if DEBUG
                             LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {debugCallCount}");
 #endif
-                            var recipeList = workstationWindowGroup.recipeList;
+                            var recipeList = workstationWindowGroup?.recipeList;
                             recipeList?.RefreshRecipes();
 
 #if DEBUG
                             LogUtil.DebugLog($"{d_MethodName} Refreshing the action list for open workstation in call {debugCallCount}");
 #endif
-                            var craftInfoWindow = workstationWindowGroup.craftInfoWindow;
+                            var craftInfoWindow = workstationWindowGroup?.craftInfoWindow;
                             craftInfoWindow?.actionItemList?.RefreshActionList();
                         }
                     }
