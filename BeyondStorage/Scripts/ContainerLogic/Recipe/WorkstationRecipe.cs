@@ -5,8 +5,8 @@ using BeyondStorage.Scripts.Utils;
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
 public static class WorkstationRecipe
 {
-    static int s_bg_calls = 0;
-    static int s_curr_calls = 0;
+    private static int s_bg_calls = 0;
+    private static int s_curr_calls = 0;
 
     public static void BackgroundWorkstationCraftCompleted()
     {

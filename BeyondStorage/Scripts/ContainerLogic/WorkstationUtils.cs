@@ -70,6 +70,18 @@ public static class WorkstationUtils
                 continue;
             }
 
+            if (ContainerUtils.LockedTileEntities.Count > 0)
+            {
+                var pos = workstation.ToWorldPos();
+                if (ContainerUtils.LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != player.entityId)
+                {
+                    continue;
+                }
+            }
+#if DEBUG
+            // TODO: You might want to comment the following line out while debugging new features
+            LogUtil.DebugLog($"TE_WS: {workstation}; Locked Count: {ContainerUtils.LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
+#endif
             yield return workstation;
         }
     }

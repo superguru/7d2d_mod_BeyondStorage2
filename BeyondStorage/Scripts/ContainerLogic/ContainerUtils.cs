@@ -174,24 +174,22 @@ public static class ContainerUtils
             {
                 continue;
             }
-
 #if DEBUG
             // TODO: You might want to comment the following line out while debugging new features
             // LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
 #endif
-
-            if (LockedTileEntities.Count > 0)
+            if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
             {
-                var pos = tileEntityLootable.ToWorldPos();
-                if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != player.entityId)
+                if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
                 {
                     continue;
                 }
             }
 
-            if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+            if (LockedTileEntities.Count > 0)
             {
-                if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                var pos = tileEntityLootable.ToWorldPos();
+                if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != player.entityId)
                 {
                     continue;
                 }

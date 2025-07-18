@@ -106,19 +106,28 @@ public static class ServerUtils
         // Remove anything not player storage
         foreach (var kvp in newLockedDict)
         {
-            // Skip anything not ITileEntityLootable
-            if (!kvp.Key.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
-            {
-                continue;
-            }
+            Vector3i tePos;
 
-            // Skip any lootables not of player storage
-            if (!tileEntityLootable.bPlayerStorage)
+            if (kvp.Key.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
             {
-                continue;
-            }
+                // Handle lootable TEs
+                if (!tileEntityLootable.bPlayerStorage)
+                {
+                    continue;
+                }
 
-            var tePos = tileEntityLootable.ToWorldPos();
+                tePos = tileEntityLootable.ToWorldPos();
+            }
+            else
+            {
+                // Handle workstations
+                if (kvp.Key is not TileEntityWorkstation workstation)
+                {
+                    continue;
+                }
+
+                tePos = workstation.ToWorldPos();
+            }
 
             // Add current entry to our new dict for clients
             tempDict.Add(tePos, kvp.Value);
