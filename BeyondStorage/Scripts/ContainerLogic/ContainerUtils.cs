@@ -28,10 +28,7 @@ public static class ContainerUtils
     public static void UpdateLockedTEs(Dictionary<Vector3i, int> lockedTileEntities)
     {
         LockedTileEntities = new ConcurrentDictionary<Vector3i, int>(lockedTileEntities);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
-        }
+        LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
     }
 
     public static IEnumerable<ItemStack> GetItemStacks()
@@ -124,10 +121,7 @@ public static class ContainerUtils
         var containerStorage = GetAvailableContainerStorages();
         int containerCount = CountItems(containerStorage?.SelectMany(lootable => lootable?.items), itemValue.type);
 #if DEBUG
-        if (ModConfig.IsDebug())
-        {
-            LogUtil.DebugLog($"Container Storage count is {containerCount}");
-        }
+        LogUtil.DebugLog($"Container Storage count is {containerCount}");
 #endif
         int totalCount = containerCount;
 
@@ -135,26 +129,17 @@ public static class ContainerUtils
         {
             int vehicleCount = 0;
 #if DEBUG
-            if (ModConfig.IsDebug())
-            {
-                LogUtil.DebugLog("Will try to pull from Vehicle Storage");
-            }
+            LogUtil.DebugLog("Will try to pull from Vehicle Storage");
 #endif
             var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
             vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.items ?? Enumerable.Empty<ItemStack>()), itemValue.type);
 
 #if DEBUG
-            if (ModConfig.IsDebug())
-            {
-                LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
-            }
+            LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
 #endif
 
 #if DEBUG
-            if (ModConfig.IsDebug())
-            {
-                LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
-            }
+            LogUtil.DebugLog($"Vehicle Storage count is {vehicleCount}");
 #endif
             totalCount += vehicleCount;
         }
@@ -163,19 +148,13 @@ public static class ContainerUtils
         {
             int workstationOutputsCount = 0;
 #if DEBUG
-            if (ModConfig.IsDebug())
-            {
-                LogUtil.DebugLog("Will try to pull from Workstation Outputs");
-            }
+            LogUtil.DebugLog("Will try to pull from Workstation Outputs");
 #endif
             var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
             workstationOutputsCount = CountItems(workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()), itemValue.type);
 
 #if DEBUG
-            if (ModConfig.IsDebug())
-            {
-                LogUtil.DebugLog($"Workstation Output count is {workstationOutputsCount}");
-            }
+            LogUtil.DebugLog($"Workstation Output count is {workstationOutputsCount}");
 #endif
             totalCount += workstationOutputsCount;
         }
@@ -276,21 +255,15 @@ public static class ContainerUtils
             {
                 var countToRemove = Mathf.Min(stack.count, stillNeeded);
 #if DEBUG
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"Item Count: {stack.count} Count To Remove: {countToRemove}");
-                    LogUtil.DebugLog($"Item Count Before: {stack.count}");
-                }
+                LogUtil.DebugLog($"Item Count: {stack.count} Count To Remove: {countToRemove}");
+                LogUtil.DebugLog($"Item Count Before: {stack.count}");
 #endif
                 removedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
                 stack.count -= countToRemove;
                 stillNeeded -= countToRemove;
 #if DEBUG
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"Item Count After: {stack.count}");
-                    LogUtil.DebugLog($"Required After: {stillNeeded}");
-                }
+                LogUtil.DebugLog($"Item Count After: {stack.count}");
+                LogUtil.DebugLog($"Required After: {stillNeeded}");
 #endif
                 if (stack.count <= 0)
                 {
@@ -322,10 +295,7 @@ public static class ContainerUtils
 
         var itemName = itemValue.ItemClass.GetItemName();
 
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"{d_method_name} | Trying to remove {stillNeeded} {itemName}");
-        }
+        LogUtil.DebugLog($"{d_method_name} | Trying to remove {stillNeeded} {itemName}");
 
         int originalAmountNeeded = stillNeeded;
         int totalRemoved = 0;
@@ -348,7 +318,7 @@ public static class ContainerUtils
         }
 
 #if DEBUG
-        if ((stillNeeded < 0) && LogUtil.IsDebug())
+        if (stillNeeded < 0)
         {
             LogUtil.DebugLog($"{d_method_name} | stillNeeded after Containers should not be negative, but is {stillNeeded}");
             return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
@@ -356,10 +326,7 @@ public static class ContainerUtils
 #endif
 
         totalRemoved = originalAmountNeeded - stillNeeded;
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"{d_method_name} | Containers | Removed {totalRemoved} {itemName}, stillNeeded {stillNeeded}");
-        }
+        LogUtil.DebugLog($"{d_method_name} | Containers | Removed {totalRemoved} {itemName}, stillNeeded {stillNeeded}");
 
         if (stillNeeded == 0)
         {
@@ -386,7 +353,7 @@ public static class ContainerUtils
             }
 
 #if DEBUG
-            if ((stillNeeded < 0) && LogUtil.IsDebug())
+            if (stillNeeded < 0)
             {
                 LogUtil.DebugLog($"{d_method_name} | stillNeeded after Vehicles should not be negative, but is {stillNeeded}");
                 return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
@@ -395,10 +362,7 @@ public static class ContainerUtils
 
             int vehiclesRemoved = neededBeforeVehicles - stillNeeded;
             totalRemoved = originalAmountNeeded - stillNeeded;
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {vehiclesRemoved} {itemName}, stillNeeded {stillNeeded}");
-            }
+            LogUtil.DebugLog($"{d_method_name} | Vehicles | Removed {vehiclesRemoved} {itemName}, stillNeeded {stillNeeded}");
         }
 
         if (ModConfig.PullFromWorkstationOutputs())
@@ -409,10 +373,7 @@ public static class ContainerUtils
             {
                 var newRequiredAmount = RemoveItems(workstation.Output, itemValue, stillNeeded, ignoreModdedItems, removedItems);
 
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"{d_method_name} | Workstation stillNeeded {stillNeeded} newRequiredAmount {newRequiredAmount}");
-                }
+                LogUtil.DebugLog($"{d_method_name} | Workstation stillNeeded {stillNeeded} newRequiredAmount {newRequiredAmount}");
 
                 if (stillNeeded != newRequiredAmount)
                 {
@@ -427,7 +388,7 @@ public static class ContainerUtils
                 }
             }
 #if DEBUG
-            if ((stillNeeded < 0) && LogUtil.IsDebug())
+            if (stillNeeded < 0)
             {
                 LogUtil.DebugLog($"{d_method_name} | stillNeeded after WorkstationOutputs should not be negative, but is {stillNeeded}");
                 return 0;  // Not sure what to do here, but returning 0 to avoid negative stillNeeded
@@ -436,10 +397,7 @@ public static class ContainerUtils
 
             int workstationOutputsRemoved = beforeWorkstationOutputs - stillNeeded;
             totalRemoved = originalAmountNeeded - stillNeeded;
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"{d_method_name} | WorkstationOutputs | Removed {workstationOutputsRemoved} {itemName}, stillNeeded {stillNeeded}");
-            }
+            LogUtil.DebugLog($"{d_method_name} | WorkstationOutputs | Removed {workstationOutputsRemoved} {itemName}, stillNeeded {stillNeeded}");
         }
 
         return totalRemoved;
@@ -464,20 +422,14 @@ public static class ContainerUtils
         {
             string text = ((workstationData.WorkstationWindow != "") ? workstationData.WorkstationWindow : $"workstation_{blockName}");
 #if DEBUG
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"MarkWorkstationModified: blockName {blockName}, text {text}");
-            }
+            LogUtil.DebugLog($"MarkWorkstationModified: blockName {blockName}, text {text}");
 #endif
             var player = GameManager.Instance.World.GetPrimaryPlayer();
 
             if (player.windowManager.HasWindow(text))
             {
 #if DEBUG
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"MarkWorkstationModified: Found window for {text}");
-                }
+                LogUtil.DebugLog($"MarkWorkstationModified: Found window for {text}");
 #endif
                 var workstation_windowgroup = ((XUiC_WorkstationWindowGroup)((XUiWindowGroup)player.windowManager.GetWindow(text)).Controller);
                 if (workstation_windowgroup == null)
@@ -507,10 +459,7 @@ public static class ContainerUtils
 
                 workstation_windowgroup.syncUIfromTE();
 #if DEBUG
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"MarkWorkstationModified: Synced UI from TE for {text}");
-                }
+                LogUtil.DebugLog($"MarkWorkstationModified: Synced UI from TE for {text}");
 #endif
             }
             else

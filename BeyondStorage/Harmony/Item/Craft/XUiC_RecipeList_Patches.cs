@@ -52,10 +52,7 @@ public class XUiCRecipeListPatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Adding method to add items from all storages");
-            }
+            LogUtil.DebugLog("Adding method to add items from all storages");
 
             found = true;
             // IL_008b: ldarg.0      // this [Label 4]

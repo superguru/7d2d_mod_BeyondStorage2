@@ -37,7 +37,7 @@ public static class PowerSourceRefuel
 
         int result = lastRemoved + removed;
 
-        if (LogUtil.IsDebug() && removed > 0)
+        if (removed > 0)
         {
             LogUtil.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
         }

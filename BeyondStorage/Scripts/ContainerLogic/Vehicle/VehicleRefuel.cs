@@ -28,10 +28,7 @@ public static class VehicleRefuel
         var itemName = itemValue.ItemClass.GetItemName();
         var newRequiredCount = totalRequired - lastRemovedCount;
         var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, newRequiredCount);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"VehicleRefuelRemoveRemaining - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
-        }
+        LogUtil.DebugLog($"VehicleRefuelRemoveRemaining - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
         // return new refueled count
         return lastRemovedCount + removedFromStorage;
     }
@@ -53,10 +50,7 @@ public static class VehicleRefuel
 
         var fuelItemValue = ItemClass.GetItem(fuelItem);
         var storageHas = ContainerUtils.HasItem(fuelItemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"VehicleRefuel.CanRefuel - fuelItem {fuelItem}; storageHas {storageHas}");
-        }
+        LogUtil.DebugLog($"VehicleRefuel.CanRefuel - fuelItem {fuelItem}; storageHas {storageHas}");
 
         return storageHas;
     }

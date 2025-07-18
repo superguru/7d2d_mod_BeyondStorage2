@@ -43,10 +43,7 @@ public class EntityVehiclePatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Patching {targetMethodString}");
-            }
+            LogUtil.DebugLog($"Patching {targetMethodString}");
 
             found = true;
             List<CodeInstruction> newCode = [

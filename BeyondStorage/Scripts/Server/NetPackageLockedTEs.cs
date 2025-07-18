@@ -86,10 +86,7 @@ public class NetPackageLockedTEs : NetPackage
 
         ContainerUtils.UpdateLockedTEs(LockedTileEntities);
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"NetPackageLockedTEs: size {Length}; count {EntryCount}");
-        }
+        LogUtil.DebugLog($"NetPackageLockedTEs: size {Length}; count {EntryCount}");
 #endif
     }
 

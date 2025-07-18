@@ -23,10 +23,7 @@ public static class ServerUtils
             return;
         }
 
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"client {data.ClientInfo}; isLocalPlayer {data.IsLocalPlayer}; entityId {data.EntityId}; respawn type {data.RespawnType}; pos {data.Position}");
-        }
+        LogUtil.DebugLog($"client {data.ClientInfo}; isLocalPlayer {data.IsLocalPlayer}; entityId {data.EntityId}; respawn type {data.RespawnType}; pos {data.Position}");
 
         if (data.ClientInfo == null)
         {
@@ -50,10 +47,7 @@ public static class ServerUtils
 
         var destinationId = client.entityId;
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"PlayerSpawnedInWorld called with {destinationId}");
-        }
+        LogUtil.DebugLog($"PlayerSpawnedInWorld called with {destinationId}");
         // skip if invalid entity ID or if we are the server just logging in
         if (destinationId == -1)
         {
@@ -63,11 +57,7 @@ public static class ServerUtils
 
         if (!GameManager.IsDedicatedServer && destinationId == GameManager.Instance.myEntityPlayerLocal.entityId)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Skipping local player starting server");
-            }
-
+            LogUtil.DebugLog("Skipping local player starting server");
             return;
         }
 #else
@@ -91,10 +81,7 @@ public static class ServerUtils
         client.SendPackage(NetPackageManager.GetPackage<NetPackageLockedTEs>().Setup(currentCopy));
         // SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(currentCopy), true, destinationId);
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"SendCurrentLockedDict to {destinationId}");
-        }
+        LogUtil.DebugLog($"SendCurrentLockedDict to {destinationId}");
 #endif
     }
 
@@ -165,10 +152,7 @@ public static class ServerUtils
             return;
         }
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"Original Count: {newLockedDict.Count}; Filter Count: {newCount}");
-        }
+        LogUtil.DebugLog($"Original Count: {newLockedDict.Count}; Filter Count: {newCount}");
 #endif
         // Update clients with filtered list
         SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));

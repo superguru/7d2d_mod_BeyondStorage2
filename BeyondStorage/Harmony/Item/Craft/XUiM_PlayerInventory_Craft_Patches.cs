@@ -30,10 +30,7 @@ public class XUiMPlayerInventoryCraftPatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Patching {targetMethodString}");
-            }
+            LogUtil.DebugLog($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [
                 // _itemStacks

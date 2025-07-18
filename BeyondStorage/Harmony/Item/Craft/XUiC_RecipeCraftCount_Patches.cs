@@ -35,10 +35,7 @@ public class XUiCRecipeCraftCountPatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Appending our item stacks to current inventory");
-            }
+            LogUtil.DebugLog("Appending our item stacks to current inventory");
 
             // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetAllItemStacks()).ToArray()
             codes.Insert(i + 1,

@@ -13,17 +13,11 @@ public class ItemCraft
         // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
         if (items != null)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount before {items.Count}");
-            }
+            LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount before {items.Count}");
 
             items.AddRange(ContainerUtils.GetItemStacks());
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount after {items.Count}");
-            }
+            LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount after {items.Count}");
         }
 
         return items;
@@ -37,17 +31,11 @@ public class ItemCraft
         // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
         if (items != null)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count before {items.Count}");
-            }
+            LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count before {items.Count}");
 
             items.AddRange(ContainerUtils.GetItemStacks());
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count after {items.Count}");
-            }
+            LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count after {items.Count}");
         }
     }
 
@@ -58,10 +46,7 @@ public class ItemCraft
     {
         var itemValue = entry.Ingredient.itemValue;
         var storageCount = ContainerUtils.GetItemCount(itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; initialCount {count}; storageCount {storageCount}");
-        }
+        LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; initialCount {count}; storageCount {storageCount}");
 
         if (storageCount > 0)
         {
@@ -79,10 +64,7 @@ public class ItemCraft
     public static int HasItemGetItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
     {
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"HasItemGetItemCount {itemStacks}; {i}; {numLeft}");
-        }
+        LogUtil.DebugLog($"HasItemGetItemCount {itemStacks}; {i}; {numLeft}");
 #endif
         if (numLeft <= 0)
         {
@@ -90,10 +72,7 @@ public class ItemCraft
         }
 
         var storageCount = ContainerUtils.GetItemCount(itemStacks[i].itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"HasItemGetItemCount | item {itemStacks[i].itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
-        }
+        LogUtil.DebugLog($"HasItemGetItemCount | item {itemStacks[i].itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return numLeft - storageCount;
     }

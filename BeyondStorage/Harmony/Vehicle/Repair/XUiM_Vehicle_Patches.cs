@@ -29,10 +29,7 @@ public class XUiMVehiclePatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Patching {targetMethodString}");
-            }
+            LogUtil.DebugLog($"Patching {targetMethodString}");
 
             found = true;
             // define new lable

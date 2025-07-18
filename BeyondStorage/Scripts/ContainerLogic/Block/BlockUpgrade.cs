@@ -17,10 +17,7 @@ public class BlockUpgrade
         }
 
         var result = ContainerUtils.GetItemCount(itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockUpgradeGetItemCount | item {itemValue.ItemClass.GetItemName()}; count {result}");
-        }
+        LogUtil.DebugLog($"BlockUpgradeGetItemCount | item {itemValue.ItemClass.GetItemName()}; count {result}");
 
         return result;
     }
@@ -45,19 +42,13 @@ public class BlockUpgrade
             return currentCount;
         }
 
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
-        }
+        LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
 
         var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, requiredCount - currentCount);
 
         // add amount removed from storage to previous removed count to update result
         var result = currentCount + removedFromStorage;
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; removed {removedFromStorage}; new result {result}");
-        }
+        LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; removed {removedFromStorage}; new result {result}");
 
         return result;
     }

@@ -29,10 +29,7 @@ public class XUiCPowerSourceStatsPatches
                 codeList[i].operand is MethodInfo mi &&
                 mi == AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
             {
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog($"Patching {targetMethodString} at instruction {i}");
-                }
+                LogUtil.DebugLog($"Patching {targetMethodString} at instruction {i}");
 
                 // Ensure we have enough instructions before and after for safe patching
                 if (i - 5 >= 0 && i + 2 < codeList.Count)
@@ -68,7 +65,7 @@ public class XUiCPowerSourceStatsPatches
         {
             LogUtil.Error($"Failed to patch {targetMethodString}: target instruction not found.");
         }
-        else if (LogUtil.IsDebug())
+        else if (patchApplied)
         {
             LogUtil.DebugLog($"Successfully patched {targetMethodString}");
         }

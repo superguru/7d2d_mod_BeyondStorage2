@@ -17,10 +17,7 @@ public static class Ranged
 
         // otherwise look for ammo
         var canReloadFromStorage = ContainerUtils.HasItem(itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"canReloadFromStorage: {canReloadFromStorage}");
-        }
+        LogUtil.DebugLog($"canReloadFromStorage: {canReloadFromStorage}");
 
         return canReloadFromStorage;
     }
@@ -49,10 +46,7 @@ public static class Ranged
 
         var ammoRequired = isPerMag ? 1 : maxMagSize - currentAmmo;
         var ammoRemovedFromStorage = ContainerUtils.RemoveRemaining(ammoType, ammoRequired);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"RemoveAmmoForReload {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
-        }
+        LogUtil.DebugLog($"RemoveAmmoForReload {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
 
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;
     }

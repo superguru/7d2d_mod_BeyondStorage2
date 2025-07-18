@@ -19,10 +19,7 @@ public class BlockRepair
         }
 
         var result = ContainerUtils.GetItemCount(itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockRepairGetItemCount | item {itemName}; result {result}");
-        }
+        LogUtil.DebugLog($"BlockRepairGetItemCount | item {itemName}; result {result}");
 
         return result;
     }
@@ -43,10 +40,7 @@ public class BlockRepair
         // itemStack.count is total amount needed
         // currentCount is the amount removed previously in last DecItem
         var stillNeeded = itemStack.count - currentCount;
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockRepairRemoveRemaining | itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
-        }
+        LogUtil.DebugLog($"BlockRepairRemoveRemaining | itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
 
         // Skip if already 0
         if (stillNeeded == 0)
@@ -56,10 +50,7 @@ public class BlockRepair
 
         // Add amount removed from storage to last amount removed to update result
         var totalRemoved = currentCount + ContainerUtils.RemoveRemaining(itemStack.itemValue, stillNeeded);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"BlockRepairRemoveRemaining | total removed {totalRemoved}; stillNeeded {stillNeeded}");
-        }
+        LogUtil.DebugLog($"BlockRepairRemoveRemaining | total removed {totalRemoved}; stillNeeded {stillNeeded}");
 
         return totalRemoved;
     }

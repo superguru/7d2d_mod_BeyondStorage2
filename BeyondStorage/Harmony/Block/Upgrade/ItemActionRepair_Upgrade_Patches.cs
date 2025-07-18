@@ -52,10 +52,7 @@ public class ItemActionRepairUpgradePatches
 
         if (targetIndex > -1)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Adding method to count items from all storages");
-            }
+            LogUtil.DebugLog("Adding method to count items from all storages");
 
             var newLabel = generator.DefineLabel();
             // ldloc.s  _itemValue [newLabel]
@@ -111,10 +108,7 @@ public class ItemActionRepairUpgradePatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Adding method to remove items from all storages");
-            }
+            LogUtil.DebugLog("Adding method to remove items from all storages");
 
             found = true;
             List<CodeInstruction> newCode = [

@@ -15,10 +15,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
 
     public override void write(PooledBinaryWriter _writer)
     {
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"Sending config, version {ConfigVersion}, to client.");
-        }
+        LogUtil.DebugLog($"Sending config, version {ConfigVersion}, to client.");
 
         base.write(_writer);
 
@@ -59,10 +56,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
     {
         var configVersion = reader.ReadUInt16();
         var sentBoolCount = reader.ReadUInt16();
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"Received config from server. Version {configVersion}; sentBoolCount {sentBoolCount}; localBoolCount {BoolCount}.");
-        }
+        LogUtil.DebugLog($"Received config from server. Version {configVersion}; sentBoolCount {sentBoolCount}; localBoolCount {BoolCount}.");
         // check if we got the same, newer, or older version of the config.
         switch (configVersion)
         {
@@ -104,30 +98,24 @@ public class NetPackageBeyondStorageConfig : NetPackage
         }
 
 #if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
 
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForGeneratorRefuel {ModConfig.ServerConfig.enableForGeneratorRefuel}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForItemRepair {ModConfig.ServerConfig.enableForItemRepair}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForReload {ModConfig.ServerConfig.enableForReload}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRefuel {ModConfig.ServerConfig.enableForVehicleRefuel}");
-            LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRepair {ModConfig.ServerConfig.enableForVehicleRepair}");
-        }
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForGeneratorRefuel {ModConfig.ServerConfig.enableForGeneratorRefuel}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForItemRepair {ModConfig.ServerConfig.enableForItemRepair}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForReload {ModConfig.ServerConfig.enableForReload}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRefuel {ModConfig.ServerConfig.enableForVehicleRefuel}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRepair {ModConfig.ServerConfig.enableForVehicleRepair}");
 #endif
     }
 
     public override void ProcessPackage(World world, GameManager callbacks)
     {
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog("Updated client config to use server settings.");
-        }
+        LogUtil.DebugLog("Updated client config to use server settings.");
     }
 
     public override int GetLength()

@@ -22,11 +22,6 @@ public static class AnimatorCommon
         var lastRet = codeInstructions.FindLastIndex(codeInstruction => codeInstruction.opcode == OpCodes.Ret);
         if (lastRet != -1)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Found last ret at {lastRet} for {targetMethodString}");
-            }
-
             var start = new CodeInstruction(OpCodes.Ldarg_2);
             codeInstructions[lastRet - 1].MoveLabelsTo(start);
             codeInstructions[lastRet - 1] = new CodeInstruction(OpCodes.Nop);

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
 using HarmonyLib;
@@ -15,7 +16,7 @@ public class XUiMPlayerInventoryCommonPatches
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
     private static void XUiM_PlayerInventory_RemoveItems_Prefix(IList<ItemStack> _itemStacks, int _multiplier)
     {
-        if (!LogUtil.IsDebug())
+        if (!ModConfig.IsDebug())
         {
             return;
         }
@@ -52,10 +53,7 @@ public class XUiMPlayerInventoryCommonPatches
             }
 
             set = true;
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Patching {targetMethodString}");
-            }
+            LogUtil.DebugLog($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [
                 // ldarg.1      // _itemStacks

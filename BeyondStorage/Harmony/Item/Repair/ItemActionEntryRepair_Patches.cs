@@ -83,10 +83,6 @@ public class ItemActionEntryRepairPatches
             if (startIndex != -1 && codes[i].opcode == OpCodes.Ldc_I4_0 && codes[i + 1].opcode == OpCodes.Bgt)
             {
                 endIndex = i;
-                if (LogUtil.IsDebug())
-                {
-                    LogUtil.DebugLog("Found end");
-                }
 
                 List<CodeInstruction> newCode = [
                     codes[startIndex - 4].Clone(),
@@ -121,7 +117,7 @@ public class ItemActionEntryRepairPatches
                 // Small smoke test that we're copying the code we expect
                 if (startIndex + 8 != endIndex + 1)
                 {
-                    LogUtil.Error($"Expected Equals False | Start+8 {startIndex + 8} == End+1 {endIndex + 1}");
+                    LogUtil.Error($"{targetMethodString} patch: Expected Equals False | Start+8 {startIndex + 8} == End+1 {endIndex + 1}");
                 }
 
                 break;
@@ -133,11 +129,6 @@ public class ItemActionEntryRepairPatches
                 ]))
             {
                 continue;
-            }
-
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Found start");
             }
 
             startIndex = i;

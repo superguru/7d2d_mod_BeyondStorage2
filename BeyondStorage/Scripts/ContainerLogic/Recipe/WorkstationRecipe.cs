@@ -20,12 +20,8 @@ public static class WorkstationRecipe
         string d_MethodName = "BackgroundWorkstationCraftComplete";
         s_bg_calls++;
 
-#if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"{d_MethodName} called {s_bg_calls} times");
-        }
-#endif
+        LogUtil.DebugLog($"{d_MethodName} called {s_bg_calls} times");
+
         RefreshOpenWorkstationWindows(d_MethodName, s_bg_calls);
     }
     public static void CurrentWorkstationCraftCompleted()
@@ -40,12 +36,8 @@ public static class WorkstationRecipe
         string d_MethodName = "CurrentWorkstationCraftCompleted";
         s_curr_calls++;
 
-#if DEBUG
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"{d_MethodName} called {s_curr_calls} times");
-        }
-#endif
+        LogUtil.DebugLog($"{d_MethodName} called {s_curr_calls} times");
+
         RefreshOpenWorkstationWindows(d_MethodName, s_curr_calls);
     }
 

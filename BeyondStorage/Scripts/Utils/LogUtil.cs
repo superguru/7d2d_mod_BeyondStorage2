@@ -5,11 +5,6 @@ public static class LogUtil
 {
     private const string Prefix = "[BeyondStorage2]";
 
-    public static bool IsDebug()
-    {
-        return ModConfig.IsDebug();
-    }
-
     public static bool IsDebugLogSettingsAccess()
     {
         // This is used to control whether settings access logs are printed

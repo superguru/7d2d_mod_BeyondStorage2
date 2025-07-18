@@ -20,10 +20,7 @@ public static class ItemRepair
         }
 
         var currentValue = currentCount * itemValue.ItemClass.RepairAmount.Value;
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
-        }
+        LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
 
         if (currentValue > 0)
         {
@@ -32,10 +29,7 @@ public static class ItemRepair
 
         var storageCount = ContainerUtils.GetItemCount(itemValue);
         var newCount = currentCount + storageCount;
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
-        }
+        LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
 
         return newCount;
     }
@@ -57,10 +51,7 @@ public static class ItemRepair
         }
 
         var storageCount = ContainerUtils.GetItemCount(itemValue);
-        if (LogUtil.IsDebug())
-        {
-            LogUtil.DebugLog($"ItemRepairRefreshGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
-        }
+        LogUtil.DebugLog($"ItemRepairRefreshGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return storageCount;
     }

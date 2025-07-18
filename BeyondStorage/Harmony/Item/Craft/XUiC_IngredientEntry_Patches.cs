@@ -34,10 +34,7 @@ public class XUiCIngredientEntryPatches
                 continue;
             }
 
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"XUiC_IngredientEntry_GetBindingValue_Patch: Adding method to add item counts from all storages (patch #{++patchCount})");
-            }
+            LogUtil.DebugLog($"XUiC_IngredientEntry_GetBindingValue_Patch: Adding method to add item counts from all storages (patch #{++patchCount})");
 
             found = true;
             List<CodeInstruction> newCode = [

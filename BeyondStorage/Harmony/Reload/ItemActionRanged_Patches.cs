@@ -25,10 +25,6 @@ public class ItemActionRangedPatches
         LogUtil.Info($"Transpiling {targetMethodString}");
         if (lastBgt != -1)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Last BGT Index: {lastBgt}");
-            }
             // if (Ranged.CanReloadFromStorage(_itemValue) > 0)
             List<CodeInstruction> newCode = [
                 // new CodeInstruction(OpCodes.Ldarg_0),

@@ -52,10 +52,7 @@ public class ItemActionRepairPatches
 
         if (targetIndex > -1)
         {
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog("Adding method to count items from all storages");
-            }
+            LogUtil.DebugLog("Adding method to count items from all storages");
 
             List<CodeInstruction> newCode = [];
             // == New ==
@@ -120,10 +117,7 @@ public class ItemActionRepairPatches
             }
 
             found = true;
-            if (LogUtil.IsDebug())
-            {
-                LogUtil.DebugLog($"Patching {targetMethodString}");
-            }
+            LogUtil.DebugLog($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [
                 // _itemStack
