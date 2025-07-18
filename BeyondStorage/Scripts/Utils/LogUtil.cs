@@ -12,8 +12,8 @@ public static class LogUtil
 
     public static bool IsDebugLogSettingsAccess()
     {
-        // Independent of IsDebug, this is used to control whether settings access logs are printed
-        return ModConfig.IsDebugLogSettingsAccess();
+        // This is used to control whether settings access logs are printed
+        return ModConfig.IsDebug() && ModConfig.IsDebugLogSettingsAccess();
     }
 
     public static void Info(string text)
@@ -28,7 +28,10 @@ public static class LogUtil
 
     public static void DebugLog(string text)
     {
-        Log.Out($"{Prefix}(Debug) {text}");
+        if (ModConfig.IsDebug())
+        {
+            Log.Out($"{Prefix}(Debug) {text}");
+        }
     }
 
     public static void Warning(string text)
