@@ -486,6 +486,25 @@ public static class ContainerUtils
                     return;
                 }
 
+                if (workstation_windowgroup.WorkstationData == null)
+                {
+                    LogUtil.Error($"MarkWorkstationModified: workstation_windowgroup.WorkstationData is null for {text}");
+                    return;
+                }
+
+                var w = player.windowManager.GetWindow(text);
+                if (w == null)
+                {
+                    LogUtil.Error($"MarkWorkstationModified: Window {text} is null");
+                    return;
+                }
+
+                if (!w.isShowing)
+                {
+                    //LogUtil.Error($"MarkWorkstationModified: Window {text} is not showing");
+                    return;
+                }
+
                 workstation_windowgroup.syncUIfromTE();
 #if DEBUG
                 if (LogUtil.IsDebug())
