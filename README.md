@@ -6,11 +6,7 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-## History
-
-Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Source code is at https://github.com/aedenthorn/7D2DMods.
-
-It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
+As of v2.1.0, resources can be pulled from nearby workstations (configurable).
 
 ## Installation
 
@@ -26,6 +22,13 @@ Please refer to the mod description on Nexus Mods for details of the configurati
 
 ## License
 This mod is licensed under the MIT License. See the LICENSE file in the root of the repository for details.
+
+## History
+
+Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Source code is at https://github.com/aedenthorn/7D2DMods.
+
+It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
+
 
 ## Credits
 - [aedenthorn](https://github.com/aedenthorn) for the original mod
