@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
@@ -9,6 +10,12 @@ public static class WorkstationRecipe
 
     public static void BackgroundWorkstationCraftCompleted()
     {
+        if (!ModConfig.PullFromWorkstationOutputs())
+        {
+            // If the config is set to not pull from workstation outputs, we don't need to refresh the windows
+            return;
+        }
+
         // This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
         string d_MethodName = "BackgroundWorkstationCraftComplete";
         s_bg_calls++;
@@ -23,6 +30,12 @@ public static class WorkstationRecipe
     }
     public static void CurrentWorkstationCraftCompleted()
     {
+        if (!ModConfig.PullFromWorkstationOutputs())
+        {
+            // If the config is set to not pull from workstation outputs, we don't need to refresh the windows
+            return;
+        }
+
         // This is called when the recipe finishes crafting on the currently opened workstation window
         string d_MethodName = "CurrentWorkstationCraftCompleted";
         s_curr_calls++;
@@ -57,13 +70,13 @@ public static class WorkstationRecipe
                         if (wg?.Controller is XUiC_WorkstationWindowGroup workstationWindowGroup)
                         {
 #if DEBUG
-                            LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {debugCallCount}");
+                            LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
 #endif
                             var recipeList = workstationWindowGroup?.recipeList;
                             recipeList?.RefreshRecipes();
 
 #if DEBUG
-                            LogUtil.DebugLog($"{d_MethodName} Refreshing the action list for open workstation in call {debugCallCount}");
+                            LogUtil.DebugLog($"{d_MethodName} Refreshing the action list for open workstation in call {callCount}");
 #endif
                             var craftInfoWindow = workstationWindowGroup?.craftInfoWindow;
                             craftInfoWindow?.actionItemList?.RefreshActionList();
