@@ -22,9 +22,8 @@ public static class WorkstationUtils
             LogUtil.Error("GetAvailableWorkstationOutputs: chunkCacheCopy is null");
             yield break;
         }
-#if DEBUG
+
         LogUtil.DebugLog("Starting GetAvailableWorkstationOutputs()");
-#endif
         foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list.Where(item => item is TileEntityWorkstation)))
         {
             if (tileEntity is not TileEntityWorkstation workstation)

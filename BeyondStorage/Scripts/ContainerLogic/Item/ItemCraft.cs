@@ -63,16 +63,15 @@ public class ItemCraft
     //          Item Crafting -
     public static int HasItemGetItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
     {
-#if DEBUG
-        LogUtil.DebugLog($"HasItemGetItemCount {itemStacks}; {i}; {numLeft}");
-#endif
+        LogUtil.DebugLog($"HasItemGetItemCount Before {itemStacks}; {i}; {numLeft}");
+
         if (numLeft <= 0)
         {
             return numLeft;
         }
 
         var storageCount = ContainerUtils.GetItemCount(itemStacks[i].itemValue);
-        LogUtil.DebugLog($"HasItemGetItemCount | item {itemStacks[i].itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+        LogUtil.DebugLog($"HasItemGetItemCount After | item {itemStacks[i].itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return numLeft - storageCount;
     }

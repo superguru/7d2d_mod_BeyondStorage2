@@ -61,15 +61,11 @@ public static class WorkstationRecipe
                     {
                         if (wg?.Controller is XUiC_WorkstationWindowGroup workstationWindowGroup)
                         {
-#if DEBUG
                             LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
-#endif
                             var recipeList = workstationWindowGroup?.recipeList;
                             recipeList?.RefreshRecipes();
 
-#if DEBUG
                             LogUtil.DebugLog($"{d_MethodName} Refreshing the action list for open workstation in call {callCount}");
-#endif
                             var craftInfoWindow = workstationWindowGroup?.craftInfoWindow;
                             craftInfoWindow?.actionItemList?.RefreshActionList();
                         }
