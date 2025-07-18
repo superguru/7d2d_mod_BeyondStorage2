@@ -14,20 +14,19 @@ public static class ModConfig
     private const string ConfigFileName = "config.json";
     public static BsConfig ClientConfig { get; private set; }
     public static BsConfig ServerConfig { get; } = new();
+    private static bool IsConfigLoaded { get; set; } = false;
 
     public static void LoadConfig(BeyondStorage context)
     {
         var path = Path.Combine(FileUtil.GetConfigPath(true), ConfigFileName);
         LogUtil.DebugLog($"Loading config from {path}");
 
-        bool config_loaded = false;
-
         if (File.Exists(path))
         {
             try
             {
                 ClientConfig = JsonConvert.DeserializeObject<BsConfig>(File.ReadAllText(path));
-                config_loaded = true;
+                IsConfigLoaded = true;
                 LogUtil.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
 
                 ValidateConfig();
@@ -38,7 +37,7 @@ public static class ModConfig
             }
         }
 
-        if (!config_loaded)
+        if (!IsConfigLoaded)
         {
             LogUtil.Warning($"Config file {path} not found or invalid, using default config.");
             ClientConfig = new BsConfig();
@@ -81,7 +80,7 @@ public static class ModConfig
 
     private static void LogSettingsAccess(string name, bool serverValue, bool clientValue)
     {
-        if (LogUtil.IsDebugLogSettingsAccess())
+        if (IsDebugLogSettingsAccess())
         {
             LogUtil.DebugLog(
                 $"Setting ({name}): " +
@@ -93,7 +92,7 @@ public static class ModConfig
     }
     private static void LogSettingsAccess(string name, float serverValue, float clientValue)
     {
-        if (LogUtil.IsDebugLogSettingsAccess())
+        if (IsDebugLogSettingsAccess())
         {
             LogUtil.DebugLog(
                 $"Setting ({name}): " +
@@ -215,15 +214,13 @@ public static class ModConfig
     }
 
     public static bool IsDebug()
-
     {
-        return ClientConfig.isDebug;
+        return IsConfigLoaded && ClientConfig.isDebug;
     }
 
     public static bool IsDebugLogSettingsAccess()
-
     {
-        return ClientConfig.isDebug && ClientConfig.isDebugLogSettingsAccess;
+        return IsConfigLoaded && ClientConfig.isDebug && ClientConfig.isDebugLogSettingsAccess;
     }
 
     public static bool ServerSyncConfig()
