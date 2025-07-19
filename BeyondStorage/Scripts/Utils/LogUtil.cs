@@ -15,6 +15,9 @@ public static class LogUtil
         Log.Error($"{Prefix}(Error) {text}");
     }
 
+    /// <summary>
+    /// Call to put debug information into the log that you might want users to send you when they report issues.
+    /// </summary>
     public static void DebugLog(string text)
     {
         if (ModConfig.IsDebug())

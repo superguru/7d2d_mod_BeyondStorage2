@@ -8,6 +8,9 @@ public static class WorkstationRecipe
     private static int s_bg_calls = 0;
     private static int s_curr_calls = 0;
 
+    /// <summary>
+    /// This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
+    /// </summary>
     public static void BackgroundWorkstationCraftCompleted()
     {
         if (!ModConfig.PullFromWorkstationOutputs())
@@ -16,7 +19,6 @@ public static class WorkstationRecipe
             return;
         }
 
-        // This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
         string d_MethodName = "BackgroundWorkstationCraftComplete";
         s_bg_calls++;
 
@@ -24,6 +26,10 @@ public static class WorkstationRecipe
 
         RefreshOpenWorkstationWindows(d_MethodName, s_bg_calls);
     }
+
+    /// <summary>
+    /// Called when the recipe finishes crafting on the currently opened workstation window
+    /// </summary>
     public static void CurrentWorkstationCraftCompleted()
     {
         if (!ModConfig.PullFromWorkstationOutputs())
@@ -32,7 +38,6 @@ public static class WorkstationRecipe
             return;
         }
 
-        // This is called when the recipe finishes crafting on the currently opened workstation window
         string d_MethodName = "CurrentWorkstationCraftCompleted";
         s_curr_calls++;
 
@@ -50,6 +55,12 @@ public static class WorkstationRecipe
             return;
         }
 
+        //if (player is EntityPlayerLocal localPlayer && localPlayer.IsAlive())
+        //{
+        //    LogUtil.DebugLog($"{d_MethodName} Refreshing the local player's inventory in call {callCount}");
+        //    localPlayer.callInventoryChanged();
+        //}
+
         var shows = player.windowManager?.windows.Where(w => w.isShowing);
         if (shows != null)
         {
@@ -59,15 +70,56 @@ public static class WorkstationRecipe
                 {
                     if (win is XUiWindowGroup wg)
                     {
-                        if (wg?.Controller is XUiC_WorkstationWindowGroup workstationWindowGroup)
+                        if (wg?.Controller is XUiC_CraftingWindowGroup windowGroup)
                         {
-                            LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
-                            var recipeList = workstationWindowGroup?.recipeList;
-                            recipeList?.RefreshRecipes();
 
-                            LogUtil.DebugLog($"{d_MethodName} Refreshing the action list for open workstation in call {callCount}");
-                            var craftInfoWindow = workstationWindowGroup?.craftInfoWindow;
-                            craftInfoWindow?.actionItemList?.RefreshActionList();
+                            var recipeList = windowGroup?.recipeList;
+                            if (recipeList != null)
+                            {
+                                LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
+
+                                var selectedRecipe = recipeList.SelectedEntry;
+
+                                var currPage = recipeList.Page;
+                                recipeList.RefreshRecipes();
+                                recipeList.Page = currPage;
+
+                                if (selectedRecipe != null)
+                                {
+                                    var newSelectedRecipe = recipeList.recipeControls.Where(r => r.Recipe.GetName() == selectedRecipe.Recipe.GetName()).FirstOrDefault();
+                                    if (newSelectedRecipe != null)
+                                    {
+                                        LogUtil.DebugLog($"{d_MethodName} reselecting recipe {selectedRecipe.Recipe.GetName()} in call {callCount}");
+                                        recipeList.SelectedEntry = newSelectedRecipe;
+                                    }
+                                    else
+                                    {
+                                        // TODO: This might be an error in the game? Not sure.
+                                        LogUtil.DebugLog($"{d_MethodName} selected recipe {selectedRecipe.Recipe.GetName()} not found in call {callCount}, so not reselecting it");
+                                    }
+                                }
+                                else
+                                {
+                                    LogUtil.DebugLog($"{d_MethodName} selected recipe is null in call {callCount}, so not reselecting it");
+                                }
+
+                            }
+                            else
+                            {
+                                LogUtil.DebugLog($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
+                            }
+
+                            if (windowGroup is XUiC_WorkstationWindowGroup workstation)
+                            {
+                                LogUtil.DebugLog($"{d_MethodName} Refreshing the open workstation window in call {callCount}");
+                                workstation.syncUIfromTE();
+                            }
+                            else
+                            {
+                                LogUtil.DebugLog($"{d_MethodName} windowGroup is not a workstation in call {callCount}, so just setting as dirty");
+                                wg.Controller.IsDirty = true;
+                                wg.Controller.SetAllChildrenDirty();
+                            }
                         }
                     }
                 }
