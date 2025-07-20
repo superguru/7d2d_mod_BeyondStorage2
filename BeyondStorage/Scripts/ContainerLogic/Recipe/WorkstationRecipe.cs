@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Utils;
+using static XUiC_CraftingInfoWindow;
 
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
 public static class WorkstationRecipe
@@ -70,18 +71,32 @@ public static class WorkstationRecipe
                 {
                     if (win is XUiWindowGroup wg)
                     {
-                        if (wg?.Controller is XUiC_CraftingWindowGroup windowGroup)
+                        if (wg?.Controller is XUiC_WorkstationWindowGroup workstation)
                         {
 
-                            var recipeList = windowGroup?.recipeList;
+                            var recipeList = workstation?.recipeList;
                             if (recipeList != null)
                             {
                                 LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
 
-                                var selectedRecipe = recipeList.SelectedEntry;
-
+                                // Save the state of things
                                 var currPage = recipeList.Page;
+                                var selectedRecipe = recipeList.SelectedEntry;
+                                XUiC_CraftingInfoWindow craftInfoWindow = null;
+                                TabTypes craftInfoTabType = TabTypes.Ingredients;
+
+                                if (selectedRecipe != null)
+                                {
+                                    craftInfoWindow = workstation.craftInfoWindow;
+                                    craftInfoTabType = craftInfoWindow.TabType;
+                                }
+
+                                // Refresh the things
+                                LogUtil.DebugLog($"{d_MethodName} refreshing the workstation in call {callCount}");
                                 recipeList.RefreshRecipes();
+                                workstation.syncUIfromTE();
+
+                                // Restore the state of things
                                 recipeList.Page = currPage;
 
                                 if (selectedRecipe != null)
@@ -89,7 +104,7 @@ public static class WorkstationRecipe
                                     var newSelectedRecipe = recipeList.recipeControls.Where(r => r.Recipe.GetName() == selectedRecipe.Recipe.GetName()).FirstOrDefault();
                                     if (newSelectedRecipe != null)
                                     {
-                                        LogUtil.DebugLog($"{d_MethodName} reselecting recipe {selectedRecipe.Recipe.GetName()} in call {callCount}");
+                                        LogUtil.DebugLog($"{d_MethodName} restoring the selected recipe {selectedRecipe.Recipe.GetName()} in call {callCount}");
                                         recipeList.SelectedEntry = newSelectedRecipe;
                                     }
                                     else
@@ -97,29 +112,27 @@ public static class WorkstationRecipe
                                         // TODO: This might be an error in the game? Not sure.
                                         LogUtil.DebugLog($"{d_MethodName} selected recipe {selectedRecipe.Recipe.GetName()} not found in call {callCount}, so not reselecting it");
                                     }
+
+                                    LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
+                                    craftInfoWindow.TabType = craftInfoTabType;
+                                    craftInfoWindow.SetSelectedButtonByType(craftInfoTabType);
+                                    craftInfoWindow.IsDirty = true;
                                 }
                                 else
                                 {
                                     LogUtil.DebugLog($"{d_MethodName} selected recipe is null in call {callCount}, so not reselecting it");
                                 }
-
                             }
                             else
                             {
                                 LogUtil.DebugLog($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
                             }
-
-                            if (windowGroup is XUiC_WorkstationWindowGroup workstation)
-                            {
-                                LogUtil.DebugLog($"{d_MethodName} Refreshing the open workstation window in call {callCount}");
-                                workstation.syncUIfromTE();
-                            }
-                            else
-                            {
-                                LogUtil.DebugLog($"{d_MethodName} windowGroup is not a workstation in call {callCount}, so just setting as dirty");
-                                wg.Controller.IsDirty = true;
-                                wg.Controller.SetAllChildrenDirty();
-                            }
+                        }
+                        else
+                        {
+                            LogUtil.DebugLog($"{d_MethodName} windowGroup is not a workstation in call {callCount}, so just setting as dirty");
+                            wg.Controller.IsDirty = true;
+                            wg.Controller.SetAllChildrenDirty();
                         }
                     }
                 }
