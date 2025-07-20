@@ -39,6 +39,24 @@ public class ItemCraft
         }
     }
 
+    public static List<ItemStack> ItemCraftGetAllAvailableItemStacks(XUi xui)
+    {
+        var result = new List<ItemStack>();
+        if (xui != null)
+        {
+            LogUtil.DebugLog("ItemCraftGetAllAvailableItemStacks adding all player items");
+            result = xui.PlayerInventory.GetAllItemStacks();
+        }
+        else
+        {
+            LogUtil.Error("ItemCraftGetAllAvailableItemStacks called with null xui");
+        }
+
+        ItemCraft.ItemCraftGetAllStorageStacks(result);
+
+        return result;
+    }
+
     //  Used By:
     //      XUiC_IngredientEntry.GetBindingValue
     //          Item Crafting - shows item count available in crafting window(s)
