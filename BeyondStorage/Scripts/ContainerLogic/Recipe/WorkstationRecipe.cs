@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
@@ -67,128 +66,111 @@ public static class WorkstationRecipe
 
         foreach (var win in openWindows)
         {
-            if (win is not XUiWindowGroup wg || wg?.Controller == null)
+            if (win is not XUiWindowGroup wg || wg.Controller == null)
             {
                 continue;
             }
 
-            if (wg.Controller is XUiC_WorkstationWindowGroup workstation)
+            if (wg.Controller is not XUiC_WorkstationWindowGroup workstation)
             {
-                var recipeList = workstation.recipeList;
-                if (recipeList == null)
+                continue;
+            }
+
+            var recipeList = workstation.recipeList;
+            if (recipeList == null)
+            {
+                LogUtil.DebugLog($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
+                continue;
+            }
+
+            var availableItems = ItemCraft.ItemCraftGetAllAvailableItemStacks(recipeList.xui);
+
+            LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
+
+            // Save state
+            var currPage = recipeList.Page;
+            var selectedRecipe = recipeList.SelectedEntry;
+            var craftInfoWindow = workstation.craftInfoWindow;
+            var craftInfoTabType = selectedRecipe != null && craftInfoWindow != null
+                ? craftInfoWindow.TabType
+                : TabTypes.Ingredients;
+
+            // Refresh recipe controls
+            int refreshCount = 0;
+            foreach (var recipeEntry in recipeList.recipeControls)
+            {
+                if (recipeEntry.Recipe == null || recipeEntry.HasIngredients)
                 {
-                    LogUtil.DebugLog($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
                     continue;
                 }
 
-                var availableItems = ItemCraft.ItemCraftGetAllAvailableItemStacks(recipeList.xui);
+                LogUtil.DebugLog($"{d_MethodName} recipeControl.Recipe for {recipeEntry.recipe.GetName()} is doesn't have the ingredients, so re-checking them");
 
-                LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
-
-                // Save state
-                var currPage = recipeList.Page;
-                var selectedRecipe = recipeList.SelectedEntry;
-                XUiC_CraftingInfoWindow craftInfoWindow = null;
-                TabTypes craftInfoTabType = TabTypes.Ingredients;
-
-                if (selectedRecipe != null)
+                var recipe = recipeEntry.Recipe;
+                var recipeInfo = recipeList.recipeInfos.FirstOrDefault(r => r.recipe.GetName() == recipe.GetName());
+                if (string.IsNullOrEmpty(recipeInfo.name))
                 {
-                    craftInfoWindow = workstation.craftInfoWindow;
-                    craftInfoTabType = craftInfoWindow.TabType;
+                    LogUtil.Error($"{d_MethodName} recipeInfo for {recipe.GetName()} not found in call {callCount}, so not refreshing it");
+                    continue;
                 }
 
-                // Refresh
-                LogUtil.DebugLog($"{d_MethodName} refreshing the workstation in call {callCount}");
-                //recipeList.RefreshRecipes();
-
-                var refreshCount = 0;
-                foreach (var recipeEntry in recipeList.recipeControls)
+                LogUtil.DebugLog($"{d_MethodName} re-checking ingredients for recipe {recipe.GetName()} in call {callCount}");
+                var hasIngredients = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipeInfo.recipe, player)
+                    && (recipeList.craftingWindow == null || recipeList.craftingWindow.CraftingRequirementsValid(recipeInfo.recipe));
+                if (hasIngredients)
                 {
-                    if (recipeEntry.Recipe != null && !recipeEntry.HasIngredients)
-                    {
-                        LogUtil.DebugLog($"{d_MethodName} recipeControl.Recipe for {recipeEntry.recipe.GetName()} is doesn't have the ingredients, so re-checking them");
-
-                        var recipe = recipeEntry.Recipe;
-                        if (recipe == null)
-                        {
-                            LogUtil.Error($"{d_MethodName} recipeControl.Recipe is null for {recipeEntry.recipe.GetName()} in call {callCount}, so not refreshing it");
-                            continue;
-                        }
-
-                        var recipeInfo = recipeList.recipeInfos.FirstOrDefault(r => r.recipe.GetName() == recipe.GetName());
-                        if (!String.IsNullOrEmpty(recipeInfo.name))
-                        {
-                            LogUtil.DebugLog($"{d_MethodName} re-checking ingredients for recipe {recipe.GetName()} in call {callCount}");
-                            var flag = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipeInfo.recipe, player);
-                            var hasIngredientsNow = (flag && (recipeList.craftingWindow == null || recipeList.craftingWindow.CraftingRequirementsValid(recipeInfo.recipe)));
-                            if (hasIngredientsNow)
-                            {
-                                LogUtil.DebugLog($"{d_MethodName} recipeInfo for {recipe.GetName()} has ingredients now in call {callCount}. Updating recipeEntry");
-
-                                recipeEntry.HasIngredients = true;
-
-                                refreshCount++;
-                            }
-                        }
-                        else
-                        {
-                            LogUtil.Error($"{d_MethodName} recipeInfo for {recipe.GetName()} not found in call {callCount}, so not refreshing it");
-                        }
-                    }
-                    else
-                    {
-                        // Already has the ingredients, so no need to refresh
-                        continue;
-                    }
+                    LogUtil.DebugLog($"{d_MethodName} recipeInfo for {recipe.GetName()} has ingredients now in call {callCount}. Updating recipeEntry");
+                    recipeEntry.HasIngredients = true;
+                    refreshCount++;
                 }
+            }
 
-                if (refreshCount > 0)
+            if (refreshCount > 0)
+            {
+                LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
+                recipeList.IsDirty = true;
+                recipeList.CraftCount.IsDirty = true;
+            }
+            else
+            {
+                LogUtil.DebugLog($"{d_MethodName} no recipe controls needed refreshing in call {callCount}");
+            }
+
+            LogUtil.DebugLog($"{d_MethodName} syncing workstation UI from TE in call {callCount}");
+            workstation.syncUIfromTE();
+
+            // Restore state
+            LogUtil.DebugLog($"{d_MethodName} restoring the current page {currPage} in call {callCount}");
+            recipeList.Page = currPage;
+            recipeList.PlayerInventory_OnBackpackItemsChanged();
+
+            if (selectedRecipe != null)
+            {
+                var newSelectedRecipe = recipeList.recipeControls
+                    .FirstOrDefault(r => r.Recipe.GetName() == selectedRecipe.Recipe.GetName());
+
+                if (newSelectedRecipe != null)
                 {
-                    LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
-                    recipeList.IsDirty = true;
+                    LogUtil.DebugLog($"{d_MethodName} restoring the selected recipe {selectedRecipe.Recipe.GetName()} in call {callCount}");
+                    recipeList.SelectedEntry = newSelectedRecipe;
                     recipeList.CraftCount.IsDirty = true;
                 }
                 else
                 {
-                    LogUtil.DebugLog($"{d_MethodName} no recipe controls needed refreshing in call {callCount}");
+                    LogUtil.DebugLog($"{d_MethodName} selected recipe {selectedRecipe.Recipe.GetName()} not found in call {callCount}, so not reselecting it");
                 }
 
-                LogUtil.DebugLog($"{d_MethodName} syncing workstation UI from TE in call {callCount}");
-                workstation.syncUIfromTE();
-
-                // Restore state
-                LogUtil.DebugLog($"{d_MethodName} restoring the current page {currPage} in call {callCount}");
-                recipeList.Page = currPage;
-                recipeList.PlayerInventory_OnBackpackItemsChanged();
-
-                if (selectedRecipe != null)
+                LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
+                if (craftInfoWindow != null)
                 {
-                    var newSelectedRecipe = recipeList.recipeControls
-                        .FirstOrDefault(r => r.Recipe.GetName() == selectedRecipe.Recipe.GetName());
-
-                    if (newSelectedRecipe != null)
-                    {
-                        LogUtil.DebugLog($"{d_MethodName} restoring the selected recipe {selectedRecipe.Recipe.GetName()} in call {callCount}");
-                        recipeList.SelectedEntry = newSelectedRecipe;
-                        recipeList.CraftCount.IsDirty = true;
-                    }
-                    else
-                    {
-                        LogUtil.DebugLog($"{d_MethodName} selected recipe {selectedRecipe.Recipe.GetName()} not found in call {callCount}, so not reselecting it");
-                    }
-
-                    LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
-                    if (craftInfoWindow != null)
-                    {
-                        craftInfoWindow.TabType = craftInfoTabType;
-                        craftInfoWindow.SetSelectedButtonByType(craftInfoTabType);
-                        craftInfoWindow.IsDirty = true;
-                    }
+                    craftInfoWindow.TabType = craftInfoTabType;
+                    craftInfoWindow.SetSelectedButtonByType(craftInfoTabType);
+                    craftInfoWindow.IsDirty = true;
                 }
-                else
-                {
-                    LogUtil.DebugLog($"{d_MethodName} selected recipe is null in call {callCount}, so not reselecting it");
-                }
+            }
+            else
+            {
+                LogUtil.DebugLog($"{d_MethodName} selected recipe is null in call {callCount}, so not reselecting it");
             }
         }
     }
