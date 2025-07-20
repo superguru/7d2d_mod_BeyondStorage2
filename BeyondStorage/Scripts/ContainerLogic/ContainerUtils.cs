@@ -349,7 +349,6 @@ public static class ContainerUtils
 
                 if (stillNeeded != newRequiredAmount)
                 {
-                    LogUtil.DebugLog($"{d_method_name} | Marking Workstation {workstation.GetType().Name} as modified");
                     MarkWorkstationModified(workstation);
                 }
 
@@ -376,11 +375,15 @@ public static class ContainerUtils
 
     private static void MarkWorkstationModified(TileEntityWorkstation workstation)
     {
-        // This method of is used when items are removed from a workstation's output, such as when pulling items from the workstation
+        const string d_method_name = "MarkWorkstationModified";
+
+        LogUtil.DebugLog($"{d_method_name} | Marking Workstation '{workstation?.GetType().Name}' as modified");
+
+        // This method is used when items are removed from a workstation's output, such as when pulling items from the workstation
 #if DEBUG
         if (workstation == null)
         {
-            LogUtil.Error("MarkWorkstationModified: workstation is null");
+            LogUtil.Error($"{d_method_name}: workstation is null");
             return;
         }
 #endif
@@ -391,46 +394,45 @@ public static class ContainerUtils
         WorkstationData workstationData = CraftingManager.GetWorkstationData(blockName);
         if (workstationData != null)
         {
-            string text = ((workstationData.WorkstationWindow != "") ? workstationData.WorkstationWindow : $"workstation_{blockName}");
+            string text = (!string.IsNullOrEmpty(workstationData.WorkstationWindow) ? workstationData.WorkstationWindow : $"workstation_{blockName}");
 #if DEBUG
-            LogUtil.DebugLog($"MarkWorkstationModified: blockName {blockName}, text {text}");
+            LogUtil.DebugLog($"{d_method_name}: blockName {blockName}, text {text}");
 #endif
             var player = GameManager.Instance.World.GetPrimaryPlayer();
 
             if (player.windowManager.HasWindow(text))
             {
 #if DEBUG
-                LogUtil.DebugLog($"MarkWorkstationModified: Found window for {text}");
+                LogUtil.DebugLog($"{d_method_name}: Found window for {text}");
 #endif
                 var workstation_windowgroup = ((XUiC_WorkstationWindowGroup)((XUiWindowGroup)player.windowManager.GetWindow(text)).Controller);
                 if (workstation_windowgroup == null)
                 {
-                    LogUtil.Error($"MarkWorkstationModified: workstation_windowgroup is null for {text}");
+                    LogUtil.Error($"{d_method_name}: workstation_windowgroup is null for {text}");
                     return;
                 }
 
                 if (workstation_windowgroup.WorkstationData == null)
                 {
-                    LogUtil.Error($"MarkWorkstationModified: workstation_windowgroup.WorkstationData is null for {text}");
+                    LogUtil.Error($"{d_method_name}: workstation_windowgroup.WorkstationData is null for {text}");
                     return;
                 }
 
                 var w = player.windowManager.GetWindow(text);
                 if (w == null)
                 {
-                    LogUtil.Error($"MarkWorkstationModified: Window {text} is null");
+                    LogUtil.Error($"{d_method_name}: Window {text} is null");
                     return;
                 }
 
                 if (!w.isShowing)
                 {
-                    //LogUtil.Error($"MarkWorkstationModified: Window {text} is not showing");
                     return;
                 }
 
                 workstation_windowgroup.syncUIfromTE();
 #if DEBUG
-                LogUtil.DebugLog($"MarkWorkstationModified: Synced UI from TE for {text}");
+                LogUtil.DebugLog($"{d_method_name}: Synced UI from TE for {text}");
 #endif
             }
             else
