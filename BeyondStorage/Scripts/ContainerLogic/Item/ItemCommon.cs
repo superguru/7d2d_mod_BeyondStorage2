@@ -11,9 +11,11 @@ public static class ItemCommon
     //          Item Repair (Remove items on repair)
     public static int ItemRemoveRemaining(int originalResult, ItemValue itemValue, int totalRequiredAmount, bool ignoreModdedItems = false, List<ItemStack> removedItems = null)
     {
+        var itemName = itemValue.ItemClass.GetItemName();
+
         // stillNeeded = totalRequiredAmount (_count1) - originalResult (DecItem(...))
         var stillNeeded = totalRequiredAmount - originalResult;
-        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemValue.ItemClass.GetItemName()}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
+        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
 
         // If we don't need anything else return the original result
         if (stillNeeded <= 0)
@@ -22,12 +24,11 @@ public static class ItemCommon
         }
 
         // Get what we can from storage up to required amount
-        var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
+        var totalRemoved = ContainerUtils.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
 
-        // Update the result = stillNeeded - removedFromStorage
-        var result = stillNeeded - removedFromStorage;
-        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemValue.ItemClass.GetItemName()}; removedFromStorage {removedFromStorage}; newStillNeeded {result}");
+        var newStillNeeded = stillNeeded - totalRemoved;
+        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
 
-        return result;
+        return newStillNeeded;
     }
 }

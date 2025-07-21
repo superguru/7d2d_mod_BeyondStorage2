@@ -15,7 +15,7 @@ public class ItemCraft
         {
             LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount before {items.Count}");
 
-            items.AddRange(ContainerUtils.GetItemStacks());
+            items.AddRange(ContainerUtils.GetContainerItemStacks());
 
             LogUtil.DebugLog($"ItemCraftMaxGetAllStorageStacks | itemCount after {items.Count}");
         }
@@ -33,7 +33,7 @@ public class ItemCraft
         {
             LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count before {items.Count}");
 
-            items.AddRange(ContainerUtils.GetItemStacks());
+            items.AddRange(ContainerUtils.GetContainerItemStacks());
 
             LogUtil.DebugLog($"ItemCraftGetAllStorageStacks | items.Count after {items.Count}");
         }
@@ -63,13 +63,17 @@ public class ItemCraft
     public static int EntryBindingAddAllStorageCount(int count, XUiC_IngredientEntry entry)
     {
         var itemValue = entry.Ingredient.itemValue;
+        var itemName = itemValue.ItemClass.GetItemName();
         var storageCount = ContainerUtils.GetItemCount(itemValue);
-        LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; initialCount {count}; storageCount {storageCount}");
 
         if (storageCount > 0)
         {
-            LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemValue.ItemClass.GetItemName()}; adding storage count {storageCount} to count {count} and setting the window controller IsDirty = true");
+            LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemName}; adding storage count {storageCount} to count {count} and setting the window controller IsDirty = true");
             entry.windowGroup.Controller.IsDirty = true;
+        }
+        else
+        {
+            LogUtil.DebugLog($"EntryBindingAddAllStorageCount | item {itemName}; initialCount {count}; storageCount {storageCount}");
         }
 
         return count + storageCount;
@@ -81,16 +85,20 @@ public class ItemCraft
     //          Item Crafting -
     public static int HasItemGetItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
     {
-        LogUtil.DebugLog($"HasItemGetItemCount Before {itemStacks}; {i}; {numLeft}");
+        var itemValue = itemStacks[i].itemValue;
+        var itemName = itemValue.ItemClass.GetItemName();
+
+        LogUtil.DebugLog($"HasItemGetItemCount Before item {i} {itemName}; itemStacks {itemStacks}; numLeft {numLeft}");
 
         if (numLeft <= 0)
         {
             return numLeft;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(itemStacks[i].itemValue);
-        LogUtil.DebugLog($"HasItemGetItemCount After | item {itemStacks[i].itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+        var storageCount = ContainerUtils.GetItemCount(itemValue);
+        var result = numLeft - storageCount;
+        LogUtil.DebugLog($"HasItemGetItemCount After | item {itemName}; storageCount {storageCount}; returning {result}");
 
-        return numLeft - storageCount;
+        return result;
     }
 }
