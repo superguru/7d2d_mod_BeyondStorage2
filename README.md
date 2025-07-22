@@ -6,7 +6,9 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-As of v2.1.0, resources can be pulled from nearby workstations (configurable).
+As of v2.1.0, items can be pulled from nearby workstations (configurable).
+
+As of v2.1.3, items can be pulled from nearby dew collectors (configurable).
 
 ## Installation
 
