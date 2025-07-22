@@ -118,15 +118,20 @@ public static class ServerUtils
 
                 tePos = tileEntityLootable.ToWorldPos();
             }
+            else if (kvp.Key is TileEntityDewCollector dewCollector)
+            {
+                // Handle dew collector TEs
+                tePos = dewCollector.ToWorldPos();
+            }
+            else if (kvp.Key is TileEntityWorkstation workstation)
+            {
+                // Handle workstation TEs
+                tePos = workstation.ToWorldPos();
+            }
             else
             {
-                // Handle workstations
-                if (kvp.Key is not TileEntityWorkstation workstation)
-                {
-                    continue;
-                }
-
-                tePos = workstation.ToWorldPos();
+                // Some other TE, which we are not handling
+                continue;
             }
 
             // Add current entry to our new dict for clients
