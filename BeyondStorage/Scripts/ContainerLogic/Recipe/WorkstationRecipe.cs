@@ -147,7 +147,7 @@ public static class WorkstationRecipe
             if (selectedRecipe != null)
             {
                 var newSelectedRecipe = recipeList.recipeControls
-                    .FirstOrDefault(r => r.Recipe.GetName() == selectedRecipe.Recipe.GetName());
+                    .FirstOrDefault(r => r.Recipe.Equals(selectedRecipe.Recipe));
 
                 if (newSelectedRecipe != null)
                 {

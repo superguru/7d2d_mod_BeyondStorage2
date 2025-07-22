@@ -36,6 +36,13 @@ public static class ContainerUtils
         var containerStorage = GetAvailableContainerStorages();
         var results = containerStorage?.SelectMany(lootable => lootable?.items) ?? [];
 
+        if (ModConfig.PullFromDewCollectors())
+        {
+            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages() ?? [];
+            var dewCollectorResults = dewCollectors?.SelectMany(dewCollector => dewCollector?.items ?? []) ?? [];
+            results = results.Concat(dewCollectorResults);
+        }
+
         if (ModConfig.PullFromWorkstationOutputs())
         {
             var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs() ?? [];
@@ -65,12 +72,25 @@ public static class ContainerUtils
 
         var containerStorage = GetAvailableContainerStorages();
         bool containerHas = containerStorage != null &&
-            containerStorage.SelectMany(lootable => lootable?.items)
+            containerStorage.SelectMany(lootable => lootable?.items ?? [])
                             .Any(stack => stack?.itemValue?.type == itemValue.type);
 
         if (containerHas)
         {
             return true;
+        }
+
+        if (ModConfig.PullFromDewCollectors())
+        {
+            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages();
+            bool dewCollectorHas = dewCollectors != null &&
+                dewCollectors.SelectMany(dewCollector => dewCollector?.items ?? [])
+                             .Any(stack => stack?.itemValue?.type == itemValue.type);
+
+            if (dewCollectorHas)
+            {
+                return true;
+            }
         }
 
         if (ModConfig.PullFromWorkstationOutputs())
@@ -119,6 +139,15 @@ public static class ContainerUtils
         LogUtil.DebugLog($"Container Storage count is {containerCount}");
         int totalCount = containerCount;
 
+        if (ModConfig.PullFromDewCollectors())
+        {
+            LogUtil.DebugLog("Will try to pull from Dew Collectors");
+            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages();
+            int dewCollectorCount = CountItems(dewCollectors?.SelectMany(dewCollector => dewCollector?.items ?? []), itemValue.type);
+            LogUtil.DebugLog($"Dew Collector count is {dewCollectorCount}");
+            totalCount += dewCollectorCount;
+        }
+
         if (ModConfig.PullFromWorkstationOutputs())
         {
             LogUtil.DebugLog("Will try to pull from Workstation Outputs");
@@ -144,58 +173,88 @@ public static class ContainerUtils
 
     private static IEnumerable<ITileEntityLootable> GetAvailableContainerStorages()
     {
-        var player = GameManager.Instance.World.GetPrimaryPlayer();
+        const string d_method_name = "GetAvailableContainerStorages";
+
+        var world = GameManager.Instance.World;
+        if (world == null)
+        {
+            yield break;
+        }
+
+        var player = world.GetPrimaryPlayer();
+        if (player == null)
+        {
+            yield break;
+        }
+
+        LogUtil.DebugLog($"{d_method_name}: Starting");
+
         var playerPos = player.position;
         var configRange = ModConfig.Range();
         var configOnlyCrates = ModConfig.OnlyStorageCrates();
         var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
+        var playerEntityId = player.entityId;
 
-        var chunkCacheCopy = GameManager.Instance.World.ChunkCache.GetChunkArrayCopySync();
-
-        foreach (var tileEntity in chunkCacheCopy.Where(chunk => chunk != null).SelectMany(chunk => chunk.GetTileEntities().list))
+        var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
+        if (chunkCacheCopy == null)
         {
-            bool isInRange = (configRange <= 0 || Vector3.Distance(playerPos, tileEntity.ToWorldPos()) < configRange);
-            if (!isInRange)
+            yield break;
+        }
+
+        foreach (var chunk in chunkCacheCopy)
+        {
+            if (chunk == null)
             {
                 continue;
             }
 
-            if (!tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
+            foreach (var tileEntity in chunk.GetTileEntities().list)
             {
-                continue;
-            }
-
-            if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
-            {
-                continue;
-            }
-
-            if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
-            {
-                continue;
-            }
-#if DEBUG
-            // TODO: You might want to comment the following line out while debugging new features
-            //LogUtil.DebugLog($"TEL: {tileEntityLootable}; Locked Count: {LockedTileEntities.Count}; {tileEntity.IsUserAccessing()}");
-#endif
-            if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
-            {
-                if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                // Range check
+                if (configRange > 0 && Vector3.Distance(playerPos, tileEntity.ToWorldPos()) >= configRange)
                 {
                     continue;
                 }
-            }
 
-            if (LockedTileEntities.Count > 0)
-            {
-                var pos = tileEntityLootable.ToWorldPos();
-                if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != player.entityId)
+                // Must be lootable
+                if (!tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
                 {
                     continue;
                 }
-            }
 
-            yield return tileEntityLootable;
+                // Must be player storage and not empty
+                if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
+                {
+                    continue;
+                }
+
+                // Only crates if configured
+                if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
+                {
+                    continue;
+                }
+
+                // Locked check
+                if (LockedTileEntities.Count > 0)
+                {
+                    var pos = tileEntityLootable.ToWorldPos();
+                    if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != playerEntityId)
+                    {
+                        continue;
+                    }
+                }
+
+                // Lockable check
+                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+                {
+                    if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                    {
+                        continue;
+                    }
+                }
+
+                yield return tileEntityLootable;
+            }
         }
     }
 
@@ -279,6 +338,13 @@ public static class ContainerUtils
             var containerStorages = GetAvailableContainerStorages() ?? [];
             ProcessStorage(d_method_name, "Containers", itemName, containerStorages, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 s => s.items, s => s.SetModified());
+        }
+
+        if (stillNeeded > 0 && ModConfig.PullFromDewCollectors())
+        {
+            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages() ?? [];
+            ProcessStorage(d_method_name, "DewCollectors", itemName, dewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                s => s.items, s => DewCollectorUtils.MarkDewCollectorModified(s));
         }
 
         if (stillNeeded > 0 && ModConfig.PullFromWorkstationOutputs())

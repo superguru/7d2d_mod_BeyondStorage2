@@ -123,10 +123,10 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromVehicleStorage()
+    public static bool PullFromDewCollectors()
     {
-        bool serverValue = ServerConfig.pullFromVehicleStorage;
-        bool clientValue = ClientConfig.pullFromVehicleStorage;
+        bool serverValue = ServerConfig.pullFromDewCollectors;
+        bool clientValue = ClientConfig.pullFromDewCollectors;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -137,6 +137,16 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromWorkstationOutputs;
         bool clientValue = ClientConfig.pullFromWorkstationOutputs;
+#if DEBUG
+        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
+#endif
+        return ServerUtils.HasServerConfig ? serverValue : clientValue;
+    }
+
+    public static bool PullFromVehicleStorage()
+    {
+        bool serverValue = ServerConfig.pullFromVehicleStorage;
+        bool clientValue = ClientConfig.pullFromVehicleStorage;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -239,6 +249,9 @@ public static class ModConfig
         // otherwise will check all lootable containers placed by player(s)
         public bool onlyStorageCrates = false;
 
+        // if set to true it will try and pull items from nearby dew collectors
+        public bool pullFromDewCollectors = true;
+
         // if set to true it will try and pull items from nearby vehicle storages
         public bool pullFromVehicleStorage = true;
 
@@ -275,6 +288,6 @@ public static class ModConfig
         // ========== Housekeeping =========
         // if set true additional logging will be printed to logs/console
         public bool isDebug = false;
-        public bool isDebugLogSettingsAccess = false;
+        public bool isDebugLogSettingsAccess = false;  // This will only work if isDebug is true and DEBUG is defined
     }
 }

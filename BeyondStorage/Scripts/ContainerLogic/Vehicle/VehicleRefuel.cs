@@ -33,10 +33,10 @@ public static class VehicleRefuel
         return lastRemovedCount + removedFromStorage;
     }
 
-    public static bool CanRefuel(EntityVehicle vehicle, bool originalResult)
+    public static bool CanRefuel(EntityVehicle vehicle, bool alreadyHasItem)
     {
         // return early if already able to refuel from inventory
-        if (originalResult)
+        if (alreadyHasItem)
         {
             return true;
         }

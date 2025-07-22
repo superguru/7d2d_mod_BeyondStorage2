@@ -36,7 +36,6 @@ public class XUiCRecipeListPatches
 #endif
     private static IEnumerable<CodeInstruction> XUiC_RecipeList_Update_Patch(IEnumerable<CodeInstruction> instructions)
     {
-        LogUtil.Info("pat5ching upgrade");
         var targetMethodString = $"{typeof(XUiC_RecipeList)}.{nameof(XUiC_RecipeList.Update)}";
         LogUtil.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);

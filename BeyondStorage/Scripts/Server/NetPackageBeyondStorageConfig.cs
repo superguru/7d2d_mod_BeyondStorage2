@@ -9,7 +9,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
     private const ushort ConfigVersion = 2;
 
     // TODO: Update number if more options being sent
-    private const ushort BoolCount = 10;
+    private const ushort BoolCount = 11;
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
 
@@ -41,6 +41,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.onlyStorageCrates);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
+        binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
 
         // #if DEBUG
         //         // testing backwards compatibility if we are sending more than expecting to receive (EX: newer config sent by server to client running older mod version)
@@ -83,6 +84,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModConfig.ServerConfig.onlyStorageCrates = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromVehicleStorage = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromWorkstationOutputs = reader.ReadBoolean();
+        ModConfig.ServerConfig.pullFromDewCollectors = reader.ReadBoolean();
 
         // Set HasServerConfig = true
         ServerUtils.HasServerConfig = true;
@@ -102,6 +104,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         LogUtil.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
 
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
@@ -122,6 +125,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
     {
         // save room for 6 more bytes (future boolean options)
         // kept it 6 after introducing pullFromWorkstationOutputs
+        // kept it 6 after introducing pullFromDewCollectors
         const int futureReservedSpace = 6;
         const int ushortSize = 2;
         const int floatSize = 4;
