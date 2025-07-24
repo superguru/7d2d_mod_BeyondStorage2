@@ -7,20 +7,22 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class VehicleUtils
 {
-    public static IEnumerable<EntityVehicle> GetAvailableVehicleStorages()
+    public static List<EntityVehicle> GetAvailableVehicleStorages()
     {
         const string d_method_name = "GetAvailableVehicleStorages";
 
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: World is null, aborting.");
+            return new List<EntityVehicle>();
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: Player is null, aborting.");
+            return new List<EntityVehicle>();
         }
 
         LogUtil.DebugLog($"{d_method_name}: Starting");
@@ -31,8 +33,11 @@ public static class VehicleUtils
         var entities = world.Entities?.list;
         if (entities == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: Entities list is null, aborting.");
+            return new List<EntityVehicle>();
         }
+
+        var result = new List<EntityVehicle>();
 
         foreach (var entity in entities)
         {
@@ -60,7 +65,9 @@ public static class VehicleUtils
                 continue;
             }
 
-            yield return vehicle;
+            result.Add(vehicle);
         }
+
+        return result;
     }
 }

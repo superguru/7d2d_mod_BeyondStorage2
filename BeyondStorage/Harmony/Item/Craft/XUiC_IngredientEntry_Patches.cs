@@ -41,7 +41,7 @@ public class XUiCIngredientEntryPatches
                 // Ldarg_0      this
                 new CodeInstruction(OpCodes.Ldarg_0),
                 // ItemCommon.EntryBindingAddAllStorageCount(this.xui.PlayerInventory.GetItemCount(this.ingredient.itemValue)), this)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.EntryBindingAddAllStorageCount)))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.EntryBinding_AddPullableSourceStorageItemCount)))
             ];
             codes.InsertRange(i + 1, newCode);
         }

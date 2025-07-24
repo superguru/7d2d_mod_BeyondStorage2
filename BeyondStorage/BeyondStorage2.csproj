@@ -67,6 +67,7 @@
     <Compile Include="Harmony\Item\Craft\XUiC_RecipeCraftCount_Patches.cs" />
     <Compile Include="Harmony\Item\Craft\XUiC_RecipeList_Patches.cs" />
     <Compile Include="Harmony\Item\Craft\XUiM_PlayerInventory_Craft_Patches.cs" />
+    <Compile Include="Harmony\Item\Action\Item_Action_Entry_Craft_Patches.cs" />
     <Compile Include="Harmony\Item\Repair\ItemActionEntryRepair_Patches.cs" />
     <Compile Include="Harmony\Item\Repair\XUiC_ItemActionList_Patches.cs" />
     <Compile Include="Harmony\Item\XUiM_PlayerInventory_Patches.cs" />

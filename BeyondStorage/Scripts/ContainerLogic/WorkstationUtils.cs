@@ -9,20 +9,22 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class WorkstationUtils
 {
-    public static IEnumerable<TileEntityWorkstation> GetAvailableWorkstationOutputs()
+    public static List<TileEntityWorkstation> GetAvailableWorkstationOutputs()
     {
         const string d_method_name = "GetAvailableWorkstationOutputs";
 
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            yield break;
+            LogUtil.Error($"{d_method_name}: World is null");
+            return new List<TileEntityWorkstation>();
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            yield break;
+            LogUtil.Error($"{d_method_name}: Player is null");
+            return new List<TileEntityWorkstation>();
         }
 
         var playerPos = player.position;
@@ -34,10 +36,12 @@ public static class WorkstationUtils
         if (chunkCacheCopy == null)
         {
             LogUtil.Error($"{d_method_name}: chunkCacheCopy is null");
-            yield break;
+            return new List<TileEntityWorkstation>();
         }
 
         LogUtil.DebugLog($"{d_method_name}: Starting");
+
+        var result = new List<TileEntityWorkstation>();
 
         foreach (var chunk in chunkCacheCopy)
         {
@@ -101,9 +105,11 @@ public static class WorkstationUtils
                     }
                 }
 
-                yield return workstation;
+                result.Add(workstation);
             }
         }
+
+        return result;
     }
 
     /// <summary>

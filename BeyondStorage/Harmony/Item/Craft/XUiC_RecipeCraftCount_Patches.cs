@@ -40,7 +40,7 @@ public class XUiCRecipeCraftCountPatches
             // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetAllItemStacks()).ToArray()
             codes.Insert(i + 1,
                 new CodeInstruction(OpCodes.Call,
-                    AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraftMaxGetAllStorageStacks))));
+                    AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks))));
             set = true;
             break;
         }

@@ -62,7 +62,7 @@ public class XUiCRecipeListPatches
             List<CodeInstruction> newCode = [
                 newJumpCi,
                 // ItemCraft.CraftGetAllStorageStacks(updateStackList)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraftGetAllStorageStacks)))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks)))
             ];
             codes.InsertRange(i - 2, newCode);
             break;

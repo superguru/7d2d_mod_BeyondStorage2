@@ -40,7 +40,7 @@ public class XUiMPlayerInventoryCraftPatches
                 // num
                 new CodeInstruction(OpCodes.Ldloc_1),
                 // ContainerUtils.GetItemCount(_itemStacks, index, num)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.HasItemGetItemCount))),
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_GetRemainingItemCount))),
                 // ldc.i4.0
                 codes[i - 2].Clone(),
                 // ble.s        <Label>

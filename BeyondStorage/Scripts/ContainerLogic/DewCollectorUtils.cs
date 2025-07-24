@@ -9,20 +9,22 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class DewCollectorUtils
 {
-    public static IEnumerable<TileEntityDewCollector> GetAvailableDewCollectorStorages()
+    public static List<TileEntityDewCollector> GetAvailableDewCollectorStorages()
     {
         const string d_method_name = "GetAvailableDewCollectorStorages";
 
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: World is null, aborting.");
+            return new List<TileEntityDewCollector>();
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: Player is null, aborting.");
+            return new List<TileEntityDewCollector>();
         }
 
         LogUtil.DebugLog($"{d_method_name}: Starting");
@@ -36,8 +38,11 @@ public static class DewCollectorUtils
         var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
         if (chunkCacheCopy == null)
         {
-            yield break;
+            LogUtil.DebugLog($"{d_method_name}: chunkCacheCopy is null, aborting.");
+            return new List<TileEntityDewCollector>();
         }
+
+        var result = new List<TileEntityDewCollector>();
 
         foreach (var chunk in chunkCacheCopy)
         {
@@ -83,9 +88,11 @@ public static class DewCollectorUtils
                     }
                 }
 
-                yield return dewCollector;
+                result.Add(dewCollector);
             }
         }
+
+        return result;
     }
 
     /// <summary>
@@ -141,6 +148,5 @@ public static class DewCollectorUtils
          *   Also this would change the behaviour a lot, meaning dew collectors could produce many more items than
          *   usual, which might not be what players expect, and might be too powerful.
         */
-
     }
 }

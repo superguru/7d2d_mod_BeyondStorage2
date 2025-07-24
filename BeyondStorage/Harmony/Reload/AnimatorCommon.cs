@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.ContainerLogic.Ranged;
 using BeyondStorage.Scripts.Utils;
 using HarmonyLib;
-using UnityEngine;
 
 namespace BeyondStorage.Reload;
 
@@ -12,7 +12,7 @@ public static class AnimatorCommon
 {
     public static int GetAmmoCount(ItemValue ammoType, int lastResult, int maxAmmo)
     {
-        return maxAmmo == lastResult ? lastResult : Mathf.Min(Ranged.GetAmmoCount(ammoType) + lastResult, maxAmmo);
+        return maxAmmo == lastResult ? lastResult : Math.Min(Ranged.GetAmmoCount(ammoType) + lastResult, maxAmmo);
     }
 
     internal static IEnumerable<CodeInstruction> GetCountToReload_Transpiler(string targetMethodString, IEnumerable<CodeInstruction> instructions)
