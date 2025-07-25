@@ -8,7 +8,7 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 
 * As of v2.1.0, items can be pulled from nearby Workstations (configurable).
 * As of v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
-
+* As of v2.1.4, Paint can be used by the Paintbrush tool from nearby storage.
 
 ## Installation
 
