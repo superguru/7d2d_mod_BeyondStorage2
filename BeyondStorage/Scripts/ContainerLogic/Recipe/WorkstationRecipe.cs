@@ -52,8 +52,6 @@ public static class WorkstationRecipe
     {
         d_MethodName = string.Concat(d_MethodName, ".RefreshOpenWorkstationWindows");
 
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
         var player = GameManager.Instance.World?.GetPrimaryPlayer();
         if (player == null)
         {
@@ -83,7 +81,7 @@ public static class WorkstationRecipe
             var recipeList = workstation.recipeList;
             if (recipeList == null)
             {
-                LogUtil.DebugLog($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
+                LogUtil.Error($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
                 continue;
             }
 
@@ -112,7 +110,7 @@ public static class WorkstationRecipe
                 var recipe = recipeEntry.Recipe;
                 var recipeName = recipe.GetName();
 
-                LogUtil.DebugLog($"{d_MethodName} recipeControl.Recipe for {recipeName} didn't have the ingredients, so re-checking them");
+                //LogUtil.DebugLog($"{d_MethodName} recipeControl.Recipe for {recipeName} didn't have the ingredients, so re-checking them");
 
                 var recipeInfo = recipeList.recipeInfos.FirstOrDefault(r => r.recipe.Equals(recipe));
                 if (string.IsNullOrEmpty(recipeInfo.name))
@@ -127,7 +125,7 @@ public static class WorkstationRecipe
                     var hasIngredients = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipeInfo.recipe, player);
                     if (hasIngredients)
                     {
-                        LogUtil.DebugLog($"{d_MethodName} recipeInfo for {recipeName} has ingredients now in call {callCount}. Updating recipeEntry");
+                        //LogUtil.DebugLog($"{d_MethodName} recipeInfo for {recipeName} has ingredients now in call {callCount}. Updating recipeEntry");
 
                         recipeEntry.HasIngredients = true;
                         recipeEntry.isDirty = true;
@@ -139,29 +137,26 @@ public static class WorkstationRecipe
 
             if (refreshCount > 0)
             {
-                LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
+                //LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
                 recipeList.IsDirty = true;
                 recipeList.CraftCount.IsDirty = true;
             }
 
-            LogUtil.DebugLog($"{d_MethodName} syncing workstation UI from TE in call {callCount}");
+            //LogUtil.DebugLog($"{d_MethodName} syncing workstation UI from TE in call {callCount}");
             workstation.syncUIfromTE();
 
             // Restore state
-            LogUtil.DebugLog($"{d_MethodName} restoring the current page {currPage} in call {callCount}");
+            //LogUtil.DebugLog($"{d_MethodName} restoring the current page {currPage} in call {callCount}");
             recipeList.Page = currPage;
             recipeList.PlayerInventory_OnBackpackItemsChanged();
 
             if (selectedRecipe != null && craftInfoWindow != null)
             {
-                LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
+                //LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
                 craftInfoWindow.TabType = craftInfoTabType;
                 craftInfoWindow.SetSelectedButtonByType(craftInfoTabType);
                 craftInfoWindow.IsDirty = true;
             }
         }
-
-        stopwatch.Stop();
-        LogUtil.DebugLog($"{d_MethodName} completed in {stopwatch.Elapsed.TotalMilliseconds:F2} ms (call {callCount})");
     }
 }
