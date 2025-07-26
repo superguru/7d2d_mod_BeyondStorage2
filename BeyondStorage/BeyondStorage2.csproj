@@ -102,6 +102,7 @@
     <Compile Include="Scripts\Server\NetPackageLockedTEs.cs" />
     <Compile Include="Scripts\Server\ServerUtils.cs" />
     <Compile Include="Scripts\Utils\FileUtil.cs" />
+    <Compile Include="Scripts\Utils\PatchUtil.cs" />
     <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />
   </ItemGroup>
