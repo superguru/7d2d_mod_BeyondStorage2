@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic.Item;
@@ -10,7 +11,7 @@ public class ItemCraft
     //          Item Crafting - gets max craftable amount
     public static List<ItemStack> ItemCraft_MaxGetAllStorageStacks(List<ItemStack> items)
     {
-        const string d_MethodName = "ItemCraft_MaxGetAllStorageStacks";
+        string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
         if (items != null)
         {
@@ -33,7 +34,7 @@ public class ItemCraft
     //          Item Crafts - shown as available in the list
     public static void ItemCraft_AddPullableSourceStorageStacks(List<ItemStack> items)
     {
-        const string d_MethodName = "ItemCraft_AddPullableSourceStorageStacks";
+        string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
         if (items != null)
         {
@@ -54,7 +55,7 @@ public class ItemCraft
 
     public static List<ItemStack> ItemCraft_GetAllAvailableItemStacksFromXui(XUi xui)
     {
-        const string d_MethodName = "ItemCraft_GetAllAvailableItemStacksFromXui";
+        string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
         var result = new List<ItemStack>();
         if (xui != null)
@@ -79,7 +80,7 @@ public class ItemCraft
     //          Item Crafting - shows item count available in crafting window(s)
     public static int EntryBinding_AddPullableSourceStorageItemCount(int count, XUiC_IngredientEntry entry)
     {
-        const string d_MethodName = "EntryBinding_AddPullableSourceStorageStacksCount";
+        string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
@@ -105,7 +106,7 @@ public class ItemCraft
     //          Item Crafting -
     public static int ItemCraft_GetRemainingItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
     {
-        const string d_MethodName = "ItemCraft_GetRemainingItemCount";
+        string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
         if (numLeft <= 0)
         {

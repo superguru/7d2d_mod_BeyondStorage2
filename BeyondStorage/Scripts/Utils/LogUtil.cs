@@ -1,4 +1,5 @@
 ﻿using BeyondStorage.Scripts.Configuration;
+
 namespace BeyondStorage.Scripts.Utils;
 
 public static class LogUtil

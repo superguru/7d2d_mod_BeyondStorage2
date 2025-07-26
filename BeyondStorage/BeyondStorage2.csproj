@@ -72,7 +72,7 @@
     <Compile Include="Harmony\Item\Repair\XUiC_ItemActionList_Patches.cs" />
     <Compile Include="Harmony\Item\XUiM_PlayerInventory_Patches.cs" />
     <Compile Include="Harmony\PowerSource\Refuel\XUiC_PowerSourceStats_Patches.cs" />
-    <Compile Include="Harmony\Recipe\Current_Workstation_Recipe_Patches.cs" />
+    <Compile Include="Harmony\Recipe\Workstation_Patches.cs" />
     <Compile Include="Harmony\Recipe\Workstation_Recipe_Patches.cs" />
     <Compile Include="Harmony\Reload\_3P\Animator3PRangedReloadState_Patches.cs" />
     <Compile Include="Harmony\Reload\AnimatorCommon.cs" />
@@ -102,6 +102,7 @@
     <Compile Include="Scripts\Server\NetPackageLockedTEs.cs" />
     <Compile Include="Scripts\Server\ServerUtils.cs" />
     <Compile Include="Scripts\Utils\FileUtil.cs" />
+    <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />
   </ItemGroup>
   <ItemGroup>

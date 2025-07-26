@@ -12,7 +12,7 @@ using HarmonyLib;
 namespace BeyondStorage.Recipe;
 
 [HarmonyPatch(typeof(XUiC_WorkstationOutputGrid))]
-public class CurrentWorkstationRecipePatches
+public class WorkstationPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_WorkstationOutputGrid.UpdateData))]
@@ -59,7 +59,8 @@ public class CurrentWorkstationRecipePatches
             List<CodeInstruction> newCode = [
                 //new CodeInstruction(OpCodes.Ldarg_0), // this
                 //new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(XUiC_RecipeStack), nameof(XUiC_RecipeStack.windowGroup))), // ldfld XUiWindowGroup XUiController::windowGroup
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.CurrentWorkstationCraftCompleted))),
+                //new CodeInstruction(OpCodes.Ldarg_1),  // stackList
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted))),
             ];
 
             codes.InsertRange(patchIndex + 1, newCode);

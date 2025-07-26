@@ -57,7 +57,7 @@ public class WorkstationRecipePatches
             List<CodeInstruction> newCode = [
                 //new CodeInstruction(OpCodes.Ldarg_0), // this
                 //new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(XUiC_RecipeStack), nameof(XUiC_RecipeStack.windowGroup))), // ldfld XUiWindowGroup XUiController::windowGroup
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.BackgroundWorkstationCraftCompleted))),
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted))),
             ];
 
             codes.InsertRange(patchIndex + 0, newCode);

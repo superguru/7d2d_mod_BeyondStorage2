@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
@@ -7,50 +9,67 @@ using static XUiC_CraftingInfoWindow;
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
 public static class WorkstationRecipe
 {
-    private static int s_bg_calls = 0;
-    private static int s_curr_calls = 0;
+    // Tracks call count and last call time (ms) for each call type
+    private static readonly Dictionary<string, (int callCount, int callTime)> s_callStats = new();
 
     /// <summary>
     /// This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
     /// </summary>
-    public static void BackgroundWorkstationCraftCompleted()
+    public static void BackgroundWorkstation_CraftCompleted()
     {
         if (!ModConfig.PullFromWorkstationOutputs())
         {
-            // If the config is set to not pull from workstation outputs, we don't need to refresh the windows
             return;
         }
 
-        string d_MethodName = "BackgroundWorkstationCraftComplete";
-        s_bg_calls++;
+        string methodName = nameof(BackgroundWorkstation_CraftCompleted);
 
-        LogUtil.DebugLog($"{d_MethodName} called {s_bg_calls} times");
+        // Increment call count and update stats
+        if (!s_callStats.TryGetValue(methodName, out var stats))
+        {
+            stats = (0, 0);
+        }
 
-        RefreshOpenWorkstationWindows(d_MethodName, s_bg_calls);
+        stats.callCount++;
+        s_callStats[methodName] = stats;
+
+        LogUtil.DebugLog($"{methodName} called {stats.callCount} times");
+
+        Update_OpenWorkstations(methodName, stats.callCount);
     }
 
     /// <summary>
     /// Called when the recipe finishes crafting on the currently opened workstation window
     /// </summary>
-    public static void CurrentWorkstationCraftCompleted()
+    public static void ForegroundWorkstation_CraftCompleted()
     {
         if (!ModConfig.PullFromWorkstationOutputs())
         {
-            // If the config is set to not pull from workstation outputs, we don't need to refresh the windows
             return;
         }
 
-        string d_MethodName = "CurrentWorkstationCraftCompleted";
-        s_curr_calls++;
+        string methodName = nameof(ForegroundWorkstation_CraftCompleted);
 
-        LogUtil.DebugLog($"{d_MethodName} called {s_curr_calls} times");
+        // Increment call count and update stats
+        if (!s_callStats.TryGetValue(methodName, out var stats))
+        {
+            stats = (0, 0);
+        }
 
-        RefreshOpenWorkstationWindows(d_MethodName, s_curr_calls);
+        stats.callCount++;
+        s_callStats[methodName] = stats;
+
+        LogUtil.DebugLog($"{methodName} Starting call {stats.callCount}");
+
+        Update_OpenWorkstations(methodName, stats.callCount);
     }
 
-    private static void RefreshOpenWorkstationWindows(string d_MethodName, int callCount)
+    private static void Update_OpenWorkstations(string callType, int callCount)
     {
-        d_MethodName = string.Concat(d_MethodName, ".RefreshOpenWorkstationWindows");
+        // Start timing for total execution
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        string d_MethodName = string.Concat(callType, ".", MethodBase.GetCurrentMethod().Name);
 
         var player = GameManager.Instance.World?.GetPrimaryPlayer();
         if (player == null)
@@ -59,104 +78,195 @@ public static class WorkstationRecipe
             return;
         }
 
-        var openWindows = player.windowManager?.windows.Where(w => w.isShowing);
-        if (openWindows == null)
+        var xui = player.PlayerUI.xui;
+        if (xui == null)
         {
-            LogUtil.Error($"{d_MethodName}: openWindows is null in call {callCount}");
+            LogUtil.Error($"{d_MethodName}: xui is null in call {callCount}");
             return;
         }
 
-        foreach (var win in openWindows)
+        // Get only open workstation windows (avoids unnecessary filtering later)
+        var openWorkstations = xui.GetChildrenByType<XUiC_WorkstationWindowGroup>()
+            .Where(w => w.WindowGroup?.isShowing ?? false)
+            .ToList();
+
+        if (openWorkstations.Count == 0)
         {
-            if (win is not XUiWindowGroup wg || wg.Controller == null)
-            {
-                continue;
-            }
+            stopwatch.Stop();
+            return; // Nothing to update - exit early
+        }
 
-            if (wg.Controller is not XUiC_WorkstationWindowGroup workstation)
-            {
-                continue;
-            }
+        // Get all available items once (shared across all workstations)
+        var availableItems = ItemCraft.ItemCraft_GetAllAvailableItemStacksFromXui(xui);
+        if (availableItems.Count == 0)
+        {
+            return;  // Interesting...
+        }
 
+        // Process each workstation
+        foreach (var workstation in openWorkstations)
+        {
             var recipeList = workstation.recipeList;
-            if (recipeList == null)
+            if (recipeList == null || recipeList.recipeControls == null)
             {
-                LogUtil.Error($"{d_MethodName} recipeList is null in call {callCount}, so not updating recipe list");
                 continue;
             }
 
-            var availableItems = ItemCraft.ItemCraft_GetAllAvailableItemStacksFromXui(workstation.xui);
-            //LogUtil.DebugLog($"{d_MethodName} Items__PRE {availableItems?.Count} in call {callCount}\n" + string.Join(", ", availableItems.Select(i => i.itemValue.ItemClass.GetItemName() + "=" + i.count)));
+            // Store UI state
+            var stateInfo = CaptureWorkstationState(workstation, recipeList);
 
-            // Save state
-            var currPage = recipeList.Page;
-            var selectedRecipe = recipeList.SelectedEntry;
-
-            var craftInfoWindow = workstation.craftInfoWindow;
-            var craftInfoTabType = selectedRecipe != null && craftInfoWindow != null
-                ? craftInfoWindow.TabType
-                : TabTypes.Ingredients;
-
-            LogUtil.DebugLog($"{d_MethodName} Refreshing the recipes for open workstation in call {callCount}");
+            // Dictionary to quickly look up recipe infos by recipe
+            var recipeInfoLookup = recipeList.recipeInfos?.ToDictionary(
+                ri => ri.recipe,
+                ri => ri,
+                new RecipeEqualityComparer()) ?? new Dictionary<global::Recipe, XUiC_RecipeList.RecipeInfo>(new RecipeEqualityComparer());
 
             int refreshCount = 0;
-            foreach (var recipeEntry in recipeList.recipeControls)
+            var craftingWindow = recipeList.craftingWindow;
+            bool hasCraftingWindow = (craftingWindow != null);
+
+            // Only process recipe entries that could potentially change (even those with HasIngredients == true can change because more ingredients might be available)
+            var recipesToCheck = recipeList.recipeControls
+                .Where(entry => entry?.Recipe != null)
+                .ToList();
+
+            if (recipesToCheck.Count == 0)
             {
-                if (recipeEntry.Recipe == null || recipeEntry.HasIngredients)
-                {
-                    continue;
-                }
+                continue; // No recipes need updating in this workstation
+            }
 
+            foreach (var recipeEntry in recipesToCheck)
+            {
                 var recipe = recipeEntry.Recipe;
-                var recipeName = recipe.GetName();
 
-                //LogUtil.DebugLog($"{d_MethodName} recipeControl.Recipe for {recipeName} didn't have the ingredients, so re-checking them");
-
-                var recipeInfo = recipeList.recipeInfos.FirstOrDefault(r => r.recipe.Equals(recipe));
-                if (string.IsNullOrEmpty(recipeInfo.name))
+                // Skip validation if recipe info is missing
+                if (!recipeInfoLookup.TryGetValue(recipe, out var recipeInfo) || string.IsNullOrEmpty(recipeInfo.name))
                 {
-                    LogUtil.Error($"{d_MethodName} recipeInfo for {recipeName} not found in call {callCount}, so not refreshing it");
                     continue;
                 }
 
-                var craftingValid = (recipeList.craftingWindow == null || recipeList.craftingWindow.CraftingRequirementsValid(recipeInfo.recipe));
-                if (craftingValid)
+                // Check if crafting requirements are valid
+                bool craftingValid = hasCraftingWindow && craftingWindow.CraftingRequirementsValid(recipeInfo.recipe);
+                bool hasIngredientsNow = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipe, player);
+
+                // Only check ingredients if crafting is valid
+                if (craftingValid && hasIngredientsNow)
                 {
-                    var hasIngredients = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipeInfo.recipe, player);
-                    if (hasIngredients)
+                    if (recipeEntry.HasIngredients ^ hasIngredientsNow)
                     {
-                        //LogUtil.DebugLog($"{d_MethodName} recipeInfo for {recipeName} has ingredients now in call {callCount}. Updating recipeEntry");
+                        recipeEntry.HasIngredients = hasIngredientsNow;  // This will cause the crafting info page to reset to Ingredients tab
 
-                        recipeEntry.HasIngredients = true;
+                        if (hasIngredientsNow)
+                        {
+                            stateInfo.SelectedEntryBecameEnabled = true;
+                            recipeList.resortRecipes = true; // This recipe has been enabled now, and we need to resort the recipes
+                        }
+
                         recipeEntry.isDirty = true;
-
                         refreshCount++;
                     }
                 }
             }
 
+            // Update UI only if changes were made
             if (refreshCount > 0)
             {
-                //LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
+                LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");
                 recipeList.IsDirty = true;
                 recipeList.CraftCount.IsDirty = true;
+
+                // Sync UI with tile entity
+                workstation.syncUIfromTE();
+
+                // Restore UI state
+                RestoreWorkstationState(workstation, recipeList, stateInfo);
+                recipeList.PlayerInventory_OnBackpackItemsChanged();
             }
+        }
 
-            //LogUtil.DebugLog($"{d_MethodName} syncing workstation UI from TE in call {callCount}");
-            workstation.syncUIfromTE();
+        // Stop timing and log the total execution time
+        stopwatch.Stop();
+        int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+        LogUtil.DebugLog($"{d_MethodName} Total execution time in call {callCount}: {elapsedMs}ms");
 
-            // Restore state
-            //LogUtil.DebugLog($"{d_MethodName} restoring the current page {currPage} in call {callCount}");
-            recipeList.Page = currPage;
-            recipeList.PlayerInventory_OnBackpackItemsChanged();
+        // Update call time in stats dictionary
+        if (s_callStats.TryGetValue(callType, out var stats))
+        {
+            s_callStats[callType] = (stats.callCount, elapsedMs);
+        }
+    }
 
-            if (selectedRecipe != null && craftInfoWindow != null)
+    // Helper class to store workstation state
+    private class WorkstationState
+    {
+        public int CurrentPage { get; set; }
+        public XUiC_RecipeEntry SelectedEntry { get; set; }
+        public bool SelectedEntryBecameEnabled { get; set; }
+        public TabTypes CraftInfoTabType { get; set; }
+    }
+
+    // Helper method to capture workstation state
+    private static WorkstationState CaptureWorkstationState(XUiC_WorkstationWindowGroup workstation, XUiC_RecipeList recipeList)
+    {
+        var craftInfoWindow = workstation?.craftInfoWindow;
+
+        return new WorkstationState
+        {
+            CurrentPage = recipeList.Page,
+            SelectedEntry = recipeList.SelectedEntry,
+            SelectedEntryBecameEnabled = false,
+            CraftInfoTabType = (craftInfoWindow != null) ? craftInfoWindow.TabType : TabTypes.Ingredients
+        };
+    }
+
+    // Helper method to restore workstation state
+    private static void RestoreWorkstationState(XUiC_WorkstationWindowGroup workstation, XUiC_RecipeList recipeList, WorkstationState stateInfo)
+    {
+        if (stateInfo.SelectedEntryBecameEnabled)
+        {
+            recipeList.SelectedEntry = stateInfo.SelectedEntry;
+        }
+        //else
+        {
+            if (recipeList.Page != stateInfo.CurrentPage)
             {
-                //LogUtil.DebugLog($"{d_MethodName} restoring previous craft info tab {craftInfoTabType} in call {callCount}");
-                craftInfoWindow.TabType = craftInfoTabType;
-                craftInfoWindow.SetSelectedButtonByType(craftInfoTabType);
-                craftInfoWindow.IsDirty = true;
+                recipeList.Page = stateInfo.CurrentPage;
+
+                var craftInfoWindow = workstation.craftInfoWindow;
+                if (stateInfo.SelectedEntry != null && craftInfoWindow != null)
+                {
+                    if (craftInfoWindow.TabType != stateInfo.CraftInfoTabType)
+                    {
+                        craftInfoWindow.TabType = stateInfo.CraftInfoTabType;
+                        craftInfoWindow.SetSelectedButtonByType(stateInfo.CraftInfoTabType);
+                        craftInfoWindow.IsDirty = true;
+                    }
+                }
             }
+        }
+    }
+
+    // Custom equality comparer for Recipe objects
+    private class RecipeEqualityComparer : IEqualityComparer<global::Recipe>
+    {
+        public bool Equals(global::Recipe x, global::Recipe y)
+        {
+            if (x == null && y == null)
+            {
+                return true;
+            }
+
+            if (x == null || y == null)
+            {
+                return false;
+            }
+
+            return x.Equals(y);
+        }
+
+        public int GetHashCode(global::Recipe obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }
