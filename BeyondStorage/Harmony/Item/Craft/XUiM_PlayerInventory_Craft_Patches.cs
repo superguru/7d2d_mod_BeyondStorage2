@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
@@ -17,49 +16,79 @@ public class XUiMPlayerInventoryCraftPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_HasItems_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_HasItems_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
-        var targetMethodString = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.HasItems)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
-        var codes = new List<CodeInstruction>(instructions);
-        var set = false;
-        for (var i = 0; i < codes.Count; i++)
+        var targetMethodName = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.HasItems)}";
+
+        var searchPattern = new List<CodeInstruction>
         {
-            if (i <= 0 || i >= codes.Count - 1 || codes[i].opcode != OpCodes.Ldc_I4_0 || codes[i + 1].opcode != OpCodes.Ret)
+            new CodeInstruction(OpCodes.Ldc_I4_0),
+            new CodeInstruction(OpCodes.Ret)
+        };
+
+        // Create replacement instructions (insert before the found pattern)
+        var replacementInstructions = new List<CodeInstruction>
+        {
+            // _itemStacks
+            new CodeInstruction(OpCodes.Ldarg_1),
+            // index
+            new CodeInstruction(OpCodes.Ldloc_0),
+            // num
+            new CodeInstruction(OpCodes.Ldloc_1),
+            // ItemCraft.ItemCraft_GetRemainingItemCount(_itemStacks, index, num)
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_GetRemainingItemCount))),
+            // ldc.i4.0 (preserve original instruction with labels)
+            new CodeInstruction(OpCodes.Ldc_I4_0),
+            // ble.s <Label> (preserve original instruction with labels)
+            new CodeInstruction(OpCodes.Ble_S, null) // The actual label will be preserved by the patch method
+        };
+
+        var patchRequest = new PatchUtil.PatchRequest
+        {
+            OriginalInstructions = [.. originalInstructions], // Convert to List for compatibility
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodName,
+            ReplacementOffset = 0,     // Insert at the match position
+            IsInsertMode = true,       // Insert new instructions before the pattern
+            MaxPatches = 1,
+            MinimumSafetyOffset = 0,   // No special safety requirements
+            ExtraLogging = true        // Enable extra logging for debugging
+        };
+
+        var patchResult = PatchUtil.ApplyPatches(patchRequest);
+
+        if (patchResult.IsPatched)
+        {
+            // -  1. Need to move this branch fixup code to the patch method
+            // ✔️ 2. Record the original index of the patch as well as the new index of the patch in the PatchResult
+            // -  3. use patchRequest.NewInstructions.GetRange();
+
+            // Find the label for the branch instruction
+            LogUtil.DebugLog($"{targetMethodName} looking for label instruction in new instructions");
+            var newLabelIndex = patchRequest.NewInstructions.FindIndex(instr => instr.opcode == OpCodes.Ble_S && instr.labels.Count == 0);
+            if (newLabelIndex >= 0)
             {
-                continue;
+                LogUtil.DebugLog($"{targetMethodName} found new label instruction at new index {newLabelIndex}");
+                var oldLabelIndex = patchResult.OriginalPositions[patchResult.Count - 1] - 1;
+                LogUtil.DebugLog($"{targetMethodName} old label index: {oldLabelIndex}");
+
+                var oldInstruction = patchRequest.OriginalInstructions[oldLabelIndex];
+                var oldLabels = oldInstruction.labels;
+                LogUtil.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
+
+                patchRequest.NewInstructions[newLabelIndex] = oldInstruction.Clone();
+            }
+            else
+            {
+                // Could not find the label instruction, log an error
+                LogUtil.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
+                return originalInstructions; // Return original instructions if patch failed
             }
 
-            LogUtil.DebugLog($"Patching {targetMethodString}");
-
-            List<CodeInstruction> newCode = [
-                // _itemStacks
-                new CodeInstruction(OpCodes.Ldarg_1),
-                // index
-                new CodeInstruction(OpCodes.Ldloc_0),
-                // num
-                new CodeInstruction(OpCodes.Ldloc_1),
-                // ContainerUtils.GetItemCount(_itemStacks, index, num)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_GetRemainingItemCount))),
-                // ldc.i4.0
-                codes[i - 2].Clone(),
-                // ble.s        <Label>
-                codes[i - 1].Clone()
-            ];
-            codes.InsertRange(i, newCode);
-            set = true;
-            break;
+            return patchRequest.NewInstructions;
         }
 
-        if (!set)
-        {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
-        }
-
-        return codes.AsEnumerable();
+        return originalInstructions;
     }
 }
