@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.ContainerLogic.Recipe;
-//using BeyondStorage.Scripts.ContainerLogic.Recipe;
 using BeyondStorage.Scripts.Utils;
 using HarmonyLib;
 
@@ -19,63 +18,41 @@ public class WorkstationRecipePatches
 #endif
     private static IEnumerable<CodeInstruction> TileEntityWorkstation_AddCraftComplete_Patch(IEnumerable<CodeInstruction> instructions)
     {
-        // This is called when the recipe finishes crafting on a NON-visible window
         var targetMethodString = $"{typeof(TileEntityWorkstation)}.{nameof(TileEntityWorkstation.AddCraftComplete)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
 
-        var codes = new List<CodeInstruction>(instructions);
-
-        int patchIndex = 0;
-        int patchCount = 0;
-        int MAX_PATCHES = 1;
-
-        while ((patchIndex >= 0) && (patchIndex < codes.Count - 2))
+        // Create search pattern for Ldarg_0 instruction
+        var searchPattern = new List<CodeInstruction>
         {
-            if ((MAX_PATCHES > 0) && (patchCount >= MAX_PATCHES))
-            {
-                LogUtil.Info($"Reached maximum patches ({MAX_PATCHES}) for {targetMethodString}. Stopping further patches.");
-                break;
-            }
+            new CodeInstruction(OpCodes.Ldarg_0)
+        };
 
-            //patchIndex = codes.FindIndex(patchIndex, code => code.opcode == OpCodes.Callvirt && code.operand is MethodInfo methodInfo && methodInfo.Name == "get_IsVisible");
-            //patchIndex = codes.FindIndex(patchIndex, code => code.opcode == OpCodes.Ldfld && code.operand is FieldInfo fieldInfo && fieldInfo.Name == "isBurning");
-            patchIndex = codes.FindIndex(patchIndex, code => code.opcode == OpCodes.Ldarg_0);
-            if (patchIndex < 0)
-            {
-                // No more matches found
-                break;
-            }
-            LogUtil.DebugLog($"Found patch point {patchCount + 1} at index {patchIndex} in {targetMethodString}");
+        // Create replacement instructions (insert at the found pattern position)
+        var replacementInstructions = new List<CodeInstruction>
+        {
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)))
+        };
 
-            if (patchIndex < 0)
-            {
-                LogUtil.Warning($"Patch index {patchIndex} is too low to insert the new code. Skipping patch.");
-                patchIndex++;
-                continue;
-            }
+        var patchRequest = new PatchUtil.PatchRequest
+        {
+            OriginalInstructions = instructions.ToList(),
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodString,
+            ReplacementOffset = 0,     // Insert at the match position
+            IsInsertMode = true,       // Insert new instructions at the pattern
+            MaxPatches = 1,
+            MinimumSafetyOffset = 0,   // No special safety requirements
+            ExtraLogging = true        // Enable extra logging for debugging
+        };
 
-            List<CodeInstruction> newCode = [
-                //new CodeInstruction(OpCodes.Ldarg_0), // this
-                //new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(XUiC_RecipeStack), nameof(XUiC_RecipeStack.windowGroup))), // ldfld XUiWindowGroup XUiController::windowGroup
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted))),
-            ];
+        var patchResult = PatchUtil.ApplyPatches(patchRequest);
 
-            codes.InsertRange(patchIndex + 0, newCode);
-            patchCount++;
-
-            LogUtil.DebugLog($"Inserted patch #{patchCount} at index {patchIndex - 2} in {targetMethodString}");
-            patchIndex += newCode.Count + 1; // Move past the newly inserted code
+        if (patchResult.IsPatched)
+        {
+            return patchRequest.NewInstructions;
         }
 
-        if (patchCount > 0)
-        {
-            LogUtil.Info($"Successfully patched {targetMethodString} in {patchCount} places");
-        }
-        else
-        {
-            LogUtil.Warning($"No patches applied to {targetMethodString}");
-        }
-
-        return codes.AsEnumerable();
+        var response = PatchUtil.ApplyPatches(patchRequest);
+        return response.BestInstructions(patchRequest);
     }
 }
