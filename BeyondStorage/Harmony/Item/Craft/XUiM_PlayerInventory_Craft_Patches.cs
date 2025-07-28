@@ -53,7 +53,7 @@ public class XUiMPlayerInventoryCraftPatches
             IsInsertMode = true,       // Insert new instructions before the pattern
             MaxPatches = 1,
             MinimumSafetyOffset = 0,   // No special safety requirements
-            ExtraLogging = true        // Enable extra logging for debugging
+            ExtraLogging = false       // Enable extra logging for debugging
         };
 
         var patchResult = PatchUtil.ApplyPatches(patchRequest);
@@ -63,19 +63,19 @@ public class XUiMPlayerInventoryCraftPatches
             // -  1. Need to move this branch fixup code to the patch method
             // ✔️ 2. Record the original index of the patch as well as the new index of the patch in the PatchResult
             // -  3. use patchRequest.NewInstructions.GetRange();
+            // -  4. Remove all this extra logging
 
-            // Find the label for the branch instruction
-            LogUtil.DebugLog($"{targetMethodName} looking for label instruction in new instructions");
             var newLabelIndex = patchRequest.NewInstructions.FindIndex(instr => instr.opcode == OpCodes.Ble_S && instr.labels.Count == 0);
             if (newLabelIndex >= 0)
             {
-                LogUtil.DebugLog($"{targetMethodName} found new label instruction at new index {newLabelIndex}");
                 var oldLabelIndex = patchResult.OriginalPositions[patchResult.Count - 1] - 1;
-                LogUtil.DebugLog($"{targetMethodName} old label index: {oldLabelIndex}");
 
                 var oldInstruction = patchRequest.OriginalInstructions[oldLabelIndex];
                 var oldLabels = oldInstruction.labels;
-                LogUtil.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
+                if (patchRequest.ExtraLogging)
+                {
+                    LogUtil.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
+                }
 
                 patchRequest.NewInstructions[newLabelIndex] = oldInstruction.Clone();
             }
@@ -85,10 +85,8 @@ public class XUiMPlayerInventoryCraftPatches
                 LogUtil.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
                 return originalInstructions; // Return original instructions if patch failed
             }
-
-            return patchRequest.NewInstructions;
         }
 
-        return originalInstructions;
+        return patchResult.BestInstructions(patchRequest);
     }
 }
