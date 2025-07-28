@@ -171,7 +171,6 @@ public static class ContainerUtils
                         continue;
                     }
 
-                    LogUtil.DebugLog($"{d_MethodName}: Found workstation {workstation.GetType().Name} at {worldPos}, chunk is at {chunk.ChunkPos}");
                     workstations.Add(workstation);
                     continue;
                 }
