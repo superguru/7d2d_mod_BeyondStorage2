@@ -14,15 +14,15 @@ public static class VehicleUtils
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            LogUtil.DebugLog($"{d_method_name}: World is null, aborting.");
-            return new List<EntityVehicle>();
+            LogUtil.Error($"{d_method_name}: World is null, aborting.");
+            return [];
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            LogUtil.DebugLog($"{d_method_name}: Player is null, aborting.");
-            return new List<EntityVehicle>();
+            LogUtil.Error($"{d_method_name}: Player is null, aborting.");
+            return [];
         }
 
         LogUtil.DebugLog($"{d_method_name}: Starting");
@@ -30,23 +30,17 @@ public static class VehicleUtils
         var playerPos = player.position;
         var configRange = ModConfig.Range();
 
-        var entities = world.Entities?.list;
-        if (entities == null)
+        var vehicles = VehicleManager.Instance?.vehiclesActive;
+        if (vehicles == null)
         {
-            LogUtil.DebugLog($"{d_method_name}: Entities list is null, aborting.");
-            return new List<EntityVehicle>();
+            LogUtil.Error($"{d_method_name}: VehicleManager returned null list, aborting.");
+            return [];
         }
 
         var result = new List<EntityVehicle>();
 
-        foreach (var entity in entities)
+        foreach (var vehicle in vehicles)
         {
-            // Only consider vehicles
-            if (entity is not EntityVehicle vehicle)
-            {
-                continue;
-            }
-
             // Must have storage and a non-empty bag
             if (vehicle.bag == null || vehicle.bag.IsEmpty() || !vehicle.hasStorage())
             {
@@ -64,6 +58,8 @@ public static class VehicleUtils
             {
                 continue;
             }
+
+            LogUtil.DebugLog($"{d_method_name}: Found vehicle {vehicle.entityId} at {vehicle.position} with storage.");
 
             result.Add(vehicle);
         }
