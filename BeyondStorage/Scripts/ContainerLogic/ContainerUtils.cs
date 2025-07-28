@@ -201,18 +201,60 @@ public static class ContainerUtils
         LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
-    private static void AddStacks(string d_MethodName, List<ItemStack> output, IEnumerable<ItemStack> stacks, string sourceName, ref int previousCount)
+    private static void AddValidStacks<T>(string d_MethodName,
+        List<ItemStack> output,
+        IEnumerable<T> sources,
+        Func<T, ItemStack[]> getStacks,
+        string sourceName,
+        ref int previousCount,
+        ItemValue filterItem = null) where T : class
     {
-        if (stacks != null)
+        if (sources == null)
         {
-            output.AddRange(stacks.Where(stack => stack != null && stack.count > 0));
+            LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in 0 stacks (null source)");
+            return;
         }
 
-        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {output.Count - previousCount} stacks");
+        int addedCount = 0;
+        int filterType = filterItem?.type ?? -1;
+
+        foreach (var source in sources)
+        {
+            if (source == null)
+            {
+                continue;
+            }
+
+            var stacks = getStacks(source);
+            if (stacks == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < stacks.Length; i++)
+            {
+                var stack = stacks[i];
+                if (stack == null || stack.count <= 0)
+                {
+                    continue;
+                }
+
+                // Apply filter if specified
+                if (filterType >= 0 && stack.itemValue?.type != filterType)
+                {
+                    continue;
+                }
+
+                output.Add(stack);
+                addedCount++;
+            }
+        }
+
+        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {addedCount} stacks");
         previousCount = output.Count;
     }
 
-    public static List<ItemStack> GetPullableSourceItemStacks()
+    public static List<ItemStack> GetPullableSourceItemStacks(ItemValue filterItem = null)
     {
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
         LogUtil.DebugLog($"{d_MethodName}: Starting");
@@ -222,31 +264,19 @@ public static class ContainerUtils
 
         InitializePullableCollections(out var lootables, out var dewCollectors, out var workstations);
 
-        // Dew Collectors
-        AddStacks(d_MethodName, result, dewCollectors
-            .SelectMany(dewCollector => dewCollector?.items ?? []),
-            "Dew Collector Storage", ref previousCount);
+        AddValidStacks(d_MethodName, result, dewCollectors, dc => dc.items, "Dew Collector Storage", ref previousCount, filterItem);
 
-        // Workstation Outputs
         if (ModConfig.PullFromWorkstationOutputs())
         {
-            AddStacks(d_MethodName, result, workstations
-                .SelectMany(workstation => workstation.Output ?? []),
-                "Workstation Output", ref previousCount);
+            AddValidStacks(d_MethodName, result, workstations, ws => ws.Output, "Workstation Output", ref previousCount, filterItem);
         }
 
-        // Container Storage
-        AddStacks(d_MethodName, result, lootables
-            .SelectMany(lootable => lootable.items ?? Enumerable.Empty<ItemStack>()),
-            "Container Storage", ref previousCount);
+        AddValidStacks(d_MethodName, result, lootables, l => l.items, "Container Storage", ref previousCount, filterItem);
 
-        // Vehicle Storage
         if (ModConfig.PullFromVehicleStorage())
         {
             var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
-            AddStacks(d_MethodName, result, vehicleStorages
-                .SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()),
-                "Vehicle Storage", ref previousCount);
+            AddValidStacks(d_MethodName, result, vehicleStorages, v => v.bag?.GetSlots(), "Vehicle Storage", ref previousCount, filterItem);
         }
 
         ItemUtil.PurgeInvalidItemStacks(result);
@@ -257,23 +287,10 @@ public static class ContainerUtils
     {
         const string d_MethodName = nameof(HasItem);
 
-        if (itemValue == null || itemValue.IsEmpty())
-        {
-            LogUtil.Error($"{d_MethodName} Item is null or Empty");
-            return false;
-        }
+        var sources = GetPullableSourceItemStacks(itemValue);
+        var result = sources.Any();
 
-        var itemClass = itemValue.ItemClass;
-        if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
-        {
-            LogUtil.Error($"{d_MethodName} ItemClass is null for item type {itemValue.type}");
-            return false;
-        }
-
-        var sources = GetPullableSourceItemStacks();
-        var result = sources.Any(stack => stack.itemValue.type == itemValue.type);
-
-        LogUtil.DebugLog($"{d_MethodName} for {itemClass.Name} is {result}");
+        LogUtil.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
 
         return result;
     }
@@ -282,23 +299,10 @@ public static class ContainerUtils
     {
         const string d_MethodName = nameof(GetItemCount);
 
-        if (itemValue == null || itemValue.IsEmpty())
-        {
-            LogUtil.Error($"{d_MethodName} Item is null or Empty");
-            return 0;
-        }
+        var sources = GetPullableSourceItemStacks(itemValue);
+        var totalCount = sources.Sum(stack => stack.count);
 
-        var itemClass = itemValue.ItemClass;
-        if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
-        {
-            LogUtil.Error($"{d_MethodName} ItemClass is null for item type {itemValue.type}");
-            return 0;
-        }
-
-        var sources = GetPullableSourceItemStacks();
-        var totalCount = sources.Where(stack => stack?.itemValue.type == itemValue.type).Sum(stack => stack?.count) ?? 0;
-
-        LogUtil.DebugLog($"{d_MethodName} | Found {totalCount} of {itemClass.Name}");
+        LogUtil.DebugLog($"{d_MethodName} | Found {totalCount} of '{itemValue?.ItemClass?.Name}'");
 
         return totalCount;
     }
