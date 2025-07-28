@@ -61,8 +61,6 @@ public static class VehicleUtils
                 continue;
             }
 
-            LogUtil.DebugLog($"{d_method_name}: Found vehicle {vehicle.entityId} at {vehicle.position} with storage.");
-
             result.Add(vehicle);
         }
 
