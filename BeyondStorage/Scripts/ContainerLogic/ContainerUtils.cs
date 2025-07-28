@@ -190,7 +190,7 @@ public static class ContainerUtils
             AddStacks(d_MethodName, result, vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()), "Vehicle Storage", ref previousCount);
         }
 
-        ItemUtil.StripNullAndEmptyItemStacks(result);
+        ItemUtil.PurgeInvalidItemStacks(result);
         return result;
     }
 
@@ -387,51 +387,5 @@ public static class ContainerUtils
             stillNeeded = 0;
         }
 #endif
-    }
-
-    public static void PurgeInvalidItemStacks(List<ItemStack> stacks)
-    {
-        const string d_MethodName = nameof(PurgeInvalidItemStacks);
-
-        if (stacks == null || stacks.Count == 0)
-        {
-            return;
-        }
-
-        LogUtil.DebugLog($"{d_MethodName}: Starting with {stacks.Count} stacks");
-
-        var toRemove = new List<ItemStack>();
-        foreach (var stack in stacks)
-        {
-            if (stack == null || stack.IsEmpty())
-            {
-                continue;
-            }
-
-            var itemType = stack.itemValue?.type;
-            if (itemType == null || itemType == 0)
-            {
-                toRemove.Add(stack);
-                continue;
-            }
-
-            // Check if the item class is valid
-            var itemClass = ItemClass.GetForId((int)itemType);
-            if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
-            {
-                toRemove.Add(stack);
-                continue;
-            }
-
-            // Optionally, log or handle specific cases for debug
-
-        }
-
-        foreach (var invalidStack in toRemove)
-        {
-            stacks.Remove(invalidStack);
-        }
-
-        LogUtil.DebugLog($"{d_MethodName}: Finished. Removed {toRemove.Count} invalid stacks, {stacks.Count} stacks remaining.");
     }
 }

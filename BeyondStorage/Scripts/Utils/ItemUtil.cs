@@ -48,15 +48,9 @@ public static class ItemUtil
         return result;
     }
 
-    /// <summary>
-    /// Efficiently removes null and empty item stacks from the input list.
-    /// Optimized for performance with minimal allocations and early exits.
-    /// Ensures the input list has adequate capacity for future operations.
-    /// </summary>
-    /// <param name="stacks">The list of item stacks to filter</param>
-    public static void StripNullAndEmptyItemStacks(List<ItemStack> stacks)
+    public static void PurgeInvalidItemStacks(List<ItemStack> stacks)
     {
-        const string d_methodName = nameof(StripNullAndEmptyItemStacks);
+        const string d_methodName = nameof(PurgeInvalidItemStacks);
 
         if (stacks == null || stacks.Count == 0)
         {
@@ -71,14 +65,11 @@ public static class ItemUtil
             if (stack?.count > 0 &&
                 stack.itemValue?.ItemClass != null &&
                 !stack.itemValue.IsEmpty() &&
-                !string.IsNullOrEmpty(stack.itemValue.ItemClass.GetItemName()))
+                !string.IsNullOrEmpty(stack.itemValue.ItemClass?.GetItemName()))
             {
                 validItems.Add(stack);
             }
         }
-
-        // Replace contents efficiently
-        stacks.Clear();
 
         // Ensure input has adequate capacity before adding items
         if (stacks.Capacity < DEFAULT_ITEMSTACK_LIST_CAPACITY)
@@ -87,6 +78,7 @@ public static class ItemUtil
             stacks.Capacity = DEFAULT_ITEMSTACK_LIST_CAPACITY;
         }
 
+        stacks.Clear();
         stacks.AddRange(validItems);
     }
 }
