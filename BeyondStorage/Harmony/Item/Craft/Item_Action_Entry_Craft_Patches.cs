@@ -44,7 +44,7 @@ public class ItemActionEntryCraftPatches
             IsInsertMode = false,     // Overwrite existing instructions
             MaxPatches = 1,
             MinimumSafetyOffset = 2,  // Ensure we have at least 2 instructions before the match
-            ExtraLogging = false      
+            ExtraLogging = false
         };
 
         var response = PatchUtil.ApplyPatches(patchRequest);
