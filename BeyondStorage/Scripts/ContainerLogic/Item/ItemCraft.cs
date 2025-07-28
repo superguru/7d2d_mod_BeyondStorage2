@@ -101,63 +101,33 @@ public class ItemCraft
     // Used By:
     //      XUiM_PlayerInventory.HasItems
     //          Item Crafting -
-    public static int ItemCraft_GetRemainingItemCount(IList<ItemStack> itemStacks, int i, int numLeft)
+    public static int ItemCraft_GetRemainingItemCount(IList<ItemStack> itemStacks, int i, int stillNeeded)
     {
         const string d_MethodName = nameof(ItemCraft_GetRemainingItemCount);
 
-        if (numLeft <= 0)
+        // Fast path: early return if nothing needed
+        if (stillNeeded <= 0)
         {
-            LogUtil.DebugLog($"{d_MethodName} called with numLeft <= 0 ({numLeft}), returning {numLeft}");
-            return 0;
+            return stillNeeded;
         }
 
-        if (itemStacks == null)
+        // Essential validation only
+        if (itemStacks == null || i < 0 || i >= itemStacks.Count)
         {
-            LogUtil.Error($"{d_MethodName} called with null itemStacks");
-            return numLeft;
-        }
-
-        if (i < 0 || i >= itemStacks.Count)
-        {
-            LogUtil.Error($"{d_MethodName} called with out-of-bounds index: {i} (Count: {itemStacks.Count})");
-            return numLeft;
+            return stillNeeded;
         }
 
         var itemStack = itemStacks[i];
-        if (itemStack == null)
+        if (itemStack?.itemValue == null || itemStack.itemValue.IsEmpty())
         {
-            LogUtil.Error($"{d_MethodName} called with null itemStack at index {i}");
-            return numLeft;
+            return stillNeeded;
         }
 
-        var itemValue = itemStack.itemValue;
-        if (itemValue != null || itemValue.IsEmpty())
-        {
-            LogUtil.Error($"{d_MethodName} called with null or empty itemValue for itemStack at index {i}");
-            return numLeft;
-        }
+        // Get storage count and return result
+        var storageCount = ContainerUtils.GetItemCount(itemStack.itemValue);
+        var result = stillNeeded - storageCount;
 
-        var itemClass = itemValue.ItemClass;
-        if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
-        {
-            LogUtil.Error($"{d_MethodName} called with null or empty itemClass for itemValue/itemStack at index {i}");
-            return numLeft;
-        }
-
-        var itemName = itemClass.GetItemName();
-        LogUtil.DebugLog($"{d_MethodName} Before stack {i} which is of {itemName}; numLeft {numLeft}");
-
-        var storageCount = ContainerUtils.GetItemCount(itemValue);
-        var result = numLeft - storageCount;
-
-        LogUtil.DebugLog($"{d_MethodName} After | item {itemName}; storageCount {storageCount}; returning {result}");
-
-        if (result < 0)
-        {
-            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; result is negative, setting it to 0");
-            result = 0;
-        }
-
+        LogUtil.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");
         return result;
     }
 }
