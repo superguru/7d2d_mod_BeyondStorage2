@@ -165,7 +165,7 @@ public static class ContainerUtils
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
         LogUtil.DebugLog($"{d_MethodName}: Starting");
 
-        var result = new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
         int previousCount = 0;
 
         InitializePullableCollections(out var containerStorages, out var dewCollectors);
@@ -190,7 +190,8 @@ public static class ContainerUtils
             AddStacks(d_MethodName, result, vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()), "Vehicle Storage", ref previousCount);
         }
 
-        return StripNullAndEmptyItemStacks(result);
+        ItemUtil.StripNullAndEmptyItemStacks(result);
+        return result;
     }
 
     public static bool HasItem(ItemValue itemValue)
@@ -386,62 +387,5 @@ public static class ContainerUtils
             stillNeeded = 0;
         }
 #endif
-    }
-
-    /// <summary>
-    /// Initializes empty collections for pullable container storages and dew collectors,
-    /// then populates them with available tile entities that meet the configured criteria.
-    /// Will strip out null and empty item stacks from the input collection.
-    /// </summary>
-    /// <remarks>
-    /// This method serves as a convenience wrapper that:
-    /// <list type="bullet">
-    /// <item><description>Creates empty collections for both storage types</description></item>
-    /// <item><description>Calls <see cref="AddPullableTileEntities"/> to populate them</description></item>
-    /// <item><description>Applies all configured filters (range, locking, storage type restrictions)</description></item>
-    /// </list>
-    /// The populated collections respect all mod configuration settings including:
-    /// range limits, storage crate restrictions, dew collector inclusion, and player permissions.
-    /// </remarks>
-    /// <summary>
-    /// Efficiently removes null and empty item stacks from the input collection.
-    /// Optimized for performance with minimal allocations and early exits.
-    /// </summary>
-    /// <param name="input">The collection of item stacks to filter</param>
-    /// <returns>A new list containing only valid, non-empty item stacks</returns>
-    public static List<ItemStack> StripNullAndEmptyItemStacks(IEnumerable<ItemStack> input)
-    {
-        // Early exit for null input
-        if (input == null)
-        {
-            return [];
-        }
-
-        // If input is already a collection, we can pre-allocate with capacity
-        var result = input is ICollection<ItemStack> collection
-            ? new List<ItemStack>(Math.Min(collection.Count, DEFAULT_ITEMSTACK_LIST_CAPACITY)) // Cap initial capacity to avoid over-allocation
-            : new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
-
-        foreach (var stack in input)
-        {
-            // Combined null and count check for early exit
-            if (stack?.count > 0)
-            {
-                var itemValue = stack.itemValue;
-                // Combined null and empty check
-                if (itemValue?.ItemClass != null && !itemValue.IsEmpty())
-                {
-                    // Only check item name if we've passed all other checks
-                    // Most items will have valid names, so this is the least likely to fail
-                    var itemName = itemValue.ItemClass.GetItemName();
-                    if (!string.IsNullOrEmpty(itemName))
-                    {
-                        result.Add(stack);
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 }
