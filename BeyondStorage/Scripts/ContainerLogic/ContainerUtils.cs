@@ -13,8 +13,9 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class ContainerUtils
 {
-    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 1024; // 10 container with 100 slots each, rounded up
     public const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16; // 10 dew collectors, rounded up
+    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 1024;   // 10 container with 100 slots each, rounded up
+    public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;   // this is all you'll ever need (tm)
 
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
 
@@ -36,17 +37,24 @@ public static class ContainerUtils
         LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
     }
 
-    private static void InitializePullableCollections(out List<ITileEntityLootable> containerStorages, out List<TileEntityDewCollector> dewCollectors)
+    private static void InitializePullableCollections(
+        out List<ITileEntityLootable> lootables,
+        out List<TileEntityDewCollector> dewCollectors,
+        out List<TileEntityWorkstation> workstations)
     {
         // Used to initialize the collections for pullable tile entities where you have to enumerate all the tile entities in the world.
 
-        containerStorages = new List<ITileEntityLootable>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        lootables = new List<ITileEntityLootable>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
         dewCollectors = new List<TileEntityDewCollector>(DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
+        workstations = new List<TileEntityWorkstation>(DEFAULT_WORKSTATION_LIST_CAPACITY);
 
-        AddPullableTileEntities(containerStorages, dewCollectors);
+        AddPullableTileEntities(lootables, dewCollectors, workstations);
     }
 
-    private static void AddPullableTileEntities(List<ITileEntityLootable> lootables, List<TileEntityDewCollector> dewCollectors)
+    private static void AddPullableTileEntities(
+        List<ITileEntityLootable> lootables,
+        List<TileEntityDewCollector> dewCollectors,
+        List<TileEntityWorkstation> workstations)
     {
         const string d_MethodName = nameof(AddPullableTileEntities);
 
@@ -77,16 +85,26 @@ public static class ContainerUtils
         // Selectors
         var configOnlyCrates = ModConfig.OnlyStorageCrates();
         var includeDewCollectors = ModConfig.PullFromDewCollectors();
+        var includeWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
+
+        int chunksProcessed = 0;
+        int nullChunks = 0;
+        int tileEntitiesProcessed = 0;
 
         foreach (var chunk in chunkCacheCopy)
         {
             if (chunk == null)
             {
+                nullChunks++;
                 continue;
             }
 
+            chunksProcessed++;
+
             foreach (var tileEntity in chunk.GetTileEntities().list)
             {
+                tileEntitiesProcessed++;
+
                 var worldPos = tileEntity.ToWorldPos();
 
                 // Range check first for early exit
@@ -104,32 +122,13 @@ public static class ContainerUtils
                     }
                 }
 
-                // LOOTABLE check
-                if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
+                // Lockable check (skip if locked and not allowed)
+                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
                 {
-                    // Must be player storage and not empty
-                    if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
+                    if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
                     {
                         continue;
                     }
-
-                    // Only crates if configured
-                    if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
-                    {
-                        continue;
-                    }
-
-                    // Lockable check (skip if locked and not allowed)
-                    if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
-                    {
-                        if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
-                        {
-                            continue;
-                        }
-                    }
-
-                    lootables.Add(tileEntityLootable);
-                    continue;
                 }
 
                 // DEW COLLECTOR check
@@ -143,10 +142,63 @@ public static class ContainerUtils
                     }
 
                     dewCollectors.Add(dewCollector);
+                    continue;
+                }
+
+                // WORKSTATION check
+                if (includeWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
+                {
+                    // Only player-placed workstations
+                    if (!workstation.IsPlayerPlaced)
+                    {
+                        continue;
+                    }
+
+                    // Must have output and not be empty
+                    if (workstation.output == null || !workstation.output.Any(stack => stack?.count > 0))
+                    {
+                        continue;
+                    }
+
+                    if (workstation.OutputEmpty())
+                    {
+                        continue;
+                    }
+
+                    // Skip if being removed
+                    if (workstation.IsRemoving)
+                    {
+                        continue;
+                    }
+
+                    LogUtil.DebugLog($"{d_MethodName}: Found workstation {workstation.GetType().Name} at {worldPos}, chunk is at {chunk.ChunkPos}");
+                    workstations.Add(workstation);
+                    continue;
+                }
+
+                // LOOTABLE check
+                if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
+                {
+
+                    // Must be player storage and not empty
+                    if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
+                    {
+                        continue;
+                    }
+
+                    // Only crates if configured
+                    if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
+                    {
+                        continue;
+                    }
+
+                    lootables.Add(tileEntityLootable);
+                    continue;
                 }
             }
-
         }
+
+        LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
     private static void AddStacks(string d_MethodName, List<ItemStack> output, IEnumerable<ItemStack> stacks, string sourceName, ref int previousCount)
@@ -168,26 +220,33 @@ public static class ContainerUtils
         var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
         int previousCount = 0;
 
-        InitializePullableCollections(out var containerStorages, out var dewCollectors);
+        InitializePullableCollections(out var lootables, out var dewCollectors, out var workstations);
 
         // Dew Collectors
-        AddStacks(d_MethodName, result, dewCollectors.SelectMany(dewCollector => dewCollector?.items ?? Enumerable.Empty<ItemStack>()), "Dew Collector Storage", ref previousCount);
+        AddStacks(d_MethodName, result, dewCollectors
+            .SelectMany(dewCollector => dewCollector?.items ?? []),
+            "Dew Collector Storage", ref previousCount);
 
         // Workstation Outputs
         if (ModConfig.PullFromWorkstationOutputs())
         {
-            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
-            AddStacks(d_MethodName, result, workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()), "Workstation Output", ref previousCount);
+            AddStacks(d_MethodName, result, workstations
+                .SelectMany(workstation => workstation.Output ?? []),
+                "Workstation Output", ref previousCount);
         }
 
         // Container Storage
-        AddStacks(d_MethodName, result, containerStorages.SelectMany(lootable => lootable.items ?? Enumerable.Empty<ItemStack>()), "Container Storage", ref previousCount);
+        AddStacks(d_MethodName, result, lootables
+            .SelectMany(lootable => lootable.items ?? Enumerable.Empty<ItemStack>()),
+            "Container Storage", ref previousCount);
 
         // Vehicle Storage
         if (ModConfig.PullFromVehicleStorage())
         {
-            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-            AddStacks(d_MethodName, result, vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()), "Vehicle Storage", ref previousCount);
+            var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
+            AddStacks(d_MethodName, result, vehicleStorages
+                .SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()),
+                "Vehicle Storage", ref previousCount);
         }
 
         ItemUtil.PurgeInvalidItemStacks(result);
@@ -319,19 +378,18 @@ public static class ContainerUtils
 
         int originalNeeded = stillNeeded;
 
-        InitializePullableCollections(out var containerStorages, out var dewCollectors);
+        InitializePullableCollections(out var containerStorages, out var dewCollectors, out var workstations);
 
         if (stillNeeded > 0 && ModConfig.PullFromDewCollectors())
         {
             ProcessStorage(d_MethodName, "DewCollectors", itemName, dewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                s => s.items, s => DewCollectorUtils.MarkDewCollectorModified(s));
+                dewCollector => dewCollector.items, s => DewCollectorUtils.MarkDewCollectorModified(s));
         }
 
         if (stillNeeded > 0 && ModConfig.PullFromWorkstationOutputs())
         {
-            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs() ?? [];
-            ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, workstationOutputs, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                s => s.Output, s => WorkstationUtils.MarkWorkstationModified(s));
+            ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                workstation => workstation.Output, s => WorkstationUtils.MarkWorkstationModified(s));
         }
 
         if (stillNeeded > 0)
