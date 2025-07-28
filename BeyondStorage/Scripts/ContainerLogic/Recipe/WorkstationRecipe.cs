@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
@@ -22,20 +21,20 @@ public static class WorkstationRecipe
             return;
         }
 
-        string methodName = nameof(BackgroundWorkstation_CraftCompleted);
+        const string d_MethodName = nameof(BackgroundWorkstation_CraftCompleted);
 
         // Increment call count and update stats
-        if (!s_callStats.TryGetValue(methodName, out var stats))
+        if (!s_callStats.TryGetValue(d_MethodName, out var stats))
         {
             stats = (0, 0);
         }
 
         stats.callCount++;
-        s_callStats[methodName] = stats;
+        s_callStats[d_MethodName] = stats;
 
-        LogUtil.DebugLog($"{methodName} called {stats.callCount} times");
+        LogUtil.DebugLog($"{d_MethodName} called {stats.callCount} times");
 
-        Update_OpenWorkstations(methodName, stats.callCount);
+        Update_OpenWorkstations(d_MethodName, stats.callCount);
     }
 
     /// <summary>
@@ -48,20 +47,20 @@ public static class WorkstationRecipe
             return;
         }
 
-        string methodName = nameof(ForegroundWorkstation_CraftCompleted);
+        const string d_MethodName = nameof(ForegroundWorkstation_CraftCompleted);
 
         // Increment call count and update stats
-        if (!s_callStats.TryGetValue(methodName, out var stats))
+        if (!s_callStats.TryGetValue(d_MethodName, out var stats))
         {
             stats = (0, 0);
         }
 
         stats.callCount++;
-        s_callStats[methodName] = stats;
+        s_callStats[d_MethodName] = stats;
 
-        LogUtil.DebugLog($"{methodName} Starting call {stats.callCount}");
+        LogUtil.DebugLog($"{d_MethodName} Starting call {stats.callCount}");
 
-        Update_OpenWorkstations(methodName, stats.callCount);
+        Update_OpenWorkstations(d_MethodName, stats.callCount);
     }
 
     private static void Update_OpenWorkstations(string callType, int callCount)
@@ -69,7 +68,7 @@ public static class WorkstationRecipe
         // Start timing for total execution
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-        string d_MethodName = string.Concat(callType, ".", MethodBase.GetCurrentMethod().Name);
+        string d_MethodName = string.Concat(callType, ".", nameof(Update_OpenWorkstations));
 
         var player = GameManager.Instance.World?.GetPrimaryPlayer();
         if (player == null)

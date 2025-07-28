@@ -7,6 +7,8 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class VehicleUtils
 {
+    public const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
+
     public static List<EntityVehicle> GetAvailableVehicleStorages()
     {
         const string d_method_name = "GetAvailableVehicleStorages";
@@ -37,7 +39,7 @@ public static class VehicleUtils
             return [];
         }
 
-        var result = new List<EntityVehicle>();
+        var result = new List<EntityVehicle>(DEFAULT_VEHICLE_LIST_CAPACITY);
 
         foreach (var vehicle in vehicles)
         {

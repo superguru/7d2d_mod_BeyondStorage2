@@ -13,6 +13,9 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class ContainerUtils
 {
+    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 1024; // 10 container with 100 slots each, rounded up
+    public const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16; // 10 dew collectors, rounded up
+
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
 
     public static void Init()
@@ -33,207 +36,47 @@ public static class ContainerUtils
         LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
     }
 
-
-    // Helper local function to add stacks and log
-    private static void AddStacks(string d_MethodName, List<ItemStack> output, IEnumerable<ItemStack> stacks, string sourceName, ref int previousCount)
+    private static void InitializePullableCollections(out List<ITileEntityLootable> containerStorages, out List<TileEntityDewCollector> dewCollectors)
     {
-        if (stacks != null)
-        {
-            output.AddRange(stacks.Where(s => s != null));
-        }
+        // Used to initialize the collections for pullable tile entities where you have to enumerate all the tile entities in the world.
 
-        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {output.Count - previousCount} stacks");
-        previousCount = output.Count;
+        containerStorages = new List<ITileEntityLootable>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        dewCollectors = new List<TileEntityDewCollector>(DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
+
+        AddPullableTileEntities(containerStorages, dewCollectors);
     }
 
-    public static List<ItemStack> GetPullableSourceItemStacks()
+    private static void AddPullableTileEntities(List<ITileEntityLootable> lootables, List<TileEntityDewCollector> dewCollectors)
     {
-        const string d_MethodName = "GetPullableSourceItemStacks";
-        LogUtil.DebugLog($"{d_MethodName}: Starting");
-
-        var result = new List<ItemStack>();
-        int previousCount = 0;
-
-        // Container Storage
-        var containerStorage = GetAvailableContainerStorages();
-        AddStacks(d_MethodName, result, containerStorage?.SelectMany(lootable => lootable?.items ?? Enumerable.Empty<ItemStack>()), "Container Storage", ref previousCount);
-
-        // Dew Collectors
-        if (ModConfig.PullFromDewCollectors())
-        {
-            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages();
-            AddStacks(d_MethodName, result, dewCollectors?.SelectMany(dewCollector => dewCollector?.items ?? Enumerable.Empty<ItemStack>()), "Dew Collector Storage", ref previousCount);
-        }
-
-        // Workstation Outputs
-        if (ModConfig.PullFromWorkstationOutputs())
-        {
-            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
-            AddStacks(d_MethodName, result, workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()), "Workstation Output", ref previousCount);
-        }
-
-        // Vehicle Storage
-        if (ModConfig.PullFromVehicleStorage())
-        {
-            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-            AddStacks(d_MethodName, result, vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()), "Vehicle Storage", ref previousCount);
-        }
-
-        return StripNullItemStacks(result);
-    }
-
-    public static bool HasItem(ItemValue itemValue)
-    {
-        const string d_MethodName = "HasItem";
-        LogUtil.DebugLog($"{d_MethodName}: Starting");
-
-        if (itemValue == null || itemValue.IsEmpty())
-        {
-            LogUtil.DebugLog($"{d_MethodName} Item is null or Empty");
-            return false;
-        }
-
-        var containerStorage = GetAvailableContainerStorages();
-        bool containerHas = containerStorage != null &&
-            containerStorage.SelectMany(lootable => lootable?.items ?? [])
-                            .Any(stack => stack?.itemValue?.type == itemValue.type);
-
-        if (containerHas)
-        {
-            return true;
-        }
-
-        if (ModConfig.PullFromDewCollectors())
-        {
-            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages();
-            bool dewCollectorHas = dewCollectors != null &&
-                dewCollectors.SelectMany(dewCollector => dewCollector?.items ?? [])
-                             .Any(stack => stack?.itemValue?.type == itemValue.type);
-
-            if (dewCollectorHas)
-            {
-                return true;
-            }
-        }
-
-        if (ModConfig.PullFromWorkstationOutputs())
-        {
-            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
-            bool workstationHas = workstationOutputs != null &&
-                workstationOutputs.SelectMany(workstation => workstation?.Output ?? [])
-                                  .Any(stack => stack?.itemValue?.type == itemValue.type);
-
-            if (workstationHas)
-            {
-                return true;
-            }
-        }
-
-        if (ModConfig.PullFromVehicleStorage())
-        {
-            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-            bool vehicleHas = vehicleStorage != null &&
-                vehicleStorage.SelectMany(vehicle => vehicle?.bag?.items ?? [])
-                              .Any(stack => stack?.itemValue?.type == itemValue.type);
-
-            if (vehicleHas)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static int GetItemCount(ItemValue itemValue)
-    {
-        const string d_MethodName = "GetItemCount";
-        LogUtil.DebugLog($"{d_MethodName}: Starting");
-
-        if (itemValue == null || itemValue.IsEmpty())
-        {
-            LogUtil.DebugLog($"{d_MethodName} Item is null or Empty");
-            return 0;
-        }
-
-        static int CountItems(IEnumerable<ItemStack> stacks, int type)
-            => stacks?.Where(stack => stack?.itemValue?.type == type).Sum(stack => stack?.count) ?? 0;
-
-        var containerStorage = GetAvailableContainerStorages();
-        int containerCount = CountItems(containerStorage?.SelectMany(lootable => lootable?.items), itemValue.type);
-        LogUtil.DebugLog($"{d_MethodName} Container Storage count is {containerCount}");
-        int totalCount = containerCount;
-
-        if (ModConfig.PullFromDewCollectors())
-        {
-            LogUtil.DebugLog($"{d_MethodName} Will try to pull from Dew Collectors");
-
-            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages();
-            int dewCollectorCount = CountItems(dewCollectors?.SelectMany(dewCollector => dewCollector?.items ?? []), itemValue.type);
-            LogUtil.DebugLog($"{d_MethodName} Dew Collector count is {dewCollectorCount}");
-
-            totalCount += dewCollectorCount;
-        }
-
-        if (ModConfig.PullFromWorkstationOutputs())
-        {
-            LogUtil.DebugLog($"{d_MethodName} Will try to pull from Workstation Outputs");
-
-            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
-            int workstationOutputsCount = CountItems(workstationOutputs?.SelectMany(workstation => workstation?.Output ?? []), itemValue.type);
-            LogUtil.DebugLog($"{d_MethodName} Workstation Output count is {workstationOutputsCount}");
-
-            totalCount += workstationOutputsCount;
-        }
-
-        if (ModConfig.PullFromVehicleStorage())
-        {
-            LogUtil.DebugLog($"{d_MethodName} Will try to pull from Vehicle Storage");
-
-            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
-            int vehicleCount = CountItems(vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.items ?? []), itemValue.type);
-            LogUtil.DebugLog($"{d_MethodName} Vehicle Storage count is {vehicleCount}");
-
-            totalCount += vehicleCount;
-        }
-
-        return totalCount;
-    }
-
-    private static List<ITileEntityLootable> GetAvailableContainerStorages()
-    {
-        const string d_MethodName = "GetAvailableContainerStorages";
+        const string d_MethodName = nameof(AddPullableTileEntities);
 
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            LogUtil.DebugLog($"{d_MethodName}: World is null, aborting.");
-            return new List<ITileEntityLootable>();
+            LogUtil.Error($"{d_MethodName}: World is null, aborting.");
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            LogUtil.DebugLog($"{d_MethodName}: Player is null, aborting.");
-            return new List<ITileEntityLootable>();
+            LogUtil.Error($"{d_MethodName}: Player is null, aborting.");
+        }
+        var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
+        if (chunkCacheCopy == null)
+        {
+            LogUtil.Error($"{d_MethodName}: chunkCacheCopy is null, aborting.");
         }
 
         LogUtil.DebugLog($"{d_MethodName}: Starting");
 
         var playerPos = player.position;
         var configRange = ModConfig.Range();
-        var configOnlyCrates = ModConfig.OnlyStorageCrates();
         var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
         var playerEntityId = player.entityId;
 
-        var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
-        if (chunkCacheCopy == null)
-        {
-            LogUtil.DebugLog($"{d_MethodName}: chunkCacheCopy is null, aborting.");
-            return new List<ITileEntityLootable>();
-        }
-
-        var result = new List<ITileEntityLootable>();
+        // Selectors
+        var configOnlyCrates = ModConfig.OnlyStorageCrates();
+        var includeDewCollectors = ModConfig.PullFromDewCollectors();
 
         foreach (var chunk in chunkCacheCopy)
         {
@@ -244,26 +87,10 @@ public static class ContainerUtils
 
             foreach (var tileEntity in chunk.GetTileEntities().list)
             {
+                var worldPos = tileEntity.ToWorldPos();
+
                 // Range check first for early exit
-                if (configRange > 0 && Vector3.Distance(playerPos, tileEntity.ToWorldPos()) >= configRange)
-                {
-                    continue;
-                }
-
-                // Must be lootable
-                if (!tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
-                {
-                    continue;
-                }
-
-                // Must be player storage and not empty
-                if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
-                {
-                    continue;
-                }
-
-                // Only crates if configured
-                if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
+                if (configRange > 0 && Vector3.Distance(playerPos, worldPos) >= configRange)
                 {
                     continue;
                 }
@@ -271,27 +98,149 @@ public static class ContainerUtils
                 // Locked check (skip if locked by another player)
                 if (LockedTileEntities.Count > 0)
                 {
-                    var pos = tileEntityLootable.ToWorldPos();
-                    if (LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != playerEntityId)
+                    if (LockedTileEntities.TryGetValue(worldPos, out int entityId) && entityId != playerEntityId)
                     {
                         continue;
                     }
                 }
 
-                // Lockable check (skip if locked and not allowed)
-                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+                // LOOTABLE check
+                if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
                 {
-                    if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                    // Must be player storage and not empty
+                    if (!tileEntityLootable.bPlayerStorage || tileEntityLootable.IsEmpty())
                     {
                         continue;
                     }
+
+                    // Only crates if configured
+                    if (configOnlyCrates && !tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
+                    {
+                        continue;
+                    }
+
+                    // Lockable check (skip if locked and not allowed)
+                    if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+                    {
+                        if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                        {
+                            continue;
+                        }
+                    }
+
+                    lootables.Add(tileEntityLootable);
+                    continue;
                 }
 
-                result.Add(tileEntityLootable);
+                // DEW COLLECTOR check
+                if (includeDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
+                {
+                    // Consider a dew collector empty if all items are empty or null. This might not be needed, and could possible be removed for improveed performance.
+                    bool isEmpty = dewCollector.items.All(item => item?.IsEmpty() ?? true);
+                    if (isEmpty)
+                    {
+                        continue;
+                    }
+
+                    dewCollectors.Add(dewCollector);
+                }
             }
+
+        }
+    }
+
+    private static void AddStacks(string d_MethodName, List<ItemStack> output, IEnumerable<ItemStack> stacks, string sourceName, ref int previousCount)
+    {
+        if (stacks != null)
+        {
+            output.AddRange(stacks.Where(stack => stack != null && stack.count > 0));
         }
 
+        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {output.Count - previousCount} stacks");
+        previousCount = output.Count;
+    }
+
+    public static List<ItemStack> GetPullableSourceItemStacks()
+    {
+        const string d_MethodName = nameof(GetPullableSourceItemStacks);
+        LogUtil.DebugLog($"{d_MethodName}: Starting");
+
+        var result = new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        int previousCount = 0;
+
+        InitializePullableCollections(out var containerStorages, out var dewCollectors);
+
+        // Dew Collectors
+        AddStacks(d_MethodName, result, dewCollectors.SelectMany(dewCollector => dewCollector?.items ?? Enumerable.Empty<ItemStack>()), "Dew Collector Storage", ref previousCount);
+
+        // Workstation Outputs
+        if (ModConfig.PullFromWorkstationOutputs())
+        {
+            var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs();
+            AddStacks(d_MethodName, result, workstationOutputs?.SelectMany(workstation => workstation?.Output ?? Enumerable.Empty<ItemStack>()), "Workstation Output", ref previousCount);
+        }
+
+        // Container Storage
+        AddStacks(d_MethodName, result, containerStorages.SelectMany(lootable => lootable.items ?? Enumerable.Empty<ItemStack>()), "Container Storage", ref previousCount);
+
+        // Vehicle Storage
+        if (ModConfig.PullFromVehicleStorage())
+        {
+            var vehicleStorage = VehicleUtils.GetAvailableVehicleStorages();
+            AddStacks(d_MethodName, result, vehicleStorage?.SelectMany(vehicle => vehicle?.bag?.GetSlots() ?? Enumerable.Empty<ItemStack>()), "Vehicle Storage", ref previousCount);
+        }
+
+        return StripNullAndEmptyItemStacks(result);
+    }
+
+    public static bool HasItem(ItemValue itemValue)
+    {
+        const string d_MethodName = nameof(HasItem);
+
+        if (itemValue == null || itemValue.IsEmpty())
+        {
+            LogUtil.Error($"{d_MethodName} Item is null or Empty");
+            return false;
+        }
+
+        var itemClass = itemValue.ItemClass;
+        if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
+        {
+            LogUtil.Error($"{d_MethodName} ItemClass is null for item type {itemValue.type}");
+            return false;
+        }
+
+        var sources = GetPullableSourceItemStacks();
+        var result = sources.Any(stack => stack.itemValue.type == itemValue.type);
+
+        LogUtil.DebugLog($"{d_MethodName} for {itemClass.Name} is {result}");
+
         return result;
+    }
+
+    public static int GetItemCount(ItemValue itemValue)
+    {
+        const string d_MethodName = nameof(GetItemCount);
+
+        if (itemValue == null || itemValue.IsEmpty())
+        {
+            LogUtil.Error($"{d_MethodName} Item is null or Empty");
+            return 0;
+        }
+
+        var itemClass = itemValue.ItemClass;
+        if (itemClass == null || string.IsNullOrEmpty(itemClass.Name))
+        {
+            LogUtil.Error($"{d_MethodName} ItemClass is null for item type {itemValue.type}");
+            return 0;
+        }
+
+        var sources = GetPullableSourceItemStacks();
+        var totalCount = sources.Where(stack => stack?.itemValue.type == itemValue.type).Sum(stack => stack?.count) ?? 0;
+
+        LogUtil.DebugLog($"{d_MethodName} | Found {totalCount} of {itemClass.Name}");
+
+        return totalCount;
     }
 
     private static int RemoveItems(ItemStack[] items, ItemValue desiredItem, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
@@ -308,7 +257,7 @@ public static class ContainerUtils
                 break;
             }
 
-            if (stack == null)
+            if (stack == null || stack.count <= 0)
             {
                 continue;
             }
@@ -354,7 +303,7 @@ public static class ContainerUtils
 
     public static int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-        const string d_MethodName = "RemoveRemaining";
+        const string d_MethodName = nameof(RemoveRemaining);
 
         if (stillNeeded <= 0 || itemValue == null || itemValue.ItemClass == null || itemValue.IsEmpty())
         {
@@ -369,16 +318,10 @@ public static class ContainerUtils
 
         int originalNeeded = stillNeeded;
 
-        if (stillNeeded > 0)
-        {
-            var containerStorages = GetAvailableContainerStorages() ?? [];
-            ProcessStorage(d_MethodName, "Containers", itemName, containerStorages, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                s => s.items, s => s.SetModified());
-        }
+        InitializePullableCollections(out var containerStorages, out var dewCollectors);
 
         if (stillNeeded > 0 && ModConfig.PullFromDewCollectors())
         {
-            var dewCollectors = DewCollectorUtils.GetAvailableDewCollectorStorages() ?? [];
             ProcessStorage(d_MethodName, "DewCollectors", itemName, dewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 s => s.items, s => DewCollectorUtils.MarkDewCollectorModified(s));
         }
@@ -388,6 +331,12 @@ public static class ContainerUtils
             var workstationOutputs = WorkstationUtils.GetAvailableWorkstationOutputs() ?? [];
             ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, workstationOutputs, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 s => s.Output, s => WorkstationUtils.MarkWorkstationModified(s));
+        }
+
+        if (stillNeeded > 0)
+        {
+            ProcessStorage(d_MethodName, "Containers", itemName, containerStorages, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                s => s.items, s => s.SetModified());
         }
 
         if (stillNeeded > 0 && ModConfig.PullFromVehicleStorage())
@@ -439,47 +388,60 @@ public static class ContainerUtils
 #endif
     }
 
-    public static List<ItemStack> StripNullItemStacks(IEnumerable<ItemStack> input)
+    /// <summary>
+    /// Initializes empty collections for pullable container storages and dew collectors,
+    /// then populates them with available tile entities that meet the configured criteria.
+    /// Will strip out null and empty item stacks from the input collection.
+    /// </summary>
+    /// <remarks>
+    /// This method serves as a convenience wrapper that:
+    /// <list type="bullet">
+    /// <item><description>Creates empty collections for both storage types</description></item>
+    /// <item><description>Calls <see cref="AddPullableTileEntities"/> to populate them</description></item>
+    /// <item><description>Applies all configured filters (range, locking, storage type restrictions)</description></item>
+    /// </list>
+    /// The populated collections respect all mod configuration settings including:
+    /// range limits, storage crate restrictions, dew collector inclusion, and player permissions.
+    /// </remarks>
+    /// <summary>
+    /// Efficiently removes null and empty item stacks from the input collection.
+    /// Optimized for performance with minimal allocations and early exits.
+    /// </summary>
+    /// <param name="input">The collection of item stacks to filter</param>
+    /// <returns>A new list containing only valid, non-empty item stacks</returns>
+    public static List<ItemStack> StripNullAndEmptyItemStacks(IEnumerable<ItemStack> input)
     {
-        // This is because of the brain dead game code that adds null item stacks to the list
-
-        var result = new List<ItemStack>();
+        // Early exit for null input
         if (input == null)
         {
-            return result;
+            return [];
         }
+
+        // If input is already a collection, we can pre-allocate with capacity
+        var result = input is ICollection<ItemStack> collection
+            ? new List<ItemStack>(Math.Min(collection.Count, DEFAULT_ITEMSTACK_LIST_CAPACITY)) // Cap initial capacity to avoid over-allocation
+            : new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
 
         foreach (var stack in input)
         {
-            if (stack == null)
+            // Combined null and count check for early exit
+            if (stack?.count > 0)
             {
-                continue;
+                var itemValue = stack.itemValue;
+                // Combined null and empty check
+                if (itemValue?.ItemClass != null && !itemValue.IsEmpty())
+                {
+                    // Only check item name if we've passed all other checks
+                    // Most items will have valid names, so this is the least likely to fail
+                    var itemName = itemValue.ItemClass.GetItemName();
+                    if (!string.IsNullOrEmpty(itemName))
+                    {
+                        result.Add(stack);
+                    }
+                }
             }
-
-            if (stack.count <= 0)
-            {
-                continue;
-            }
-
-            if (stack.itemValue == null || stack.itemValue.IsEmpty())
-            {
-                continue;
-            }
-
-            var itemClass = stack.itemValue.ItemClass;
-            if (itemClass == null)
-            {
-                continue;
-            }
-
-            var itemName = itemClass.GetItemName();
-            if (string.IsNullOrEmpty(itemName))
-            {
-                continue;
-            }
-
-            result.Add(stack);
         }
+
         return result;
     }
 }

@@ -43,7 +43,7 @@ public class ItemCraft
             items.AddRange(ContainerUtils.GetPullableSourceItemStacks());
             LogUtil.DebugLog($"{d_MethodName} | items.Count after pulling {items.Count}");
 
-            items = ContainerUtils.StripNullItemStacks(items);
+            items = ContainerUtils.StripNullAndEmptyItemStacks(items);
             LogUtil.DebugLog($"{d_MethodName} | items.Count after stripping {items.Count}");
         }
         else
@@ -57,7 +57,7 @@ public class ItemCraft
     {
         string d_MethodName = MethodBase.GetCurrentMethod().Name;
 
-        var result = new List<ItemStack>();
+        var result = new List<ItemStack>(ContainerUtils.DEFAULT_ITEMSTACK_LIST_CAPACITY);
         if (xui != null)
         {
             LogUtil.DebugLog($"{d_MethodName} adding all player items");

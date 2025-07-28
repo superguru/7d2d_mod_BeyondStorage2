@@ -9,6 +9,8 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class WorkstationUtils
 {
+    public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;
+
     public static List<TileEntityWorkstation> GetAvailableWorkstationOutputs()
     {
         const string d_method_name = "GetAvailableWorkstationOutputs";
@@ -17,14 +19,14 @@ public static class WorkstationUtils
         if (world == null)
         {
             LogUtil.Error($"{d_method_name}: World is null");
-            return new List<TileEntityWorkstation>();
+            return [];
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
             LogUtil.Error($"{d_method_name}: Player is null");
-            return new List<TileEntityWorkstation>();
+            return [];
         }
 
         var playerPos = player.position;
@@ -36,12 +38,12 @@ public static class WorkstationUtils
         if (chunkCacheCopy == null)
         {
             LogUtil.Error($"{d_method_name}: chunkCacheCopy is null");
-            return new List<TileEntityWorkstation>();
+            return [];
         }
 
         LogUtil.DebugLog($"{d_method_name}: Starting");
 
-        var result = new List<TileEntityWorkstation>();
+        var result = new List<TileEntityWorkstation>(DEFAULT_WORKSTATION_LIST_CAPACITY);
 
         foreach (var chunk in chunkCacheCopy)
         {

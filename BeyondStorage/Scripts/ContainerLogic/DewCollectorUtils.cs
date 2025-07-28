@@ -1,99 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BeyondStorage.Scripts.Configuration;
+﻿using System.Linq;
 using BeyondStorage.Scripts.Utils;
-using Platform;
-using UnityEngine;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class DewCollectorUtils
 {
-    public static List<TileEntityDewCollector> GetAvailableDewCollectorStorages()
-    {
-        const string d_method_name = "GetAvailableDewCollectorStorages";
-
-        var world = GameManager.Instance.World;
-        if (world == null)
-        {
-            LogUtil.DebugLog($"{d_method_name}: World is null, aborting.");
-            return new List<TileEntityDewCollector>();
-        }
-
-        var player = world.GetPrimaryPlayer();
-        if (player == null)
-        {
-            LogUtil.DebugLog($"{d_method_name}: Player is null, aborting.");
-            return new List<TileEntityDewCollector>();
-        }
-
-        LogUtil.DebugLog($"{d_method_name}: Starting");
-
-        var playerPos = player.position;
-        var configRange = ModConfig.Range();
-        var configOnlyCrates = ModConfig.OnlyStorageCrates();
-        var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
-        var playerEntityId = player.entityId;
-
-        var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
-        if (chunkCacheCopy == null)
-        {
-            LogUtil.DebugLog($"{d_method_name}: chunkCacheCopy is null, aborting.");
-            return new List<TileEntityDewCollector>();
-        }
-
-        var result = new List<TileEntityDewCollector>();
-
-        foreach (var chunk in chunkCacheCopy)
-        {
-            if (chunk == null)
-            {
-                continue;
-            }
-
-            foreach (var tileEntity in chunk.GetTileEntities().list)
-            {
-                // Only consider dew collectors
-                if (tileEntity is not TileEntityDewCollector dewCollector)
-                {
-                    continue;
-                }
-
-                // Skip if out of range
-                if (configRange > 0 && Vector3.Distance(playerPos, dewCollector.ToWorldPos()) >= configRange)
-                {
-                    continue;
-                }
-
-                // Skip if being accessed by another user
-                if (dewCollector.bUserAccessing)
-                {
-                    continue;
-                }
-
-                // Consider a dew collector empty if all items are empty or null
-                bool isEmpty = dewCollector.items.All(item => item?.IsEmpty() ?? true);
-                if (isEmpty)
-                {
-                    continue;
-                }
-
-                // Skip if locked by another player
-                if (ContainerUtils.LockedTileEntities.Count > 0)
-                {
-                    var pos = dewCollector.ToWorldPos();
-                    if (ContainerUtils.LockedTileEntities.TryGetValue(pos, out int entityId) && entityId != playerEntityId)
-                    {
-                        continue;
-                    }
-                }
-
-                result.Add(dewCollector);
-            }
-        }
-
-        return result;
-    }
 
     /// <summary>
     /// Marks a dew collector as modified after items are removed from it
