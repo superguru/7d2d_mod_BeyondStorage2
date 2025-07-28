@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.ContainerLogic.Item;
 using BeyondStorage.Scripts.Utils;
@@ -34,49 +32,70 @@ public class XUiCRecipeListPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_RecipeList_Update_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> XUiC_RecipeList_Update_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
-        var targetMethodString = $"{typeof(XUiC_RecipeList)}.{nameof(XUiC_RecipeList.Update)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
-        var codes = new List<CodeInstruction>(instructions);
-        var found = false;
-        for (var i = 0; i < codes.Count; i++)
+        var targetMethodName = $"{typeof(XUiC_RecipeList)}.{nameof(XUiC_RecipeList.Update)}";
+
+        var searchPattern = new List<CodeInstruction>
         {
-            // IL_008b: ldarg.0      // this
-            // IL_008c: ldloc.0      // updateStackList
-            // IL_008d: call         instance void XUiC_RecipeList::BuildRecipeInfosList(class [mscorlib]System.Collections.Generic.List`1<class ItemStack>)
-            if (i <= 2 || codes[i].opcode != OpCodes.Call || (MethodInfo)codes[i].operand !=
-                AccessTools.Method(typeof(XUiC_RecipeList), nameof(XUiC_RecipeList.BuildRecipeInfosList)))
+            new CodeInstruction(OpCodes.Ldarg_0), // this
+            new CodeInstruction(OpCodes.Ldloc_0), // updateStackList
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(XUiC_RecipeList), nameof(XUiC_RecipeList.BuildRecipeInfosList)))
+        };
+
+        var replacementInstructions = new List<CodeInstruction>
+        {
+            new CodeInstruction(OpCodes.Ldloc_0), // updateStackList
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks)))
+        };
+
+        var patchRequest = new PatchUtil.PatchRequest
+        {
+            OriginalInstructions = [.. originalInstructions],
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodName,
+            ReplacementOffset = 0,
+            IsInsertMode = true,
+            MaxPatches = 1,
+            MinimumSafetyOffset = 0,
+            ExtraLogging = false
+        };
+
+        var patchResult = PatchUtil.ApplyPatches(patchRequest);
+
+        if (patchResult.IsPatched)
+        {
+            // Handle label transfer - move labels from original ldarg.0 to new ldloc.0
+            var originalLdargIndex = patchResult.OriginalPositions[0]; // ldarg.0 position in original
+            if (originalLdargIndex >= 0 && originalLdargIndex < patchRequest.OriginalInstructions.Count)
             {
-                continue;
+                var originalInstruction = patchRequest.OriginalInstructions[originalLdargIndex];
+                if (originalInstruction.labels.Count > 0)
+                {
+                    var newLdlocIndex = patchResult.Positions[0]; // First replacement instruction (ldloc.0)
+                    if (patchRequest.ExtraLogging)
+                    {
+                        LogUtil.DebugLog($"{targetMethodName}: Moving {originalInstruction.labels.Count} labels from original ldarg.0 to new ldloc.0");
+                    }
+
+                    // Move labels to the new ldloc.0 instruction
+                    var newInstruction = patchRequest.NewInstructions[newLdlocIndex].Clone();
+                    foreach (var label in originalInstruction.labels)
+                    {
+                        newInstruction.labels.Add(label);
+                    }
+                    patchRequest.NewInstructions[newLdlocIndex] = newInstruction;
+                }
+                else
+                {
+                    // Could not find the label instruction, log an error
+                    LogUtil.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
+                    return originalInstructions; // Return original instructions if patch failed
+                }
             }
-
-            LogUtil.DebugLog("Adding method to add items from all storages");
-
-            found = true;
-            // IL_008b: ldarg.0      // this [Label 4]
-            var jumpLabelCi = codes[i - 2];
-            // IL_008c: ldloc.0      // updateStackList
-            var newJumpCi = new CodeInstruction(OpCodes.Ldloc_0);
-            jumpLabelCi.MoveLabelsTo(newJumpCi);
-            List<CodeInstruction> newCode = [
-                newJumpCi,
-                // ItemCraft.CraftGetAllStorageStacks(updateStackList)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks)))
-            ];
-            codes.InsertRange(i - 2, newCode);
-            break;
         }
 
-        if (!found)
-        {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
-        }
-
-        return codes.AsEnumerable();
+        return patchResult.BestInstructions(patchRequest);
     }
 }
