@@ -45,7 +45,7 @@ public class XUiMPlayerInventoryCraftPatches
 
         var patchRequest = new PatchUtil.PatchRequest
         {
-            OriginalInstructions = [.. originalInstructions], // Convert to List for compatibility
+            OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
             ReplacementInstructions = replacementInstructions,
             TargetMethodName = targetMethodName,
@@ -53,7 +53,7 @@ public class XUiMPlayerInventoryCraftPatches
             IsInsertMode = true,       // Insert new instructions before the pattern
             MaxPatches = 1,
             MinimumSafetyOffset = 0,   // No special safety requirements
-            ExtraLogging = false       // Enable extra logging for debugging
+            ExtraLogging = false
         };
 
         var patchResult = PatchUtil.ApplyPatches(patchRequest);

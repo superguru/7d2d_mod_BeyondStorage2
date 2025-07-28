@@ -69,6 +69,7 @@ public static class ContainerUtils
         {
             LogUtil.Error($"{d_MethodName}: Player is null, aborting.");
         }
+
         var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
         if (chunkCacheCopy == null)
         {

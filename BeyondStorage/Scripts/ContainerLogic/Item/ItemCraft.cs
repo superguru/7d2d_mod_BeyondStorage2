@@ -50,28 +50,6 @@ public class ItemCraft
         LogUtil.DebugLog($"{d_MethodName} | items.Count after pulling {stacks.Count}");
     }
 
-    public static List<ItemStack> ItemCraft_GetAllAvailableItemStacksFromXui(XUi xui)
-    {
-        const string d_MethodName = nameof(ItemCraft_GetAllAvailableItemStacksFromXui);
-
-        var result = new List<ItemStack>(ContainerUtils.DEFAULT_ITEMSTACK_LIST_CAPACITY);
-        if (xui != null)
-        {
-            LogUtil.DebugLog($"{d_MethodName} adding all player items");
-            result.AddRange(xui.PlayerInventory.GetAllItemStacks());
-            LogUtil.DebugLog($"{d_MethodName} added {result.Count} player items (not stripped)");
-        }
-        else
-        {
-            LogUtil.Error($"{d_MethodName} called with null xui");
-        }
-
-        ItemCraft_AddPullableSourceStorageStacks(result);
-        LogUtil.DebugLog($"{d_MethodName} returning {result.Count} items");
-
-        return result;
-    }
-
     //  Used By:
     //      XUiC_IngredientEntry.GetBindingValue
     //          Item Crafting - shows item count available in crafting window(s)

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.ContainerLogic.Recipe;
 using BeyondStorage.Scripts.Utils;
@@ -16,7 +15,7 @@ public class WorkstationRecipePatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> TileEntityWorkstation_AddCraftComplete_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> TileEntityWorkstation_AddCraftComplete_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodString = $"{typeof(TileEntityWorkstation)}.{nameof(TileEntityWorkstation.AddCraftComplete)}";
 
@@ -34,7 +33,7 @@ public class WorkstationRecipePatches
 
         var patchRequest = new PatchUtil.PatchRequest
         {
-            OriginalInstructions = instructions.ToList(),
+            OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
             ReplacementInstructions = replacementInstructions,
             TargetMethodName = targetMethodString,
@@ -42,7 +41,7 @@ public class WorkstationRecipePatches
             IsInsertMode = true,       // Insert new instructions at the pattern
             MaxPatches = 1,
             MinimumSafetyOffset = 0,   // No special safety requirements
-            ExtraLogging = true        // Enable extra logging for debugging
+            ExtraLogging = false
         };
 
         var patchResult = PatchUtil.ApplyPatches(patchRequest);

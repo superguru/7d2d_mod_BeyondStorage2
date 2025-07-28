@@ -96,7 +96,7 @@ public static class WorkstationRecipe
         }
 
         // Get all available items once (shared across all workstations)
-        var availableItems = ItemCraft.ItemCraft_GetAllAvailableItemStacksFromXui(xui);
+        var availableItems = ItemCommon.ItemCommon_GetAllAvailableItemStacksFromXui(xui);
         if (availableItems.Count == 0)
         {
             return;  // Interesting...
