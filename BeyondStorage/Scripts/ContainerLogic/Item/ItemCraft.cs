@@ -43,7 +43,7 @@ public class ItemCraft
 
         LogUtil.DebugLog($"{d_MethodName} | items.Count at the start {stacks.Count} (not stripped)");
 
-        ItemUtil.StripNullAndEmptyItemStacks(stacks);
+        ItemUtil.PurgeInvalidItemStacks(stacks);
         LogUtil.DebugLog($"{d_MethodName} | items.Count after stripping {stacks.Count}");
 
         stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks());
