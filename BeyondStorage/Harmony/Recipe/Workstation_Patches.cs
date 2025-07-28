@@ -19,7 +19,7 @@ public class WorkstationPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_ItemStackGrid_HandleSlotChangedEvent_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> XUiC_WorkstationOutputGrid_UpdateData_Patch(IEnumerable<CodeInstruction> instructions)
     {
         // This is called when the recipe finishes crafting on a currently opened workstation window
         var targetMethodString = $"{typeof(XUiC_WorkstationOutputGrid)}.{nameof(XUiC_WorkstationOutputGrid.UpdateData)}";

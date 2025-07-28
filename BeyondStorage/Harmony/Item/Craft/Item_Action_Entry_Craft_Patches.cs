@@ -14,7 +14,7 @@ public class ItemActionEntryCraftPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiC_ItemStackGrid_HandleSlotChangedEvent_Patch(IEnumerable<CodeInstruction> originalInstructions)
+    private static IEnumerable<CodeInstruction> ItemActionEntryCraft_HasItems_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryCraft)}.{nameof(ItemActionEntryCraft.HasItems)}";
 
