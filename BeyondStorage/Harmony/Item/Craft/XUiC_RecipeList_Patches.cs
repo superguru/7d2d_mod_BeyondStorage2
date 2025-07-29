@@ -49,7 +49,7 @@ public class XUiCRecipeListPatches
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks)))
         };
 
-        var patchRequest = new PatchUtil.PatchRequest
+        var request = new PatchUtil.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -62,30 +62,30 @@ public class XUiCRecipeListPatches
             ExtraLogging = false
         };
 
-        var patchResult = PatchUtil.ApplyPatches(patchRequest);
+        var patchResult = PatchUtil.ApplyPatches(request);
 
         if (patchResult.IsPatched)
         {
             // Handle label transfer - move labels from original ldarg.0 to new ldloc.0
             var originalLdargIndex = patchResult.OriginalPositions[0]; // ldarg.0 position in original
-            if (originalLdargIndex >= 0 && originalLdargIndex < patchRequest.OriginalInstructions.Count)
+            if (originalLdargIndex >= 0 && originalLdargIndex < request.OriginalInstructions.Count)
             {
-                var originalInstruction = patchRequest.OriginalInstructions[originalLdargIndex];
+                var originalInstruction = request.OriginalInstructions[originalLdargIndex];
                 if (originalInstruction.labels.Count > 0)
                 {
                     var newLdlocIndex = patchResult.Positions[0]; // First replacement instruction (ldloc.0)
-                    if (patchRequest.ExtraLogging)
+                    if (request.ExtraLogging)
                     {
                         LogUtil.DebugLog($"{targetMethodName}: Moving {originalInstruction.labels.Count} labels from original ldarg.0 to new ldloc.0");
                     }
 
                     // Move labels to the new ldloc.0 instruction
-                    var newInstruction = patchRequest.NewInstructions[newLdlocIndex].Clone();
+                    var newInstruction = request.NewInstructions[newLdlocIndex].Clone();
                     foreach (var label in originalInstruction.labels)
                     {
                         newInstruction.labels.Add(label);
                     }
-                    patchRequest.NewInstructions[newLdlocIndex] = newInstruction;
+                    request.NewInstructions[newLdlocIndex] = newInstruction;
                 }
                 else
                 {
@@ -96,6 +96,6 @@ public class XUiCRecipeListPatches
             }
         }
 
-        return patchResult.BestInstructions(patchRequest);
+        return patchResult.BestInstructions(request);
     }
 }

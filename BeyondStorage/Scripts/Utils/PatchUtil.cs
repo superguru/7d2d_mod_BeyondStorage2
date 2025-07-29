@@ -7,217 +7,6 @@ namespace BeyondStorage.Scripts.Utils;
 
 public static class PatchUtil
 {
-    // Finds the index of the first occurrence of a sequence of instructions (subList) within
-    // another sequence (mainList) using the default equality comparer.
-    // Returns the zero-based index of the first instruction of the found sequence in the mainList,
-    // or -1 if the sequence is not found.
-    public static bool CodesMatch(CodeInstruction a, CodeInstruction b)
-    {
-        if (a == null || b == null)
-        {
-            return a == b;
-        }
-
-        // Check if the opcodes match
-        if (a.opcode != b.opcode)
-        {
-            return false;
-        }
-
-        // If operands are null, they match
-        if (a.operand == null && b.operand == null)
-        {
-            return true;
-        }
-
-        // If one operand is null and the other is not, they do not match
-        if (a.operand == null || b.operand == null)
-        {
-            return false;
-        }
-
-        // Check if operands are equal
-        return a.operand.Equals(b.operand);
-    }
-
-    static int IndexOf(List<CodeInstruction> mainList, List<CodeInstruction> subList, bool extraLogging = false)
-    {
-        return IndexOf(mainList, subList, 0, extraLogging);
-    }
-
-    // Finds the index of the first occurrence of a sequence of instructions (subList) within
-    // another sequence (mainList) starting from a specified index, using the default equality comparer.
-    // Returns the zero-based index of the first instruction of the found sequence in the mainList,
-    // or -1 if the sequence is not found.
-    public static int IndexOf(List<CodeInstruction> mainList, List<CodeInstruction> subList, int startIndex, bool extraLogging = false)
-    {
-        int mainCount = mainList.Count;
-        int subCount = subList.Count;
-
-        if (extraLogging)
-        {
-            LogUtil.DebugLog($"IndexOf: Searching for pattern of {subCount} instructions in list of {mainCount} instructions, starting at index {startIndex}");
-            for (int i = 0; i < subList.Count; i++)
-            {
-                LogUtil.DebugLog($"IndexOf: Pattern[{i}] = {subList[i].opcode} {subList[i].operand}");
-            }
-        }
-
-        // Early validation
-        if (subCount == 0 || mainCount < subCount || startIndex < 0 || startIndex >= mainCount)
-        {
-            if (extraLogging)
-            {
-                LogUtil.DebugLog($"IndexOf: Early validation failed - subCount={subCount}, mainCount={mainCount}, startIndex={startIndex}");
-            }
-            return -1;
-        }
-
-        // Single element optimization
-        if (subCount == 1)
-        {
-            if (extraLogging)
-            {
-                LogUtil.DebugLog("IndexOf: Using single element optimization");
-            }
-
-            var target = subList[0];
-            for (int i = startIndex; i < mainCount; i++)
-            {
-                if (extraLogging)
-                {
-                    LogUtil.DebugLog($"IndexOf: Checking index {i}: {mainList[i].opcode} {mainList[i].operand} vs target {target.opcode} {target.operand}");
-                }
-
-                if (CodesMatch(mainList[i], target))
-                {
-                    if (extraLogging)
-                    {
-                        LogUtil.DebugLog($"IndexOf: Single element match found at index {i}");
-                    }
-                    return i;
-                }
-            }
-
-            if (extraLogging)
-            {
-                LogUtil.DebugLog("IndexOf: Single element not found");
-            }
-            return -1;
-        }
-
-        // Two-element optimization (very common in IL patterns)
-        if (subCount == 2)
-        {
-            if (extraLogging)
-            {
-                LogUtil.DebugLog("IndexOf: Using two element optimization");
-            }
-
-            var first = subList[0];
-            var second = subList[1];
-            for (int i = startIndex; i <= mainCount - 2; i++)
-            {
-                if (extraLogging)
-                {
-                    LogUtil.DebugLog($"IndexOf: Checking two-element match at index {i}: [{mainList[i].opcode} {mainList[i].operand}] [{mainList[i + 1].opcode} {mainList[i + 1].operand}]");
-                }
-
-                if (CodesMatch(mainList[i], first) && CodesMatch(mainList[i + 1], second))
-                {
-                    if (extraLogging)
-                    {
-                        LogUtil.DebugLog($"IndexOf: Two element match found at index {i}");
-                    }
-                    return i;
-                }
-            }
-
-            if (extraLogging)
-            {
-                LogUtil.DebugLog("IndexOf: Two element pattern not found");
-            }
-            return -1;
-        }
-
-        // For longer patterns, use optimized search with skip table
-        if (extraLogging)
-        {
-            LogUtil.DebugLog("IndexOf: Using skip table optimization for longer pattern");
-        }
-        return IndexOfWithSkipTable(mainList, subList, startIndex, false);  // extraLogging is false here to avoid excessive logging in the optimized path
-    }
-
-    // Boyer-Moore inspired algorithm with bad character skip table
-    private static int IndexOfWithSkipTable(List<CodeInstruction> mainList, List<CodeInstruction> subList, int startIndex, bool extraLogging = false)
-    {
-        int mainCount = mainList.Count;
-        int subCount = subList.Count;
-
-        // Build skip table for last occurrence of each instruction in pattern
-        var skipTable = new Dictionary<CodeInstruction, int>();
-        for (int i = 0; i < subCount - 1; i++)
-        {
-            skipTable[subList[i]] = subCount - 1 - i;
-        }
-
-        if (extraLogging)
-        {
-            LogUtil.DebugLog($"IndexOf: Built skip table with {skipTable.Count} entries");
-        }
-
-        int pos = startIndex;
-        int attempts = 0;
-        while (pos <= mainCount - subCount)
-        {
-            attempts++;
-            if (extraLogging)
-            {
-                LogUtil.DebugLog($"IndexOf: Attempt #{attempts} at position {pos}");
-            }
-
-            // Start matching from the end of the pattern
-            int i = subCount - 1;
-            while (i >= 0 && CodesMatch(mainList[pos + i], subList[i]))
-            {
-                if (extraLogging)
-                {
-                    LogUtil.DebugLog($"IndexOf: Match at pattern index {i}, instruction: {mainList[pos + i].opcode} {mainList[pos + i].operand}");
-                }
-                i--;
-            }
-
-            if (i < 0)
-            {
-                if (extraLogging)
-                {
-                    LogUtil.DebugLog($"IndexOf: Complete pattern match found at position {pos} after {attempts} attempts");
-                }
-                return pos; // Found match
-            }
-
-            // Calculate skip distance
-            var badChar = mainList[pos + i];
-            int skip = skipTable.TryGetValue(badChar, out int skipValue) ? skipValue : subCount;
-
-            // Ensure we advance at least one position to avoid infinite loops
-            int actualSkip = Math.Max(1, skip - (subCount - 1 - i));
-
-            if (extraLogging)
-            {
-                LogUtil.DebugLog($"IndexOf: Mismatch at pattern index {i}, bad char: {badChar.opcode} {badChar.operand}, skip: {actualSkip}");
-            }
-
-            pos += actualSkip;
-        }
-
-        if (extraLogging)
-        {
-            LogUtil.DebugLog($"IndexOf: Pattern not found after {attempts} attempts");
-        }
-        return -1;
-    }
-
     /// <summary>
     /// Inserts replacement instructions at the specified position in the target list.
     /// </summary>
@@ -238,13 +27,20 @@ public static class PatchUtil
 
     /// <summary>
     /// Overwrites instructions in the target list with replacement instructions, preserving labels.
+    /// If the replacement list is longer than available instructions, appends the remaining ones.
     /// </summary>
     /// <param name="request">PatchRequest containing the instructions and replacement details</param>
     /// <param name="replacementPosition">The starting position for overwriting</param>
     /// <param name="replacementCount">The number of instructions to replace</param>
+    /// <param name="instructionsToAppend">Number of instructions that were appended beyond the available space</param>
     private static void OverwriteInstructions(PatchRequest request, int replacementPosition, int replacementCount)
     {
-        for (int i = 0; i < replacementCount; i++)
+        int availableInstructions = request.NewInstructions.Count - replacementPosition;
+        int instructionsToOverwrite = Math.Min(replacementCount, availableInstructions);
+        int instructionsToAppend = Math.Max(0, replacementCount - availableInstructions);
+
+        // Overwrite existing instructions
+        for (int i = 0; i < instructionsToOverwrite; i++)
         {
             var newInstruction = request.ReplacementInstructions[i];
             var targetIndex = replacementPosition + i;
@@ -266,9 +62,27 @@ public static class PatchUtil
             request.NewInstructions[targetIndex] = newInstruction;
         }
 
+        // Append remaining replacement instructions if any
+        if (instructionsToAppend > 0)
+        {
+            var instructionsToAdd = request.ReplacementInstructions
+                .Skip(instructionsToOverwrite)
+                .Take(instructionsToAppend)
+                .ToList();
+
+            request.NewInstructions.AddRange(instructionsToAdd);
+
+            if (request.ExtraLogging)
+            {
+                LogUtil.DebugLog($"Appended {instructionsToAppend} additional instructions to end of method in {request.TargetMethodName}");
+            }
+        }
+
         if (request.ExtraLogging)
         {
-            LogUtil.DebugLog($"Overwrote {replacementCount} instructions starting at index {replacementPosition} in {request.TargetMethodName}");
+            LogUtil.DebugLog($"Overwrote {instructionsToOverwrite} instructions starting at index {replacementPosition}" +
+                            (instructionsToAppend > 0 ? $" and appended {instructionsToAppend} additional instructions" : "") +
+                            $" in {request.TargetMethodName}");
         }
     }
 
@@ -293,7 +107,7 @@ public static class PatchUtil
                 break;
             }
 
-            int matchIndex = IndexOf(request.NewInstructions, request.SearchPattern, searchIndex, request.ExtraLogging);
+            int matchIndex = CodesUtil.IndexOf(request.NewInstructions, request.SearchPattern, searchIndex, request.ExtraLogging);
             if (matchIndex < 0)
             {
                 // No more matches found
@@ -328,30 +142,20 @@ public static class PatchUtil
                 continue;
             }
 
-            if (!request.IsInsertMode && replacementPosition + replacementCount > request.NewInstructions.Count)
-            {
-                if (request.ExtraLogging)
-                {
-                    LogUtil.DebugLog($"Not enough instructions to overwrite at position {replacementPosition}. Skipping patch of {request.TargetMethodName}");
-                }
-
-                searchIndex = matchIndex + 1;
-                continue;
-            }
-
             // Apply the patch
             if (request.IsInsertMode)
             {
                 InsertInstructions(request, replacementPosition, replacementCount, matchIndex);
+                response.RegisterPatch(replacementPosition, matchIndex);
                 searchIndex = replacementPosition + replacementCount + 1;
             }
             else
             {
                 OverwriteInstructions(request, replacementPosition, replacementCount);
+                response.RegisterPatch(replacementPosition, matchIndex);
                 searchIndex = replacementPosition + replacementCount;
             }
 
-            response.RegisterPatch(replacementPosition, matchIndex);
             LogUtil.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {replacementPosition} (original match at {matchIndex})");
         }
 

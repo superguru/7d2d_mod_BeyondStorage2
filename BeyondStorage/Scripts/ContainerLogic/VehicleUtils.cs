@@ -27,8 +27,6 @@ public static class VehicleUtils
             return [];
         }
 
-        LogUtil.DebugLog($"{d_method_name}: Starting");
-
         var playerPos = player.position;
         var configRange = ModConfig.Range();
 

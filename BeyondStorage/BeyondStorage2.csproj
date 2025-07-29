@@ -70,6 +70,7 @@
     <Compile Include="Harmony\Item\Craft\Item_Action_Entry_Craft_Patches.cs" />
     <Compile Include="Harmony\Item\Repair\ItemActionEntryRepair_Patches.cs" />
     <Compile Include="Harmony\Item\Repair\XUiC_ItemActionList_Patches.cs" />
+    <Compile Include="Harmony\Item\Texture\ItemActionTextureBlock_Patches.cs" />
     <Compile Include="Harmony\Item\XUiM_PlayerInventory_Patches.cs" />
     <Compile Include="Harmony\PowerSource\Refuel\XUiC_PowerSourceStats_Patches.cs" />
     <Compile Include="Harmony\Recipe\Workstation_Patches.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Scripts\ContainerLogic\Block\BlockUpgrade.cs" />
     <Compile Include="Scripts\ContainerLogic\ContainerUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemCommon.cs" />
+    <Compile Include="Scripts\ContainerLogic\Item\ItemTexture.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemCraft.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemRepair.cs" />
     <Compile Include="Scripts\ContainerLogic\PowerSource\PowerSourceRefuel.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="Scripts\Server\NetPackageLockedTEs.cs" />
     <Compile Include="Scripts\Server\ServerUtils.cs" />
     <Compile Include="Scripts\Utils\FileUtil.cs" />
+    <Compile Include="Scripts\Utils\CodesUtil.cs" />
     <Compile Include="Scripts\Utils\PatchUtil.cs" />
     <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />

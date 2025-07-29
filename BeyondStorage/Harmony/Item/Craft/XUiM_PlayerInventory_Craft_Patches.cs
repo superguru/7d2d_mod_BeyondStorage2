@@ -44,7 +44,7 @@ public class XUiMPlayerInventoryCraftPatches
             new CodeInstruction(OpCodes.Ble_S, null) // The actual label will be preserved by the patch method
         };
 
-        var patchRequest = new PatchUtil.PatchRequest
+        var request = new PatchUtil.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -57,28 +57,28 @@ public class XUiMPlayerInventoryCraftPatches
             ExtraLogging = false
         };
 
-        var patchResult = PatchUtil.ApplyPatches(patchRequest);
+        var patchResult = PatchUtil.ApplyPatches(request);
 
         if (patchResult.IsPatched)
         {
             // -  1. Need to move this branch fixup code to the patch method
             // ✔️ 2. Record the original index of the patch as well as the new index of the patch in the PatchResult
-            // -  3. use patchRequest.NewInstructions.GetRange();
+            // -  3. use request.NewInstructions.GetRange();
             // -  4. Remove all this extra logging
 
-            var newLabelIndex = patchRequest.NewInstructions.FindIndex(instr => instr.opcode == OpCodes.Ble_S && instr.labels.Count == 0);
+            var newLabelIndex = request.NewInstructions.FindIndex(instr => instr.opcode == OpCodes.Ble_S && instr.labels.Count == 0);
             if (newLabelIndex >= 0)
             {
                 var oldLabelIndex = patchResult.OriginalPositions[patchResult.Count - 1] - 1;
 
-                var oldInstruction = patchRequest.OriginalInstructions[oldLabelIndex];
+                var oldInstruction = request.OriginalInstructions[oldLabelIndex];
                 var oldLabels = oldInstruction.labels;
-                if (patchRequest.ExtraLogging)
+                if (request.ExtraLogging)
                 {
                     LogUtil.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
                 }
 
-                patchRequest.NewInstructions[newLabelIndex] = oldInstruction.Clone();
+                request.NewInstructions[newLabelIndex] = oldInstruction.Clone();
             }
             else
             {
@@ -88,6 +88,6 @@ public class XUiMPlayerInventoryCraftPatches
             }
         }
 
-        return patchResult.BestInstructions(patchRequest);
+        return patchResult.BestInstructions(request);
     }
 }

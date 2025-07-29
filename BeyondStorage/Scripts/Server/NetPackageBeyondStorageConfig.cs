@@ -42,6 +42,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
+        binaryWriter.Write(ModConfig.ClientConfig.enableForBlockTexture);
 
         // #if DEBUG
         //         // testing backwards compatibility if we are sending more than expecting to receive (EX: newer config sent by server to client running older mod version)
@@ -85,6 +86,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModConfig.ServerConfig.pullFromVehicleStorage = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromWorkstationOutputs = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromDewCollectors = reader.ReadBoolean();
+        ModConfig.ServerConfig.enableForBlockTexture = reader.ReadBoolean();
 
         // Set HasServerConfig = true
         ServerUtils.HasServerConfig = true;
@@ -107,6 +109,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
 
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
+        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockTexture {ModConfig.ServerConfig.enableForBlockTexture}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForGeneratorRefuel {ModConfig.ServerConfig.enableForGeneratorRefuel}");
         LogUtil.DebugLog($"ModConfig.ServerConfig.enableForItemRepair {ModConfig.ServerConfig.enableForItemRepair}");
@@ -126,6 +129,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // save room for 6 more bytes (future boolean options)
         // kept it 6 after introducing pullFromWorkstationOutputs
         // kept it 6 after introducing pullFromDewCollectors
+        // kept it 6 after introducing enableForBlockTexture
         const int futureReservedSpace = 6;
         const int ushortSize = 2;
         const int floatSize = 4;

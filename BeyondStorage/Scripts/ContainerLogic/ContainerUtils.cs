@@ -250,14 +250,14 @@ public static class ContainerUtils
             }
         }
 
-        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {addedCount} stacks");
+        //LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {addedCount} stacks");
         previousCount = output.Count;
     }
 
     public static List<ItemStack> GetPullableSourceItemStacks(ItemValue filterItem = null)
     {
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
-        LogUtil.DebugLog($"{d_MethodName}: Starting");
+        //LogUtil.DebugLog($"{d_MethodName}: Starting");
 
         var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
         int previousCount = 0;
@@ -409,7 +409,7 @@ public static class ContainerUtils
                 s => s.bag.items, s => s.SetBagModified());
         }
 
-        return originalNeeded - stillNeeded;
+        return originalNeeded - stillNeeded;  // Return the total number of items removed
     }
 
     private static void ProcessStorage<T>(
