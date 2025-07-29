@@ -170,10 +170,6 @@ public class ItemActionTextureBlockPatches
         {
             // The stack now has the value of DecItem return value (countRemoved)
             new CodeInstruction(OpCodes.Stloc_S, 4),    // set entityAvailableCount with Inventory.DecItem result, which is the count of items removed from the inventory
-            new CodeInstruction(OpCodes.Ldloc_S, 4),    // load entityAvailableCount, which is now used as countRemoved
-            new CodeInstruction(OpCodes.Ldloc_1),       // paintCost aka stillNeeded
-            new CodeInstruction(OpCodes.Sub),           // stillNeeded - countRemoved
-            new CodeInstruction(OpCodes.Stloc_1),       // paintCost aka stillNeeded
 
             // Set up the arguments for ItemTexture_RemoveAmmo
             new CodeInstruction(OpCodes.Ldloc_3),     // itemValue

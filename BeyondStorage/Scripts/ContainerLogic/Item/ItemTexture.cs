@@ -69,46 +69,34 @@ public class ItemTexture
         return totalAvailableCount;
     }
 
-    public static int ItemTexture_RemoveAmmo(ItemValue ammoType, int stillNeeded, bool _ignoreModdedItems = false, IList<ItemStack> _removedItems = null)
+    public static int ItemTexture_RemoveAmmo(ItemValue ammoType, int paintCost, bool _ignoreModdedItems = false, IList<ItemStack> _removedItems = null)
     {
         const string d_MethodName = nameof(ItemTexture_RemoveAmmo);
-
-        LogUtil.DebugLog($"{d_MethodName}: Before - ammoType {ammoType?.ItemClass?.Name ?? "null"}, stillNeeded {stillNeeded}, ignoreModdedItems {_ignoreModdedItems}");
 
         // Early exit conditions
         if (!ModConfig.EnableForBlockTexture())
         {
-            LogUtil.DebugLog($"{d_MethodName}: Block texture feature disabled");
-            return stillNeeded;
+            return paintCost;
         }
 
-        if (stillNeeded <= 0)
+        if (paintCost <= 0)
         {
-            LogUtil.DebugLog($"{d_MethodName}: No ammo needed, returning {stillNeeded}");
-            return stillNeeded;
+            return paintCost;
         }
 
         // Validate ammo type
         if (!IsValidAmmoType(ammoType, d_MethodName))
         {
             LogUtil.DebugLog($"{d_MethodName}: Invalid ammo type, cannot remove from storage");
-            return stillNeeded;
+            return paintCost;
         }
 
-        try
-        {
-            var removedFromStorage = ContainerUtils.RemoveRemaining(ammoType, stillNeeded, _ignoreModdedItems, _removedItems);
-            var result = Math.Max(0, stillNeeded - removedFromStorage); // Ensure non-negative
+        var removedFromStorage = ContainerUtils.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems);
+        var stillNeeded = paintCost - removedFromStorage;
 
-            LogUtil.DebugLog($"{d_MethodName}: After - ammoType {ammoType.ItemClass.Name}, stillNeeded {stillNeeded}, removedFromStorage {removedFromStorage}, result {result}");
+        LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
 
-            return result;
-        }
-        catch (System.Exception ex)
-        {
-            LogUtil.Error($"{d_MethodName}: Exception while removing ammo: {ex.Message}");
-            return stillNeeded; // Return original value on error
-        }
+        return removedFromStorage;
     }
 
     /// <summary>

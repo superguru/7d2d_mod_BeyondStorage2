@@ -5,6 +5,7 @@
     "pullFromWorkstationOutputs": true,
     "pullFromVehicleStorage": true,
     "enableForBlockRepair": true,
+    "enableForBlockTexture": true,
     "enableForBlockUpgrade": true,
     "enableForGeneratorRefuel": true,
     "enableForItemRepair": true,
