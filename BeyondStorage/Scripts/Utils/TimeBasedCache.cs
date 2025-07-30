@@ -59,13 +59,13 @@ public sealed class TimeBasedCache<T> where T : class
             {
                 _cachedItem = newItem;
                 _cacheTimestamp = DateTime.Now;
-                LogUtil.DebugLog($"{methodName}: Created fresh {_cacheTypeName}");
+                //LogUtil.DebugLog($"{methodName}: Created fresh {_cacheTypeName}");
             }
             else
             {
                 // Clear cache if factory returns null
                 _cachedItem = null;
-                LogUtil.DebugLog($"{methodName}: Factory returned null for {_cacheTypeName}, cache cleared");
+                //LogUtil.DebugLog($"{methodName}: Factory returned null for {_cacheTypeName}, cache cleared");
             }
 
             return newItem;

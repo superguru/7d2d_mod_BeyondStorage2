@@ -137,7 +137,7 @@ public static class ContainerUtils
         LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {itemsAddedCount} items, stillNeeded {stillNeeded}");
     }
 
-    public static List<ItemStack> GetPullableSourceItemStacks(out int totalItemsAddedCount, ItemValue filterItem = null, int stillNeeded = -1)
+    public static List<ItemStack> GetPullableSourceItemStacks(BatchRemovalContext context, out int totalItemsAddedCount, ItemValue filterItem = null, int stillNeeded = -1)
     {
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
 
@@ -148,7 +148,17 @@ public static class ContainerUtils
             return [];
         }
 
-        var context = new BatchRemovalContext();
+        if (context == null)
+        {
+            context = BatchRemovalContext.Create(d_MethodName);
+        }
+
+        if (context == null)
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
+            return [];
+        }
+
         var config = context.Config;
 
         var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
@@ -374,7 +384,7 @@ public static class ContainerUtils
         LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
-    public static bool HasItem(ItemValue itemValue)
+    public static bool HasItem(BatchRemovalContext context, ItemValue itemValue)
     {
         const string d_MethodName = nameof(HasItem);
 
@@ -384,7 +394,18 @@ public static class ContainerUtils
             return false;
         }
 
-        var sourceStacks = GetItemCount(itemValue, stillNeeded: 1);
+        if (context == null)
+        {
+            context = BatchRemovalContext.Create(d_MethodName);
+        }
+
+        if (context == null)
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
+            return false;
+        }
+
+        var sourceStacks = GetItemCount(context, itemValue);
         var result = sourceStacks > 0;
 
         LogUtil.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
@@ -392,7 +413,7 @@ public static class ContainerUtils
         return result;
     }
 
-    public static int GetItemCount(ItemValue itemValue, int stillNeeded = -1)
+    public static int GetItemCount(BatchRemovalContext context, ItemValue itemValue)
     {
         const string d_MethodName = nameof(GetItemCount);
 
@@ -402,7 +423,18 @@ public static class ContainerUtils
             return 0;
         }
 
-        var sources = GetPullableSourceItemStacks(out var totalItemCountAdded, filterItem: itemValue, stillNeeded: stillNeeded);
+        if (context == null)
+        {
+            context = BatchRemovalContext.Create(d_MethodName);
+        }
+
+        if (context == null)
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
+            return 0;
+        }
+
+        var sources = GetPullableSourceItemStacks(context, out var totalItemCountAdded, filterItem: itemValue, stillNeeded: -1);
 
         LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
 
@@ -415,7 +447,15 @@ public static class ContainerUtils
        bool ignoreModdedItems = false,
        IList<ItemStack> removedItems = null)
     {
-        var context = new BatchRemovalContext();
+        const string d_MethodName = nameof(RemoveRemaining);
+
+        var context = BatchRemovalContext.Create(d_MethodName);
+        if (context == null)
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
+            return 0;
+        }
+
         int removedCount = RemoveRemainingWithContext(context, itemValue, stillNeeded, ignoreModdedItems, removedItems);
 
         return removedCount;

@@ -22,7 +22,7 @@ public class ItemCraft
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
         ItemUtil.PurgeInvalidItemStacks(stacks);
 
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(out int totalItemsAddedCount));
+        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(null, out int totalItemsAddedCount));
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
 
         return stacks;
@@ -48,7 +48,7 @@ public class ItemCraft
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
         // Todo: Add item filtering here, if needed
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(out int totalItemsAddedCount));
+        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(null, out int totalItemsAddedCount));
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
     }
 
@@ -64,11 +64,7 @@ public class ItemCraft
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var storageCount = ContainerUtils.GetItemCount(
-            itemValue,
-            //TODO: stillNeeded: entry.Recipe.ingredients.Where(item => item.itemValue.type == itemValue.type).Sum(item => item.count)
-            stillNeeded: -1
-            );
+        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
 
         if (storageCount > 0)
         {
@@ -111,7 +107,7 @@ public class ItemCraft
         }
 
         // Get storage count and return result
-        var storageCount = ContainerUtils.GetItemCount(itemStack.itemValue);
+        var storageCount = ContainerUtils.GetItemCount(null, itemStack.itemValue);
         var result = stillNeeded - storageCount;
 
         LogUtil.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");

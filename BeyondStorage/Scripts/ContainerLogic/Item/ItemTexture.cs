@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Utils;
 
@@ -16,39 +15,23 @@ public class ItemTexture
             return true;
         }
 
-        //if (!IsValidAmmoType(ammoType, d_MethodName))
-        //{
-        //    return false;
-        //}
-
         if (!ModConfig.EnableForBlockTexture())
         {
             return false;
         }
 
-        if (!IsValidLocalPlayer(_actionData, d_MethodName))
-        {
-            return false;
-        }
+        // Use batch context for efficient checking
+        var batchContext = BatchPaintContext.Create(d_MethodName);
+        var removalContext = batchContext?.RemovalContext;
 
-        var hasAmmo = ContainerUtils.HasItem(ammoType);
-
-        //LogUtil.DebugLog($"{d_MethodName}: hasAmmo is {hasAmmo} for ammoType {ammoType.ItemClass.Name}");
+        var hasAmmo = ContainerUtils.HasItem(removalContext, ammoType);
+        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
         return hasAmmo;
     }
 
     public static int ItemTexture_GetAmmoCount(ItemValue ammoType, int entityAvailableCount)
     {
-        // entityAvailableCount is the total of bag count + entity inventory count
-
         const string d_MethodName = nameof(ItemTexture_GetAmmoCount);
-
-        // Validate inputs
-        if (!IsValidAmmoType(ammoType, d_MethodName))
-        {
-            LogUtil.DebugLog($"{d_MethodName}: Invalid ammo type, returning entityInventoryCount {entityAvailableCount}");
-            return Math.Max(0, entityAvailableCount); // Ensure non-negative
-        }
 
         if (entityAvailableCount < 0)
         {
@@ -61,16 +44,20 @@ public class ItemTexture
             return entityAvailableCount;
         }
 
-        // TODO: Change the 1 to the cost of the ammo type, if available
-        var storageCount = ContainerUtils.GetItemCount(ammoType, stillNeeded: 1);
+        // Use batch context for efficient item counting
+        var batchContext = BatchPaintContext.Create(d_MethodName);
+        var removalContext = batchContext?.RemovalContext;
+
+        var storageCount = ContainerUtils.GetItemCount(removalContext, ammoType);
         var totalAvailableCount = storageCount + entityAvailableCount;
 
-        //LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, new total (incl storages) {totalAvailableCount}");
+        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
         return totalAvailableCount;
     }
 
     public static int ItemTexture_RemoveAmmo(ItemValue ammoType, int paintCost, bool _ignoreModdedItems = false, IList<ItemStack> _removedItems = null)
     {
+        const string d_MethodName = nameof(ItemTexture_RemoveAmmo);
 
         // Early exit conditions
         if (!ModConfig.EnableForBlockTexture())
@@ -83,79 +70,48 @@ public class ItemTexture
             return paintCost;
         }
 
-        //// Validate ammo type
-        //if (!IsValidAmmoType(ammoType, d_MethodName))
-        //{
-        //    LogUtil.DebugLog($"{d_MethodName}: Invalid ammo type, cannot remove from storage");
-        //    return paintCost;
-        //}
+        // Use batch context for efficient removal operations
+        var batchContext = BatchPaintContext.Create(d_MethodName);
+        var removalContext = batchContext?.RemovalContext;
 
-        var removedFromStorage = ContainerUtils.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems);
+        var removedFromStorage = ContainerUtils.RemoveRemainingWithContext(removalContext, ammoType, paintCost, _ignoreModdedItems, _removedItems);
+        batchContext?.AccumulateRemoval(ammoType, removedFromStorage);
         var stillNeeded = paintCost - removedFromStorage;
 
-        //LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
+        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
         return removedFromStorage;
     }
 
     /// <summary>
-    /// Validates that the ammo type is not null and has a valid item class.
+    /// Forces invalidation of the batch paint cache. 
+    /// Call this when paint operations are complete or when world state changes significantly.
     /// </summary>
-    /// <param name="ammoType">The ammo type to validate</param>
-    /// <param name="methodName">The calling method name for logging</param>
-    /// <returns>True if valid, false otherwise</returns>
-    private static bool IsValidAmmoType(ItemValue ammoType, string methodName)
+    public static void InvalidateBatchPaintCache()
     {
-        if (ammoType == null || ammoType.IsEmpty())
-        {
-            LogUtil.Error($"{methodName}: ammoType is null or empty");
-            return false;
-        }
-
-        if (ammoType.ItemClass == null)
-        {
-            LogUtil.Error($"{methodName}: ammoType.ItemClass is null");
-            return false;
-        }
-
-        return true;
+        BatchPaintContext.InvalidateCache();
     }
 
     /// <summary>
-    /// Validates that the action data represents a valid local player context.
+    /// Gets batch paint cache statistics for debugging.
     /// </summary>
-    /// <param name="actionData">The action data to validate</param>
-    /// <param name="methodName">The calling method name for logging</param>
-    /// <returns>True if valid local player, false otherwise</returns>
-    private static bool IsValidLocalPlayer(ItemActionData actionData, string methodName)
+    public static string GetBatchPaintCacheStats()
     {
-        var entity = actionData?.invData?.holdingEntity;
-        if (entity is not EntityPlayer playerEntity)
-        {
-            LogUtil.DebugLog($"{methodName}: entity is not a player");
-            return false;
-        }
+        return BatchPaintContext.GetCacheStats();
+    }
 
-        var world = GameManager.Instance.World;
-        if (world == null)
-        {
-            LogUtil.Error($"{methodName}: World is null");
-            return false;
-        }
+    /// <summary>
+    /// Forces invalidation of all related caches (batch paint and batch removal context).
+    /// </summary>
+    public static void InvalidateAllCaches()
+    {
+        BatchPaintContext.InvalidateAllCaches();
+    }
 
-        var player = world.GetPrimaryPlayer();
-        if (player == null)
-        {
-            LogUtil.Error($"{methodName}: Primary player is null");
-            return false;
-        }
-
-        if (playerEntity.entityId != player.entityId)
-        {
-            LogUtil.DebugLog($"{methodName}: Not the local player (entityId: {playerEntity.entityId} vs {player.entityId})");
-            return false;
-        }
-
-        LogUtil.DebugLog($"{methodName}: Valid local player context");
-        return true;
+    /// <summary>
+    /// Gets comprehensive cache statistics for all related caches.
+    /// </summary>
+    public static string GetComprehensiveCacheStats()
+    {
+        return BatchPaintContext.GetComprehensiveCacheStats();
     }
 }

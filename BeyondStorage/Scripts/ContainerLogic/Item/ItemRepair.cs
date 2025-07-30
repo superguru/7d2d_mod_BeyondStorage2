@@ -27,7 +27,7 @@ public static class ItemRepair
             return currentCount;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(itemValue);
+        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
         var newCount = currentCount + storageCount;
         LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
 
@@ -50,7 +50,7 @@ public static class ItemRepair
             return 0;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(itemValue);
+        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
         LogUtil.DebugLog($"ItemRepairRefreshGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return storageCount;

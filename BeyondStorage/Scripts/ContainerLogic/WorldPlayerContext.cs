@@ -11,7 +11,7 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 /// </summary>
 public sealed class WorldPlayerContext
 {
-    private static readonly TimeBasedCache<WorldPlayerContext> s_cache = new(0.5, nameof(WorldPlayerContext)); // 500ms cache
+    private static readonly TimeBasedCache<WorldPlayerContext> s_cache = new(1.0f, nameof(WorldPlayerContext)); // 500ms cache
 
     public World World { get; }
     public EntityPlayerLocal Player { get; }

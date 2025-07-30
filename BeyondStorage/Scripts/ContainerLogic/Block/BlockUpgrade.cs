@@ -16,7 +16,7 @@ public class BlockUpgrade
             return 0;
         }
 
-        var result = ContainerUtils.GetItemCount(itemValue);
+        var result = ContainerUtils.GetItemCount(null, itemValue);
         LogUtil.DebugLog($"BlockUpgradeGetItemCount | item {itemValue.ItemClass.GetItemName()}; count {result}");
 
         return result;

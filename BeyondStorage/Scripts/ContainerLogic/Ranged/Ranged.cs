@@ -16,7 +16,7 @@ public static class Ranged
         }
 
         // otherwise look for ammo
-        var canReloadFromStorage = ContainerUtils.HasItem(itemValue);
+        var canReloadFromStorage = ContainerUtils.HasItem(null, itemValue);
         LogUtil.DebugLog($"canReloadFromStorage: {canReloadFromStorage}");
 
         return canReloadFromStorage;
@@ -28,7 +28,7 @@ public static class Ranged
     //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - Get Total Ammo Count (not displayed))
     public static int GetAmmoCount(ItemValue itemValue)
     {
-        return ContainerUtils.GetItemCount(itemValue);
+        return ContainerUtils.GetItemCount(null, itemValue);
     }
 
     // Used By:

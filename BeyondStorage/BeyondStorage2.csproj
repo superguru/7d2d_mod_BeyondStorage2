@@ -90,6 +90,7 @@
     <Compile Include="Scripts\ContainerLogic\Block\BlockUpgrade.cs" />
     <Compile Include="Scripts\ContainerLogic\ConfigSnapshot.cs" />
     <Compile Include="Scripts\ContainerLogic\ContainerUtils.cs" />
+    <Compile Include="Scripts\ContainerLogic\Item\BatchPaintContext.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemCommon.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemTexture.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemCraft.cs" />

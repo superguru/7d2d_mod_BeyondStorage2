@@ -18,7 +18,7 @@ public class BlockRepair
             return 0;
         }
 
-        var result = ContainerUtils.GetItemCount(itemValue);
+        var result = ContainerUtils.GetItemCount(null, itemValue);
         LogUtil.DebugLog($"BlockRepairGetItemCount | item {itemName}; result {result}");
 
         return result;

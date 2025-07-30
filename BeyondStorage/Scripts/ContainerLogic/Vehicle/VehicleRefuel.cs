@@ -49,7 +49,7 @@ public static class VehicleRefuel
         }
 
         var fuelItemValue = ItemClass.GetItem(fuelItem);
-        var storageHas = ContainerUtils.HasItem(fuelItemValue);
+        var storageHas = ContainerUtils.HasItem(null, fuelItemValue);
         LogUtil.DebugLog($"VehicleRefuel.CanRefuel - fuelItem {fuelItem}; storageHas {storageHas}");
 
         return storageHas;
