@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using BeyondStorage.Scripts.Utils;
 
@@ -7,11 +6,11 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public sealed class BatchRemovalContext
 {
-    // Multiple caches for different durations - using concurrent dictionary for thread safety
-    private static readonly ConcurrentDictionary<double, TimeBasedCache<BatchRemovalContext>> s_cachesByDuration = new();
-
     // Default cache duration
     private const double DEFAULT_CACHE_DURATION = 1.0;
+
+    // Single cache for batch removal operations
+    private static readonly TimeBasedCache<BatchRemovalContext> s_contextCache = new(DEFAULT_CACHE_DURATION, nameof(BatchRemovalContext)); // 1 second cache
 
     public ConfigSnapshot Config { get; }
     public WorldPlayerContext WorldPlayerContext { get; }
@@ -52,7 +51,7 @@ public sealed class BatchRemovalContext
 
         CreatedAt = DateTime.Now;
 
-        //LogUtil.DebugLog($"BatchRemovalContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
+        LogUtil.DebugLog($"BatchRemovalContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
     }
 
     /// <summary>
@@ -61,133 +60,45 @@ public sealed class BatchRemovalContext
     /// </summary>
     /// <param name="methodName">The calling method name for logging purposes</param>
     /// <param name="forceRefresh">If true, bypasses cache and creates fresh context</param>
-    /// <param name="cacheDurationSeconds">Override cache duration in seconds (default: 1.0)</param>
     /// <returns>A valid BatchRemovalContext or null if creation failed</returns>
-    public static BatchRemovalContext Create(string methodName = "Unknown", double cacheDurationSeconds = DEFAULT_CACHE_DURATION, bool forceRefresh = false)
+    public static BatchRemovalContext Create(string methodName = "Unknown", bool forceRefresh = false)
     {
-        // Ensure cache duration is reasonable
-        if (cacheDurationSeconds <= 0)
-        {
-            LogUtil.Warning($"{methodName}: Invalid cache duration {cacheDurationSeconds}, using default {DEFAULT_CACHE_DURATION}");
-            cacheDurationSeconds = DEFAULT_CACHE_DURATION;
-        }
-
-        // Get or create cache for this duration
-        var cache = s_cachesByDuration.GetOrAdd(cacheDurationSeconds, duration =>
-            new TimeBasedCache<BatchRemovalContext>(duration, $"{nameof(BatchRemovalContext)}_{duration:F1}s"));
-
-        return cache.GetOrCreate(() => CreateFresh(methodName), forceRefresh, methodName);
+        return s_contextCache.GetOrCreate(() => CreateFresh(methodName), forceRefresh, methodName);
     }
 
     /// <summary>
-    /// Forces cache invalidation for BatchRemovalContext instances with the specified duration.
+    /// Forces cache invalidation for BatchRemovalContext instances.
+    /// Call this when world state changes significantly.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to invalidate (default: all caches)</param>
-    public static void InvalidateCache(double? cacheDurationSeconds = null)
+    public static void InvalidateCache()
     {
-        if (cacheDurationSeconds.HasValue)
-        {
-            // Invalidate specific cache duration
-            if (s_cachesByDuration.TryGetValue(cacheDurationSeconds.Value, out var cache))
-            {
-                cache.InvalidateCache();
-                //LogUtil.DebugLog($"BatchRemovalContext cache invalidated for duration {cacheDurationSeconds.Value:F1}s");
-            }
-        }
-        else
-        {
-            // Invalidate all caches
-            foreach (var kvp in s_cachesByDuration)
-            {
-                kvp.Value.InvalidateCache();
-            }
-            //LogUtil.DebugLog("All BatchRemovalContext caches invalidated");
-        }
+        s_contextCache.InvalidateCache();
+        LogUtil.DebugLog("BatchRemovalContext cache invalidated");
     }
 
     /// <summary>
-    /// Gets the age of the current cached context in seconds for the specified cache duration.
+    /// Gets the age of the current cached context in seconds.
     /// Returns -1 if no cached context exists.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 1.0)</param>
-    public static double GetCacheAge(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static double GetCacheAge()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.GetCacheAge();
-        }
-        return -1;
+        return s_contextCache.GetCacheAge();
     }
 
     /// <summary>
-    /// Checks if the cache currently has a valid (non-expired) context for the specified duration.
+    /// Checks if the cache currently has a valid (non-expired) context.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 1.0)</param>
-    public static bool HasValidCachedContext(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static bool HasValidCachedContext()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.HasValidCachedItem();
-        }
-        return false;
+        return s_contextCache.HasValidCachedItem();
     }
 
     /// <summary>
-    /// Gets cache statistics for diagnostics for the specified cache duration.
+    /// Gets cache statistics for diagnostics.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 1.0)</param>
-    public static string GetCacheStats(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static string GetCacheStats()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.GetCacheStats();
-        }
-        return $"{nameof(BatchRemovalContext)}_{cacheDurationSeconds:F1}s: No cache found";
-    }
-
-    /// <summary>
-    /// Gets cache statistics for all cache durations.
-    /// </summary>
-    public static string GetAllCacheStats()
-    {
-        if (s_cachesByDuration.IsEmpty)
-        {
-            return "BatchRemovalContext: No caches created";
-        }
-
-        var stats = new List<string>();
-        foreach (var kvp in s_cachesByDuration)
-        {
-            stats.Add($"{kvp.Key:F1}s: {kvp.Value.GetCacheStats()}");
-        }
-        return $"BatchRemovalContext caches: [{string.Join(", ", stats)}]";
-    }
-
-    /// <summary>
-    /// Cleans up unused caches (those without valid cached items).
-    /// Call this periodically to prevent memory leaks from many different cache durations.
-    /// </summary>
-    public static void CleanupUnusedCaches()
-    {
-        var keysToRemove = new List<double>();
-
-        foreach (var kvp in s_cachesByDuration)
-        {
-            if (!kvp.Value.HasValidCachedItem())
-            {
-                keysToRemove.Add(kvp.Key);
-            }
-        }
-
-        foreach (var key in keysToRemove)
-        {
-            s_cachesByDuration.TryRemove(key, out _);
-        }
-
-        if (keysToRemove.Count > 0)
-        {
-            //LogUtil.DebugLog($"BatchRemovalContext: Cleaned up {keysToRemove.Count} unused caches");
-        }
+        return s_contextCache.GetCacheStats();
     }
 
     private static BatchRemovalContext CreateFresh(string methodName)
@@ -224,10 +135,9 @@ public sealed class BatchRemovalContext
     /// <summary>
     /// Gets comprehensive cache information including nested WorldPlayerContext cache stats.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 1.0)</param>
-    public static string GetComprehensiveCacheStats(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static string GetComprehensiveCacheStats()
     {
-        var batchStats = GetCacheStats(cacheDurationSeconds);
+        var batchStats = s_contextCache.GetCacheStats();
         var worldPlayerStats = WorldPlayerContext.GetCacheStats();
         return $"BatchRemovalContext: {batchStats} | WorldPlayerContext: {worldPlayerStats}";
     }

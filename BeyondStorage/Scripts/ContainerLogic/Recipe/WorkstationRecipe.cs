@@ -92,7 +92,6 @@ public static class WorkstationRecipe
 
         if (openWorkstations.Count == 0)
         {
-            stopwatch.Stop();
             return; // Nothing to update - exit early
         }
 

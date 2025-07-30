@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using BeyondStorage.Scripts.Utils;
 
@@ -11,11 +10,11 @@ namespace BeyondStorage.Scripts.ContainerLogic.Item;
 /// </summary>
 public sealed class BatchPaintContext
 {
-    // Multiple caches for different durations - using concurrent dictionary for thread safety
-    private static readonly ConcurrentDictionary<double, TimeBasedCache<BatchPaintContext>> s_cachesByDuration = new();
-
     // Default cache duration for paint operations
     private const double DEFAULT_CACHE_DURATION = 2.0;
+
+    // Single cache for batch paint operations
+    private static readonly TimeBasedCache<BatchPaintContext> s_batchPaintCache = new(DEFAULT_CACHE_DURATION, nameof(BatchPaintContext)); // 2 second cache for paint operations
 
     public BatchRemovalContext RemovalContext { get; }
     private readonly Dictionary<int, int> _accumulatedRemovals = new();
@@ -31,22 +30,10 @@ public sealed class BatchPaintContext
     /// </summary>
     /// <param name="methodName">The calling method name for logging</param>
     /// <param name="forceRefresh">If true, bypasses cache and creates fresh context</param>
-    /// <param name="cacheDurationSeconds">Override cache duration in seconds (default: 2.0)</param>
     /// <returns>A BatchPaintContext or null if creation failed</returns>
-    public static BatchPaintContext Create(string methodName, double cacheDurationSeconds = DEFAULT_CACHE_DURATION, bool forceRefresh = false)
+    public static BatchPaintContext Create(string methodName, bool forceRefresh = false)
     {
-        // Ensure cache duration is reasonable
-        if (cacheDurationSeconds <= 0)
-        {
-            LogUtil.Warning($"{methodName}: Invalid cache duration {cacheDurationSeconds}, using default {DEFAULT_CACHE_DURATION}");
-            cacheDurationSeconds = DEFAULT_CACHE_DURATION;
-        }
-
-        // Get or create cache for this duration
-        var cache = s_cachesByDuration.GetOrAdd(cacheDurationSeconds, duration =>
-            new TimeBasedCache<BatchPaintContext>(duration, $"{nameof(BatchPaintContext)}_{duration:F1}s"));
-
-        return cache.GetOrCreate(() => CreateFresh(methodName), forceRefresh, methodName);
+        return s_batchPaintCache.GetOrCreate(() => CreateFresh(methodName), forceRefresh, methodName);
     }
 
     /// <summary>
@@ -58,7 +45,7 @@ public sealed class BatchPaintContext
     {
         try
         {
-            var removalContext = BatchRemovalContext.Create(methodName, cacheDurationSeconds: DEFAULT_CACHE_DURATION);
+            var removalContext = BatchRemovalContext.Create(methodName);
             if (removalContext?.WorldPlayerContext == null)
             {
                 LogUtil.Error($"{methodName}: Failed to create BatchRemovalContext with valid WorldPlayerContext");
@@ -76,139 +63,59 @@ public sealed class BatchPaintContext
     }
 
     /// <summary>
-    /// Forces invalidation of the batch paint cache for the specified duration.
+    /// Forces invalidation of the batch paint cache. 
+    /// Call this when paint operations are complete or when world state changes significantly.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to invalidate (default: all caches)</param>
-    public static void InvalidateCache(double? cacheDurationSeconds = null)
+    public static void InvalidateCache()
     {
-        if (cacheDurationSeconds.HasValue)
-        {
-            // Invalidate specific cache duration
-            if (s_cachesByDuration.TryGetValue(cacheDurationSeconds.Value, out var cache))
-            {
-                cache.InvalidateCache();
-                LogUtil.DebugLog($"BatchPaintContext cache invalidated for duration {cacheDurationSeconds.Value:F1}s");
-            }
-        }
-        else
-        {
-            // Invalidate all caches
-            foreach (var kvp in s_cachesByDuration)
-            {
-                kvp.Value.InvalidateCache();
-            }
-            LogUtil.DebugLog("All BatchPaintContext caches invalidated");
-        }
+        s_batchPaintCache.InvalidateCache();
+        LogUtil.DebugLog("Batch paint cache invalidated");
     }
 
     /// <summary>
-    /// Gets batch paint cache statistics for debugging for the specified cache duration.
+    /// Gets batch paint cache statistics for debugging.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 2.0)</param>
-    public static string GetCacheStats(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static string GetCacheStats()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.GetCacheStats();
-        }
-        return $"{nameof(BatchPaintContext)}_{cacheDurationSeconds:F1}s: No cache found";
+        return s_batchPaintCache.GetCacheStats();
     }
 
     /// <summary>
-    /// Gets cache statistics for all cache durations.
-    /// </summary>
-    public static string GetAllCacheStats()
-    {
-        if (s_cachesByDuration.IsEmpty)
-        {
-            return "BatchPaintContext: No caches created";
-        }
-
-        var stats = new List<string>();
-        foreach (var kvp in s_cachesByDuration)
-        {
-            stats.Add($"{kvp.Key:F1}s: {kvp.Value.GetCacheStats()}");
-        }
-        return $"BatchPaintContext caches: [{string.Join(", ", stats)}]";
-    }
-
-    /// <summary>
-    /// Gets the age of the current cached context in seconds for the specified cache duration.
+    /// Gets the age of the current cached context in seconds.
     /// Returns -1 if no cached context exists.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 2.0)</param>
-    public static double GetCacheAge(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static double GetCacheAge()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.GetCacheAge();
-        }
-        return -1;
+        return s_batchPaintCache.GetCacheAge();
     }
 
     /// <summary>
-    /// Checks if the cache currently has a valid (non-expired) context for the specified duration.
+    /// Checks if the cache currently has a valid (non-expired) context.
     /// </summary>
-    /// <param name="cacheDurationSeconds">Cache duration to check (default: 2.0)</param>
-    public static bool HasValidCachedContext(double cacheDurationSeconds = DEFAULT_CACHE_DURATION)
+    public static bool HasValidCachedContext()
     {
-        if (s_cachesByDuration.TryGetValue(cacheDurationSeconds, out var cache))
-        {
-            return cache.HasValidCachedItem();
-        }
-        return false;
+        return s_batchPaintCache.HasValidCachedItem();
     }
 
     /// <summary>
     /// Forces invalidation of all related caches (batch paint and batch removal context).
     /// </summary>
-    /// <param name="paintCacheDurationSeconds">Paint cache duration to invalidate (default: all paint caches)</param>
-    /// <param name="removalCacheDurationSeconds">Removal cache duration to invalidate (default: all removal caches)</param>
-    public static void InvalidateAllCaches(double? paintCacheDurationSeconds = null, double? removalCacheDurationSeconds = null)
+    public static void InvalidateAllCaches()
     {
-        InvalidateCache(paintCacheDurationSeconds);
-        BatchRemovalContext.InvalidateCache(removalCacheDurationSeconds);
+        s_batchPaintCache.InvalidateCache();
+        BatchRemovalContext.InvalidateCache();
         WorldPlayerContext.InvalidateCache();
-        //LogUtil.DebugLog("All BatchPaintContext-related caches invalidated");
+        LogUtil.DebugLog("All BatchPaintContext-related caches invalidated");
     }
 
     /// <summary>
     /// Gets comprehensive cache statistics for all related caches.
     /// </summary>
-    /// <param name="paintCacheDurationSeconds">Paint cache duration to check (default: 2.0)</param>
-    /// <param name="removalCacheDurationSeconds">Removal cache duration to check (default: 1.0)</param>
-    public static string GetComprehensiveCacheStats(double paintCacheDurationSeconds = DEFAULT_CACHE_DURATION, double removalCacheDurationSeconds = 1.0)
+    public static string GetComprehensiveCacheStats()
     {
-        var paintStats = GetCacheStats(paintCacheDurationSeconds);
-        var contextStats = BatchRemovalContext.GetComprehensiveCacheStats(removalCacheDurationSeconds);
+        var paintStats = s_batchPaintCache.GetCacheStats();
+        var contextStats = BatchRemovalContext.GetComprehensiveCacheStats();
         return $"BatchPaint: {paintStats} | {contextStats}";
-    }
-
-    /// <summary>
-    /// Cleans up unused caches (those without valid cached items).
-    /// Call this periodically to prevent memory leaks from many different cache durations.
-    /// </summary>
-    public static void CleanupUnusedCaches()
-    {
-        var keysToRemove = new List<double>();
-
-        foreach (var kvp in s_cachesByDuration)
-        {
-            if (!kvp.Value.HasValidCachedItem())
-            {
-                keysToRemove.Add(kvp.Key);
-            }
-        }
-
-        foreach (var key in keysToRemove)
-        {
-            s_cachesByDuration.TryRemove(key, out _);
-        }
-
-        if (keysToRemove.Count > 0)
-        {
-            //LogUtil.DebugLog($"BatchPaintContext: Cleaned up {keysToRemove.Count} unused caches");
-        }
     }
 
     /// <summary>

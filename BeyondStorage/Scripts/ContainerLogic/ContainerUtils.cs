@@ -141,6 +141,9 @@ public static class ContainerUtils
     {
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
 
+        // Start timing for total execution
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         totalItemsAddedCount = 0;
 
         if (stillNeeded == 0)
@@ -159,11 +162,10 @@ public static class ContainerUtils
             return [];
         }
 
+        //LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, {context.Workstations.Count} workstations, {context.Lootables.Count} lootables, {context.Vehicles.Count} vehicles, stillNeeded {stillNeeded}");
         var config = context.Config;
 
         var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
-
-        LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, {context.Workstations.Count} workstations, {context.Lootables.Count} lootables, {context.Vehicles.Count} vehicles, stillNeeded {stillNeeded}");
 
         if (config.PullFromDewCollectors)
         {
@@ -174,6 +176,9 @@ public static class ContainerUtils
             totalItemsAddedCount += dewCollectorItemsAddedCount;
             if (stillNeeded == 0)
             {
+                stopwatch.Stop();
+                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+                LogUtil.DebugLog($"{d_MethodName}: Early exit after dew collectors - Total execution time: {elapsedMs}ms");
                 return result;
             }
         }
@@ -187,6 +192,9 @@ public static class ContainerUtils
             totalItemsAddedCount += workstationItemsAddedCount;
             if (stillNeeded == 0)
             {
+                stopwatch.Stop();
+                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+                LogUtil.DebugLog($"{d_MethodName}: Early exit after workstations - Total execution time: {elapsedMs}ms");
                 return result;
             }
         }
@@ -199,6 +207,9 @@ public static class ContainerUtils
             totalItemsAddedCount += containerItemsAddedCount;
             if (stillNeeded == 0)
             {
+                stopwatch.Stop();
+                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+                LogUtil.DebugLog($"{d_MethodName}: Early exit after containers - Total execution time: {elapsedMs}ms");
                 return result;
             }
         }
@@ -210,11 +221,12 @@ public static class ContainerUtils
             //LogUtil.DebugLog($"{d_MethodName}: Found {context.Vehicles.Count} vehicles, added {vehicleItemsAddedCount} items, stillNeeded {stillNeeded}");
 
             totalItemsAddedCount += vehicleItemsAddedCount;
-            if (stillNeeded == 0)
-            {
-                return result;
-            }
         }
+
+        // Stop timing and log the total execution time
+        stopwatch.Stop();
+        int totalElapsedMs = (int)stopwatch.ElapsedMilliseconds;
+        LogUtil.DebugLog($"{d_MethodName}: Total execution time: {totalElapsedMs}ms, found {totalItemsAddedCount} items from {result.Count} stacks");
 
         return result;
     }
