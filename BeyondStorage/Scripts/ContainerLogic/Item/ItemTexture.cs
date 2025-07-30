@@ -10,10 +10,13 @@ public class ItemTexture
     {
         const string d_MethodName = nameof(ItemTexture_checkAmmo);
 
-
+#if DEBUG
+        LogUtil.DebugLog($"{d_MethodName}: Starting");
+#endif
         // Paint cost is 1 for everything in v2.x
         if (entityAvailableCount > 0)
         {
+            LogUtil.DebugLog($"{d_MethodName}: Entity has available count {entityAvailableCount}, no need to check ammo");
             return true;
         }
 
@@ -25,12 +28,8 @@ public class ItemTexture
         // Use batch context for efficient checking
         var batchContext = BatchPaintContext.Create(d_MethodName);
         var removalContext = batchContext?.StorageContext;
-        var hasAmmo = batchContext != null && removalContext != null;
 
-        if (hasAmmo)
-        {
-            hasAmmo = ContainerUtils.HasItem(removalContext, ammoType);
-        }
+        var hasAmmo = ContainerUtils.HasItem(removalContext, ammoType);
 
         LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
         return hasAmmo;

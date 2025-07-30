@@ -236,14 +236,6 @@ public sealed class StorageAccessContext
         return result;
     }
 
-    public void PurgeItemStacks()
-    {
-        ItemUtil.PurgeInvalidItemStacks(DewCollectorItems);
-        ItemUtil.PurgeInvalidItemStacks(WorkstationItems);
-        ItemUtil.PurgeInvalidItemStacks(ContainerItems);
-        ItemUtil.PurgeInvalidItemStacks(VehicleItems);
-    }
-
     /// <summary>
     /// Creates or retrieves a cached StorageAccessContext instance.
     /// Uses TimeBasedCache to avoid expensive context creation operations.

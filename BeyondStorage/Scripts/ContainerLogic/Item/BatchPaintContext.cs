@@ -133,12 +133,6 @@ public sealed class BatchPaintContext
             _totalOperations++;
 
             LogUtil.DebugLog($"BatchPaintContext: Accumulated {removedCount} of {itemValue.ItemClass.Name} (total: {_accumulatedRemovals[itemType]}, operations: {_totalOperations})");
-
-            if (currentCount % 63 == 0)
-            {
-                StorageContext.PurgeItemStacks();
-                LogUtil.DebugLog($"BatchPaintContext: Purged item stacks after accumulating {currentCount} of {itemValue.ItemClass.Name}");
-            }
         }
     }
 
