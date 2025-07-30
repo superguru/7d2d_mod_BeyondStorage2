@@ -19,10 +19,11 @@ public class ItemCraft
             return stacks;  // We're not fixing the caller's mistakes
         }
 
-        LogUtil.DebugLog($"{d_MethodName} | itemCount before {stacks.Count}");
+        LogUtil.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
+        ItemUtil.PurgeInvalidItemStacks(stacks);
 
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks());
-        LogUtil.DebugLog($"{d_MethodName} | itemCount after {stacks.Count}");
+        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(out int totalItemsAddedCount));
+        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
 
         return stacks;
     }
@@ -41,38 +42,46 @@ public class ItemCraft
             return;
         }
 
-        LogUtil.DebugLog($"{d_MethodName} | items.Count at the start {stacks.Count} (not stripped)");
+        LogUtil.DebugLog($"{d_MethodName} | stacks.Count at the start {stacks.Count} (not stripped)");
 
         ItemUtil.PurgeInvalidItemStacks(stacks);
-        LogUtil.DebugLog($"{d_MethodName} | items.Count after stripping {stacks.Count}");
+        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks());
-        LogUtil.DebugLog($"{d_MethodName} | items.Count after pulling {stacks.Count}");
+        // Todo: Add item filtering here, if needed
+        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(out int totalItemsAddedCount));
+        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
     }
 
     //  Used By:
     //      XUiC_IngredientEntry.GetBindingValue
     //          Item Crafting - shows item count available in crafting window(s)
-    public static int EntryBinding_AddPullableSourceStorageItemCount(int count, XUiC_IngredientEntry entry)
+    public static int EntryBinding_AddPullableSourceStorageItemCount(int entityAvailableCount, XUiC_IngredientEntry entry)
     {
         const string d_MethodName = nameof(EntryBinding_AddPullableSourceStorageItemCount);
 
+        // Todo: this should use an upper limit for the number if items required
+
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
-        var storageCount = ContainerUtils.GetItemCount(itemValue);
+
+        var storageCount = ContainerUtils.GetItemCount(
+            itemValue,
+            //TODO: stillNeeded: entry.Recipe.ingredients.Where(item => item.itemValue.type == itemValue.type).Sum(item => item.count)
+            stillNeeded: -1
+            );
 
         if (storageCount > 0)
         {
-            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; adding storage count {storageCount} to count {count} and setting the window controller IsDirty = true");
+            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
             entry.windowGroup.Controller.IsDirty = true;
         }
         else
         {
-            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; initialCount {count}; storageCount {storageCount} but resetting it to 0");
+            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount} but resetting it to 0");
             storageCount = 0;
         }
 
-        return count + storageCount;
+        return entityAvailableCount + storageCount;
     }
 
 

@@ -50,8 +50,6 @@ public static class ItemUtil
 
     public static void PurgeInvalidItemStacks(List<ItemStack> stacks)
     {
-        const string d_methodName = nameof(PurgeInvalidItemStacks);
-
         if (stacks == null || stacks.Count == 0)
         {
             return;
@@ -69,13 +67,6 @@ public static class ItemUtil
             {
                 validItems.Add(stack);
             }
-        }
-
-        // Ensure input has adequate capacity before adding items
-        if (stacks.Capacity < DEFAULT_ITEMSTACK_LIST_CAPACITY)
-        {
-            LogUtil.DebugLog($"{d_methodName}: Resizing stacks capacity from {stacks.Capacity} to {DEFAULT_ITEMSTACK_LIST_CAPACITY}");
-            stacks.Capacity = DEFAULT_ITEMSTACK_LIST_CAPACITY;
         }
 
         stacks.Clear();

@@ -16,10 +16,10 @@ public class ItemTexture
             return true;
         }
 
-        if (!IsValidAmmoType(ammoType, d_MethodName))
-        {
-            return false;
-        }
+        //if (!IsValidAmmoType(ammoType, d_MethodName))
+        //{
+        //    return false;
+        //}
 
         if (!ModConfig.EnableForBlockTexture())
         {
@@ -32,8 +32,8 @@ public class ItemTexture
         }
 
         var hasAmmo = ContainerUtils.HasItem(ammoType);
-        LogUtil.DebugLog($"{d_MethodName}: hasAmmo is {hasAmmo} for ammoType {ammoType.ItemClass.Name}");
 
+        //LogUtil.DebugLog($"{d_MethodName}: hasAmmo is {hasAmmo} for ammoType {ammoType.ItemClass.Name}");
         return hasAmmo;
     }
 
@@ -61,17 +61,16 @@ public class ItemTexture
             return entityAvailableCount;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(ammoType);
+        // TODO: Change the 1 to the cost of the ammo type, if available
+        var storageCount = ContainerUtils.GetItemCount(ammoType, stillNeeded: 1);
         var totalAvailableCount = storageCount + entityAvailableCount;
 
-        LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, new total (incl storages) {totalAvailableCount}");
-
+        //LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, new total (incl storages) {totalAvailableCount}");
         return totalAvailableCount;
     }
 
     public static int ItemTexture_RemoveAmmo(ItemValue ammoType, int paintCost, bool _ignoreModdedItems = false, IList<ItemStack> _removedItems = null)
     {
-        const string d_MethodName = nameof(ItemTexture_RemoveAmmo);
 
         // Early exit conditions
         if (!ModConfig.EnableForBlockTexture())
@@ -84,18 +83,17 @@ public class ItemTexture
             return paintCost;
         }
 
-        // Validate ammo type
-        if (!IsValidAmmoType(ammoType, d_MethodName))
-        {
-            LogUtil.DebugLog($"{d_MethodName}: Invalid ammo type, cannot remove from storage");
-            return paintCost;
-        }
+        //// Validate ammo type
+        //if (!IsValidAmmoType(ammoType, d_MethodName))
+        //{
+        //    LogUtil.DebugLog($"{d_MethodName}: Invalid ammo type, cannot remove from storage");
+        //    return paintCost;
+        //}
 
         var removedFromStorage = ContainerUtils.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems);
         var stillNeeded = paintCost - removedFromStorage;
 
-        LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
-
+        //LogUtil.DebugLog($"{d_MethodName}: ammoType {ammoType.ItemClass.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
         return removedFromStorage;
     }
 
@@ -109,13 +107,13 @@ public class ItemTexture
     {
         if (ammoType == null || ammoType.IsEmpty())
         {
-            LogUtil.DebugLog($"{methodName}: ammoType is null or empty");
+            LogUtil.Error($"{methodName}: ammoType is null or empty");
             return false;
         }
 
         if (ammoType.ItemClass == null)
         {
-            LogUtil.DebugLog($"{methodName}: ammoType.ItemClass is null");
+            LogUtil.Error($"{methodName}: ammoType.ItemClass is null");
             return false;
         }
 
