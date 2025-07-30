@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BeyondStorage.Scripts.Server;
 using BeyondStorage.Scripts.Utils;
-using Platform;
-using UnityEngine;
 
 
 namespace BeyondStorage.Scripts.ContainerLogic;
@@ -211,57 +209,44 @@ public static class ContainerUtils
         return result;
     }
 
-    public static void DiscoverTileEntitySources(
-        ConfigSnapshot config,
-        out List<TileEntityDewCollector> dewCollectors,
-        out List<TileEntityWorkstation> workstations,
-        out List<ITileEntityLootable> lootables)
+    public static void DiscoverTileEntitySources(BatchRemovalContext context)
     {
-        dewCollectors = new List<TileEntityDewCollector>(DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
-        workstations = new List<TileEntityWorkstation>(DEFAULT_WORKSTATION_LIST_CAPACITY);
-        lootables = new List<ITileEntityLootable>(DEFAULT_LOOTBLE_LIST_CAPACITY);
+        if (context == null)
+        {
+            LogUtil.Error($"{nameof(DiscoverTileEntitySources)}: context is null, aborting.");
+            return;
+        }
 
-        AddPullableTileEntities(config, dewCollectors, workstations, lootables);
+        AddPullableTileEntities(context);
     }
 
-    private static void AddPullableTileEntities(
-        ConfigSnapshot config,
-        List<TileEntityDewCollector> dewCollectors,
-        List<TileEntityWorkstation> workstations,
-        List<ITileEntityLootable> lootables)
+    private static void AddPullableTileEntities(BatchRemovalContext context)
     {
         const string d_MethodName = nameof(AddPullableTileEntities);
 
-        var world = GameManager.Instance.World;
-        if (world == null)
+        if (context == null)
         {
-            LogUtil.Error($"{d_MethodName}: World is null, aborting.");
+            LogUtil.Error($"{d_MethodName}: context is null, aborting.");
             return;
         }
 
-        var player = world.GetPrimaryPlayer();
-        if (player == null)
+        if (context.WorldPlayerContext == null)
         {
-            LogUtil.Error($"{d_MethodName}: Player is null, aborting.");
+            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
             return;
         }
 
-        var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
-        if (chunkCacheCopy == null)
-        {
-            LogUtil.Error($"{d_MethodName}: chunkCacheCopy is null, aborting.");
-            return;
-        }
-
-        var playerPos = player.position;
-        var internalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
-        var playerEntityId = player.entityId;
+        var config = context.Config;
+        var worldPlayerContext = context.WorldPlayerContext;
+        var dewCollectors = context.DewCollectors;
+        var workstations = context.Workstations;
+        var lootables = context.Lootables;
 
         int chunksProcessed = 0;
         int nullChunks = 0;
         int tileEntitiesProcessed = 0;
 
-        foreach (var chunk in chunkCacheCopy)
+        foreach (var chunk in worldPlayerContext.ChunkCacheCopy)
         {
             if (chunk == null)
             {
@@ -304,14 +289,14 @@ public static class ContainerUtils
                 // Locked check (skip if locked by another player)
                 if (LockedTileEntities.Count > 0)
                 {
-                    if (LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != playerEntityId)
+                    if (LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
                     {
                         continue;
                     }
                 }
 
                 // Range check first for early exit
-                if (config.Range > 0 && Vector3.Distance(playerPos, tileEntityWorldPos) >= config.Range)
+                if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
                 {
                     continue;
                 }
@@ -319,7 +304,7 @@ public static class ContainerUtils
                 // Lockable check (skip if locked and not allowed)
                 if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
                 {
-                    if (tileLockable.IsLocked() && !tileLockable.IsUserAllowed(internalLocalUserIdentifier))
+                    if (!worldPlayerContext.CanAccessLockable(tileLockable))
                     {
                         continue;
                     }

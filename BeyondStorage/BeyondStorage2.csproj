@@ -102,6 +102,7 @@
     <Compile Include="Scripts\ContainerLogic\VehicleUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRefuel.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRepair.cs" />
+    <Compile Include="Scripts\ContainerLogic\WorldPlayerContext.cs" />
     <Compile Include="Scripts\Server\NetPackageBeyondStorageConfig.cs" />
     <Compile Include="Scripts\Server\NetPackageLockedTEs.cs" />
     <Compile Include="Scripts\Server\ServerUtils.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Scripts\Utils\PatchUtil.cs" />
     <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />
+    <Compile Include="Scripts\Utils\TimeBasedCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ModInfo.xml" />

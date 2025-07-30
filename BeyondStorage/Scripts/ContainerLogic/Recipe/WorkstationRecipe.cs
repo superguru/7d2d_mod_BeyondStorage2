@@ -70,13 +70,14 @@ public static class WorkstationRecipe
 
         string d_MethodName = string.Concat(callType, ".", nameof(Update_OpenWorkstations));
 
-        var player = GameManager.Instance.World?.GetPrimaryPlayer();
-        if (player == null)
+        var worldPlayerContext = WorldPlayerContext.TryCreate(d_MethodName);
+        if (worldPlayerContext == null)
         {
-            LogUtil.Error($"{d_MethodName}: primary player is null in call {callCount}");
+            LogUtil.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}");
             return;
         }
 
+        var player = worldPlayerContext.Player;
         var xui = player.PlayerUI.xui;
         if (xui == null)
         {

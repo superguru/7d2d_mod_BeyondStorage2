@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Utils;
-using UnityEngine;
+﻿using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
 
@@ -8,35 +6,30 @@ public static class VehicleUtils
 {
     public const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
 
-    public static List<EntityVehicle> GetAvailableVehicleStorages(ConfigSnapshot config)
+    public static void GetAvailableVehicleStorages(BatchRemovalContext context)
     {
-        const string d_method_name = "GetAvailableVehicleStorages";
+        const string d_method_name = nameof(GetAvailableVehicleStorages);
 
-        var world = GameManager.Instance.World;
-        if (world == null)
+        if (context == null)
         {
-            LogUtil.Error($"{d_method_name}: World is null, aborting.");
-            return [];
+            LogUtil.Error($"{d_method_name}: context is null, aborting.");
+            return;
         }
 
-        var player = world.GetPrimaryPlayer();
-        if (player == null)
+        if (context.WorldPlayerContext == null)
         {
-            LogUtil.Error($"{d_method_name}: Player is null, aborting.");
-            return [];
+            LogUtil.Error($"{d_method_name}: WorldPlayerContext is null, aborting.");
+            return;
         }
 
-        var playerPos = player.position;
-        var configRange = config.Range;
+        var configRange = context.Config.Range;
 
         var vehicles = VehicleManager.Instance?.vehiclesActive;
         if (vehicles == null)
         {
             LogUtil.Error($"{d_method_name}: VehicleManager returned null list, aborting.");
-            return [];
+            return;
         }
-
-        var result = new List<EntityVehicle>(DEFAULT_VEHICLE_LIST_CAPACITY);
 
         foreach (var vehicle in vehicles)
         {
@@ -46,21 +39,19 @@ public static class VehicleUtils
                 continue;
             }
 
-            // Range check
-            if (configRange > 0 && Vector3.Distance(playerPos, vehicle.position) >= configRange)
+            // Range check using WorldPlayerContext
+            if (!context.WorldPlayerContext.IsWithinRange(vehicle.position, configRange))
             {
                 continue;
             }
 
             // Locked for player check
-            if (vehicle.IsLockedForLocalPlayer(player))
+            if (vehicle.IsLockedForLocalPlayer(context.WorldPlayerContext.Player))
             {
                 continue;
             }
 
-            result.Add(vehicle);
+            context.Vehicles.Add(vehicle);
         }
-
-        return result;
     }
 }
