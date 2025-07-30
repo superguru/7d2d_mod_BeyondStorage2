@@ -6,11 +6,11 @@ namespace BeyondStorage.Scripts.ContainerLogic.Item;
 
 public class ItemTexture
 {
-    public static bool ItemTexture_checkAmmo(int currentCount, ItemActionData _actionData, ItemValue ammoType)
+    public static bool ItemTexture_checkAmmo(int entityAvailableCount, ItemActionData _actionData, ItemValue ammoType)
     {
         const string d_MethodName = nameof(ItemTexture_checkAmmo);
 
-        if (currentCount > 0)
+        if (entityAvailableCount > 0)
         {
             return true;
         }
@@ -22,7 +22,7 @@ public class ItemTexture
 
         // Use batch context for efficient checking
         var batchContext = BatchPaintContext.Create(d_MethodName);
-        var removalContext = batchContext?.RemovalContext;
+        var removalContext = batchContext?.StorageContext;
 
         var hasAmmo = ContainerUtils.HasItem(removalContext, ammoType);
         LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
@@ -46,7 +46,7 @@ public class ItemTexture
 
         // Use batch context for efficient item counting
         var batchContext = BatchPaintContext.Create(d_MethodName);
-        var removalContext = batchContext?.RemovalContext;
+        var removalContext = batchContext?.StorageContext;
 
         var storageCount = ContainerUtils.GetItemCount(removalContext, ammoType);
         var totalAvailableCount = storageCount + entityAvailableCount;
@@ -72,7 +72,7 @@ public class ItemTexture
 
         // Use batch context for efficient removal operations
         var batchContext = BatchPaintContext.Create(d_MethodName);
-        var removalContext = batchContext?.RemovalContext;
+        var removalContext = batchContext?.StorageContext;
 
         var removedFromStorage = ContainerUtils.RemoveRemainingWithContext(removalContext, ammoType, paintCost, _ignoreModdedItems, _removedItems);
         batchContext?.AccumulateRemoval(ammoType, removedFromStorage);

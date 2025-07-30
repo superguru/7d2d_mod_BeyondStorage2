@@ -5,7 +5,7 @@ using BeyondStorage.Scripts.Utils;
 namespace BeyondStorage.Scripts.ContainerLogic.Item;
 
 /// <summary>
-/// Context class for batch paint operations that holds a shared BatchRemovalContext
+/// Context class for batch paint operations that holds a shared StorageAccessContext
 /// and tracks accumulated operations for debugging.
 /// </summary>
 public sealed class BatchPaintContext
@@ -16,13 +16,13 @@ public sealed class BatchPaintContext
     // Single cache for batch paint operations
     private static readonly TimeBasedCache<BatchPaintContext> s_batchPaintCache = new(DEFAULT_CACHE_DURATION, nameof(BatchPaintContext)); // 2 second cache for paint operations
 
-    public BatchRemovalContext RemovalContext { get; }
+    public StorageAccessContext StorageContext { get; }
     private readonly Dictionary<int, int> _accumulatedRemovals = new();
     private int _totalOperations = 0;
 
-    public BatchPaintContext(BatchRemovalContext removalContext)
+    public BatchPaintContext(StorageAccessContext storageContext)
     {
-        RemovalContext = removalContext ?? throw new ArgumentNullException(nameof(removalContext));
+        StorageContext = storageContext ?? throw new ArgumentNullException(nameof(storageContext));
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public sealed class BatchPaintContext
     }
 
     /// <summary>
-    /// Creates a new BatchPaintContext with a fresh BatchRemovalContext.
+    /// Creates a new BatchPaintContext with a fresh StorageAccessContext.
     /// </summary>
     /// <param name="methodName">The calling method name for logging</param>
     /// <returns>A new BatchPaintContext or null if creation failed</returns>
@@ -45,15 +45,15 @@ public sealed class BatchPaintContext
     {
         try
         {
-            var removalContext = BatchRemovalContext.Create(methodName);
-            if (removalContext?.WorldPlayerContext == null)
+            var storageContext = StorageAccessContext.Create(methodName);
+            if (storageContext?.WorldPlayerContext == null)
             {
-                LogUtil.Error($"{methodName}: Failed to create BatchRemovalContext with valid WorldPlayerContext");
+                LogUtil.Error($"{methodName}: Failed to create StorageAccessContext with valid WorldPlayerContext");
                 return null;
             }
 
-            LogUtil.DebugLog($"{methodName}: Created batch paint context with {removalContext.GetSourceSummary()}");
-            return new BatchPaintContext(removalContext);
+            LogUtil.DebugLog($"{methodName}: Created batch paint context with {storageContext.GetSourceSummary()}");
+            return new BatchPaintContext(storageContext);
         }
         catch (Exception ex)
         {
@@ -98,12 +98,12 @@ public sealed class BatchPaintContext
     }
 
     /// <summary>
-    /// Forces invalidation of all related caches (batch paint and batch removal context).
+    /// Forces invalidation of all related caches (batch paint and storage access context).
     /// </summary>
     public static void InvalidateAllCaches()
     {
         s_batchPaintCache.InvalidateCache();
-        BatchRemovalContext.InvalidateCache();
+        StorageAccessContext.InvalidateCache();
         WorldPlayerContext.InvalidateCache();
         LogUtil.DebugLog("All BatchPaintContext-related caches invalidated");
     }
@@ -114,7 +114,7 @@ public sealed class BatchPaintContext
     public static string GetComprehensiveCacheStats()
     {
         var paintStats = s_batchPaintCache.GetCacheStats();
-        var contextStats = BatchRemovalContext.GetComprehensiveCacheStats();
+        var contextStats = StorageAccessContext.GetComprehensiveCacheStats();
         return $"BatchPaint: {paintStats} | {contextStats}";
     }
 
@@ -133,6 +133,12 @@ public sealed class BatchPaintContext
             _totalOperations++;
 
             LogUtil.DebugLog($"BatchPaintContext: Accumulated {removedCount} of {itemValue.ItemClass.Name} (total: {_accumulatedRemovals[itemType]}, operations: {_totalOperations})");
+
+            if (currentCount % 63 == 0)
+            {
+                StorageContext.PurgeItemStacks();
+                LogUtil.DebugLog($"BatchPaintContext: Purged item stacks after accumulating {currentCount} of {itemValue.ItemClass.Name}");
+            }
         }
     }
 
@@ -142,8 +148,8 @@ public sealed class BatchPaintContext
     /// <returns>A string containing operation statistics and context ages</returns>
     public string GetOperationsSummary()
     {
-        var contextAge = RemovalContext?.AgeInSeconds ?? -1;
-        var worldContextAge = RemovalContext?.WorldPlayerContext?.AgeInSeconds ?? -1;
+        var contextAge = StorageContext?.AgeInSeconds ?? -1;
+        var worldContextAge = StorageContext?.WorldPlayerContext?.AgeInSeconds ?? -1;
         return $"BatchPaintContext: {_totalOperations} operations, {_accumulatedRemovals.Count} different item types, Context age: {contextAge:F1}s, WorldPlayerContext age: {worldContextAge:F1}s";
     }
 

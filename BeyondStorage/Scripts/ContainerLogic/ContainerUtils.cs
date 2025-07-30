@@ -5,7 +5,6 @@ using System.Linq;
 using BeyondStorage.Scripts.Server;
 using BeyondStorage.Scripts.Utils;
 
-
 namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class ContainerUtils
@@ -16,22 +15,45 @@ public static class ContainerUtils
 
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
 
+    // Statistics tracker for performance monitoring
+    private static readonly MethodCallStatistics s_methodStats = new("ContainerUtils");
+
     public static void Init()
     {
         ServerUtils.HasServerConfig = false;
         LockedTileEntities = new ConcurrentDictionary<Vector3i, int>();
+        s_methodStats.Clear();
     }
 
     public static void Cleanup()
     {
         ServerUtils.HasServerConfig = false;
         LockedTileEntities?.Clear();
+        s_methodStats.Clear();
     }
 
     public static void UpdateLockedTEs(Dictionary<Vector3i, int> lockedTileEntities)
     {
         LockedTileEntities = new ConcurrentDictionary<Vector3i, int>(lockedTileEntities);
         LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
+    }
+
+    /// <summary>
+    /// Gets call statistics for ContainerUtils methods.
+    /// </summary>
+    /// <returns>Dictionary of method names and their timing statistics</returns>
+    public static Dictionary<string, (int callCount, long totalTimeMs, double avgTimeMs)> GetCallStatistics()
+    {
+        return s_methodStats.GetAllStatistics();
+    }
+
+    /// <summary>
+    /// Gets formatted call statistics for logging/debugging.
+    /// </summary>
+    /// <returns>Formatted string with call statistics</returns>
+    public static string GetFormattedCallStatistics()
+    {
+        return s_methodStats.GetFormattedStatistics();
     }
 
     private static void AddValidItemStacksFromSources<T>(
@@ -41,7 +63,6 @@ public static class ContainerUtils
             Func<T, ItemStack[]> getStacks,
             string sourceName,
             out int itemsAddedCount,
-            ref int stillNeeded,
             ItemValue filterItem = null) where T : class
     {
         itemsAddedCount = 0;
@@ -52,28 +73,11 @@ public static class ContainerUtils
             return;
         }
 
-        // stillNeeded == -1 means "get all", which is valid
-        // Only error on values < -1
-        if (stillNeeded < -1)
-        {
-            LogUtil.Error($"{d_MethodName}: {sourceName} invalid stillNeeded value: {stillNeeded}. resetting it to 0 and returning.");
-            stillNeeded = 0;  // Reset to 0 if negative, as it doesn't make sense
-            return;
-        }
-
         int filterType = filterItem?.type ?? -1;
         var filtering = filterType >= 0;
 
-        bool shouldGetAllItems = stillNeeded == -1;
-        LogUtil.DebugLog($"{d_MethodName}: {sourceName} filtering is {filtering}, stillNeeded {stillNeeded}, shouldGetAllItems {shouldGetAllItems}");
-
         foreach (var source in sources)
         {
-            if (!shouldGetAllItems && stillNeeded == 0)
-            {
-                break;  // No need to continue if we already have enough items
-            }
-
             if (source == null)
             {
                 continue;
@@ -87,17 +91,12 @@ public static class ContainerUtils
 
             for (int i = 0; i < stacks.Length; i++)
             {
-                if (!shouldGetAllItems && stillNeeded == 0)
-                {
-                    break;  // No need to continue if we already have enough items
-                }
-
                 var stack = stacks[i];
                 int stackCount = stack?.count ?? 0;
 
                 if (stackCount <= 0)
                 {
-                    continue;  // This is just part of the game logic, but we don't want to add empty stacks
+                    continue;
                 }
 
                 // Apply filter if specified
@@ -106,132 +105,105 @@ public static class ContainerUtils
                     continue;
                 }
 
-                if (shouldGetAllItems)
-                {
-                    output.Add(stack);
-                    itemsAddedCount += stackCount;
-                }
-                else
-                {
-                    if (stackCount <= stillNeeded)
-                    {
-                        // Add the entire stack to the output
-                        output.Add(stack);
-
-                        itemsAddedCount += stackCount;
-                        stillNeeded -= stackCount;
-                    }
-                    else
-                    {
-                        // Only add a partial stack to the output
-                        var partialStack = new ItemStack(stack.itemValue, stillNeeded);
-                        output.Add(partialStack);
-
-                        itemsAddedCount += stillNeeded;
-                        stillNeeded = 0;
-                    }
-                }
+                output.Add(stack);
+                itemsAddedCount += stackCount;
             }
         }
-
-        LogUtil.DebugLog($"{d_MethodName}: {sourceName} pulled in {itemsAddedCount} items, stillNeeded {stillNeeded}");
     }
 
-    public static List<ItemStack> GetPullableSourceItemStacks(BatchRemovalContext context, out int totalItemsAddedCount, ItemValue filterItem = null, int stillNeeded = -1)
+    public static List<ItemStack> GetPullableSourceItemStacks(StorageAccessContext context, out int totalItemsAddedCount, ItemValue filterItem = null)
     {
         const string d_MethodName = nameof(GetPullableSourceItemStacks);
 
-        // Start timing for total execution
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
         totalItemsAddedCount = 0;
 
-        if (stillNeeded == 0)
+        // Early exit for error conditions - don't track timing for these
+        if (context == null)
         {
-            return [];
+            context = StorageAccessContext.Create(d_MethodName);
         }
 
         if (context == null)
         {
-            context = BatchRemovalContext.Create(d_MethodName);
-        }
-
-        if (context == null)
-        {
-            LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
+            LogUtil.Error($"{d_MethodName}: Failed to create StorageAccessContext");
             return [];
         }
 
-        //LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, {context.Workstations.Count} workstations, {context.Lootables.Count} lootables, {context.Vehicles.Count} vehicles, stillNeeded {stillNeeded}");
+        // Check if we have cached ItemStack results for this filter
+        if (context.AreItemStacksCached(filterItem))
+        {
+            totalItemsAddedCount = context.GetTotalItemCount();
+            var cachedResult = context.GetAllItemStacks();
+
+            LogUtil.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemsAddedCount} items from {cachedResult.Count} stacks - DC:{context.DewCollectorItems.Count}, WS:{context.WorkstationItems.Count}, CT:{context.ContainerItems.Count}, VH:{context.VehicleItems.Count} | {context.GetItemStackCacheInfo()}");
+
+            return cachedResult;
+        }
+
+        // Start timing using internal stopwatch management
+        s_methodStats.StartTiming(d_MethodName);
+
         var config = context.Config;
 
-        var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        // Clear any existing ItemStack lists to ensure fresh results
+        context.ClearItemStacks();
 
         if (config.PullFromDewCollectors)
         {
-            AddValidItemStacksFromSources(d_MethodName, result, context.DewCollectors, dc => dc.items,
-                "Dew Collector Storage", out int dewCollectorItemsAddedCount, ref stillNeeded, filterItem);
-            //LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, added {dewCollectorItemsAddedCount} items, stillNeeded {stillNeeded}");
+            AddValidItemStacksFromSources(d_MethodName, context.DewCollectorItems, context.DewCollectors, dc => dc.items,
+                "Dew Collector Storage", out int dewCollectorItemsAddedCount, filterItem);
 
             totalItemsAddedCount += dewCollectorItemsAddedCount;
-            if (stillNeeded == 0)
-            {
-                stopwatch.Stop();
-                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
-                LogUtil.DebugLog($"{d_MethodName}: Early exit after dew collectors - Total execution time: {elapsedMs}ms");
-                return result;
-            }
         }
 
         if (config.PullFromWorkstationOutputs)
         {
-            AddValidItemStacksFromSources(d_MethodName, result, context.Workstations, workstation => workstation.output,
-                "Workstation Output", out int workstationItemsAddedCount, ref stillNeeded, filterItem);
-            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Workstations.Count} workstations, added {workstationItemsAddedCount} items, stillNeeded {stillNeeded}");
+            AddValidItemStacksFromSources(d_MethodName, context.WorkstationItems, context.Workstations, workstation => workstation.output,
+                "Workstation Output", out int workstationItemsAddedCount, filterItem);
 
             totalItemsAddedCount += workstationItemsAddedCount;
-            if (stillNeeded == 0)
-            {
-                stopwatch.Stop();
-                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
-                LogUtil.DebugLog($"{d_MethodName}: Early exit after workstations - Total execution time: {elapsedMs}ms");
-                return result;
-            }
         }
 
-        {
-            AddValidItemStacksFromSources(d_MethodName, result, context.Lootables, l => l.items,
-                "Container Storage", out int containerItemsAddedCount, ref stillNeeded, filterItem);
-            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Lootables.Count} containers, added {containerItemsAddedCount} items, stillNeeded {stillNeeded}");
+        // Containers (Lootables)
+        AddValidItemStacksFromSources(d_MethodName, context.ContainerItems, context.Lootables, l => l.items,
+            "Container Storage", out int containerItemsAddedCount, filterItem);
 
-            totalItemsAddedCount += containerItemsAddedCount;
-            if (stillNeeded == 0)
-            {
-                stopwatch.Stop();
-                int elapsedMs = (int)stopwatch.ElapsedMilliseconds;
-                LogUtil.DebugLog($"{d_MethodName}: Early exit after containers - Total execution time: {elapsedMs}ms");
-                return result;
-            }
-        }
+        totalItemsAddedCount += containerItemsAddedCount;
 
         if (config.PullFromVehicleStorage)
         {
-            AddValidItemStacksFromSources(d_MethodName, result, context.Vehicles, v => v.bag?.GetSlots(),
-                "Vehicle Storage", out int vehicleItemsAddedCount, ref stillNeeded, filterItem);
-            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Vehicles.Count} vehicles, added {vehicleItemsAddedCount} items, stillNeeded {stillNeeded}");
+            AddValidItemStacksFromSources(d_MethodName, context.VehicleItems, context.Vehicles, v => v.bag?.GetSlots(),
+                "Vehicle Storage", out int vehicleItemsAddedCount, filterItem);
 
             totalItemsAddedCount += vehicleItemsAddedCount;
         }
 
-        // Stop timing and log the total execution time
-        stopwatch.Stop();
-        int totalElapsedMs = (int)stopwatch.ElapsedMilliseconds;
-        LogUtil.DebugLog($"{d_MethodName}: Total execution time: {totalElapsedMs}ms, found {totalItemsAddedCount} items from {result.Count} stacks");
+        // Mark the results as cached for this filter
+        context.MarkItemStacksCached(filterItem);
+
+        // Get the concatenated result from the context
+        var result = context.GetAllItemStacks();
+
+        // Stop timing and explicitly record the call
+        var elapsedNs = s_methodStats.StopAndRecordCall(d_MethodName);
+
+        // Get current statistics for logging - now we have accurate data since we just recorded
+        var methodStats = s_methodStats.GetMethodStats(d_MethodName);
+        var currentAvgNs = methodStats?.avgTimeNs ?? 0;
+        var callCount = methodStats?.callCount ?? 1;
+        var totaltimeNs = methodStats?.totalTimeNs ?? 0;
+
+        // Format timing using the centralized formatting method
+        var currentTimeDisplay = MethodCallStatistics.FormatNanoseconds(elapsedNs);
+        var avgTimeDisplay = MethodCallStatistics.FormatNanoseconds(currentAvgNs);
+        var totaltimeDisplay = MethodCallStatistics.FormatNanoseconds(totaltimeNs);
+
+        LogUtil.DebugLog($"{d_MethodName}: Exec time: {currentTimeDisplay} (avg: {avgTimeDisplay} over {callCount} calls, cumulative {totaltimeDisplay}), found {totalItemsAddedCount} items from {result.Count} stacks - DC:{context.DewCollectorItems.Count}, WS:{context.WorkstationItems.Count}, CT:{context.ContainerItems.Count}, VH:{context.VehicleItems.Count} | {context.GetItemStackCacheInfo()}");
 
         return result;
     }
 
-    public static void DiscoverTileEntitySources(BatchRemovalContext context)
+    public static void DiscoverTileEntitySources(StorageAccessContext context)
     {
         if (context == null)
         {
@@ -242,7 +214,7 @@ public static class ContainerUtils
         AddPullableTileEntities(context);
     }
 
-    private static void AddPullableTileEntities(BatchRemovalContext context)
+    private static void AddPullableTileEntities(StorageAccessContext context)
     {
         const string d_MethodName = nameof(AddPullableTileEntities);
 
@@ -396,7 +368,7 @@ public static class ContainerUtils
         LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
-    public static bool HasItem(BatchRemovalContext context, ItemValue itemValue)
+    public static bool HasItem(StorageAccessContext context, ItemValue itemValue)
     {
         const string d_MethodName = nameof(HasItem);
 
@@ -408,7 +380,7 @@ public static class ContainerUtils
 
         if (context == null)
         {
-            context = BatchRemovalContext.Create(d_MethodName);
+            context = StorageAccessContext.Create(d_MethodName);
         }
 
         if (context == null)
@@ -417,15 +389,15 @@ public static class ContainerUtils
             return false;
         }
 
-        var sourceStacks = GetItemCount(context, itemValue);
-        var result = sourceStacks > 0;
+        var totalItemCount = GetItemCount(context, itemValue);
+        var result = totalItemCount > 0;
 
         LogUtil.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
 
         return result;
     }
 
-    public static int GetItemCount(BatchRemovalContext context, ItemValue itemValue)
+    public static int GetItemCount(StorageAccessContext context, ItemValue itemValue)
     {
         const string d_MethodName = nameof(GetItemCount);
 
@@ -437,7 +409,7 @@ public static class ContainerUtils
 
         if (context == null)
         {
-            context = BatchRemovalContext.Create(d_MethodName);
+            context = StorageAccessContext.Create(d_MethodName);
         }
 
         if (context == null)
@@ -446,22 +418,18 @@ public static class ContainerUtils
             return 0;
         }
 
-        var sources = GetPullableSourceItemStacks(context, out var totalItemCountAdded, filterItem: itemValue, stillNeeded: -1);
+        var sources = GetPullableSourceItemStacks(context, out var totalItemCountAdded, filterItem: itemValue);
 
         LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
 
         return totalItemCountAdded;
     }
 
-    public static int RemoveRemaining(
-       ItemValue itemValue,
-       int stillNeeded,
-       bool ignoreModdedItems = false,
-       IList<ItemStack> removedItems = null)
+    public static int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(RemoveRemaining);
 
-        var context = BatchRemovalContext.Create(d_MethodName);
+        var context = StorageAccessContext.Create(d_MethodName);
         if (context == null)
         {
             LogUtil.Error($"{d_MethodName}: Failed to create BatchRemovalContext");
@@ -473,12 +441,7 @@ public static class ContainerUtils
         return removedCount;
     }
 
-    public static int RemoveRemainingWithContext(
-        BatchRemovalContext context,
-        ItemValue itemValue,
-        int stillNeeded,
-        bool ignoreModdedItems = false,
-        IList<ItemStack> removedItems = null)
+    public static int RemoveRemainingWithContext(StorageAccessContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(RemoveRemainingWithContext);
 

@@ -6,7 +6,7 @@ public static class VehicleUtils
 {
     public const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
 
-    public static void GetAvailableVehicleStorages(BatchRemovalContext context)
+    public static void GetAvailableVehicleStorages(StorageAccessContext context)
     {
         const string d_method_name = nameof(GetAvailableVehicleStorages);
 
