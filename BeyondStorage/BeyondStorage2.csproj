@@ -85,8 +85,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\Common\EventsUtil.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
+    <Compile Include="Scripts\ContainerLogic\BatchRemovalContext.cs" />
     <Compile Include="Scripts\ContainerLogic\Block\BlockRepair.cs" />
     <Compile Include="Scripts\ContainerLogic\Block\BlockUpgrade.cs" />
+    <Compile Include="Scripts\ContainerLogic\ConfigSnapshot.cs" />
     <Compile Include="Scripts\ContainerLogic\ContainerUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemCommon.cs" />
     <Compile Include="Scripts\ContainerLogic\Item\ItemTexture.cs" />

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Utils;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ public static class VehicleUtils
 {
     public const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
 
-    public static List<EntityVehicle> GetAvailableVehicleStorages()
+    public static List<EntityVehicle> GetAvailableVehicleStorages(ConfigSnapshot config)
     {
         const string d_method_name = "GetAvailableVehicleStorages";
 
@@ -28,7 +27,7 @@ public static class VehicleUtils
         }
 
         var playerPos = player.position;
-        var configRange = ModConfig.Range();
+        var configRange = config.Range;
 
         var vehicles = VehicleManager.Instance?.vehiclesActive;
         if (vehicles == null)

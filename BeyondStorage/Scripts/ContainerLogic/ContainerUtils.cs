@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Server;
 using BeyondStorage.Scripts.Utils;
 using Platform;
@@ -13,41 +12,11 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class ContainerUtils
 {
-    public const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16; // 10 dew collectors, rounded up
-    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 1024;   // 10 container with 100 slots each, rounded up
-    public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;   // this is all you'll ever need (tm)
+    public const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16;
+    public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 16;
+    public const int DEFAULT_LOOTBLE_LIST_CAPACITY = 16;
 
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
-
-    /// <summary>
-    /// Configuration snapshot that captures all relevant settings at a single point in time
-    /// to ensure consistency throughout method execution.
-    /// </summary>
-    private sealed class ConfigSnapshot
-    {
-        public bool PullFromDewCollectors { get; }
-        public bool PullFromWorkstationOutputs { get; }
-        public bool PullFromVehicleStorage { get; }
-        public bool OnlyStorageCrates { get; }
-        public float Range { get; }
-
-        /// <summary>
-        /// Creates a snapshot of the current configuration state by querying ModConfig
-        /// </summary>
-        private ConfigSnapshot()
-        {
-            PullFromDewCollectors = ModConfig.PullFromDewCollectors();
-            PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
-            PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
-            OnlyStorageCrates = ModConfig.OnlyStorageCrates();
-            Range = ModConfig.Range();
-        }
-
-        /// <summary>
-        /// Gets a snapshot of the current configuration state
-        /// </summary>
-        public static ConfigSnapshot Current => new ConfigSnapshot();
-    }
 
     public static void Init()
     {
@@ -181,19 +150,18 @@ public static class ContainerUtils
             return [];
         }
 
-        // Capture configuration snapshot once at the beginning
-        var config = ConfigSnapshot.Current;
+        var context = new BatchRemovalContext();
+        var config = context.Config;
 
         var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
 
-        DiscoverTileEntitySources(config, out var lootables, out var dewCollectors, out var workstations);
-        LogUtil.DebugLog($"{d_MethodName}: Found {lootables.Count} lootables, {dewCollectors.Count} dew collectors, {workstations.Count} workstations, stillNeeded {stillNeeded}");
+        LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, {context.Workstations.Count} workstations, {context.Lootables.Count} lootables, {context.Vehicles.Count} vehicles, stillNeeded {stillNeeded}");
 
         if (config.PullFromDewCollectors)
         {
-            AddValidItemStacksFromSources(d_MethodName, result, dewCollectors, dc => dc.items,
+            AddValidItemStacksFromSources(d_MethodName, result, context.DewCollectors, dc => dc.items,
                 "Dew Collector Storage", out int dewCollectorItemsAddedCount, ref stillNeeded, filterItem);
-            LogUtil.DebugLog($"{d_MethodName}: Found {dewCollectors.Count} dew collectors, added {dewCollectorItemsAddedCount} items, stillNeeded {stillNeeded}");
+            //LogUtil.DebugLog($"{d_MethodName}: Found {context.DewCollectors.Count} dew collectors, added {dewCollectorItemsAddedCount} items, stillNeeded {stillNeeded}");
 
             totalItemsAddedCount += dewCollectorItemsAddedCount;
             if (stillNeeded == 0)
@@ -204,9 +172,9 @@ public static class ContainerUtils
 
         if (config.PullFromWorkstationOutputs)
         {
-            AddValidItemStacksFromSources(d_MethodName, result, workstations, ws => ws.Output,
+            AddValidItemStacksFromSources(d_MethodName, result, context.Workstations, workstation => workstation.output,
                 "Workstation Output", out int workstationItemsAddedCount, ref stillNeeded, filterItem);
-            LogUtil.DebugLog($"{d_MethodName}: Found {workstations.Count} workstations, added {workstationItemsAddedCount} items, stillNeeded {stillNeeded}");
+            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Workstations.Count} workstations, added {workstationItemsAddedCount} items, stillNeeded {stillNeeded}");
 
             totalItemsAddedCount += workstationItemsAddedCount;
             if (stillNeeded == 0)
@@ -216,9 +184,9 @@ public static class ContainerUtils
         }
 
         {
-            AddValidItemStacksFromSources(d_MethodName, result, lootables, l => l.items,
+            AddValidItemStacksFromSources(d_MethodName, result, context.Lootables, l => l.items,
                 "Container Storage", out int containerItemsAddedCount, ref stillNeeded, filterItem);
-            LogUtil.DebugLog($"{d_MethodName}: Found {lootables.Count} containers, added {containerItemsAddedCount} items, stillNeeded {stillNeeded}");
+            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Lootables.Count} containers, added {containerItemsAddedCount} items, stillNeeded {stillNeeded}");
 
             totalItemsAddedCount += containerItemsAddedCount;
             if (stillNeeded == 0)
@@ -229,16 +197,9 @@ public static class ContainerUtils
 
         if (config.PullFromVehicleStorage)
         {
-            var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
-            if (vehicleStorages == null)
-            {
-                LogUtil.Error($"{d_MethodName}: GetAvailableVehicleStorages returned null");
-                vehicleStorages = [];
-            }
-
-            AddValidItemStacksFromSources(d_MethodName, result, vehicleStorages, v => v.bag?.GetSlots(),
+            AddValidItemStacksFromSources(d_MethodName, result, context.Vehicles, v => v.bag?.GetSlots(),
                 "Vehicle Storage", out int vehicleItemsAddedCount, ref stillNeeded, filterItem);
-            LogUtil.DebugLog($"{d_MethodName}: Found {vehicleStorages.Count} vehicles, added {vehicleItemsAddedCount} items, stillNeeded {stillNeeded}");
+            //LogUtil.DebugLog($"{d_MethodName}: Found {context.Vehicles.Count} vehicles, added {vehicleItemsAddedCount} items, stillNeeded {stillNeeded}");
 
             totalItemsAddedCount += vehicleItemsAddedCount;
             if (stillNeeded == 0)
@@ -250,24 +211,24 @@ public static class ContainerUtils
         return result;
     }
 
-    private static void DiscoverTileEntitySources(
+    public static void DiscoverTileEntitySources(
         ConfigSnapshot config,
-        out List<ITileEntityLootable> lootables,
         out List<TileEntityDewCollector> dewCollectors,
-        out List<TileEntityWorkstation> workstations)
+        out List<TileEntityWorkstation> workstations,
+        out List<ITileEntityLootable> lootables)
     {
-        lootables = new List<ITileEntityLootable>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
         dewCollectors = new List<TileEntityDewCollector>(DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
         workstations = new List<TileEntityWorkstation>(DEFAULT_WORKSTATION_LIST_CAPACITY);
+        lootables = new List<ITileEntityLootable>(DEFAULT_LOOTBLE_LIST_CAPACITY);
 
-        AddPullableTileEntities(config, lootables, dewCollectors, workstations);
+        AddPullableTileEntities(config, dewCollectors, workstations, lootables);
     }
 
     private static void AddPullableTileEntities(
         ConfigSnapshot config,
-        List<ITileEntityLootable> lootables,
         List<TileEntityDewCollector> dewCollectors,
-        List<TileEntityWorkstation> workstations)
+        List<TileEntityWorkstation> workstations,
+        List<ITileEntityLootable> lootables)
     {
         const string d_MethodName = nameof(AddPullableTileEntities);
 
@@ -464,12 +425,25 @@ public static class ContainerUtils
     }
 
     public static int RemoveRemaining(
+       ItemValue itemValue,
+       int stillNeeded,
+       bool ignoreModdedItems = false,
+       IList<ItemStack> removedItems = null)
+    {
+        var context = new BatchRemovalContext();
+        int removedCount = RemoveRemainingWithContext(context, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+
+        return removedCount;
+    }
+
+    public static int RemoveRemainingWithContext(
+        BatchRemovalContext context,
         ItemValue itemValue,
         int stillNeeded,
         bool ignoreModdedItems = false,
         IList<ItemStack> removedItems = null)
     {
-        const string d_MethodName = nameof(RemoveRemaining);
+        const string d_MethodName = nameof(RemoveRemainingWithContext);
 
         if (stillNeeded <= 0 || itemValue == null || itemValue.ItemClass == null || itemValue.type <= 0)
         {
@@ -484,41 +458,30 @@ public static class ContainerUtils
 
         int originalNeeded = stillNeeded;
 
-        // Capture configuration snapshot once at the beginning
-        var config = ConfigSnapshot.Current;
-
-        DiscoverTileEntitySources(config, out var containerStorages, out var dewCollectors, out var workstations);
+        var config = context.Config;
 
         if (stillNeeded > 0 && config.PullFromDewCollectors)
         {
-            ProcessStorage(d_MethodName, "DewCollectors", itemName, dewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                dewCollector => dewCollector.items, s => DewCollectorUtils.MarkDewCollectorModified(s));
+            ProcessStorage(d_MethodName, "DewCollectors", itemName, context.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                dewCollector => dewCollector.items, dewCollector => DewCollectorUtils.MarkDewCollectorModified(dewCollector));
         }
 
         if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
         {
-            ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                workstation => workstation.Output, s => WorkstationUtils.MarkWorkstationModified(s));
+            ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, context.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                workstation => workstation.output, workstation => WorkstationUtils.MarkWorkstationModified(workstation));
         }
 
         if (stillNeeded > 0)
         {
-            ProcessStorage(d_MethodName, "Containers", itemName, containerStorages, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                s => s.items, s => s.SetModified());
+            ProcessStorage(d_MethodName, "Containers", itemName, context.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                lootable => lootable.items, lootable => lootable.SetModified());
         }
 
         if (stillNeeded > 0 && config.PullFromVehicleStorage)
         {
-            var vehicleStorages = VehicleUtils.GetAvailableVehicleStorages();
-            if (vehicleStorages != null)
-            {
-                ProcessStorage(d_MethodName, "Vehicles", itemName, vehicleStorages, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                    s => s.bag.items, s => s.SetBagModified());
-            }
-            else
-            {
-                LogUtil.Error($"{d_MethodName} | GetAvailableVehicleStorages returned null");
-            }
+            ProcessStorage(d_MethodName, "Vehicles", itemName, context.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                vehicle => vehicle.bag.items, vehicle => vehicle.SetBagModified());
         }
 
         return originalNeeded - stillNeeded;  // Return the total number of items removed

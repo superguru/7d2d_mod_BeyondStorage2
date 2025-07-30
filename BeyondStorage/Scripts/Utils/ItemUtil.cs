@@ -5,7 +5,7 @@ namespace BeyondStorage.Scripts.Utils;
 
 public static class ItemUtil
 {
-    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 1024;
+    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
 
     public static string InfoItemStackToString(IEnumerable<ItemStack> stacks)
     {

@@ -36,7 +36,7 @@ public static class ItemCommon
     {
         const string d_MethodName = nameof(ItemCommon_GetAllAvailableItemStacksFromXui);
 
-        var result = new List<ItemStack>(ContainerUtils.DEFAULT_ITEMSTACK_LIST_CAPACITY);
+        var result = new List<ItemStack>(ItemUtil.DEFAULT_ITEMSTACK_LIST_CAPACITY);
         if (xui != null)
         {
             LogUtil.DebugLog($"{d_MethodName} adding all player items");
