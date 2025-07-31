@@ -48,7 +48,7 @@ public sealed class TimeBasedCache<T> where T : class
                 var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
                 if (age < _cacheDurationSeconds)
                 {
-                    LogUtil.DebugLog($"{methodName}: Using cached {_cacheTypeName} (age: {age:F2}s)");
+                    LogUtil.DebugLog($"{methodName}: Using cached {_cacheTypeName} (age: {age:F3}s)");
                     return _cachedItem;
                 }
             }
