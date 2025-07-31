@@ -109,12 +109,14 @@
     <Compile Include="Scripts\Utils\DebugUtil.cs" />
     <Compile Include="Scripts\Utils\FileUtil.cs" />
     <Compile Include="Scripts\Utils\CodesUtil.cs" />
+    <Compile Include="Scripts\ContainerLogic\ItemPropertiesCache.cs" />
     <Compile Include="Scripts\Utils\ListProvider.cs" />
     <Compile Include="Scripts\Utils\MethodCallStatistics.cs" />
     <Compile Include="Scripts\Utils\PatchUtil.cs" />
     <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />
     <Compile Include="Scripts\Utils\TimeBasedCache.cs" />
+    <Compile Include="Scripts\Utils\TimeBasedDictionaryCache.cs" />
     <Compile Include="Scripts\Utils\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>

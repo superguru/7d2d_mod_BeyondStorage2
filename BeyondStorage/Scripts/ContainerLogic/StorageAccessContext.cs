@@ -501,7 +501,7 @@ public sealed class StorageAccessContext
     private int RemoveItemsInternal(IEnumerable<ItemStack> items, ItemValue desiredItem, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         int filterType = desiredItem.type;
-        bool itemCanStack = ItemClass.GetForId(filterType).CanStack();
+        bool itemCanStack = ItemPropertiesCache.GetCanStack(desiredItem);
 
         foreach (var stack in items)
         {
@@ -521,7 +521,7 @@ public sealed class StorageAccessContext
                 continue;
             }
 
-            if (ignoreModdedItems && itemValue.HasModSlots && itemValue.HasMods())
+            if (ItemPropertiesCache.ShouldIgnoreModdedItem(itemValue, ignoreModdedItems))
             {
                 continue;
             }
@@ -891,6 +891,7 @@ public sealed class StorageAccessContext
     {
         var contextStats = s_contextCache.GetCacheStats();
         var worldPlayerStats = WorldPlayerContext.GetCacheStats();
-        return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | Global invalidations: {s_globalInvalidationCounter}";
+        var itemPropsStats = ItemPropertiesCache.GetCacheStats();
+        return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {s_globalInvalidationCounter}";
     }
 }
