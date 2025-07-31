@@ -100,7 +100,6 @@
     <Compile Include="Scripts\ContainerLogic\Recipe\WorkstationRecipe.cs" />
     <Compile Include="Scripts\ContainerLogic\DewCollectorUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\WorkstationUtils.cs" />
-    <Compile Include="Scripts\ContainerLogic\VehicleUtils.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRefuel.cs" />
     <Compile Include="Scripts\ContainerLogic\Vehicle\VehicleRepair.cs" />
     <Compile Include="Scripts\ContainerLogic\WorldPlayerContext.cs" />
@@ -110,11 +109,13 @@
     <Compile Include="Scripts\Utils\DebugUtil.cs" />
     <Compile Include="Scripts\Utils\FileUtil.cs" />
     <Compile Include="Scripts\Utils\CodesUtil.cs" />
+    <Compile Include="Scripts\Utils\ListProvider.cs" />
     <Compile Include="Scripts\Utils\MethodCallStatistics.cs" />
     <Compile Include="Scripts\Utils\PatchUtil.cs" />
     <Compile Include="Scripts\Utils\ItemUtil.cs" />
     <Compile Include="Scripts\Utils\LogUtil.cs" />
     <Compile Include="Scripts\Utils\TimeBasedCache.cs" />
+    <Compile Include="Scripts\Utils\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ModInfo.xml" />

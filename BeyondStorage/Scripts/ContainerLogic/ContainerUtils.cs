@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using BeyondStorage.Scripts.Server;
 using BeyondStorage.Scripts.Utils;
 
@@ -9,10 +8,6 @@ namespace BeyondStorage.Scripts.ContainerLogic;
 
 public static class ContainerUtils
 {
-    public const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16;
-    public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 16;
-    public const int DEFAULT_LOOTBLE_LIST_CAPACITY = 16;
-
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
 
     // Statistics tracker for performance monitoring
@@ -203,171 +198,6 @@ public static class ContainerUtils
         return result;
     }
 
-    public static void DiscoverTileEntitySources(StorageAccessContext context)
-    {
-        if (context == null)
-        {
-            LogUtil.Error($"{nameof(DiscoverTileEntitySources)}: context is null, aborting.");
-            return;
-        }
-
-        AddPullableTileEntities(context);
-    }
-
-    private static void AddPullableTileEntities(StorageAccessContext context)
-    {
-        const string d_MethodName = nameof(AddPullableTileEntities);
-
-        if (context == null)
-        {
-            LogUtil.Error($"{d_MethodName}: context is null, aborting.");
-            return;
-        }
-
-        if (context.WorldPlayerContext == null)
-        {
-            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
-            return;
-        }
-
-        var config = context.Config;
-        var worldPlayerContext = context.WorldPlayerContext;
-        var dewCollectors = context.DewCollectors;
-        var workstations = context.Workstations;
-        var lootables = context.Lootables;
-
-        int chunksProcessed = 0;
-        int nullChunks = 0;
-        int tileEntitiesProcessed = 0;
-
-        foreach (var chunk in worldPlayerContext.ChunkCacheCopy)
-        {
-            if (chunk == null)
-            {
-                nullChunks++;
-                continue;
-            }
-
-            chunksProcessed++;
-
-            var tileEntityList = chunk.tileEntities?.list;
-            if (tileEntityList == null)
-            {
-                continue;
-            }
-
-            foreach (var tileEntity in tileEntityList)
-            {
-                tileEntitiesProcessed++;
-
-                // Skip if being removed
-                if (tileEntity.IsRemoving)
-                {
-                    continue;
-                }
-
-                // 1. Type checks first (cheapest) - cache both interface queries
-                bool isLootable = tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable);
-                bool hasStorageFeature = config.OnlyStorageCrates ? tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _) : true;
-
-                if (!(tileEntity is TileEntityDewCollector ||
-                      tileEntity is TileEntityWorkstation ||
-                      isLootable))
-                {
-                    continue;
-                }
-
-                // 2. Then positional checks
-                var tileEntityWorldPos = tileEntity.ToWorldPos();
-
-                // Locked check (skip if locked by another player)
-                if (LockedTileEntities.Count > 0)
-                {
-                    if (LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
-                    {
-                        continue;
-                    }
-                }
-
-                // Range check first for early exit
-                if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
-                {
-                    continue;
-                }
-
-                // Lockable check (skip if locked and not allowed)
-                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
-                {
-                    if (!worldPlayerContext.CanAccessLockable(tileLockable))
-                    {
-                        continue;
-                    }
-                }
-
-                // DEW COLLECTOR check
-                if (config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
-                {
-                    // Skip if any player is currently accessing the dew collector
-                    if (dewCollector.bUserAccessing)
-                    {
-                        continue;
-                    }
-
-                    if (dewCollector.items?.Length <= 0 || !dewCollector.items.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    dewCollectors.Add(dewCollector);
-                    continue;
-                }
-
-                // WORKSTATION check  
-                if (config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
-                {
-                    // Only player-placed workstations
-                    if (!workstation.IsPlayerPlaced)
-                    {
-                        continue;
-                    }
-
-                    if (workstation.output?.Length <= 0 || !workstation.output.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    workstations.Add(workstation);
-                    continue;
-                }
-
-                // LOOTABLE (Containers) check
-                if (lootable != null)
-                {
-                    // Must be player storage
-                    if (!lootable.bPlayerStorage)
-                    {
-                        continue;
-                    }
-
-                    if (config.OnlyStorageCrates && !hasStorageFeature)
-                    {
-                        continue;
-                    }
-
-                    if (lootable.items?.Length <= 0 || !lootable.items.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    lootables.Add(lootable);
-                    continue;
-                }
-            }
-        }
-
-        LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
-    }
-
     public static bool HasItem(StorageAccessContext context, ItemValue itemValue)
     {
         const string d_MethodName = nameof(HasItem);
@@ -462,36 +292,36 @@ public static class ContainerUtils
 
         if (stillNeeded > 0 && config.PullFromDewCollectors)
         {
-            RemoveItemsFromStorage(d_MethodName, "DewCollectors", itemName, context.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorageInternal(d_MethodName, "DewCollectors", itemName, context.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 dewCollector => dewCollector.items, dewCollector => DewCollectorUtils.MarkDewCollectorModified(dewCollector));
         }
 
         if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
         {
-            RemoveItemsFromStorage(d_MethodName, "WorkstationOutputs", itemName, context.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorageInternal(d_MethodName, "WorkstationOutputs", itemName, context.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 workstation => workstation.output, workstation => WorkstationUtils.MarkWorkstationModified(workstation));
         }
 
         if (stillNeeded > 0)
         {
-            RemoveItemsFromStorage(d_MethodName, "Containers", itemName, context.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorageInternal(d_MethodName, "Containers", itemName, context.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 lootable => lootable.items, lootable => lootable.SetModified());
         }
 
         if (stillNeeded > 0 && config.PullFromVehicleStorage)
         {
-            RemoveItemsFromStorage(d_MethodName, "Vehicles", itemName, context.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorageInternal(d_MethodName, "Vehicles", itemName, context.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 vehicle => vehicle.bag.items, vehicle => vehicle.SetBagModified());
         }
 
         return originalNeeded - stillNeeded;  // Return the total number of items removed
     }
 
-    private static void RemoveItemsFromStorage<T>(
+    private static void RemoveItemsFromStorageInternal<T>(
         string d_method_name,
         string storageName,
         string itemName,
-        IEnumerable<T> storages,
+        List<T> storages,
         ItemValue itemValue,
         ref int stillNeeded,
         bool ignoreModdedItems,

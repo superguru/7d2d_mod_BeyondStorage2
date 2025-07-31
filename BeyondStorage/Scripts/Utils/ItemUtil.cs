@@ -5,13 +5,6 @@ namespace BeyondStorage.Scripts.Utils;
 
 public static class ItemUtil
 {
-    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
-
-    public static List<ItemStack> CreateDefaultItemList()
-    {
-        return new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
-    }
-
     public static string InfoItemStackToString(IEnumerable<ItemStack> stacks)
     {
         if (stacks == null)
@@ -68,7 +61,7 @@ public static class ItemUtil
             if (stack?.count > 0 &&
                 stack.itemValue?.ItemClass != null &&
                 !stack.itemValue.IsEmpty() &&
-                !string.IsNullOrEmpty(stack.itemValue.ItemClass?.GetItemName()))
+                !string.IsNullOrEmpty(stack.itemValue.ItemClass?.Name))
             {
                 validItems.Add(stack);
             }
@@ -76,5 +69,64 @@ public static class ItemUtil
 
         stacks.Clear();
         stacks.AddRange(validItems);
+    }
+
+    /// <summary>
+    /// Extracts unique item types from a list of ItemStacks.
+    /// Returns -1 for null/empty stacks or when type=0 (empty item type).
+    /// If no valid items are found, returns a list containing only -1 (unfiltered).
+    /// </summary>
+    /// <param name="stacks">List of ItemStacks to extract types from</param>
+    /// <returns>Read-only list of unique item types, using -1 for unfiltered/empty</returns>
+    public static IReadOnlyList<int> GetUniqueItemTypes(List<ItemStack> stacks)
+    {
+        const string d_MethodName = nameof(GetUniqueItemTypes);
+
+        if (stacks == null || stacks.Count == 0)
+        {
+            return new int[] { -1 }; // Return unfiltered for null/empty lists
+        }
+
+        var uniqueTypes = new HashSet<int>();
+        bool hasValidItems = false;
+
+        foreach (var stack in stacks)
+        {
+            if (stack?.count <= 0)
+            {
+                continue; // Skip empty stacks
+            }
+
+            var itemValue = stack.itemValue;
+            if (itemValue?.ItemClass == null)
+            {
+                continue; // Skip invalid items
+            }
+
+            int itemType = itemValue.type;
+
+            // Convert type=0 (empty type) to -1 (unfiltered convention)
+            if (itemType <= 0)
+            {
+                itemType = -1;
+            }
+
+            uniqueTypes.Add(itemType);
+            hasValidItems = true;
+        }
+
+        // If no valid items found, return unfiltered
+        if (!hasValidItems || uniqueTypes.Count == 0)
+        {
+            return new int[] { -1 };
+        }
+
+        // Convert to sorted array for optimal performance
+        var result = uniqueTypes.ToArray();
+        System.Array.Sort(result);
+
+        LogUtil.DebugLog($"{d_MethodName}: Found {result.Length} unique types from {stacks.Count} stacks: [{string.Join(", ", result)}]");
+
+        return result;
     }
 }

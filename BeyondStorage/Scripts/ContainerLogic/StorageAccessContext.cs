@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
@@ -63,35 +64,41 @@ public sealed class StorageAccessContext
             return;
         }
 
-        // Initialize collections with appropriate capacity
-        DewCollectors = new List<TileEntityDewCollector>(ContainerUtils.DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
-        Workstations = new List<TileEntityWorkstation>(ContainerUtils.DEFAULT_WORKSTATION_LIST_CAPACITY);
-        Lootables = new List<ITileEntityLootable>(ContainerUtils.DEFAULT_LOOTBLE_LIST_CAPACITY);
-        Vehicles = new List<EntityVehicle>(VehicleUtils.DEFAULT_VEHICLE_LIST_CAPACITY);
+        InitSourceCollections();
+        DiscoverSources();
 
+        InitItemStackLists();
+
+        CreatedAt = DateTime.Now;
+        LogUtil.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
+    }
+
+    private void InitSourceCollections()
+    {
+        // Initialize collections with appropriate capacity - will be populated when discovery methods are called
+        DewCollectors = ListProvider.GetEmptyDewCollectorList();
+        Workstations = ListProvider.GetEmptyWorkstationList();
+        Lootables = ListProvider.GetEmptyLootableList();
+        Vehicles = ListProvider.GetEmptyVehicleList();
+    }
+
+    private void DiscoverSources()
+    {
+        DiscoverTileEntitySources();
+        DiscoverVehicleStorages();
+    }
+
+    private void InitItemStackLists()
+    {
         // Initialize ItemStack lists - will be populated when GetPullableSourceItemStacks is called
         DewCollectorItems = new List<ItemStack>();
         WorkstationItems = new List<ItemStack>();
         ContainerItems = new List<ItemStack>();
         VehicleItems = new List<ItemStack>();
-
-        // Let utility classes populate the collections
-        ContainerUtils.DiscoverTileEntitySources(this);
-        VehicleUtils.GetAvailableVehicleStorages(this);
-
-        CreatedAt = DateTime.Now;
-
-        LogUtil.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
     }
 
-    /// <summary>
-    /// Gets whether the cached ItemStacks are filtered (specific item type) or unfiltered (all items).
-    /// </summary>
     public bool IsFiltered => _lastFilterItemType >= 0;
 
-    /// <summary>
-    /// Gets the current filter item type, or -1 if unfiltered (all items).
-    /// </summary>
     public int CurrentFilterType => _lastFilterItemType;
 
     /// <summary>
@@ -287,6 +294,217 @@ public sealed class StorageAccessContext
         var stackCount = GetTotalStackCount();
 
         return $"Filter stats: {cacheInfo}, {filterStatus}, {itemCount} items in {stackCount} stacks";
+    }
+
+    /// <summary>
+    /// Discovers and populates tile entity sources (containers, dew collectors, workstations).
+    /// </summary>
+    private void DiscoverTileEntitySources()
+    {
+        if (WorldPlayerContext == null)
+        {
+            LogUtil.Error($"{nameof(DiscoverTileEntitySources)}: WorldPlayerContext is null, aborting.");
+            return;
+        }
+
+        AddPullableTileEntities();
+    }
+
+    /// <summary>
+    /// Adds pullable tile entities to the appropriate collections based on configuration settings.
+    /// </summary>
+    private void AddPullableTileEntities()
+    {
+        const string d_MethodName = nameof(AddPullableTileEntities);
+
+        if (WorldPlayerContext == null)
+        {
+            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
+            return;
+        }
+
+        var config = Config;
+        var worldPlayerContext = WorldPlayerContext;
+        var dewCollectors = DewCollectors;
+        var workstations = Workstations;
+        var lootables = Lootables;
+
+        int chunksProcessed = 0;
+        int nullChunks = 0;
+        int tileEntitiesProcessed = 0;
+
+        foreach (var chunk in worldPlayerContext.ChunkCacheCopy)
+        {
+            if (chunk == null)
+            {
+                nullChunks++;
+                continue;
+            }
+
+            chunksProcessed++;
+
+            var tileEntityList = chunk.tileEntities?.list;
+            if (tileEntityList == null)
+            {
+                continue;
+            }
+
+            foreach (var tileEntity in tileEntityList)
+            {
+                tileEntitiesProcessed++;
+
+                // Skip if being removed
+                if (tileEntity.IsRemoving)
+                {
+                    continue;
+                }
+
+                // 1. Type checks first (cheapest) - cache both interface queries
+                bool isLootable = tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable);
+                bool hasStorageFeature = config.OnlyStorageCrates ? tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _) : true;
+
+                if (!(tileEntity is TileEntityDewCollector ||
+                      tileEntity is TileEntityWorkstation ||
+                      isLootable))
+                {
+                    continue;
+                }
+
+                // 2. Then positional checks
+                var tileEntityWorldPos = tileEntity.ToWorldPos();
+
+                // Locked check (skip if locked by another player)
+                if (ContainerUtils.LockedTileEntities.Count > 0)
+                {
+                    if (ContainerUtils.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
+                    {
+                        continue;
+                    }
+                }
+
+                // Range check first for early exit
+                if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
+                {
+                    continue;
+                }
+
+                // Lockable check (skip if locked and not allowed)
+                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+                {
+                    if (!worldPlayerContext.CanAccessLockable(tileLockable))
+                    {
+                        continue;
+                    }
+                }
+
+                // DEW COLLECTOR check
+                if (config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
+                {
+                    // Skip if any player is currently accessing the dew collector
+                    if (dewCollector.bUserAccessing)
+                    {
+                        continue;
+                    }
+
+                    if (dewCollector.items?.Length <= 0 || !dewCollector.items.Any(item => item?.count > 0))
+                    {
+                        continue;
+                    }
+
+                    dewCollectors.Add(dewCollector);
+                    continue;
+                }
+
+                // WORKSTATION check  
+                if (config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
+                {
+                    // Only player-placed workstations
+                    if (!workstation.IsPlayerPlaced)
+                    {
+                        continue;
+                    }
+
+                    if (workstation.output?.Length <= 0 || !workstation.output.Any(item => item?.count > 0))
+                    {
+                        continue;
+                    }
+
+                    workstations.Add(workstation);
+                    continue;
+                }
+
+                // LOOTABLE (Containers) check
+                if (lootable != null)
+                {
+                    // Must be player storage
+                    if (!lootable.bPlayerStorage)
+                    {
+                        continue;
+                    }
+
+                    if (config.OnlyStorageCrates && !hasStorageFeature)
+                    {
+                        continue;
+                    }
+
+                    if (lootable.items?.Length <= 0 || !lootable.items.Any(item => item?.count > 0))
+                    {
+                        continue;
+                    }
+
+                    lootables.Add(lootable);
+                    continue;
+                }
+            }
+        }
+
+        LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
+    }
+
+    /// <summary>
+    /// Discovers and populates available vehicle storages.
+    /// </summary>
+    private void DiscoverVehicleStorages()
+    {
+        const string d_MethodName = nameof(DiscoverVehicleStorages);
+
+        if (WorldPlayerContext == null)
+        {
+            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
+            return;
+        }
+
+        var configRange = Config.Range;
+
+        var vehicles = VehicleManager.Instance?.vehiclesActive;
+        if (vehicles == null)
+        {
+            LogUtil.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
+            return;
+        }
+
+        foreach (var vehicle in vehicles)
+        {
+            // Must have storage and a non-empty bag
+            if (vehicle.bag == null || vehicle.bag.IsEmpty() || !vehicle.hasStorage())
+            {
+                continue;
+            }
+
+            // Range check using WorldPlayerContext
+            if (!WorldPlayerContext.IsWithinRange(vehicle.position, configRange))
+            {
+                continue;
+            }
+
+            // Locked for player check
+            if (vehicle.IsLockedForLocalPlayer(WorldPlayerContext.Player))
+            {
+                continue;
+            }
+
+            Vehicles.Add(vehicle);
+        }
     }
 
     /// <summary>
