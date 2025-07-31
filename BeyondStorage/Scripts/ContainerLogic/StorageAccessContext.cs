@@ -29,8 +29,8 @@ public sealed class StorageAccessContext
     public List<ItemStack> ContainerItems { get; private set; }
     public List<ItemStack> VehicleItems { get; private set; }
 
-    // Cache tracking for ItemStack lists
-    private int? _lastFilterItemType = null;
+    // Cache tracking for ItemStack lists - using -1 for unfiltered instead of nullable
+    private int _lastFilterItemType = -1; // -1 means unfiltered/all items
     private bool _itemStacksCached = false;
     private DateTime _itemStacksCacheTime = DateTime.MinValue;
     private long _itemStacksInvalidationCounter = 0; // Tracks invalidation at time of caching
@@ -85,6 +85,16 @@ public sealed class StorageAccessContext
     }
 
     /// <summary>
+    /// Gets whether the cached ItemStacks are filtered (specific item type) or unfiltered (all items).
+    /// </summary>
+    public bool IsFiltered => _lastFilterItemType >= 0;
+
+    /// <summary>
+    /// Gets the current filter item type, or -1 if unfiltered (all items).
+    /// </summary>
+    public int CurrentFilterType => _lastFilterItemType;
+
+    /// <summary>
     /// Checks if the global invalidation has occurred since ItemStacks were cached.
     /// </summary>
     private bool HasGlobalInvalidationOccurred()
@@ -97,7 +107,7 @@ public sealed class StorageAccessContext
     /// </summary>
     /// <param name="filterItem">The filter item to check against cached results</param>
     /// <returns>True if cached results are valid for this filter</returns>
-    public bool AreItemStacksCached(ItemValue filterItem)
+    public bool IsCachedForFilter(ItemValue filterItem)
     {
         if (!_itemStacksCached)
         {
@@ -119,7 +129,7 @@ public sealed class StorageAccessContext
             return false;
         }
 
-        // Check if filter matches
+        // Check if filter matches: -1 means unfiltered/all items
         var filterType = filterItem?.type ?? -1;
         return _lastFilterItemType == filterType;
     }
@@ -127,10 +137,10 @@ public sealed class StorageAccessContext
     /// <summary>
     /// Marks the ItemStack lists as cached for the given filter.
     /// </summary>
-    /// <param name="filterItem">The filter item used to populate the lists</param>
+    /// <param name="filterItem">The filter item used to populate the lists, or null for unfiltered</param>
     public void MarkItemStacksCached(ItemValue filterItem)
     {
-        _lastFilterItemType = filterItem?.type ?? -1;
+        _lastFilterItemType = filterItem?.type ?? -1; // -1 means unfiltered/all items
         _itemStacksCached = true;
         _itemStacksCacheTime = DateTime.Now;
         _itemStacksInvalidationCounter = s_globalInvalidationCounter; // Capture current invalidation state
@@ -148,7 +158,7 @@ public sealed class StorageAccessContext
 
         // Invalidate cache
         _itemStacksCached = false;
-        _lastFilterItemType = null;
+        _lastFilterItemType = -1; // Reset to unfiltered
         _itemStacksCacheTime = DateTime.MinValue;
         _itemStacksInvalidationCounter = s_globalInvalidationCounter; // Reset to current state
     }
@@ -160,13 +170,13 @@ public sealed class StorageAccessContext
     public void InvalidateItemStacksCache()
     {
         _itemStacksCached = false;
-        _lastFilterItemType = null;
+        _lastFilterItemType = -1; // Reset to unfiltered
         _itemStacksCacheTime = DateTime.MinValue;
         _itemStacksInvalidationCounter = s_globalInvalidationCounter; // Reset to current state
     }
 
     /// <summary>
-    /// Gets cache information for ItemStack lists.
+    /// Gets enhanced cache information including filter awareness.
     /// </summary>
     public string GetItemStackCacheInfo()
     {
@@ -177,7 +187,11 @@ public sealed class StorageAccessContext
 
         var cacheAge = (DateTime.Now - _itemStacksCacheTime).TotalSeconds;
         var isValid = cacheAge <= ITEMSTACK_CACHE_DURATION && !HasGlobalInvalidationOccurred();
-        var filterInfo = _lastFilterItemType.HasValue ? $"filter:{_lastFilterItemType.Value}" : "no filter";
+
+        var filterInfo = IsFiltered
+            ? $"filtered for type:{_lastFilterItemType}"
+            : "unfiltered (all items)";
+
         var globalInvalidationInfo = HasGlobalInvalidationOccurred() ? ", globally invalidated" : "";
 
         return $"ItemStacks: Cached {cacheAge:F2}s ago, {filterInfo}, valid:{isValid}{globalInvalidationInfo}";
@@ -234,6 +248,45 @@ public sealed class StorageAccessContext
         result.AddRange(VehicleItems);
 
         return result;
+    }
+
+    /// <summary>
+    /// Checks if the current cached data is compatible with the specified filter.
+    /// Returns true if data can be reused (either exact match or cached data is more general).
+    /// </summary>
+    /// <param name="requestedFilterItem">The filter being requested</param>
+    /// <returns>True if cached data is compatible</returns>
+    public bool IsFilterCompatible(ItemValue requestedFilterItem)
+    {
+        if (!_itemStacksCached)
+        {
+            return false;
+        }
+
+        var requestedFilterType = requestedFilterItem?.type ?? -1;
+
+        // If we have unfiltered data (-1), it's compatible with any filter request
+        if (_lastFilterItemType == -1)
+        {
+            return true;
+        }
+
+        // If we have filtered data, it's only compatible with the exact same filter
+        return _lastFilterItemType == requestedFilterType;
+    }
+
+    /// <summary>
+    /// Gets filtering statistics for performance analysis.
+    /// </summary>
+    /// <returns>String with filtering statistics</returns>
+    public string GetFilteringStats()
+    {
+        var cacheInfo = _itemStacksCached ? "cached" : "not cached";
+        var filterStatus = IsFiltered ? $"filtered (type {_lastFilterItemType})" : "unfiltered";
+        var itemCount = GetTotalItemCount();
+        var stackCount = GetTotalStackCount();
+
+        return $"Filter stats: {cacheInfo}, {filterStatus}, {itemCount} items in {stackCount} stacks";
     }
 
     /// <summary>
@@ -320,12 +373,13 @@ public sealed class StorageAccessContext
     }
 
     /// <summary>
-    /// Gets a summary including ItemStack counts and cache info.
+    /// Gets a summary including ItemStack counts and enhanced cache info.
     /// </summary>
     public string GetItemStackSummary()
     {
         var cacheInfo = GetItemStackCacheInfo();
-        return $"ItemStacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count}, Total:{GetTotalStackCount()} stacks, {GetTotalItemCount()} items | {cacheInfo}";
+        var filterStats = GetFilteringStats();
+        return $"ItemStacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count}, Total:{GetTotalStackCount()} stacks, {GetTotalItemCount()} items | {cacheInfo} | {filterStats}";
     }
 
     /// <summary>

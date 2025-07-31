@@ -130,7 +130,7 @@ public static class ContainerUtils
         }
 
         // Check if we have cached ItemStack results for this filter
-        if (context.AreItemStacksCached(filterItem))
+        if (context.IsCachedForFilter(filterItem))
         {
             totalItemsAddedCount = context.GetTotalItemCount();
             var cachedResult = context.GetAllItemStacks();
@@ -462,32 +462,32 @@ public static class ContainerUtils
 
         if (stillNeeded > 0 && config.PullFromDewCollectors)
         {
-            ProcessStorage(d_MethodName, "DewCollectors", itemName, context.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorage(d_MethodName, "DewCollectors", itemName, context.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 dewCollector => dewCollector.items, dewCollector => DewCollectorUtils.MarkDewCollectorModified(dewCollector));
         }
 
         if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
         {
-            ProcessStorage(d_MethodName, "WorkstationOutputs", itemName, context.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorage(d_MethodName, "WorkstationOutputs", itemName, context.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 workstation => workstation.output, workstation => WorkstationUtils.MarkWorkstationModified(workstation));
         }
 
         if (stillNeeded > 0)
         {
-            ProcessStorage(d_MethodName, "Containers", itemName, context.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorage(d_MethodName, "Containers", itemName, context.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 lootable => lootable.items, lootable => lootable.SetModified());
         }
 
         if (stillNeeded > 0 && config.PullFromVehicleStorage)
         {
-            ProcessStorage(d_MethodName, "Vehicles", itemName, context.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+            RemoveItemsFromStorage(d_MethodName, "Vehicles", itemName, context.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
                 vehicle => vehicle.bag.items, vehicle => vehicle.SetBagModified());
         }
 
         return originalNeeded - stillNeeded;  // Return the total number of items removed
     }
 
-    private static void ProcessStorage<T>(
+    private static void RemoveItemsFromStorage<T>(
         string d_method_name,
         string storageName,
         string itemName,

@@ -2,7 +2,7 @@
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class DebutUtil
+public static class DebugUtil
 {
     public static string GetStackTrace()
     {

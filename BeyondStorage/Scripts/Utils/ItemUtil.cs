@@ -7,6 +7,11 @@ public static class ItemUtil
 {
     public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
 
+    public static List<ItemStack> CreateDefaultItemList()
+    {
+        return new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
+    }
+
     public static string InfoItemStackToString(IEnumerable<ItemStack> stacks)
     {
         if (stacks == null)
