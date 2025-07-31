@@ -7,6 +7,8 @@ public static class VehicleRefuel
 {
     public static int VehicleRefuelRemoveRemaining(ItemValue itemValue, int lastRemovedCount, int totalRequired)
     {
+        const string d_MethodName = nameof(VehicleRefuelRemoveRemaining);
+
         // skip if already at required amount
         if (lastRemovedCount == totalRequired)
         {
@@ -27,14 +29,18 @@ public static class VehicleRefuel
 
         var itemName = itemValue.ItemClass.GetItemName();
         var newRequiredCount = totalRequired - lastRemovedCount;
-        var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, newRequiredCount);
-        LogUtil.DebugLog($"VehicleRefuelRemoveRemaining - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
-        // return new refueled count
-        return lastRemovedCount + removedFromStorage;
+
+        var context = StorageAccessContext.Create(d_MethodName);
+        var removedFromStorage = context?.RemoveRemaining(itemValue, newRequiredCount) ?? 0;
+
+        LogUtil.DebugLog($"{d_MethodName} - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
+        return lastRemovedCount + removedFromStorage;  // return new refueled count
     }
 
     public static bool CanRefuel(EntityVehicle vehicle, bool alreadyHasItem)
     {
+        const string d_MethodName = nameof(CanRefuel);
+
         // return early if already able to refuel from inventory
         if (alreadyHasItem)
         {
@@ -49,8 +55,9 @@ public static class VehicleRefuel
         }
 
         var fuelItemValue = ItemClass.GetItem(fuelItem);
-        var storageHas = ContainerUtils.HasItem(null, fuelItemValue);
-        LogUtil.DebugLog($"VehicleRefuel.CanRefuel - fuelItem {fuelItem}; storageHas {storageHas}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var storageHas = context?.HasItem(fuelItemValue) ?? false;
+        LogUtil.DebugLog($"{d_MethodName} - fuelItem {fuelItem}; storageHas {storageHas}");
 
         return storageHas;
     }

@@ -24,7 +24,8 @@ public static class ItemCommon
         }
 
         // Get what we can from storage up to required amount
-        var totalRemoved = ContainerUtils.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
+        var context = StorageAccessContext.Create(nameof(ItemRemoveRemaining));
+        var totalRemoved = context?.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems) ?? 0;
 
         var newStillNeeded = stillNeeded - totalRemoved;
         LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");

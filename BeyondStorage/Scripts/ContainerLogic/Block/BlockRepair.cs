@@ -20,9 +20,10 @@ public class BlockRepair
 
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var result = ContainerUtils.GetItemCount(null, itemValue);
-        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var result = context?.GetItemCount(itemValue) ?? 0;
 
+        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
         return result;
     }
 
@@ -40,7 +41,6 @@ public class BlockRepair
         }
 
         var itemName = itemStack.itemValue.ItemClass.GetItemName();
-        var context = StorageAccessContext.Create(d_MethodName);
 
         // itemStack.count is total amount needed
         // currentCount is the amount removed previously in last DecItem
@@ -54,8 +54,11 @@ public class BlockRepair
         }
 
         // Add amount removed from storage to last amount removed to update result
-        var totalRemoved = currentCount + ContainerUtils.RemoveRemaining(itemStack.itemValue, stillNeeded);
-        LogUtil.DebugLog($"{d_MethodName} | total removed {totalRemoved}; stillNeeded {stillNeeded}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var removedFromStorage = context?.RemoveRemaining(itemStack.itemValue, stillNeeded) ?? 0;
+
+        var totalRemoved = currentCount + removedFromStorage;
+        LogUtil.DebugLog($"{d_MethodName} | total removed {totalRemoved}; removedFromStorage {removedFromStorage}; stillNeeded {stillNeeded}");
 
         return totalRemoved;
     }

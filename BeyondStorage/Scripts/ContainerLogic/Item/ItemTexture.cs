@@ -29,7 +29,7 @@ public class ItemTexture
         var batchContext = BatchPaintContext.Create(d_MethodName);
         var removalContext = batchContext?.StorageContext;
 
-        var hasAmmo = ContainerUtils.HasItem(removalContext, ammoType);
+        var hasAmmo = removalContext?.HasItem(ammoType) ?? false;
 
         LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
         return hasAmmo;
@@ -54,7 +54,7 @@ public class ItemTexture
         var batchContext = BatchPaintContext.Create(d_MethodName);
         var removalContext = batchContext?.StorageContext;
 
-        var storageCount = ContainerUtils.GetItemCount(removalContext, ammoType);
+        var storageCount = removalContext?.GetItemCount(ammoType) ?? 0;
         var totalAvailableCount = storageCount + entityAvailableCount;
 
         LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
@@ -80,7 +80,7 @@ public class ItemTexture
         var batchContext = BatchPaintContext.Create(d_MethodName);
         var removalContext = batchContext?.StorageContext;
 
-        var removedFromStorage = ContainerUtils.RemoveRemainingWithContext(removalContext, ammoType, paintCost, _ignoreModdedItems, _removedItems);
+        var removedFromStorage = removalContext?.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems) ?? 0;
         batchContext?.AccumulateRemoval(ammoType, removedFromStorage);
         var stillNeeded = paintCost - removedFromStorage;
 

@@ -13,6 +13,8 @@ public static class ItemRepair
     //          FOR: Item Repair - Allows Repair
     public static int ItemRepairOnActivatedGetItemCount(ItemValue itemValue, int currentCount)
     {
+        const string d_MethodName = nameof(ItemRepairOnActivatedGetItemCount);
+
         // skip if not enabled
         if (!ModConfig.EnableForItemRepair())
         {
@@ -20,17 +22,18 @@ public static class ItemRepair
         }
 
         var currentValue = currentCount * itemValue.ItemClass.RepairAmount.Value;
-        LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
+        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
 
         if (currentValue > 0)
         {
             return currentCount;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
+        var context = StorageAccessContext.Create(d_MethodName);
+        var storageCount = context?.GetItemCount(itemValue) ?? 0;
         var newCount = currentCount + storageCount;
-        LogUtil.DebugLog($"ItemRepairOnActivatedGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
 
+        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
         return newCount;
     }
 
@@ -39,6 +42,8 @@ public static class ItemRepair
     //          FOR: Item Repair - Button Enabled
     public static int ItemRepairRefreshGetItemCount(ItemValue itemValue)
     {
+        const string d_MethodName = nameof(ItemRepairRefreshGetItemCount);
+
         // skip if not enabled
         if (!ModConfig.EnableForItemRepair())
         {
@@ -50,8 +55,9 @@ public static class ItemRepair
             return 0;
         }
 
-        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
-        LogUtil.DebugLog($"ItemRepairRefreshGetItemCount | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var storageCount = context?.GetItemCount(itemValue) ?? 0;
+        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return storageCount;
     }

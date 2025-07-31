@@ -33,7 +33,8 @@ public static class PowerSourceRefuel
             return lastRemoved;
         }
 
-        int removed = ContainerUtils.RemoveRemaining(itemValue, amountToRemove);
+        var context = StorageAccessContext.Create(d_method_name);
+        int removed = context?.RemoveRemaining(itemValue, amountToRemove) ?? 0;
 
         int result = lastRemoved + removed;
 

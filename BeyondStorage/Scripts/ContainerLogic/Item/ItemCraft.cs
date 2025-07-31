@@ -22,8 +22,17 @@ public class ItemCraft
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
         ItemUtil.PurgeInvalidItemStacks(stacks);
 
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(null, out int totalItemsAddedCount));
-        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        if (context != null)
+        {
+            context.PullSourceItemStacks(out int totalItemsAddedCount, filterItem: null);
+            stacks.AddRange(context.GetAllItemStacks());
+            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+        }
+        else
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+        }
 
         return stacks;
     }
@@ -48,8 +57,17 @@ public class ItemCraft
         LogUtil.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
         // Todo: Add item filtering here, if needed
-        stacks.AddRange(ContainerUtils.GetPullableSourceItemStacks(null, out int totalItemsAddedCount));
-        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        if (context != null)
+        {
+            context.PullSourceItemStacks(out int totalItemsAddedCount, filterItem: null);
+            stacks.AddRange(context.GetAllItemStacks());
+            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+        }
+        else
+        {
+            LogUtil.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+        }
     }
 
     //  Used By:
@@ -64,7 +82,8 @@ public class ItemCraft
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var storageCount = ContainerUtils.GetItemCount(null, itemValue);
+        var context = StorageAccessContext.Create(d_MethodName);
+        var storageCount = context?.GetItemCount(itemValue) ?? 0;
 
         if (storageCount > 0)
         {
@@ -107,7 +126,8 @@ public class ItemCraft
         }
 
         // Get storage count and return result
-        var storageCount = ContainerUtils.GetItemCount(null, itemStack.itemValue);
+        var context = StorageAccessContext.Create(d_MethodName);
+        var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;
 
         LogUtil.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");

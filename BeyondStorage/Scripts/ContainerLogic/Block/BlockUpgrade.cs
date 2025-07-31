@@ -10,15 +10,18 @@ public class BlockUpgrade
     //          Block Upgrade - Resources Available Check (called by ItemActionRepair: .ExecuteAction() and .RemoveRequiredResource())
     public static int BlockUpgradeGetItemCount(ItemValue itemValue)
     {
+        const string d_MethodName = nameof(BlockUpgradeGetItemCount);
+
         // skip if not enabled
         if (!ModConfig.EnableForBlockUpgrade())
         {
             return 0;
         }
 
-        var result = ContainerUtils.GetItemCount(null, itemValue);
-        LogUtil.DebugLog($"BlockUpgradeGetItemCount | item {itemValue.ItemClass.GetItemName()}; count {result}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var result = context?.GetItemCount(itemValue) ?? 0;
 
+        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; count {result}");
         return result;
     }
 
@@ -27,6 +30,7 @@ public class BlockUpgrade
     //          Block Upgrade - Remove items
     public static int BlockUpgradeRemoveRemaining(int currentCount, ItemValue itemValue, int requiredCount)
     {
+        const string d_MethodName = nameof(BlockUpgradeRemoveRemaining);
         var itemName = itemValue.ItemClass.GetItemName();
 
         // skip if not enabled
@@ -42,13 +46,14 @@ public class BlockUpgrade
             return currentCount;
         }
 
-        LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
+        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
 
-        var removedFromStorage = ContainerUtils.RemoveRemaining(itemValue, requiredCount - currentCount);
+        var context = StorageAccessContext.Create(d_MethodName);
+        var removedFromStorage = context?.RemoveRemaining(itemValue, requiredCount - currentCount) ?? 0;
 
         // add amount removed from storage to previous removed count to update result
         var result = currentCount + removedFromStorage;
-        LogUtil.DebugLog($"BlockUpgradeRemoveRemaining | item {itemName}; removed {removedFromStorage}; new result {result}");
+        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; removed {removedFromStorage}; new result {result}");
 
         return result;
     }
