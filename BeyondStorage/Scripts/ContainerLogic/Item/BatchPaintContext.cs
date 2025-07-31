@@ -46,7 +46,7 @@ public sealed class BatchPaintContext
         try
         {
             var storageContext = StorageAccessContext.Create(methodName);
-            if (storageContext?.WorldPlayerContext == null)
+            if (!StorageAccessContext.IsValidContext(storageContext))
             {
                 LogUtil.Error($"{methodName}: Failed to create StorageAccessContext with valid WorldPlayerContext");
                 return null;
@@ -143,7 +143,7 @@ public sealed class BatchPaintContext
     public string GetOperationsSummary()
     {
         var contextAge = StorageContext?.AgeInSeconds ?? -1;
-        var worldContextAge = StorageContext?.WorldPlayerContext?.AgeInSeconds ?? -1;
+        var worldContextAge = StorageContext?.WorldPlayerContextAgeInSeconds;
         return $"BatchPaintContext: {_totalOperations} operations, {_accumulatedRemovals.Count} different item types, Context age: {contextAge:F1}s, WorldPlayerContext age: {worldContextAge:F1}s";
     }
 

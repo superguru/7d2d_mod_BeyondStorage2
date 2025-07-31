@@ -13,8 +13,8 @@ public sealed class StorageAccessContext
 
     private static long s_globalInvalidationCounter = 0;
 
-    public ConfigSnapshot Config { get; }
-    public WorldPlayerContext WorldPlayerContext { get; }
+    private ConfigSnapshot Config { get; }
+    private WorldPlayerContext WorldPlayerContext { get; }
 
     private List<TileEntityDewCollector> DewCollectors { get; set; }
     private List<ITileEntityLootable> Lootables { get; set; }
@@ -32,7 +32,7 @@ public sealed class StorageAccessContext
     private long _itemStacksInvalidationCounter = 0;
     private const double ITEMSTACK_CACHE_DURATION = 0.8;
 
-    public DateTime CreatedAt { get; }
+    private DateTime CreatedAt { get; }
 
     public static StorageAccessContext Create(string methodName = "Unknown", bool forceRefresh = false)
     {
@@ -148,7 +148,7 @@ public sealed class StorageAccessContext
             return true;
         }
 
-        return AreFilterTypesEquivalent(_lastFilterTypes, filterTypes);
+        return UniqueItemTypes.IsEquivalent(_lastFilterTypes, filterTypes);
     }
 
     public bool IsCachedForFilter(ItemValue filterItem)
@@ -160,40 +160,7 @@ public sealed class StorageAccessContext
         return IsCachedForFilter(filterTypes);
     }
 
-    private bool AreFilterTypesEquivalent(UniqueItemTypes cached, UniqueItemTypes requested)
-    {
-        if (cached == null || requested == null)
-        {
-            return cached == requested;
-        }
-
-        if (cached.IsUnfiltered && requested.IsUnfiltered)
-        {
-            return true;
-        }
-
-        if (cached.IsUnfiltered != requested.IsUnfiltered)
-        {
-            return false;
-        }
-
-        if (cached.Count != requested.Count)
-        {
-            return false;
-        }
-
-        foreach (int type in requested)
-        {
-            if (!cached.Contains(type))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void MarkItemStacksCached(UniqueItemTypes filterTypes)
+    private void MarkItemStacksCached(UniqueItemTypes filterTypes)
     {
         _lastFilterTypes = filterTypes ?? UniqueItemTypes.Unfiltered;
         _itemStacksCached = true;
@@ -201,16 +168,7 @@ public sealed class StorageAccessContext
         _itemStacksInvalidationCounter = s_globalInvalidationCounter;
     }
 
-    public void MarkItemStacksCached(ItemValue filterItem)
-    {
-        var filterTypes = filterItem != null
-            ? UniqueItemTypes.FromItemType(filterItem.type)
-            : UniqueItemTypes.Unfiltered;
-
-        MarkItemStacksCached(filterTypes);
-    }
-
-    public void ClearItemStacks()
+    private void ClearItemStacks()
     {
         DewCollectorItems.Clear();
         WorkstationItems.Clear();
@@ -223,7 +181,7 @@ public sealed class StorageAccessContext
         _itemStacksInvalidationCounter = s_globalInvalidationCounter;
     }
 
-    public void InvalidateItemStacksCache()
+    private void InvalidateItemStacksCache()
     {
         _itemStacksCached = false;
         _lastFilterTypes = UniqueItemTypes.Unfiltered;
@@ -250,8 +208,16 @@ public sealed class StorageAccessContext
         return $"ItemStacks: Cached {cacheAge:F2}s ago, {filterInfo}, valid:{isValid}{globalInvalidationInfo}";
     }
 
+    /// <summary>
+    /// Gets the total count of all items across all storage sources.
+    /// Ensures ItemStacks are pulled before counting.
+    /// </summary>
+    /// <returns>Total count of all items</returns>
     public int GetTotalItemCount()
     {
+        // Ensure ItemStacks are pulled with unfiltered access
+        PullSourceItemStacks(CurrentFilterTypes);
+
         int total = 0;
         foreach (var stack in DewCollectorItems)
         {
@@ -276,14 +242,31 @@ public sealed class StorageAccessContext
         return total;
     }
 
+    /// <summary>
+    /// Gets the total number of ItemStack instances across all storage sources.
+    /// Ensures ItemStacks are pulled before counting.
+    /// </summary>
+    /// <returns>Total number of ItemStack instances</returns>
     public int GetTotalStackCount()
     {
+        // Ensure ItemStacks are pulled with unfiltered access
+        PullSourceItemStacks(CurrentFilterTypes);
+
         return DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count;
     }
 
-    public List<ItemStack> GetAllItemStacks()
+    /// <summary>
+    /// Gets all available item stacks from storage sources with filter types.
+    /// This is a convenience method that combines PullSourceItemStacks and GetAllItemStacks.
+    /// </summary>
+    /// <param name="filterTypes">Optional filter to limit results to specific item types</param>
+    /// <returns>List of all available item stacks from storage sources</returns>
+    public List<ItemStack> GetAllAvailableItemStacks(UniqueItemTypes filterTypes)
     {
-        var totalStacks = GetTotalStackCount();
+        PullSourceItemStacks(filterTypes);
+
+        // Direct access to lists since we just called PullSourceItemStacks
+        var totalStacks = DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count;
         var result = new List<ItemStack>(totalStacks);
 
         result.AddRange(DewCollectorItems);
@@ -294,49 +277,19 @@ public sealed class StorageAccessContext
         return result;
     }
 
-    public bool IsFilterCompatible(UniqueItemTypes requestedFilterTypes)
-    {
-        if (!_itemStacksCached)
-        {
-            return false;
-        }
-
-        if (_lastFilterTypes.IsUnfiltered)
-        {
-            return true;
-        }
-
-        if (requestedFilterTypes == null || requestedFilterTypes.IsUnfiltered)
-        {
-            return false;
-        }
-
-        foreach (int type in requestedFilterTypes)
-        {
-            if (!_lastFilterTypes.Contains(type))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public bool IsFilterCompatible(ItemValue requestedFilterItem)
-    {
-        var requestedFilterTypes = requestedFilterItem != null
-            ? UniqueItemTypes.FromItemType(requestedFilterItem.type)
-            : UniqueItemTypes.Unfiltered;
-
-        return IsFilterCompatible(requestedFilterTypes);
-    }
-
+    /// <summary>
+    /// Gets filtering and cache statistics.
+    /// Ensures ItemStacks are pulled before generating statistics.
+    /// </summary>
+    /// <returns>String containing filtering statistics</returns>
     public string GetFilteringStats()
     {
         var cacheInfo = _itemStacksCached ? "cached" : "not cached";
         var filterStatus = _lastFilterTypes.IsFiltered
             ? $"filtered ({_lastFilterTypes.Count} types)"
             : "unfiltered";
+
+        // These methods now ensure ItemStacks are pulled
         var itemCount = GetTotalItemCount();
         var stackCount = GetTotalStackCount();
 
@@ -353,7 +306,7 @@ public sealed class StorageAccessContext
             return 0;
         }
 
-        PullSourceItemStacks(out var totalItemCountAdded, filterItem: itemValue);
+        var totalItemCountAdded = PullSourceItemStacks(itemValue);
 
         LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
 
@@ -369,10 +322,9 @@ public sealed class StorageAccessContext
             filterTypes = UniqueItemTypes.Unfiltered;
         }
 
-        PullSourceItemStacks(out var totalItemCountAdded, filterTypes);
+        var totalItemCountAdded = PullSourceItemStacks(filterTypes);
 
         LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} items with filter: {filterTypes}");
-
         return totalItemCountAdded;
     }
 
@@ -390,7 +342,6 @@ public sealed class StorageAccessContext
         var result = totalItemCount > 0;
 
         LogUtil.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
-
         return result;
     }
 
@@ -724,29 +675,45 @@ public sealed class StorageAccessContext
         }
     }
 
-    public void PullSourceItemStacks(out int totalItemsAddedCount, ItemValue filterItem = null)
+    private int PullSourceItemStacks(ItemValue filterItem)
     {
         var filterTypes = filterItem != null
             ? UniqueItemTypes.FromItemType(filterItem.type)
             : UniqueItemTypes.Unfiltered;
 
-        PullSourceItemStacks(out totalItemsAddedCount, filterTypes);
+        var totalItemCountAdded = PullSourceItemStacks(filterTypes);
+        return totalItemCountAdded;
     }
 
-    public void PullSourceItemStacks(out int totalItemsAddedCount, UniqueItemTypes filterTypes = null)
+    private int PullSourceItemStacks(UniqueItemTypes filterTypes)
     {
         const string d_MethodName = nameof(PullSourceItemStacks);
 
-        totalItemsAddedCount = 0;
+        var totalItemCountAdded = 0;
         filterTypes ??= UniqueItemTypes.Unfiltered;
 
         if (IsCachedForFilter(filterTypes))
         {
-            totalItemsAddedCount = GetTotalItemCount();
-            var cachedResult = GetAllItemStacks();
+            totalItemCountAdded = 0;
+            foreach (var stack in DewCollectorItems)
+            {
+                totalItemCountAdded += stack.count;
+            }
+            foreach (var stack in WorkstationItems)
+            {
+                totalItemCountAdded += stack.count;
+            }
+            foreach (var stack in ContainerItems)
+            {
+                totalItemCountAdded += stack.count;
+            }
+            foreach (var stack in VehicleItems)
+            {
+                totalItemCountAdded += stack.count;
+            }
 
-            LogUtil.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemsAddedCount} items from {cachedResult.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
-            return;
+            LogUtil.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
+            return totalItemCountAdded;
         }
 
         ClearItemStacks();
@@ -756,7 +723,7 @@ public sealed class StorageAccessContext
             AddValidItemStacksFromSources(d_MethodName, DewCollectorItems, DewCollectors, dc => dc.items,
                 "Dew Collector Storage", out int dewCollectorItemsAddedCount, filterTypes);
 
-            totalItemsAddedCount += dewCollectorItemsAddedCount;
+            totalItemCountAdded += dewCollectorItemsAddedCount;
         }
 
         if (Config.PullFromWorkstationOutputs)
@@ -764,24 +731,26 @@ public sealed class StorageAccessContext
             AddValidItemStacksFromSources(d_MethodName, WorkstationItems, Workstations, workstation => workstation.output,
                 "Workstation Output", out int workstationItemsAddedCount, filterTypes);
 
-            totalItemsAddedCount += workstationItemsAddedCount;
+            totalItemCountAdded += workstationItemsAddedCount;
         }
 
         AddValidItemStacksFromSources(d_MethodName, ContainerItems, Lootables, l => l.items,
             "Container Storage", out int containerItemsAddedCount, filterTypes);
 
-        totalItemsAddedCount += containerItemsAddedCount;
+        totalItemCountAdded += containerItemsAddedCount;
 
         if (Config.PullFromVehicleStorage)
         {
             AddValidItemStacksFromSources(d_MethodName, VehicleItems, Vehicles, v => v.bag?.GetSlots(),
                 "Vehicle Storage", out int vehicleItemsAddedCount, filterTypes);
 
-            totalItemsAddedCount += vehicleItemsAddedCount;
+            totalItemCountAdded += vehicleItemsAddedCount;
         }
 
         MarkItemStacksCached(filterTypes);
-        LogUtil.DebugLog($"{d_MethodName}: Found {totalItemsAddedCount} items from {GetTotalStackCount()} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
+
+        LogUtil.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
+        return totalItemCountAdded;
     }
 
     private void AddValidItemStacksFromSources<T>(
@@ -873,6 +842,8 @@ public sealed class StorageAccessContext
 
     public double AgeInSeconds => (DateTime.Now - CreatedAt).TotalSeconds;
 
+    public object WorldPlayerContextAgeInSeconds { get { return WorldPlayerContext?.AgeInSeconds ?? -1; } }
+
     public bool HasExpired(double lifetimeSeconds) => AgeInSeconds > lifetimeSeconds;
 
     public string GetSourceSummary()
@@ -880,11 +851,18 @@ public sealed class StorageAccessContext
         return $"Lootables: {Lootables.Count}, DewCollectors: {DewCollectors.Count}, Workstations: {Workstations.Count}, Vehicles: {Vehicles.Count}, Age: {AgeInSeconds:F1}s";
     }
 
+    /// <summary>
+    /// Gets a summary of ItemStack information.
+    /// Ensures ItemStacks are pulled before generating the summary.
+    /// </summary>
+    /// <returns>String containing ItemStack summary information</returns>
     public string GetItemStackSummary()
     {
         var cacheInfo = GetItemStackCacheInfo();
         var filterStats = GetFilteringStats();
-        return $"ItemStacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count}, Total:{GetTotalStackCount()} stacks, {GetTotalItemCount()} items | {cacheInfo} | {filterStats}";
+
+        // Use direct access since GetFilteringStats() -> GetTotalItemCount/GetTotalStackCount() already called PullSourceItemStacks()
+        return $"ItemStacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count}, Total:{DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks, {0} items | {cacheInfo} | {filterStats}";
     }
 
     public static string GetComprehensiveCacheStats()
@@ -893,5 +871,10 @@ public sealed class StorageAccessContext
         var worldPlayerStats = WorldPlayerContext.GetCacheStats();
         var itemPropsStats = ItemPropertiesCache.GetCacheStats();
         return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {s_globalInvalidationCounter}";
+    }
+
+    internal static bool IsValidContext(StorageAccessContext context)
+    {
+        return context != null && context.WorldPlayerContext != null;
     }
 }

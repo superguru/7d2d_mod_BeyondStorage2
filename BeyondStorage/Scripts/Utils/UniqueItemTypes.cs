@@ -175,6 +175,46 @@ public sealed class UniqueItemTypes
         return false;
     }
 
+    /// <summary>
+    /// Determines if two UniqueItemTypes instances are equivalent.
+    /// Two instances are considered equivalent if they represent the same set of item types.
+    /// </summary>
+    /// <param name="cached">The first UniqueItemTypes to compare</param>
+    /// <param name="requested">The second UniqueItemTypes to compare</param>
+    /// <returns>True if both instances are equivalent, false otherwise</returns>
+    public static bool IsEquivalent(UniqueItemTypes cached, UniqueItemTypes requested)
+    {
+        if (cached == null || requested == null)
+        {
+            return cached == requested;
+        }
+
+        if (cached.IsUnfiltered && requested.IsUnfiltered)
+        {
+            return true;
+        }
+
+        if (cached.IsUnfiltered != requested.IsUnfiltered)
+        {
+            return false;
+        }
+
+        if (cached.Count != requested.Count)
+        {
+            return false;
+        }
+
+        foreach (int type in requested)
+        {
+            if (!cached.Contains(type))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static UniqueItemTypes FromItemStacks(List<ItemStack> stacks)
     {
         if (stacks == null || stacks.Count == 0)

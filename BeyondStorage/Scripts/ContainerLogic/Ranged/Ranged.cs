@@ -9,16 +9,17 @@ public static class Ranged
     //      ItemActionRanged.CanReload (Weapon Reload - Ammo Exists Check)
     public static bool CanReloadFromStorage(ItemValue itemValue)
     {
-        // return 0 if not enabled for reloading
+        const string d_MethodName = nameof(CanReloadFromStorage);
+
         if (!ModConfig.EnableForReload())
         {
             return false;
         }
 
-        // otherwise look for ammo
-        var canReloadFromStorage = ContainerUtils.HasItem(null, itemValue);
-        LogUtil.DebugLog($"canReloadFromStorage: {canReloadFromStorage}");
+        var context = StorageAccessContext.Create(d_MethodName);
+        var canReloadFromStorage = context?.HasItem(itemValue) ?? false;
 
+        LogUtil.DebugLog($"{d_MethodName}: {canReloadFromStorage}");
         return canReloadFromStorage;
     }
 

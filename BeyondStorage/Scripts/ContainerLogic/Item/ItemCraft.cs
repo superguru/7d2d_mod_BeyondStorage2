@@ -25,9 +25,9 @@ public class ItemCraft
         var context = StorageAccessContext.Create(d_MethodName);
         if (context != null)
         {
-            context.PullSourceItemStacks(out int totalItemsAddedCount, filterItem: null);
-            stacks.AddRange(context.GetAllItemStacks());
-            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+            var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
+            stacks.AddRange(storageStacks);
+            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
@@ -60,9 +60,9 @@ public class ItemCraft
         var context = StorageAccessContext.Create(d_MethodName);
         if (context != null)
         {
-            context.PullSourceItemStacks(out int totalItemsAddedCount, filterItem: null);
-            stacks.AddRange(context.GetAllItemStacks());
-            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, totalItemCountAdded {totalItemsAddedCount}");
+            var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
+            stacks.AddRange(storageStacks);
+            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
