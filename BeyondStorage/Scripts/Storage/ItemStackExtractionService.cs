@@ -12,6 +12,23 @@ namespace BeyondStorage.Scripts.Storage
     public static class ItemStackExtractionService
     {
         /// <summary>
+        /// Extracts ItemStacks for a specific item type.
+        /// </summary>
+        /// <param name="sources">The storage sources to extract from</param>
+        /// <param name="config">Configuration settings for extraction</param>
+        /// <param name="filterItem">The specific item to filter for</param>
+        /// <param name="cacheManager">Cache manager for tracking cache state</param>
+        /// <returns>Total count of items extracted</returns>
+        public static int ExtractItemStacks(StorageSourceCollection sources, ConfigSnapshot config, ItemValue filterItem, ItemStackCacheManager cacheManager)
+        {
+            var filterTypes = filterItem != null
+                ? UniqueItemTypes.FromItemType(filterItem.type)
+                : UniqueItemTypes.Unfiltered;
+
+            return ExtractItemStacks(sources, config, filterTypes, cacheManager);
+        }
+
+        /// <summary>
         /// Extracts ItemStacks from storage sources, applying filtering and caching logic.
         /// </summary>
         /// <param name="sources">The storage sources to extract from</param>
@@ -41,7 +58,7 @@ namespace BeyondStorage.Scripts.Storage
             if (config.PullFromDewCollectors)
             {
                 AddValidItemStacksFromSources(d_MethodName, sources.DewCollectorItems, sources.DewCollectors, dc => dc.items,
-                    "Dew Collector Storage", out int dewCollectorItemsAddedCount, filterTypes);
+                    "Dew Collector", out int dewCollectorItemsAddedCount, filterTypes);
                 totalItemCountAdded += dewCollectorItemsAddedCount;
             }
 
@@ -67,23 +84,6 @@ namespace BeyondStorage.Scripts.Storage
 
             ModLogger.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.LootableItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
             return totalItemCountAdded;
-        }
-
-        /// <summary>
-        /// Extracts ItemStacks for a specific item type.
-        /// </summary>
-        /// <param name="sources">The storage sources to extract from</param>
-        /// <param name="config">Configuration settings for extraction</param>
-        /// <param name="filterItem">The specific item to filter for</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <returns>Total count of items extracted</returns>
-        public static int ExtractItemStacks(StorageSourceCollection sources, ConfigSnapshot config, ItemValue filterItem, ItemStackCacheManager cacheManager)
-        {
-            var filterTypes = filterItem != null
-                ? UniqueItemTypes.FromItemType(filterItem.type)
-                : UniqueItemTypes.Unfiltered;
-
-            return ExtractItemStacks(sources, config, filterTypes, cacheManager);
         }
 
         /// <summary>
