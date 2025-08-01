@@ -50,24 +50,20 @@ namespace BeyondStorage.Scripts.Storage
 
         public string GetSourceSummary()
         {
-            return $"Lootables: {Lootables?.Count ?? 0}, DewCollectors: {DewCollectors?.Count ?? 0}, Workstations: {Workstations?.Count ?? 0}, Vehicles: {Vehicles?.Count ?? 0}";
+            //return $"Lootables: {Lootables?.Count ?? 0}, DewCollectors: {DewCollectors?.Count ?? 0}, Workstations: {Workstations?.Count ?? 0}, Vehicles: {Vehicles?.Count ?? 0}";
+            return "To be implemented: GetSourceSummary()";
         }
 
         public string GetItemStackSummary()
         {
-            int dewCount = DewCollectorItems?.Count ?? 0;
-            int workstationCount = WorkstationItems?.Count ?? 0;
-            int lootableCount = LootableItems?.Count ?? 0;
-            int vehicleCount = VehicleItems?.Count ?? 0;
+            //int dewCount = DewCollectorItems?.Count ?? 0;
+            //int workstationCount = WorkstationItems?.Count ?? 0;
+            //int lootableCount = LootableItems?.Count ?? 0;
+            //int vehicleCount = VehicleItems?.Count ?? 0;
 
-            var totalStacks = dewCount + workstationCount + lootableCount + vehicleCount;
-            return $"ItemStacks - DC:{dewCount}, WS:{workstationCount}, LT:{lootableCount}, VH:{vehicleCount}, Total:{totalStacks} stacks";
-        }
-
-        public bool IsValid()
-        {
-            return DewCollectors != null && Lootables != null && Vehicles != null && Workstations != null &&
-                   DewCollectorItems != null && WorkstationItems != null && LootableItems != null && VehicleItems != null;
+            //var totalStacks = dewCount + workstationCount + lootableCount + vehicleCount;
+            //return $"ItemStacks - DC:{dewCount}, WS:{workstationCount}, LT:{lootableCount}, VH:{vehicleCount}, Total:{totalStacks} stacks";
+            return "To be implemented: GetItemStackSummary()";
         }
     }
 }
