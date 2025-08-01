@@ -11,11 +11,12 @@ namespace BeyondStorage.Scripts.Game.Item;
 /// </summary>
 public sealed class BatchPaintContext
 {
-    // Default cache duration for paint operations
-    private const double DEFAULT_CACHE_DURATION = 2.0;
+    // Reduced cache duration to be consistent with StorageAccessContext (0.5s)
+    // This prevents holding stale storage contexts for too long
+    private const double DEFAULT_CACHE_DURATION = 1.0;
 
     // Single cache for batch paint operations
-    private static readonly ExpiringCache<BatchPaintContext> s_batchPaintCache = new(DEFAULT_CACHE_DURATION, nameof(BatchPaintContext)); // 2 second cache for paint operations
+    private static readonly ExpiringCache<BatchPaintContext> s_batchPaintCache = new(DEFAULT_CACHE_DURATION, nameof(BatchPaintContext));
 
     public StorageAccessContext StorageContext { get; }
     private readonly Dictionary<int, int> _accumulatedRemovals = new();
@@ -105,7 +106,7 @@ public sealed class BatchPaintContext
     {
         s_batchPaintCache.InvalidateCache();
         StorageAccessContext.InvalidateCache();
-        WorldPlayerContext.InvalidateCache();
+        WorldPlayerContext.InvalidateCache(); // ✅ This is correct - static method
         ModLogger.DebugLog("All BatchPaintContext-related caches invalidated");
     }
 
@@ -126,7 +127,8 @@ public sealed class BatchPaintContext
     /// <param name="removedCount">The number of items removed</param>
     public void AccumulateRemoval(ItemValue itemValue, int removedCount)
     {
-        if (itemValue?.ItemClass != null && removedCount > 0)
+        // ✅ Added validation for item type
+        if (itemValue?.ItemClass != null && removedCount > 0 && itemValue.type > 0)
         {
             var itemType = itemValue.type;
             _accumulatedRemovals.TryGetValue(itemType, out var currentCount);
@@ -134,6 +136,11 @@ public sealed class BatchPaintContext
             _totalOperations++;
 
             ModLogger.DebugLog($"BatchPaintContext: Accumulated {removedCount} of {itemValue.ItemClass.Name} (total: {_accumulatedRemovals[itemType]}, operations: {_totalOperations})");
+        }
+        else if (removedCount > 0)
+        {
+            // Log invalid items for debugging
+            ModLogger.DebugLog($"BatchPaintContext: Skipped accumulation for invalid item - removedCount: {removedCount}, itemValue: {itemValue?.ItemClass?.Name ?? "null"}, type: {itemValue?.type ?? -1}");
         }
     }
 
@@ -144,7 +151,8 @@ public sealed class BatchPaintContext
     public string GetOperationsSummary()
     {
         var contextAge = StorageContext?.AgeInSeconds ?? -1;
-        var worldContextAge = StorageContext?.WorldPlayerContextAgeInSeconds;
+        // ✅ Fixed: Consistent typing
+        double worldContextAge = StorageContext?.WorldPlayerContextAgeInSeconds ?? -1;
         return $"BatchPaintContext: {_totalOperations} operations, {_accumulatedRemovals.Count} different item types, Context age: {contextAge:F1}s, WorldPlayerContext age: {worldContextAge:F1}s";
     }
 
@@ -165,6 +173,11 @@ public sealed class BatchPaintContext
     /// <returns>The total count removed, or 0 if not found</returns>
     public int GetTotalRemovedCount(int itemType)
     {
+        // ✅ Added validation for item type
+        if (itemType <= 0)
+        {
+            return 0;
+        }
         return _accumulatedRemovals.TryGetValue(itemType, out var count) ? count : 0;
     }
 
@@ -175,7 +188,7 @@ public sealed class BatchPaintContext
     /// <returns>The total count removed, or 0 if not found</returns>
     public int GetTotalRemovedCount(ItemValue itemValue)
     {
-        if (itemValue?.ItemClass == null)
+        if (itemValue?.ItemClass == null || itemValue.type <= 0)
         {
             return 0;
         }

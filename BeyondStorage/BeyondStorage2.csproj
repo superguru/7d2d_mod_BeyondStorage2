@@ -100,7 +100,10 @@
     <Compile Include="Scripts\Game\PowerSource\PowerSourceRefuel.cs" />
     <Compile Include="Scripts\Game\Ranged\Ranged.cs" />
     <Compile Include="Scripts\Game\Recipe\WorkstationRecipe.cs" />
+    <Compile Include="Scripts\Storage\StorageContextFactory.cs" />
     <Compile Include="Scripts\Storage\StorageDiscoveryService.cs" />
+    <Compile Include="Scripts\Storage\StorageItemRemovalService.cs" />
+    <Compile Include="Scripts\Storage\StorageQueryService.cs" />
     <Compile Include="Scripts\Storage\StorageSourceCollection.cs" />
     <Compile Include="Scripts\TileEntities\DewCollectorStateManager.cs" />
     <Compile Include="Scripts\TileEntities\WorkstationStateManager.cs" />

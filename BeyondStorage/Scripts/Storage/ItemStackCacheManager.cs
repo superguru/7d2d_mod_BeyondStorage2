@@ -14,7 +14,7 @@ namespace BeyondStorage.Scripts.Storage
         private long _itemStacksInvalidationCounter = 0;
         private UniqueItemTypes _lastFilterTypes = UniqueItemTypes.Unfiltered;
 
-        private const double ITEMSTACK_CACHE_DURATION = 0.8;
+        private const double ITEMSTACK_CACHE_DURATION = 0.5;
         private static long s_globalInvalidationCounter = 0;
 
         /// <summary>
