@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using BeyondStorage.Scripts.Configuration;
+﻿using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
@@ -192,12 +191,21 @@ namespace BeyondStorage.Scripts.Storage
 
         private static bool HasValidItems(ItemStack[] items)
         {
-            if (items == null || items.Length <= 0)
+            if (items == null || items.Length == 0)
             {
                 return false;
             }
 
-            return items.Any(item => item?.count > 0);
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                if (item != null && item.count > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void DiscoverVehicleStorages(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
