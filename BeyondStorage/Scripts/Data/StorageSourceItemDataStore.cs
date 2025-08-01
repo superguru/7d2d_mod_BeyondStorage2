@@ -7,88 +7,118 @@ namespace BeyondStorage.Scripts.Data;
 
 internal class StorageSourceItemDataStore
 {
-    private readonly Dictionary<IStorageSource, List<ItemStack>> _itemStacksByStorageSource = new Dictionary<IStorageSource, List<ItemStack>>();
-    private readonly Dictionary<ItemStack, IStorageSource> _storageSourcesByItemStack = new Dictionary<ItemStack, IStorageSource>();
+    private readonly Dictionary<IStorageSource, List<ItemStack>> _itemStacksBySource = new Dictionary<IStorageSource, List<ItemStack>>();
+    private readonly Dictionary<ItemStack, IStorageSource> _sourcesByItemStack = new Dictionary<ItemStack, IStorageSource>();
+    private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = new();
 
-    public void AddRelationship(IStorageSource storageSource, ItemStack itemStack)
+    public void AddRelationship(IStorageSource source, ItemStack stack)
     {
-        if (storageSource == null)
+        if (source == null)
         {
-            throw new ArgumentNullException(nameof(storageSource), "Storage source cannot be null.");
+            throw new ArgumentNullException(nameof(source), "Storage source cannot be null.");
         }
 
-        if (itemStack == null)
+        if (stack == null)
         {
-            throw new ArgumentNullException(nameof(itemStack), "Item stack cannot be null.");
+            throw new ArgumentNullException(nameof(stack), "Item stack cannot be null.");
         }
 
-        if (_storageSourcesByItemStack.TryGetValue(itemStack, out var existingStorageSource))
+        if (_sourcesByItemStack.TryGetValue(stack, out var existingStorageSource))
         {
-            if (existingStorageSource.Equals(storageSource))
+            if (existingStorageSource.Equals(source))
             {
-                // You made a programming mistake when you changed the mod, and now we're here.
                 throw new InvalidOperationException("ItemStack is already associated with this storage source.");
             }
             else
             {
-                // If the item stack is associated with a different entity, we should not allow this.
                 throw new InvalidOperationException("ItemStack is already associated with a different storage source.");
             }
         }
 
-        if (!_itemStacksByStorageSource.TryGetValue(storageSource, out var itemStackList))
+        if (!_itemStacksBySource.TryGetValue(source, out var itemStackList))
         {
             itemStackList = CollectionFactory.CreateItemStackList();
-            _itemStacksByStorageSource[storageSource] = itemStackList;
+            _itemStacksBySource[source] = itemStackList;
+
+            // Add to type tracking
+            var sourceType = source.GetType();
+            if (!_sourcesByType.TryGetValue(sourceType, out var sourcesOfType))
+            {
+                sourcesOfType = CollectionFactory.CreateStorageSourceList();
+                _sourcesByType[sourceType] = sourcesOfType;
+            }
+            sourcesOfType.Add(source);
         }
 
-        itemStackList.Add(itemStack);
-        _storageSourcesByItemStack[itemStack] = storageSource;
+        itemStackList.Add(stack);
+        _sourcesByItemStack[stack] = source;
     }
 
-    public void RemoveRelationship(IStorageSource? storageSource, ItemStack? itemStack)
+    public void RemoveRelationship(IStorageSource? source, ItemStack? stack)
     {
-        if (storageSource == null || itemStack == null)
+        if (source == null || stack == null)
         {
-            return; // Nothing to remove
+            return;
         }
 
         // Check if the relationship exists and is correct
-        if (_storageSourcesByItemStack.TryGetValue(itemStack, out var existingStorageSource) &&
-            existingStorageSource.Equals(storageSource))
+        if (_sourcesByItemStack.TryGetValue(stack, out var existingSource) &&
+            existingSource.Equals(source))
         {
-            _storageSourcesByItemStack.Remove(itemStack);
+            _sourcesByItemStack.Remove(stack);
 
-            if (_itemStacksByStorageSource.TryGetValue(storageSource, out var itemStackList))
+            if (_itemStacksBySource.TryGetValue(source, out var itemStackList))
             {
-                itemStackList.Remove(itemStack);
+                itemStackList.Remove(stack);
 
                 // Clean up empty lists to prevent memory bloat
                 if (itemStackList.Count == 0)
                 {
-                    _itemStacksByStorageSource.Remove(storageSource);
+                    _itemStacksBySource.Remove(source);
+
+                    // Remove from type tracking
+                    var sourceType = source.GetType();
+                    if (_sourcesByType.TryGetValue(sourceType, out var sourcesOfType))
+                    {
+                        sourcesOfType.Remove(source);
+                        if (sourcesOfType.Count == 0)
+                        {
+                            _sourcesByType.Remove(sourceType);
+                        }
+                    }
                 }
             }
         }
     }
 
-    public void RemoveAllRelationshipsForStorageSource(IStorageSource? storageSource)
+    public void RemoveAllRelationshipsForSource(IStorageSource? source)
     {
-        if (storageSource == null)
+        if (source == null)
         {
             return;
         }
 
-        if (_itemStacksByStorageSource.TryGetValue(storageSource, out var itemStackList))
+        if (_itemStacksBySource.TryGetValue(source, out var itemStackList))
         {
             // Remove all reverse mappings
             foreach (var itemStack in itemStackList)
             {
-                _storageSourcesByItemStack.Remove(itemStack);
+                _sourcesByItemStack.Remove(itemStack);
             }
 
-            // Remove the storage source entry
-            _itemStacksByStorageSource.Remove(storageSource);
+            // Remove the source entry
+            _itemStacksBySource.Remove(source);
+
+            // Remove from type tracking
+            var sourceType = source.GetType();
+            if (_sourcesByType.TryGetValue(sourceType, out var sourcesOfType))
+            {
+                sourcesOfType.Remove(source);
+                if (sourcesOfType.Count == 0)
+                {
+                    _sourcesByType.Remove(sourceType);
+                }
+            }
         }
     }
 
@@ -97,13 +127,28 @@ internal class StorageSourceItemDataStore
     /// </summary>
     public void Clear()
     {
-        _itemStacksByStorageSource.Clear();
-        _storageSourcesByItemStack.Clear();
+        _itemStacksBySource.Clear();
+        _sourcesByItemStack.Clear();
+        _sourcesByType.Clear();
     }
 
-    public List<ItemStack> GetItemsStacksForStorageSource(IStorageSource storageSource)
+    public IReadOnlyList<IStorageSource> GetSourcesByType<T>() where T : class, IStorageSource
     {
-        if (_itemStacksByStorageSource.TryGetValue(storageSource, out List<ItemStack> result))
+        return GetSourcesByType(typeof(T));
+    }
+
+    public IReadOnlyList<IStorageSource> GetSourcesByType(Type sourceType)
+    {
+        if (_sourcesByType.TryGetValue(sourceType, out var sources))
+        {
+            return sources.AsReadOnly();
+        }
+        return Array.Empty<IStorageSource>();
+    }
+
+    public List<ItemStack> GetItemsStacksBySource(IStorageSource source)
+    {
+        if (_itemStacksBySource.TryGetValue(source, out List<ItemStack> result))
         {
             return result;
         }
@@ -111,9 +156,9 @@ internal class StorageSourceItemDataStore
         return [];
     }
 
-    public IStorageSource? GetStorageSourceForItemStack(ItemStack itemStack)
+    public IStorageSource? GetSourceByItemStack(ItemStack stack)
     {
-        if (_storageSourcesByItemStack.TryGetValue(itemStack, out var result))
+        if (_sourcesByItemStack.TryGetValue(stack, out var result))
         {
             return result;
         }
@@ -121,8 +166,25 @@ internal class StorageSourceItemDataStore
         return null;
     }
 
-    public IEnumerable<IStorageSource> GetAllEntities()
+    public IEnumerable<IStorageSource> GetAllSources()
     {
-        return _itemStacksByStorageSource.Keys;
+        return _itemStacksBySource.Keys;
+    }
+
+    public IEnumerable<Type> GetAllSourceTypes()
+    {
+        return _sourcesByType.Keys;
+    }
+
+    /// <summary>
+    /// Gets diagnostic information about the current state of the data store.
+    /// </summary>
+    public string GetDiagnosticInfo()
+    {
+        var totalSources = _itemStacksBySource.Count;
+        var totalStacks = _sourcesByItemStack.Count;
+        var totalTypes = _sourcesByType.Count;
+
+        return $"Sources: {totalSources}, Stacks: {totalStacks}, Types: {totalTypes}";
     }
 }
