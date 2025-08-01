@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using BeyondStorage.Scripts.Server;
-using BeyondStorage.Scripts.Utils;
+using BeyondStorage.Scripts.Multiplayer;
+using BeyondStorage.Scripts.Infrastructure;
 using Newtonsoft.Json;
 
 #if DEBUG
@@ -18,8 +18,8 @@ public static class ModConfig
 
     public static void LoadConfig(BeyondStorage context)
     {
-        var path = Path.Combine(FileUtil.GetConfigPath(true), ConfigFileName);
-        LogUtil.DebugLog($"Loading config from {path}");
+        var path = Path.Combine(ModPathManager.GetConfigPath(true), ConfigFileName);
+        ModLogger.DebugLog($"Loading config from {path}");
 
         if (File.Exists(path))
         {
@@ -27,19 +27,19 @@ public static class ModConfig
             {
                 ClientConfig = JsonConvert.DeserializeObject<BsConfig>(File.ReadAllText(path));
                 IsConfigLoaded = true;
-                LogUtil.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
+                ModLogger.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
 
                 ValidateConfig();
             }
             catch (JsonException e)
             {
-                LogUtil.Error($"Failed to load config from {path}: {e.Message}");
+                ModLogger.Error($"Failed to load config from {path}: {e.Message}");
             }
         }
 
         if (!IsConfigLoaded)
         {
-            LogUtil.Warning($"Config file {path} not found or invalid, using default config.");
+            ModLogger.Warning($"Config file {path} not found or invalid, using default config.");
             ClientConfig = new BsConfig();
 
             // No need to write the default config back to file, as the config file is packaged with the mod as of 2.0.1.
@@ -56,7 +56,7 @@ public static class ModConfig
     {
         if (ClientConfig.range <= 0.0f && ClientConfig.range != -1.0f)
         {
-            LogUtil.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
+            ModLogger.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
             ClientConfig.range = -1.0f;
         }
     }
@@ -82,7 +82,7 @@ public static class ModConfig
     {
         if (IsDebugLogSettingsAccess())
         {
-            LogUtil.DebugLog(
+            ModLogger.DebugLog(
                 $"Setting ({name}): " +
                 $"server {serverValue}; " +
                 $"client {clientValue}; " +
@@ -94,7 +94,7 @@ public static class ModConfig
     {
         if (IsDebugLogSettingsAccess())
         {
-            LogUtil.DebugLog(
+            ModLogger.DebugLog(
                 $"Setting ({name}): " +
                 $"server {serverValue}; " +
                 $"client {clientValue}; " +
@@ -157,6 +157,16 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.enableForBlockRepair;
         bool clientValue = ClientConfig.enableForBlockRepair;
+#if DEBUG
+        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
+#endif
+        return ServerUtils.HasServerConfig ? serverValue : clientValue;
+    }
+
+    public static bool EnableForBlockTexture()
+    {
+        bool serverValue = ServerConfig.enableForBlockTexture;
+        bool clientValue = ClientConfig.enableForBlockTexture;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -259,26 +269,28 @@ public static class ModConfig
         public bool pullFromWorkstationOutputs = true;
 
         // ========== Functionality =========
-        // if set true nearby containers will be used for block repairs
+        // if set true will allow block repairs
         public bool enableForBlockRepair = true;
 
-        // if set true nearby containers will be used for block upgrades
+        // if set true will allow block textures (painting)
+        public bool enableForBlockTexture = true;
+
+        // if set true will allow block upgrades
         public bool enableForBlockUpgrade = true;
 
         // if set true will allow refueling generators
         public bool enableForGeneratorRefuel = true;
 
-        // if set true nearby containers will be used for item repairs
-        // disable if you experience lag
+        // if set true will allow item repairs
         public bool enableForItemRepair = true;
 
-        // if set true nearby containers will be used for gun reloading
+        // if set true will allow gun reloading
         public bool enableForReload = true;
 
-        // if set true will allow refueling vehicles from nearby storage
+        // if set true will allow refueling vehicles
         public bool enableForVehicleRefuel = true;
 
-        // if set true will allow repairing vehicles from nearby storage
+        // if set true will allow repairing vehicles
         public bool enableForVehicleRepair = true;
 
         // ========== Multiplayer =========

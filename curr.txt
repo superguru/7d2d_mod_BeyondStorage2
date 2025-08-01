@@ -1,0 +1,1 @@
+cs_list_namespaces|less
