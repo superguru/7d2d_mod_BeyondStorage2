@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Multiplayer;
 using BeyondStorage.Scripts.TileEntities;
 
 namespace BeyondStorage.Scripts.Storage;
@@ -21,16 +19,7 @@ public sealed class StorageAccessContext
 
     private ConfigSnapshot Config { get; }
     private WorldPlayerContext WorldPlayerContext { get; }
-
-    private List<TileEntityDewCollector> DewCollectors { get; set; }
-    private List<ITileEntityLootable> Lootables { get; set; }
-    private List<EntityVehicle> Vehicles { get; set; }
-    private List<TileEntityWorkstation> Workstations { get; set; }
-
-    private List<ItemStack> DewCollectorItems { get; set; }
-    private List<ItemStack> WorkstationItems { get; set; }
-    private List<ItemStack> ContainerItems { get; set; }
-    private List<ItemStack> VehicleItems { get; set; }
+    private StorageSourceCollection Sources { get; }
 
     private UniqueItemTypes _lastFilterTypes = UniqueItemTypes.Unfiltered;
     private bool _itemStacksCached = false;
@@ -39,6 +28,17 @@ public sealed class StorageAccessContext
     private const double ITEMSTACK_CACHE_DURATION = 0.8;
 
     private DateTime CreatedAt { get; }
+
+    // Legacy properties for backward compatibility - delegate to Sources
+    private List<TileEntityDewCollector> DewCollectors => Sources.DewCollectors;
+    private List<ITileEntityLootable> Lootables => Sources.Lootables;
+    private List<EntityVehicle> Vehicles => Sources.Vehicles;
+    private List<TileEntityWorkstation> Workstations => Sources.Workstations;
+
+    private List<ItemStack> DewCollectorItems => Sources.DewCollectorItems;
+    private List<ItemStack> WorkstationItems => Sources.WorkstationItems;
+    private List<ItemStack> ContainerItems => Sources.ContainerItems;
+    private List<ItemStack> VehicleItems => Sources.VehicleItems;
 
     public static StorageAccessContext Create(string methodName = "Unknown", bool forceRefresh = false)
     {
@@ -70,54 +70,20 @@ public sealed class StorageAccessContext
     private StorageAccessContext()
     {
         Config = ConfigSnapshot.Current;
+        Sources = new StorageSourceCollection();
 
         WorldPlayerContext = WorldPlayerContext.TryCreate(nameof(StorageAccessContext));
         if (WorldPlayerContext == null)
         {
             ModLogger.Error($"{nameof(StorageAccessContext)}: Failed to create WorldPlayerContext, aborting context creation.");
-            DewCollectors = new List<TileEntityDewCollector>(0);
-            Workstations = new List<TileEntityWorkstation>(0);
-            Lootables = new List<ITileEntityLootable>(0);
-            Vehicles = new List<EntityVehicle>(0);
-
-            DewCollectorItems = new List<ItemStack>(0);
-            WorkstationItems = new List<ItemStack>(0);
-            ContainerItems = new List<ItemStack>(0);
-            VehicleItems = new List<ItemStack>(0);
-
             CreatedAt = DateTime.Now;
             return;
         }
 
-        InitSourceCollections();
-        DiscoverSources();
-
-        InitItemStackLists();
+        StorageDiscoveryService.DiscoverStorageSources(Sources, WorldPlayerContext, Config);
 
         CreatedAt = DateTime.Now;
         ModLogger.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
-    }
-
-    private void InitSourceCollections()
-    {
-        DewCollectors = CollectionFactory.GetEmptyDewCollectorList();
-        Workstations = CollectionFactory.GetEmptyWorkstationList();
-        Lootables = CollectionFactory.GetEmptyLootableList();
-        Vehicles = CollectionFactory.GetEmptyVehicleList();
-    }
-
-    private void DiscoverSources()
-    {
-        DiscoverTileEntitySources();
-        DiscoverVehicleStorages();
-    }
-
-    private void InitItemStackLists()
-    {
-        DewCollectorItems = new List<ItemStack>();
-        WorkstationItems = new List<ItemStack>();
-        ContainerItems = new List<ItemStack>();
-        VehicleItems = new List<ItemStack>();
     }
 
     public bool IsFiltered => _lastFilterTypes.IsFiltered;
@@ -176,10 +142,7 @@ public sealed class StorageAccessContext
 
     private void ClearItemStacks()
     {
-        DewCollectorItems.Clear();
-        WorkstationItems.Clear();
-        ContainerItems.Clear();
-        VehicleItems.Clear();
+        Sources.ClearItemStacks();
 
         _itemStacksCached = false;
         _lastFilterTypes = UniqueItemTypes.Unfiltered;
@@ -505,182 +468,6 @@ public sealed class StorageAccessContext
         return stillNeeded;
     }
 
-    private void AddPullableTileEntities()
-    {
-        const string d_MethodName = nameof(AddPullableTileEntities);
-
-        if (WorldPlayerContext == null)
-        {
-            ModLogger.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
-            return;
-        }
-
-        var config = Config;
-        var worldPlayerContext = WorldPlayerContext;
-        var dewCollectors = DewCollectors;
-        var workstations = Workstations;
-        var lootables = Lootables;
-
-        int chunksProcessed = 0;
-        int nullChunks = 0;
-        int tileEntitiesProcessed = 0;
-
-        foreach (var chunk in worldPlayerContext.ChunkCacheCopy)
-        {
-            if (chunk == null)
-            {
-                nullChunks++;
-                continue;
-            }
-
-            chunksProcessed++;
-
-            var tileEntityList = chunk.tileEntities?.list;
-            if (tileEntityList == null)
-            {
-                continue;
-            }
-
-            foreach (var tileEntity in tileEntityList)
-            {
-                tileEntitiesProcessed++;
-
-                if (tileEntity.IsRemoving)
-                {
-                    continue;
-                }
-
-                bool isLootable = tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable);
-                bool hasStorageFeature = config.OnlyStorageCrates ? tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _) : true;
-
-                if (!(tileEntity is TileEntityDewCollector ||
-                      tileEntity is TileEntityWorkstation ||
-                      isLootable))
-                {
-                    continue;
-                }
-
-                var tileEntityWorldPos = tileEntity.ToWorldPos();
-
-                if (TileEntityLockManager.LockedTileEntities.Count > 0)
-                {
-                    if (TileEntityLockManager.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
-                    {
-                        continue;
-                    }
-                }
-
-                if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
-                {
-                    continue;
-                }
-
-                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
-                {
-                    if (!worldPlayerContext.CanAccessLockable(tileLockable))
-                    {
-                        continue;
-                    }
-                }
-
-                if (config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
-                {
-                    if (dewCollector.bUserAccessing)
-                    {
-                        continue;
-                    }
-
-                    if (dewCollector.items?.Length <= 0 || !dewCollector.items.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    dewCollectors.Add(dewCollector);
-                    continue;
-                }
-
-                if (config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
-                {
-                    if (!workstation.IsPlayerPlaced)
-                    {
-                        continue;
-                    }
-
-                    if (workstation.output?.Length <= 0 || !workstation.output.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    workstations.Add(workstation);
-                    continue;
-                }
-
-                if (lootable != null)
-                {
-                    if (!lootable.bPlayerStorage)
-                    {
-                        continue;
-                    }
-
-                    if (config.OnlyStorageCrates && !hasStorageFeature)
-                    {
-                        continue;
-                    }
-
-                    if (lootable.items?.Length <= 0 || !lootable.items.Any(item => item?.count > 0))
-                    {
-                        continue;
-                    }
-
-                    lootables.Add(lootable);
-                    continue;
-                }
-            }
-        }
-
-        ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
-    }
-
-    private void DiscoverVehicleStorages()
-    {
-        const string d_MethodName = nameof(DiscoverVehicleStorages);
-
-        if (WorldPlayerContext == null)
-        {
-            ModLogger.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
-            return;
-        }
-
-        var configRange = Config.Range;
-
-        var vehicles = VehicleManager.Instance?.vehiclesActive;
-        if (vehicles == null)
-        {
-            ModLogger.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
-            return;
-        }
-
-        foreach (var vehicle in vehicles)
-        {
-            if (vehicle.bag == null || vehicle.bag.IsEmpty() || !vehicle.hasStorage())
-            {
-                continue;
-            }
-
-            if (!WorldPlayerContext.IsWithinRange(vehicle.position, configRange))
-            {
-                continue;
-            }
-
-            if (vehicle.IsLockedForLocalPlayer(WorldPlayerContext.Player))
-            {
-                continue;
-            }
-
-            Vehicles.Add(vehicle);
-        }
-    }
-
     private int PullSourceItemStacks(ItemValue filterItem)
     {
         var filterTypes = filterItem != null
@@ -811,17 +598,6 @@ public sealed class StorageAccessContext
         }
     }
 
-    private void DiscoverTileEntitySources()
-    {
-        if (WorldPlayerContext == null)
-        {
-            ModLogger.Error($"{nameof(DiscoverTileEntitySources)}: WorldPlayerContext is null, aborting.");
-            return;
-        }
-
-        AddPullableTileEntities();
-    }
-
     public static void InvalidateCache()
     {
         s_contextCache.InvalidateCache();
@@ -854,7 +630,7 @@ public sealed class StorageAccessContext
 
     public string GetSourceSummary()
     {
-        return $"Lootables: {Lootables.Count}, DewCollectors: {DewCollectors.Count}, Workstations: {Workstations.Count}, Vehicles: {Vehicles.Count}, Age: {AgeInSeconds:F1}s";
+        return $"{Sources.GetSourceSummary()}, Age: {AgeInSeconds:F1}s";
     }
 
     /// <summary>
@@ -868,7 +644,7 @@ public sealed class StorageAccessContext
         var filterStats = GetFilteringStats();
 
         // Use direct access since GetFilteringStats() -> GetTotalItemCount/GetTotalStackCount() already called PullSourceItemStacks()
-        return $"ItemStacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count}, Total:{DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks, {0} items | {cacheInfo} | {filterStats}";
+        return $"{Sources.GetItemStackSummary()}, {0} items | {cacheInfo} | {filterStats}";
     }
 
     public static string GetComprehensiveCacheStats()
