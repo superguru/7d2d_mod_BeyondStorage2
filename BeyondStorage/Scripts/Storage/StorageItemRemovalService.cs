@@ -39,25 +39,29 @@ namespace BeyondStorage.Scripts.Storage
 
             if (stillNeeded > 0 && config.PullFromDewCollectors)
             {
-                RemoveFromStorageType(d_MethodName, "DewCollectors", itemName, sources.DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                RemoveFromStorageType(d_MethodName, "DewCollectors", itemName, sources.DewCollectors, itemValue,
+                    ref stillNeeded, ignoreModdedItems, removedItems,
                     dewCollector => dewCollector.items, dewCollector => DewCollectorStateManager.MarkDewCollectorModified(dewCollector));
             }
 
             if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
             {
-                RemoveFromStorageType(d_MethodName, "WorkstationOutputs", itemName, sources.Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                RemoveFromStorageType(d_MethodName, "WorkstationOutputs", itemName, sources.Workstations, itemValue,
+                    ref stillNeeded, ignoreModdedItems, removedItems,
                     workstation => workstation.output, workstation => WorkstationStateManager.MarkWorkstationModified(workstation));
             }
 
             if (stillNeeded > 0)
             {
-                RemoveFromStorageType(d_MethodName, "Containers", itemName, sources.Lootables, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                RemoveFromStorageType(d_MethodName, "Containers", itemName, sources.Lootables, itemValue,
+                    ref stillNeeded, ignoreModdedItems, removedItems,
                     lootable => lootable.items, lootable => lootable.SetModified());
             }
 
             if (stillNeeded > 0 && config.PullFromVehicleStorage)
             {
-                RemoveFromStorageType(d_MethodName, "Vehicles", itemName, sources.Vehicles, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
+                RemoveFromStorageType(d_MethodName, "Vehicles", itemName, sources.Vehicles, itemValue,
+                    ref stillNeeded, ignoreModdedItems, removedItems,
                     vehicle => vehicle.bag.items, vehicle => vehicle.SetBagModified());
             }
 
