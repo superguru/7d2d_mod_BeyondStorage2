@@ -2,7 +2,7 @@
 
 namespace BeyondStorage.Scripts.Data;
 
-internal interface IStorageSource : IEquatable<IStorageSource>
+public interface IStorageSource : IEquatable<IStorageSource>
 {
     void MarkModified();
 

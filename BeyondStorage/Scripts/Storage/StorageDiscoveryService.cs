@@ -114,20 +114,20 @@ namespace BeyondStorage.Scripts.Storage
                     // Process each type separately with clear logic
                     if (config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
                     {
-                        ProcessDewCollector(dewCollector, sources);
+                        ProcessDewCollector(sources, dewCollector);
                         continue;
                     }
 
                     if (config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
                     {
-                        ProcessWorkstation(workstation, sources);
+                        ProcessWorkstation(sources, workstation);
                         continue;
                     }
 
                     // Process lootables (containers) - always enabled since they're primary storage
                     if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
                     {
-                        ProcessLootable(lootable, tileEntity, config, sources);
+                        ProcessLootable(sources, lootable, tileEntity, config);
                         continue;
                     }
                 }
@@ -136,7 +136,7 @@ namespace BeyondStorage.Scripts.Storage
             ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
         }
 
-        private static void ProcessDewCollector(TileEntityDewCollector dewCollector, StorageSourceManager sources)
+        private static void ProcessDewCollector(StorageSourceManager sources, TileEntityDewCollector dewCollector)
         {
             if (dewCollector.bUserAccessing)
             {
@@ -151,7 +151,7 @@ namespace BeyondStorage.Scripts.Storage
             sources.DewCollectors.Add(dewCollector);
         }
 
-        private static void ProcessWorkstation(TileEntityWorkstation workstation, StorageSourceManager sources)
+        private static void ProcessWorkstation(StorageSourceManager sources, TileEntityWorkstation workstation)
         {
             if (!workstation.IsPlayerPlaced)
             {
@@ -166,7 +166,7 @@ namespace BeyondStorage.Scripts.Storage
             sources.Workstations.Add(workstation);
         }
 
-        private static void ProcessLootable(ITileEntityLootable lootable, TileEntity tileEntity, ConfigSnapshot config, StorageSourceManager sources)
+        private static void ProcessLootable(StorageSourceManager sources, ITileEntityLootable lootable, TileEntity tileEntity, ConfigSnapshot config)
         {
             if (!lootable.bPlayerStorage)
             {

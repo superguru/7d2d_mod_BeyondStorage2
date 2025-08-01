@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BeyondStorage.Scripts.Infrastructure;
+namespace BeyondStorage.Scripts.Data;
 
 public static class CollectionFactory
 {
@@ -10,27 +10,27 @@ public static class CollectionFactory
     private const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
     private const int DEFAULT_WORKSTATION_LIST_CAPACITY = 16;
 
-    public static List<TileEntityDewCollector> GetEmptyDewCollectorList()
+    public static List<TileEntityDewCollector> CreateDewCollectorList()
     {
         return new List<TileEntityDewCollector>(DEFAULT_DEW_COLLECTOR_LIST_CAPACITY);
     }
 
-    public static List<ItemStack> GetEmptyItemStackList()
+    public static List<ItemStack> CreateItemStackList()
     {
         return new List<ItemStack>(DEFAULT_ITEMSTACK_LIST_CAPACITY);
     }
 
-    public static List<ITileEntityLootable> GetEmptyLootableList()
+    public static List<ITileEntityLootable> CreateLootableList()
     {
         return new List<ITileEntityLootable>(DEFAULT_LOOTBLE_LIST_CAPACITY);
     }
 
-    public static List<EntityVehicle> GetEmptyVehicleList()
+    public static List<EntityVehicle> CreateVehicleList()
     {
         return new List<EntityVehicle>(DEFAULT_VEHICLE_LIST_CAPACITY);
     }
 
-    public static List<TileEntityWorkstation> GetEmptyWorkstationList()
+    public static List<TileEntityWorkstation> CreateWorkstationList()
     {
         return new List<TileEntityWorkstation>(DEFAULT_WORKSTATION_LIST_CAPACITY);
     }

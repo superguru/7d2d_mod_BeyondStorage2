@@ -120,7 +120,7 @@
     <Compile Include="Scripts\Infrastructure\ModPathManager.cs" />
     <Compile Include="Scripts\Harmony\ILCodeMatcher.cs" />
     <Compile Include="Scripts\Caching\ItemPropertiesCache.cs" />
-    <Compile Include="Scripts\Infrastructure\CollectionFactory.cs" />
+    <Compile Include="Scripts\Data\CollectionFactory.cs" />
     <Compile Include="Scripts\Infrastructure\PerformanceProfiler.cs" />
     <Compile Include="Scripts\Harmony\ILPatchEngine.cs" />
     <Compile Include="Scripts\Data\ItemStackAnalyzer.cs" />

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Data;
 
 namespace BeyondStorage.Scripts.Storage
 {
@@ -29,18 +29,18 @@ namespace BeyondStorage.Scripts.Storage
 
         private void InitializeSourceCollections()
         {
-            DewCollectors = CollectionFactory.GetEmptyDewCollectorList();
-            Workstations = CollectionFactory.GetEmptyWorkstationList();
-            Lootables = CollectionFactory.GetEmptyLootableList();
-            Vehicles = CollectionFactory.GetEmptyVehicleList();
+            DewCollectors = CollectionFactory.CreateDewCollectorList();
+            Workstations = CollectionFactory.CreateWorkstationList();
+            Lootables = CollectionFactory.CreateLootableList();
+            Vehicles = CollectionFactory.CreateVehicleList();
         }
 
         private void InitializeItemStackLists()
         {
-            DewCollectorItems = CollectionFactory.GetEmptyItemStackList();
-            WorkstationItems = CollectionFactory.GetEmptyItemStackList();
-            LootableItems = CollectionFactory.GetEmptyItemStackList();
-            VehicleItems = CollectionFactory.GetEmptyItemStackList();
+            DewCollectorItems = CollectionFactory.CreateItemStackList();
+            WorkstationItems = CollectionFactory.CreateItemStackList();
+            LootableItems = CollectionFactory.CreateItemStackList();
+            VehicleItems = CollectionFactory.CreateItemStackList();
         }
 
         public void ClearItemStacks()

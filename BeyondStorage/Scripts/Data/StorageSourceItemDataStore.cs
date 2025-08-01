@@ -1,6 +1,7 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
@@ -37,7 +38,7 @@ internal class StorageSourceItemDataStore
 
         if (!_itemStacksByStorageSource.TryGetValue(storageSource, out var itemStackList))
         {
-            itemStackList = CollectionFactory.GetEmptyItemStackList();
+            itemStackList = CollectionFactory.CreateItemStackList();
             _itemStacksByStorageSource[storageSource] = itemStackList;
         }
 
@@ -45,7 +46,7 @@ internal class StorageSourceItemDataStore
         _storageSourcesByItemStack[itemStack] = storageSource;
     }
 
-    public void RemoveRelationship(IStorageSource storageSource, ItemStack itemStack)
+    public void RemoveRelationship(IStorageSource? storageSource, ItemStack? itemStack)
     {
         if (storageSource == null || itemStack == null)
         {
@@ -71,7 +72,7 @@ internal class StorageSourceItemDataStore
         }
     }
 
-    public void RemoveAllRelationshipsForStorageSource(IStorageSource storageSource)
+    public void RemoveAllRelationshipsForStorageSource(IStorageSource? storageSource)
     {
         if (storageSource == null)
         {
@@ -89,6 +90,15 @@ internal class StorageSourceItemDataStore
             // Remove the storage source entry
             _itemStacksByStorageSource.Remove(storageSource);
         }
+    }
+
+    /// <summary>
+    /// Clears all relationships from the data store, removing all storage sources and item stacks.
+    /// </summary>
+    public void Clear()
+    {
+        _itemStacksByStorageSource.Clear();
+        _storageSourcesByItemStack.Clear();
     }
 
     public List<ItemStack> GetItemsStacksForStorageSource(IStorageSource storageSource)

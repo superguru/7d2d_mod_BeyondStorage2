@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -38,7 +39,7 @@ public static class ItemCommon
     {
         const string d_MethodName = nameof(ItemCommon_GetAllAvailableItemStacksFromXui);
 
-        var result = CollectionFactory.GetEmptyItemStackList();
+        var result = CollectionFactory.CreateItemStackList();
         if (xui != null)
         {
             ModLogger.DebugLog($"{d_MethodName} adding all player items");
