@@ -15,17 +15,10 @@ public sealed class StorageAccessContext
 
     private static readonly ExpiringCache<StorageAccessContext> s_contextCache = new(DEFAULT_CACHE_DURATION, nameof(StorageAccessContext));
 
-    private static long s_globalInvalidationCounter = 0;
-
     private ConfigSnapshot Config { get; }
     private WorldPlayerContext WorldPlayerContext { get; }
     private StorageSourceCollection Sources { get; }
-
-    private UniqueItemTypes _lastFilterTypes = UniqueItemTypes.Unfiltered;
-    private bool _itemStacksCached = false;
-    private DateTime _itemStacksCacheTime = DateTime.MinValue;
-    private long _itemStacksInvalidationCounter = 0;
-    private const double ITEMSTACK_CACHE_DURATION = 0.8;
+    private ItemStackCacheManager CacheManager { get; }
 
     private DateTime CreatedAt { get; }
 
@@ -39,6 +32,10 @@ public sealed class StorageAccessContext
     private List<ItemStack> WorkstationItems => Sources.WorkstationItems;
     private List<ItemStack> ContainerItems => Sources.ContainerItems;
     private List<ItemStack> VehicleItems => Sources.VehicleItems;
+
+    // Legacy properties for backward compatibility - delegate to CacheManager
+    public bool IsFiltered => CacheManager.IsFiltered;
+    public UniqueItemTypes CurrentFilterTypes => CacheManager.CurrentFilterTypes;
 
     public static StorageAccessContext Create(string methodName = "Unknown", bool forceRefresh = false)
     {
@@ -71,6 +68,7 @@ public sealed class StorageAccessContext
     {
         Config = ConfigSnapshot.Current;
         Sources = new StorageSourceCollection();
+        CacheManager = new ItemStackCacheManager();
 
         WorldPlayerContext = WorldPlayerContext.TryCreate(nameof(StorageAccessContext));
         if (WorldPlayerContext == null)
@@ -86,95 +84,35 @@ public sealed class StorageAccessContext
         ModLogger.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
     }
 
-    public bool IsFiltered => _lastFilterTypes.IsFiltered;
-
-    public UniqueItemTypes CurrentFilterTypes => _lastFilterTypes;
-
-    private bool HasGlobalInvalidationOccurred()
-    {
-        return s_globalInvalidationCounter != _itemStacksInvalidationCounter;
-    }
-
     public bool IsCachedForFilter(UniqueItemTypes filterTypes)
     {
-        if (!_itemStacksCached)
-        {
-            return false;
-        }
-
-        if (HasGlobalInvalidationOccurred())
-        {
-            InvalidateItemStacksCache();
-            return false;
-        }
-
-        var cacheAge = (DateTime.Now - _itemStacksCacheTime).TotalSeconds;
-        if (cacheAge > ITEMSTACK_CACHE_DURATION)
-        {
-            _itemStacksCached = false;
-            return false;
-        }
-
-        if (ReferenceEquals(_lastFilterTypes, filterTypes))
-        {
-            return true;
-        }
-
-        return UniqueItemTypes.IsEquivalent(_lastFilterTypes, filterTypes);
+        return CacheManager.IsCachedForFilter(filterTypes);
     }
 
     public bool IsCachedForFilter(ItemValue filterItem)
     {
-        var filterTypes = filterItem != null
-            ? UniqueItemTypes.FromItemType(filterItem.type)
-            : UniqueItemTypes.Unfiltered;
-
-        return IsCachedForFilter(filterTypes);
+        return CacheManager.IsCachedForFilter(filterItem);
     }
 
     private void MarkItemStacksCached(UniqueItemTypes filterTypes)
     {
-        _lastFilterTypes = filterTypes ?? UniqueItemTypes.Unfiltered;
-        _itemStacksCached = true;
-        _itemStacksCacheTime = DateTime.Now;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
+        CacheManager.MarkCached(filterTypes);
     }
 
     private void ClearItemStacks()
     {
         Sources.ClearItemStacks();
-
-        _itemStacksCached = false;
-        _lastFilterTypes = UniqueItemTypes.Unfiltered;
-        _itemStacksCacheTime = DateTime.MinValue;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
+        CacheManager.ClearCache();
     }
 
     private void InvalidateItemStacksCache()
     {
-        _itemStacksCached = false;
-        _lastFilterTypes = UniqueItemTypes.Unfiltered;
-        _itemStacksCacheTime = DateTime.MinValue;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
+        CacheManager.InvalidateCache();
     }
 
     public string GetItemStackCacheInfo()
     {
-        if (!_itemStacksCached)
-        {
-            return "ItemStacks: Not cached";
-        }
-
-        var cacheAge = (DateTime.Now - _itemStacksCacheTime).TotalSeconds;
-        var isValid = cacheAge <= ITEMSTACK_CACHE_DURATION && !HasGlobalInvalidationOccurred();
-
-        var filterInfo = _lastFilterTypes.IsFiltered
-            ? $"filtered for {_lastFilterTypes.Count} types"
-            : "unfiltered (all items)";
-
-        var globalInvalidationInfo = HasGlobalInvalidationOccurred() ? ", globally invalidated" : "";
-
-        return $"ItemStacks: Cached {cacheAge:F2}s ago, {filterInfo}, valid:{isValid}{globalInvalidationInfo}";
+        return CacheManager.GetCacheInfo();
     }
 
     /// <summary>
@@ -184,7 +122,7 @@ public sealed class StorageAccessContext
     /// <returns>Total count of all items</returns>
     public int GetTotalItemCount()
     {
-        // Ensure ItemStacks are pulled with unfiltered access
+        // Ensure ItemStacks are pulled with current filter
         PullSourceItemStacks(CurrentFilterTypes);
 
         int total = 0;
@@ -218,7 +156,7 @@ public sealed class StorageAccessContext
     /// <returns>Total number of ItemStack instances</returns>
     public int GetTotalStackCount()
     {
-        // Ensure ItemStacks are pulled with unfiltered access
+        // Ensure ItemStacks are pulled with current filter
         PullSourceItemStacks(CurrentFilterTypes);
 
         return DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count;
@@ -253,9 +191,9 @@ public sealed class StorageAccessContext
     /// <returns>String containing filtering statistics</returns>
     public string GetFilteringStats()
     {
-        var cacheInfo = _itemStacksCached ? "cached" : "not cached";
-        var filterStatus = _lastFilterTypes.IsFiltered
-            ? $"filtered ({_lastFilterTypes.Count} types)"
+        var cacheInfo = CacheManager.IsCachedForFilter(CurrentFilterTypes) ? "cached" : "not cached";
+        var filterStatus = CurrentFilterTypes.IsFiltered
+            ? $"filtered ({CurrentFilterTypes.Count} types)"
             : "unfiltered";
 
         // These methods now ensure ItemStacks are pulled
@@ -485,7 +423,7 @@ public sealed class StorageAccessContext
         var totalItemCountAdded = 0;
         filterTypes ??= UniqueItemTypes.Unfiltered;
 
-        if (IsCachedForFilter(filterTypes))
+        if (CacheManager.IsCachedForFilter(filterTypes))
         {
             totalItemCountAdded = 0;
             foreach (var stack in DewCollectorItems)
@@ -601,10 +539,9 @@ public sealed class StorageAccessContext
     public static void InvalidateCache()
     {
         s_contextCache.InvalidateCache();
+        ItemStackCacheManager.InvalidateGlobalCache();
 
-        s_globalInvalidationCounter++;
-
-        ModLogger.DebugLog($"StorageAccessContext cache invalidated (global invalidation counter: {s_globalInvalidationCounter})");
+        ModLogger.DebugLog($"StorageAccessContext cache invalidated");
     }
 
     public static double GetCacheAge()
@@ -652,7 +589,8 @@ public sealed class StorageAccessContext
         var contextStats = s_contextCache.GetCacheStats();
         var worldPlayerStats = WorldPlayerContext.GetCacheStats();
         var itemPropsStats = ItemPropertiesCache.GetCacheStats();
-        return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {s_globalInvalidationCounter}";
+        var globalInvalidations = ItemStackCacheManager.GetGlobalInvalidationCounter();
+        return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {globalInvalidations}";
     }
 
     internal static bool IsValidContext(StorageAccessContext context)
