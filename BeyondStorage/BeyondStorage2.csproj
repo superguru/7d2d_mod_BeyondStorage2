@@ -86,6 +86,7 @@
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
     <Compile Include="Scripts\Storage\ItemStackCacheManager.cs" />
+    <Compile Include="Scripts\Storage\ItemStackExtractionService.cs" />
     <Compile Include="Scripts\Storage\StorageAccessContext.cs" />
     <Compile Include="Scripts\Game\Block\BlockRepair.cs" />
     <Compile Include="Scripts\Game\Block\BlockUpgrade.cs" />
