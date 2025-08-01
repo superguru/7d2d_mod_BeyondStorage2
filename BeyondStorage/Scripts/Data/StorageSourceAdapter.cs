@@ -1,4 +1,5 @@
 ﻿using System;
+using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
@@ -8,13 +9,15 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     private readonly StorageSourceItemDataStore _dataStore;
     private readonly Action<T> _markModifiedAction;
     private readonly Func<T, ItemStack[]> _getItemsFunc;
+    private readonly Func<T, T, bool> _equalsFunc;
 
-    public StorageSourceAdapter(T storageSource, StorageSourceItemDataStore dataStore, Action<T> markModifiedAction, Func<T, ItemStack[]> getItemsFunc)
+    public StorageSourceAdapter(T storageSource, StorageSourceItemDataStore dataStore, Action<T> markModifiedAction, Func<T, ItemStack[]> getItemsFunc, Func<T, T, bool> equalsFunc)
     {
         _storageSource = storageSource ?? throw new ArgumentNullException(nameof(storageSource));
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _markModifiedAction = markModifiedAction ?? throw new ArgumentNullException(nameof(markModifiedAction));
         _getItemsFunc = getItemsFunc ?? throw new ArgumentNullException(nameof(getItemsFunc));
+        _equalsFunc = equalsFunc ?? throw new ArgumentNullException(nameof(equalsFunc));
     }
 
     public T StorageSource => _storageSource;
@@ -33,11 +36,10 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             return true;
         }
 
-        // If the other is also a StorageSourceAdapter<T>, compare the wrapped storage sources
+        // If the other is also a StorageSourceAdapter<T>, use the custom equals function
         if (other is StorageSourceAdapter<T> otherAdapter)
         {
-            return ReferenceEquals(_storageSource, otherAdapter._storageSource) ||
-                   (_storageSource?.Equals(otherAdapter._storageSource) ?? false);
+            return _equalsFunc(_storageSource, otherAdapter._storageSource);
         }
 
         return false;
@@ -61,10 +63,8 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         }
         catch (Exception ex)
         {
-            // Log the exception and return empty array to maintain stability
-            // Replace with your logging mechanism
-            Console.WriteLine($"Error getting items from storage source: {ex.Message}");
-            return Array.Empty<ItemStack>();
+            ModLogger.Error($"Error getting items from storage source of type {typeof(T).Name}: {ex.Message}");
+            return [];
         }
     }
 
