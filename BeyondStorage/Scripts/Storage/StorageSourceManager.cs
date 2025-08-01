@@ -9,7 +9,7 @@ namespace BeyondStorage.Scripts.Storage
     /// while the item collections (DewCollectorItems, LootableItems, etc.) contain cached ItemStacks
     /// extracted from those sources for performance optimization.
     /// </summary>
-    public class StorageSourceCollection
+    public class StorageSourceManager
     {
         internal List<TileEntityDewCollector> DewCollectors { get; set; }
         internal List<ITileEntityLootable> Lootables { get; set; }
@@ -21,7 +21,7 @@ namespace BeyondStorage.Scripts.Storage
         internal List<ItemStack> LootableItems { get; set; }
         internal List<ItemStack> VehicleItems { get; set; }
 
-        public StorageSourceCollection()
+        public StorageSourceManager()
         {
             InitializeSourceCollections();
             InitializeItemStackLists();

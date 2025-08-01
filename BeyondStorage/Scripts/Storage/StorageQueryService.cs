@@ -20,7 +20,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <param name="itemValue">The item to count</param>
         /// <returns>Total count of the specified item</returns>
-        public static int GetItemCount(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
+        public static int GetItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
         {
             const string d_MethodName = nameof(GetItemCount);
 
@@ -56,7 +56,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <param name="filterTypes">The filter types to count</param>
         /// <returns>Total count of items matching the filter</returns>
-        public static int GetItemCount(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        public static int GetItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
         {
             const string d_MethodName = nameof(GetItemCount);
 
@@ -88,7 +88,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <param name="itemValue">The item to check for</param>
         /// <returns>True if the item is available in storage</returns>
-        public static bool HasItem(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
+        public static bool HasItem(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
         {
             const string d_MethodName = nameof(HasItem);
 
@@ -125,7 +125,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <param name="filterTypes">The filter types to check for</param>
         /// <returns>True if items matching the filter are available</returns>
-        public static bool HasItem(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        public static bool HasItem(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
         {
             const string d_MethodName = nameof(HasItem);
 
@@ -158,7 +158,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <param name="filterTypes">Optional filter to limit results to specific item types</param>
         /// <returns>List of all available item stacks from storage sources</returns>
-        public static List<ItemStack> GetAllAvailableItemStacks(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        public static List<ItemStack> GetAllAvailableItemStacks(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
         {
             const string d_MethodName = nameof(GetAllAvailableItemStacks);
 
@@ -186,7 +186,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="config">Configuration for which storage types to include</param>
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <returns>Total count of all items</returns>
-        public static int GetTotalItemCount(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
+        public static int GetTotalItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
         {
             const string d_MethodName = nameof(GetTotalItemCount);
 
@@ -214,7 +214,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="config">Configuration for which storage types to include</param>
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <returns>Total number of ItemStack instances</returns>
-        public static int GetTotalStackCount(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
+        public static int GetTotalStackCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
         {
             const string d_MethodName = nameof(GetTotalStackCount);
 
@@ -243,7 +243,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="cacheManager">Cache manager to validate</param>
         /// <param name="methodName">Calling method name for logging</param>
         /// <returns>True if all parameters are valid</returns>
-        private static bool ValidateParameters(StorageSourceCollection sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, string methodName)
+        private static bool ValidateParameters(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, string methodName)
         {
             if (sources == null)
             {

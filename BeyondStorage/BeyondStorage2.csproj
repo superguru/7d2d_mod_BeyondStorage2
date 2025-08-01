@@ -107,7 +107,7 @@
     <Compile Include="Scripts\Storage\StorageDiscoveryService.cs" />
     <Compile Include="Scripts\Storage\StorageItemRemovalService.cs" />
     <Compile Include="Scripts\Storage\StorageQueryService.cs" />
-    <Compile Include="Scripts\Storage\StorageSourceCollection.cs" />
+    <Compile Include="Scripts\Storage\StorageSourceManager.cs" />
     <Compile Include="Scripts\TileEntities\DewCollectorStateManager.cs" />
     <Compile Include="Scripts\TileEntities\WorkstationStateManager.cs" />
     <Compile Include="Scripts\Game\Vehicle\VehicleRefuel.cs" />

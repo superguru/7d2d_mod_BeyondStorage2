@@ -19,7 +19,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="filterItem">The specific item to filter for</param>
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <returns>Total count of items extracted</returns>
-        public static int ExtractItemStacks(StorageSourceCollection sources, ConfigSnapshot config, ItemValue filterItem, ItemStackCacheManager cacheManager)
+        public static int ExtractItemStacks(StorageSourceManager sources, ConfigSnapshot config, ItemValue filterItem, ItemStackCacheManager cacheManager)
         {
             var filterTypes = filterItem != null
                 ? UniqueItemTypes.FromItemType(filterItem.type)
@@ -36,7 +36,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="filterTypes">Filter types to apply during extraction</param>
         /// <param name="cacheManager">Cache manager for tracking cache state</param>
         /// <returns>Total count of items extracted</returns>
-        public static int ExtractItemStacks(StorageSourceCollection sources, ConfigSnapshot config, UniqueItemTypes filterTypes, ItemStackCacheManager cacheManager)
+        public static int ExtractItemStacks(StorageSourceManager sources, ConfigSnapshot config, UniqueItemTypes filterTypes, ItemStackCacheManager cacheManager)
         {
             const string d_MethodName = nameof(ExtractItemStacks);
 
@@ -176,7 +176,7 @@ namespace BeyondStorage.Scripts.Storage
         /// </summary>
         /// <param name="sources">The storage sources to get ItemStacks from</param>
         /// <returns>Combined list of all ItemStacks</returns>
-        public static List<ItemStack> GetAllItemStacks(StorageSourceCollection sources)
+        public static List<ItemStack> GetAllItemStacks(StorageSourceManager sources)
         {
             var totalStacks = GetTotalStackCount(sources);
             var result = new List<ItemStack>(totalStacks);
@@ -194,7 +194,7 @@ namespace BeyondStorage.Scripts.Storage
         /// </summary>
         /// <param name="sources">The storage sources to count items from</param>
         /// <returns>Total count of all items</returns>
-        public static int CountCachedItems(StorageSourceCollection sources)
+        public static int CountCachedItems(StorageSourceManager sources)
         {
             int total = 0;
 
@@ -226,7 +226,7 @@ namespace BeyondStorage.Scripts.Storage
         /// </summary>
         /// <param name="sources">The storage sources to count stacks from</param>
         /// <returns>Total number of ItemStack instances</returns>
-        public static int GetTotalStackCount(StorageSourceCollection sources)
+        public static int GetTotalStackCount(StorageSourceManager sources)
         {
             return sources.DewCollectorItems.Count + sources.WorkstationItems.Count +
                    sources.LootableItems.Count + sources.VehicleItems.Count;
@@ -238,7 +238,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="sources">The storage sources to analyze</param>
         /// <param name="cacheManager">The cache manager to get cache info from</param>
         /// <returns>String containing detailed extraction statistics</returns>
-        public static string GetExtractionStats(StorageSourceCollection sources, ItemStackCacheManager cacheManager)
+        public static string GetExtractionStats(StorageSourceManager sources, ItemStackCacheManager cacheManager)
         {
             var itemCount = CountCachedItems(sources);
             var stackCount = GetTotalStackCount(sources);

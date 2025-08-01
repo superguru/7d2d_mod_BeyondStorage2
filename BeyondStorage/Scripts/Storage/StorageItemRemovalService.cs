@@ -23,7 +23,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
         /// <param name="removedItems">Optional list to track removed items</param>
         /// <returns>The actual amount removed</returns>
-        public static int RemoveItems(StorageSourceCollection sources, ConfigSnapshot config, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+        public static int RemoveItems(StorageSourceManager sources, ConfigSnapshot config, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
         {
             const string d_MethodName = nameof(RemoveItems);
 

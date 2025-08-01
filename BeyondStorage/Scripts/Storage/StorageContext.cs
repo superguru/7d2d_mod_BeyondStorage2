@@ -15,7 +15,7 @@ public sealed class StorageContext
 {
     internal ConfigSnapshot Config { get; }
     internal WorldPlayerContext WorldPlayerContext { get; }
-    internal StorageSourceCollection Sources { get; }
+    internal StorageSourceManager Sources { get; }
     internal ItemStackCacheManager CacheManager { get; }
 
     private DateTime CreatedAt { get; }
@@ -23,7 +23,7 @@ public sealed class StorageContext
     /// <summary>
     /// Internal constructor used by StorageContextFactory.
     /// </summary>
-    internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageSourceCollection sources, ItemStackCacheManager cacheManager)
+    internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageSourceManager sources, ItemStackCacheManager cacheManager)
     {
         Config = config ?? throw new ArgumentNullException(nameof(config));
         WorldPlayerContext = worldPlayerContext ?? throw new ArgumentNullException(nameof(worldPlayerContext));

@@ -16,7 +16,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="sources">The collection to populate with discovered sources</param>
         /// <param name="worldPlayerContext">Context containing world and player information</param>
         /// <param name="config">Configuration snapshot with discovery settings</param>
-        public static void DiscoverStorageSources(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
+        public static void DiscoverStorageSources(StorageSourceManager sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
             const string d_MethodName = nameof(DiscoverStorageSources);
 
@@ -29,11 +29,11 @@ namespace BeyondStorage.Scripts.Storage
             DiscoverVehicleStorages(sources, worldPlayerContext, config);
         }
 
-        private static bool ValidateParameters(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config, string methodName)
+        private static bool ValidateParameters(StorageSourceManager sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config, string methodName)
         {
             if (sources == null)
             {
-                ModLogger.Error($"{methodName}: StorageSourceCollection is null, aborting.");
+                ModLogger.Error($"{methodName}: StorageSourceManager is null, aborting.");
                 return false;
             }
 
@@ -52,7 +52,7 @@ namespace BeyondStorage.Scripts.Storage
             return true;
         }
 
-        private static void DiscoverTileEntitySources(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
+        private static void DiscoverTileEntitySources(StorageSourceManager sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
             const string d_MethodName = nameof(DiscoverTileEntitySources);
 
@@ -136,7 +136,7 @@ namespace BeyondStorage.Scripts.Storage
             ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
         }
 
-        private static void ProcessDewCollector(TileEntityDewCollector dewCollector, StorageSourceCollection sources)
+        private static void ProcessDewCollector(TileEntityDewCollector dewCollector, StorageSourceManager sources)
         {
             if (dewCollector.bUserAccessing)
             {
@@ -151,7 +151,7 @@ namespace BeyondStorage.Scripts.Storage
             sources.DewCollectors.Add(dewCollector);
         }
 
-        private static void ProcessWorkstation(TileEntityWorkstation workstation, StorageSourceCollection sources)
+        private static void ProcessWorkstation(TileEntityWorkstation workstation, StorageSourceManager sources)
         {
             if (!workstation.IsPlayerPlaced)
             {
@@ -166,7 +166,7 @@ namespace BeyondStorage.Scripts.Storage
             sources.Workstations.Add(workstation);
         }
 
-        private static void ProcessLootable(ITileEntityLootable lootable, TileEntity tileEntity, ConfigSnapshot config, StorageSourceCollection sources)
+        private static void ProcessLootable(ITileEntityLootable lootable, TileEntity tileEntity, ConfigSnapshot config, StorageSourceManager sources)
         {
             if (!lootable.bPlayerStorage)
             {
@@ -208,7 +208,7 @@ namespace BeyondStorage.Scripts.Storage
             return false;
         }
 
-        private static void DiscoverVehicleStorages(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
+        private static void DiscoverVehicleStorages(StorageSourceManager sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
             const string d_MethodName = nameof(DiscoverVehicleStorages);
 

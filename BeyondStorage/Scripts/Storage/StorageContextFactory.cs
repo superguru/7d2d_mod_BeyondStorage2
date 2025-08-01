@@ -48,7 +48,7 @@ namespace BeyondStorage.Scripts.Storage
                     return null;
                 }
 
-                var sources = new StorageSourceCollection();
+                var sources = new StorageSourceManager();
                 var cacheManager = new ItemStackCacheManager();
 
                 // Discover storage sources
