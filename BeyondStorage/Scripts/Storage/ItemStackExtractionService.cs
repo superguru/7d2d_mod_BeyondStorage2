@@ -29,7 +29,7 @@ namespace BeyondStorage.Scripts.Storage
             if (cacheManager.IsCachedForFilter(filterTypes))
             {
                 totalItemCountAdded = CountCachedItems(sources);
-                ModLogger.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.ContainerItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
+                ModLogger.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.LootableItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
 
                 cacheManager.MarkCached(filterTypes);
                 return totalItemCountAdded;
@@ -52,7 +52,7 @@ namespace BeyondStorage.Scripts.Storage
                 totalItemCountAdded += workstationItemsAddedCount;
             }
 
-            AddValidItemStacksFromSources(d_MethodName, sources.ContainerItems, sources.Lootables, l => l.items,
+            AddValidItemStacksFromSources(d_MethodName, sources.LootableItems, sources.Lootables, l => l.items,
                 "Container Storage", out int containerItemsAddedCount, filterTypes);
             totalItemCountAdded += containerItemsAddedCount;
 
@@ -65,7 +65,7 @@ namespace BeyondStorage.Scripts.Storage
 
             cacheManager.MarkCached(filterTypes);
 
-            ModLogger.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.ContainerItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
+            ModLogger.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.LootableItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
             return totalItemCountAdded;
         }
 
@@ -183,7 +183,7 @@ namespace BeyondStorage.Scripts.Storage
 
             result.AddRange(sources.DewCollectorItems);
             result.AddRange(sources.WorkstationItems);
-            result.AddRange(sources.ContainerItems);
+            result.AddRange(sources.LootableItems);
             result.AddRange(sources.VehicleItems);
 
             return result;
@@ -208,7 +208,7 @@ namespace BeyondStorage.Scripts.Storage
                 total += stack?.count ?? 0;
             }
 
-            foreach (var stack in sources.ContainerItems)
+            foreach (var stack in sources.LootableItems)
             {
                 total += stack?.count ?? 0;
             }
@@ -229,7 +229,7 @@ namespace BeyondStorage.Scripts.Storage
         public static int GetTotalStackCount(StorageSourceCollection sources)
         {
             return sources.DewCollectorItems.Count + sources.WorkstationItems.Count +
-                   sources.ContainerItems.Count + sources.VehicleItems.Count;
+                   sources.LootableItems.Count + sources.VehicleItems.Count;
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace BeyondStorage.Scripts.Storage
                 ? $"filtered ({cacheManager.CurrentFilterTypes.Count} types)"
                 : "unfiltered";
 
-            return $"Extraction stats: {cacheInfo}, {filterStatus}, {itemCount} items in {stackCount} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.ContainerItems.Count}, VH:{sources.VehicleItems.Count}";
+            return $"Extraction stats: {cacheInfo}, {filterStatus}, {itemCount} items in {stackCount} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.LootableItems.Count}, VH:{sources.VehicleItems.Count}";
         }
     }
 }

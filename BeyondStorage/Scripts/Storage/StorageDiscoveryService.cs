@@ -19,9 +19,10 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="config">Configuration snapshot with discovery settings</param>
         public static void DiscoverStorageSources(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
-            if (worldPlayerContext == null)
+            const string d_MethodName = nameof(DiscoverStorageSources);
+
+            if (!ValidateParameters(sources, worldPlayerContext, config, d_MethodName))
             {
-                ModLogger.Error($"{nameof(DiscoverStorageSources)}: WorldPlayerContext is null, aborting.");
                 return;
             }
 
@@ -29,13 +30,32 @@ namespace BeyondStorage.Scripts.Storage
             DiscoverVehicleStorages(sources, worldPlayerContext, config);
         }
 
+        private static bool ValidateParameters(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config, string methodName)
+        {
+            if (sources == null)
+            {
+                ModLogger.Error($"{methodName}: StorageSourceCollection is null, aborting.");
+                return false;
+            }
+
+            if (worldPlayerContext == null)
+            {
+                ModLogger.Error($"{methodName}: WorldPlayerContext is null, aborting.");
+                return false;
+            }
+
+            if (config == null)
+            {
+                ModLogger.Error($"{methodName}: ConfigSnapshot is null, aborting.");
+                return false;
+            }
+
+            return true;
+        }
+
         private static void DiscoverTileEntitySources(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
             const string d_MethodName = nameof(DiscoverTileEntitySources);
-
-            var dewCollectors = sources.DewCollectors;
-            var workstations = sources.Workstations;
-            var lootables = sources.Lootables;
 
             int chunksProcessed = 0;
             int nullChunks = 0;
@@ -66,18 +86,15 @@ namespace BeyondStorage.Scripts.Storage
                         continue;
                     }
 
-                    bool isLootable = tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable);
-                    bool hasStorageFeature = config.OnlyStorageCrates ? tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _) : true;
+                    var tileEntityWorldPos = tileEntity.ToWorldPos();
 
-                    if (!(tileEntity is TileEntityDewCollector ||
-                          tileEntity is TileEntityWorkstation ||
-                          isLootable))
+                    // Early range check to avoid unnecessary processing
+                    if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
                     {
                         continue;
                     }
 
-                    var tileEntityWorldPos = tileEntity.ToWorldPos();
-
+                    // Check locks early
                     if (TileEntityLockManager.LockedTileEntities.Count > 0)
                     {
                         if (TileEntityLockManager.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
@@ -86,11 +103,7 @@ namespace BeyondStorage.Scripts.Storage
                         }
                     }
 
-                    if (!worldPlayerContext.IsWithinRange(tileEntityWorldPos, config.Range))
-                    {
-                        continue;
-                    }
-
+                    // Check accessibility
                     if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
                     {
                         if (!worldPlayerContext.CanAccessLockable(tileLockable))
@@ -99,56 +112,23 @@ namespace BeyondStorage.Scripts.Storage
                         }
                     }
 
+                    // Process each type separately with clear logic
                     if (config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
                     {
-                        if (dewCollector.bUserAccessing)
-                        {
-                            continue;
-                        }
-
-                        if (dewCollector.items?.Length <= 0 || !dewCollector.items.Any(item => item?.count > 0))
-                        {
-                            continue;
-                        }
-
-                        dewCollectors.Add(dewCollector);
+                        ProcessDewCollector(dewCollector, sources);
                         continue;
                     }
 
                     if (config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
                     {
-                        if (!workstation.IsPlayerPlaced)
-                        {
-                            continue;
-                        }
-
-                        if (workstation.output?.Length <= 0 || !workstation.output.Any(item => item?.count > 0))
-                        {
-                            continue;
-                        }
-
-                        workstations.Add(workstation);
+                        ProcessWorkstation(workstation, sources);
                         continue;
                     }
 
-                    if (lootable != null)
+                    // Process lootables (containers) - always enabled since they're primary storage
+                    if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
                     {
-                        if (!lootable.bPlayerStorage)
-                        {
-                            continue;
-                        }
-
-                        if (config.OnlyStorageCrates && !hasStorageFeature)
-                        {
-                            continue;
-                        }
-
-                        if (lootable.items?.Length <= 0 || !lootable.items.Any(item => item?.count > 0))
-                        {
-                            continue;
-                        }
-
-                        lootables.Add(lootable);
+                        ProcessLootable(lootable, tileEntity, config, sources);
                         continue;
                     }
                 }
@@ -157,11 +137,77 @@ namespace BeyondStorage.Scripts.Storage
             ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
         }
 
+        private static void ProcessDewCollector(TileEntityDewCollector dewCollector, StorageSourceCollection sources)
+        {
+            if (dewCollector.bUserAccessing)
+            {
+                return;
+            }
+
+            if (!HasValidItems(dewCollector.items))
+            {
+                return;
+            }
+
+            sources.DewCollectors.Add(dewCollector);
+        }
+
+        private static void ProcessWorkstation(TileEntityWorkstation workstation, StorageSourceCollection sources)
+        {
+            if (!workstation.IsPlayerPlaced)
+            {
+                return;
+            }
+
+            if (!HasValidItems(workstation.output))
+            {
+                return;
+            }
+
+            sources.Workstations.Add(workstation);
+        }
+
+        private static void ProcessLootable(ITileEntityLootable lootable, TileEntity tileEntity, ConfigSnapshot config, StorageSourceCollection sources)
+        {
+            if (!lootable.bPlayerStorage)
+            {
+                return;
+            }
+
+            if (config.OnlyStorageCrates)
+            {
+                if (!tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
+                {
+                    return;
+                }
+            }
+
+            if (!HasValidItems(lootable.items))
+            {
+                return;
+            }
+
+            sources.Lootables.Add(lootable);
+        }
+
+        private static bool HasValidItems(ItemStack[] items)
+        {
+            if (items == null || items.Length <= 0)
+            {
+                return false;
+            }
+
+            return items.Any(item => item?.count > 0);
+        }
+
         private static void DiscoverVehicleStorages(StorageSourceCollection sources, WorldPlayerContext worldPlayerContext, ConfigSnapshot config)
         {
             const string d_MethodName = nameof(DiscoverVehicleStorages);
 
-            var configRange = config.Range;
+            if (!config.PullFromVehicleStorage)
+            {
+                return;
+            }
 
             var vehicles = VehicleManager.Instance?.vehiclesActive;
             if (vehicles == null)
@@ -177,7 +223,7 @@ namespace BeyondStorage.Scripts.Storage
                     continue;
                 }
 
-                if (!worldPlayerContext.IsWithinRange(vehicle.position, configRange))
+                if (!worldPlayerContext.IsWithinRange(vehicle.position, config.Range))
                 {
                     continue;
                 }
