@@ -12,7 +12,7 @@ namespace BeyondStorage.Scripts.Storage
     public static class StorageContextFactory
     {
         private const double DEFAULT_CACHE_DURATION = 0.5;
-        private static readonly ExpiringCache<StorageAccessContext> s_contextCache = new(DEFAULT_CACHE_DURATION, nameof(StorageAccessContext));
+        private static readonly ExpiringCache<StorageContext> s_contextCache = new(DEFAULT_CACHE_DURATION, nameof(StorageContext));
 
         /// <summary>
         /// Creates or retrieves a cached StorageAccessContext instance.
@@ -20,7 +20,7 @@ namespace BeyondStorage.Scripts.Storage
         /// <param name="methodName">The calling method name for logging</param>
         /// <param name="forceRefresh">Whether to force creation of a fresh context</param>
         /// <returns>A valid StorageAccessContext or null if creation failed</returns>
-        public static StorageAccessContext Create(string methodName = "Unknown", bool forceRefresh = false)
+        public static StorageContext Create(string methodName, bool forceRefresh = false)
         {
             return s_contextCache.GetOrCreate(() => CreateFresh(methodName), forceRefresh, methodName);
         }
@@ -30,11 +30,11 @@ namespace BeyondStorage.Scripts.Storage
         /// </summary>
         /// <param name="methodName">The calling method name for logging</param>
         /// <returns>A new StorageAccessContext or null if creation failed</returns>
-        private static StorageAccessContext CreateFresh(string methodName)
+        private static StorageContext CreateFresh(string methodName)
         {
             try
             {
-                var worldPlayerContext = WorldPlayerContext.TryCreate(nameof(StorageAccessContext));
+                var worldPlayerContext = WorldPlayerContext.TryCreate(methodName);
                 if (worldPlayerContext == null)
                 {
                     ModLogger.Error($"{methodName}: Failed to create WorldPlayerContext, aborting context creation.");
@@ -42,20 +42,26 @@ namespace BeyondStorage.Scripts.Storage
                 }
 
                 var config = ConfigSnapshot.Current;
+                if (config == null)
+                {
+                    ModLogger.Error($"{methodName}: ConfigSnapshot.Current is null, aborting context creation.");
+                    return null;
+                }
+
                 var sources = new StorageSourceCollection();
                 var cacheManager = new ItemStackCacheManager();
 
                 // Discover storage sources
                 StorageDiscoveryService.DiscoverStorageSources(sources, worldPlayerContext, config);
 
-                var context = new StorageAccessContext(config, worldPlayerContext, sources, cacheManager);
+                var context = new StorageContext(config, worldPlayerContext, sources, cacheManager);
 
                 ModLogger.DebugLog($"{methodName}: Created fresh StorageAccessContext with {context.GetSourceSummary()}");
                 return context;
             }
             catch (Exception ex)
             {
-                ModLogger.Error($"{methodName}: Exception creating StorageAccessContext: {ex.Message}");
+                ModLogger.Error($"{methodName}: Exception creating StorageAccessContext: {ex}");
                 return null;
             }
         }
@@ -65,9 +71,34 @@ namespace BeyondStorage.Scripts.Storage
         /// </summary>
         /// <param name="context">The context to validate</param>
         /// <returns>True if the context is valid</returns>
-        public static bool IsValidContext(StorageAccessContext context)
+        public static bool IsValidContext(StorageContext context)
         {
-            return context != null && context.WorldPlayerContext != null;
+            if (context == null)
+            {
+                return false;
+            }
+
+            if (context.WorldPlayerContext == null)
+            {
+                return false;
+            }
+
+            if (context.Config == null)
+            {
+                return false;
+            }
+
+            if (context.Sources == null)
+            {
+                return false;
+            }
+
+            if (context.CacheManager == null)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

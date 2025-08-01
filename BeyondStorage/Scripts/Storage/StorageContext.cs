@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game;
@@ -12,7 +11,7 @@ namespace BeyondStorage.Scripts.Storage;
 /// Provides access to storage sources and operations within a specific context.
 /// This class serves as a facade that coordinates between various storage services.
 /// </summary>
-public sealed class StorageAccessContext
+public sealed class StorageContext
 {
     internal ConfigSnapshot Config { get; }
     internal WorldPlayerContext WorldPlayerContext { get; }
@@ -21,31 +20,10 @@ public sealed class StorageAccessContext
 
     private DateTime CreatedAt { get; }
 
-    // Legacy properties for backward compatibility - delegate to Sources
-    private List<TileEntityDewCollector> DewCollectors => Sources.DewCollectors;
-    private List<ITileEntityLootable> Lootables => Sources.Lootables;
-    private List<EntityVehicle> Vehicles => Sources.Vehicles;
-    private List<TileEntityWorkstation> Workstations => Sources.Workstations;
-
-    private List<ItemStack> DewCollectorItems => Sources.DewCollectorItems;
-    private List<ItemStack> WorkstationItems => Sources.WorkstationItems;
-    private List<ItemStack> ContainerItems => Sources.ContainerItems;
-    private List<ItemStack> VehicleItems => Sources.VehicleItems;
-
-    // Legacy properties for backward compatibility - delegate to CacheManager
-    public bool IsFiltered => CacheManager.IsFiltered;
-    public UniqueItemTypes CurrentFilterTypes => CacheManager.CurrentFilterTypes;
-
-    // Factory method delegation
-    public static StorageAccessContext Create(string methodName = "Unknown", bool forceRefresh = false)
-    {
-        return StorageContextFactory.Create(methodName, forceRefresh);
-    }
-
     /// <summary>
     /// Internal constructor used by StorageContextFactory.
     /// </summary>
-    internal StorageAccessContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageSourceCollection sources, ItemStackCacheManager cacheManager)
+    internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageSourceCollection sources, ItemStackCacheManager cacheManager)
     {
         Config = config ?? throw new ArgumentNullException(nameof(config));
         WorldPlayerContext = worldPlayerContext ?? throw new ArgumentNullException(nameof(worldPlayerContext));
@@ -53,7 +31,7 @@ public sealed class StorageAccessContext
         CacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
         CreatedAt = DateTime.Now;
 
-        ModLogger.DebugLog($"StorageAccessContext created: {Sources.GetSourceSummary()}");
+        ModLogger.DebugLog($"StorageContext created: {Sources.GetSourceSummary()}");
     }
 
     #region Cache Management
@@ -70,26 +48,6 @@ public sealed class StorageAccessContext
     public string GetItemStackCacheInfo()
     {
         return CacheManager.GetCacheInfo();
-    }
-
-    public static void InvalidateCache()
-    {
-        StorageContextFactory.InvalidateCache();
-    }
-
-    public static double GetCacheAge()
-    {
-        return StorageContextFactory.GetCacheAge();
-    }
-
-    public static bool HasValidCachedContext()
-    {
-        return StorageContextFactory.HasValidCachedContext();
-    }
-
-    public static string GetCacheStats()
-    {
-        return StorageContextFactory.GetCacheStats();
     }
     #endregion
 
@@ -109,7 +67,6 @@ public sealed class StorageAccessContext
         return StorageQueryService.GetAllAvailableItemStacks(Sources, Config, CacheManager, filterTypes);
     }
 
-    // Fixed: Consistent delegation pattern
     public string GetFilteringStats()
     {
         // Ensure ItemStacks are pulled through consistent service call
@@ -148,7 +105,6 @@ public sealed class StorageAccessContext
     #region Diagnostics and Statistics
     public double AgeInSeconds => (DateTime.Now - CreatedAt).TotalSeconds;
 
-    // Fixed: Changed return type from object to double for consistency
     public double WorldPlayerContextAgeInSeconds => WorldPlayerContext?.AgeInSeconds ?? -1;
 
     public bool HasExpired(double lifetimeSeconds) => AgeInSeconds > lifetimeSeconds;
@@ -158,29 +114,12 @@ public sealed class StorageAccessContext
         return $"{Sources.GetSourceSummary()}, Age: {AgeInSeconds:F1}s";
     }
 
-    // Fixed: Consistent facade pattern - use facade methods instead of direct service calls
     public string GetItemStackSummary()
     {
         var cacheInfo = GetItemStackCacheInfo();
         var filterStats = GetFilteringStats();
-        var totalItems = GetTotalItemCount(); // Use facade method instead of direct service call
+        var totalItems = GetTotalItemCount();
         return $"{Sources.GetItemStackSummary()}, {totalItems} items | {cacheInfo} | {filterStats}";
-    }
-
-    public static string GetComprehensiveCacheStats()
-    {
-        var contextStats = StorageContextFactory.GetCacheStats();
-        var worldPlayerStats = WorldPlayerContext.GetCacheStats();
-        var itemPropsStats = ItemPropertiesCache.GetCacheStats();
-        var globalInvalidations = ItemStackCacheManager.GetGlobalInvalidationCounter();
-        return $"StorageAccessContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {globalInvalidations}";
-    }
-
-    // Option 1: Remove this redundant method entirely and use StorageContextFactory.IsValidContext directly
-    // Option 2: Add specific validation logic here if needed
-    internal static bool IsValidContext(StorageAccessContext context)
-    {
-        return StorageContextFactory.IsValidContext(context);
     }
     #endregion
 }

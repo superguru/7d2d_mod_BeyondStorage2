@@ -30,6 +30,8 @@ namespace BeyondStorage.Scripts.Storage
             {
                 totalItemCountAdded = CountCachedItems(sources);
                 ModLogger.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {GetTotalStackCount(sources)} stacks - DC:{sources.DewCollectorItems.Count}, WS:{sources.WorkstationItems.Count}, CT:{sources.ContainerItems.Count}, VH:{sources.VehicleItems.Count} | {cacheManager.GetCacheInfo()}");
+
+                cacheManager.MarkCached(filterTypes);
                 return totalItemCountAdded;
             }
 
@@ -109,20 +111,25 @@ namespace BeyondStorage.Scripts.Storage
 
             if (sources == null)
             {
-                ModLogger.Error($"{d_MethodName}: {sourceName} pulled in 0 stacks (null source)");
+                ModLogger.Warning($"{d_MethodName}: {sourceName} collection is null, skipping");
                 return;
             }
+
+            int nullSourceCount = 0;
+            int nullStackArrayCount = 0;
 
             foreach (var source in sources)
             {
                 if (source == null)
                 {
+                    nullSourceCount++;
                     continue;
                 }
 
                 var stacks = getStacks(source);
                 if (stacks == null)
                 {
+                    nullStackArrayCount++;
                     continue;
                 }
 
@@ -136,7 +143,19 @@ namespace BeyondStorage.Scripts.Storage
                         continue;
                     }
 
-                    if (filterTypes.IsFiltered && !filterTypes.Contains(stack.itemValue?.type ?? 0))
+                    var itemValue = stack.itemValue;
+                    if (itemValue?.ItemClass == null)
+                    {
+                        continue; // Skip invalid items
+                    }
+
+                    int itemType = itemValue.type;
+                    if (itemType <= 0)
+                    {
+                        continue; // Skip invalid item types
+                    }
+
+                    if (filterTypes.IsFiltered && !filterTypes.Contains(itemType))
                     {
                         continue;
                     }
@@ -144,6 +163,11 @@ namespace BeyondStorage.Scripts.Storage
                     output.Add(stack);
                     itemsAddedCount += stackCount;
                 }
+            }
+
+            if (nullSourceCount > 0 || nullStackArrayCount > 0)
+            {
+                ModLogger.DebugLog($"{d_MethodName}: {sourceName} - Skipped {nullSourceCount} null sources and {nullStackArrayCount} null stack arrays");
             }
         }
 
@@ -176,22 +200,22 @@ namespace BeyondStorage.Scripts.Storage
 
             foreach (var stack in sources.DewCollectorItems)
             {
-                total += stack.count;
+                total += stack?.count ?? 0;
             }
 
             foreach (var stack in sources.WorkstationItems)
             {
-                total += stack.count;
+                total += stack?.count ?? 0;
             }
 
             foreach (var stack in sources.ContainerItems)
             {
-                total += stack.count;
+                total += stack?.count ?? 0;
             }
 
             foreach (var stack in sources.VehicleItems)
             {
-                total += stack.count;
+                total += stack?.count ?? 0;
             }
 
             return total;

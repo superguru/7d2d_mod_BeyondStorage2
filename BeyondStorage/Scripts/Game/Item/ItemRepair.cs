@@ -30,7 +30,7 @@ public static class ItemRepair
             return currentCount;
         }
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemValue) ?? 0;
         var newCount = currentCount + storageCount;
 
@@ -56,7 +56,7 @@ public static class ItemRepair
             return 0;
         }
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemValue) ?? 0;
         ModLogger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 

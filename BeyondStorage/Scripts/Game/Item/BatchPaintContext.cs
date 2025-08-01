@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Scripts.Game.Item;
 
 /// <summary>
-/// Context class for batch paint operations that holds a shared StorageAccessContext
+/// Context class for batch paint operations that holds a shared StorageContext
 /// and tracks accumulated operations for debugging.
 /// </summary>
 public sealed class BatchPaintContext
 {
-    // Reduced cache duration to be consistent with StorageAccessContext (0.5s)
+    // Reduced cache duration to be consistent with StorageContext (0.5s)
     // This prevents holding stale storage contexts for too long
     private const double DEFAULT_CACHE_DURATION = 1.0;
 
     // Single cache for batch paint operations
     private static readonly ExpiringCache<BatchPaintContext> s_batchPaintCache = new(DEFAULT_CACHE_DURATION, nameof(BatchPaintContext));
 
-    public StorageAccessContext StorageContext { get; }
+    public StorageContext StorageContext { get; }
     private readonly Dictionary<int, int> _accumulatedRemovals = new();
     private int _totalOperations = 0;
 
-    public BatchPaintContext(StorageAccessContext storageContext)
+    public BatchPaintContext(StorageContext storageContext)
     {
         StorageContext = storageContext ?? throw new ArgumentNullException(nameof(storageContext));
     }
@@ -39,7 +40,7 @@ public sealed class BatchPaintContext
     }
 
     /// <summary>
-    /// Creates a new BatchPaintContext with a fresh StorageAccessContext.
+    /// Creates a new BatchPaintContext with a fresh StorageContext.
     /// </summary>
     /// <param name="methodName">The calling method name for logging</param>
     /// <returns>A new BatchPaintContext or null if creation failed</returns>
@@ -47,10 +48,10 @@ public sealed class BatchPaintContext
     {
         try
         {
-            var storageContext = StorageAccessContext.Create(methodName);
-            if (!StorageAccessContext.IsValidContext(storageContext))
+            var storageContext = StorageContextFactory.Create(methodName);
+            if (!StorageContextFactory.IsValidContext(storageContext))
             {
-                ModLogger.Error($"{methodName}: Failed to create StorageAccessContext with valid WorldPlayerContext");
+                ModLogger.Error($"{methodName}: Failed to create StorageContext with valid WorldPlayerContext");
                 return null;
             }
 
@@ -105,8 +106,8 @@ public sealed class BatchPaintContext
     public static void InvalidateAllCaches()
     {
         s_batchPaintCache.InvalidateCache();
-        StorageAccessContext.InvalidateCache();
-        WorldPlayerContext.InvalidateCache(); // ✅ This is correct - static method
+        StorageContextFactory.InvalidateCache();
+        WorldPlayerContext.InvalidateCache();
         ModLogger.DebugLog("All BatchPaintContext-related caches invalidated");
     }
 
@@ -116,8 +117,11 @@ public sealed class BatchPaintContext
     public static string GetComprehensiveCacheStats()
     {
         var paintStats = s_batchPaintCache.GetCacheStats();
-        var contextStats = StorageAccessContext.GetComprehensiveCacheStats();
-        return $"BatchPaint: {paintStats} | {contextStats}";
+        var contextStats = StorageContextFactory.GetCacheStats();
+        var worldPlayerStats = WorldPlayerContext.GetCacheStats();
+        var itemPropsStats = ItemPropertiesCache.GetCacheStats();
+        var globalInvalidations = ItemStackCacheManager.GetGlobalInvalidationCounter();
+        return $"BatchPaint: {paintStats} | StorageContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | Global invalidations: {globalInvalidations}";
     }
 
     /// <summary>
@@ -127,7 +131,6 @@ public sealed class BatchPaintContext
     /// <param name="removedCount">The number of items removed</param>
     public void AccumulateRemoval(ItemValue itemValue, int removedCount)
     {
-        // ✅ Added validation for item type
         if (itemValue?.ItemClass != null && removedCount > 0 && itemValue.type > 0)
         {
             var itemType = itemValue.type;
@@ -151,7 +154,6 @@ public sealed class BatchPaintContext
     public string GetOperationsSummary()
     {
         var contextAge = StorageContext?.AgeInSeconds ?? -1;
-        // ✅ Fixed: Consistent typing
         double worldContextAge = StorageContext?.WorldPlayerContextAgeInSeconds ?? -1;
         return $"BatchPaintContext: {_totalOperations} operations, {_accumulatedRemovals.Count} different item types, Context age: {contextAge:F1}s, WorldPlayerContext age: {worldContextAge:F1}s";
     }
@@ -173,7 +175,6 @@ public sealed class BatchPaintContext
     /// <returns>The total count removed, or 0 if not found</returns>
     public int GetTotalRemovedCount(int itemType)
     {
-        // ✅ Added validation for item type
         if (itemType <= 0)
         {
             return 0;

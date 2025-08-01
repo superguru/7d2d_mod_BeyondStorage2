@@ -24,7 +24,7 @@ public class ItemCraft
         ModLogger.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
             var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
@@ -59,7 +59,7 @@ public class ItemCraft
         ModLogger.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
         // Todo: Add item filtering here, if needed
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
             var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
@@ -84,7 +84,7 @@ public class ItemCraft
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemValue) ?? 0;
 
         if (storageCount > 0)
@@ -128,7 +128,7 @@ public class ItemCraft
         }
 
         // Get storage count and return result
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;
 

@@ -21,7 +21,7 @@ public class BlockRepair
 
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var result = context?.GetItemCount(itemValue) ?? 0;
 
         ModLogger.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
@@ -55,7 +55,7 @@ public class BlockRepair
         }
 
         // Add amount removed from storage to last amount removed to update result
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var removedFromStorage = context?.RemoveRemaining(itemStack.itemValue, stillNeeded) ?? 0;
 
         var totalRemoved = currentCount + removedFromStorage;

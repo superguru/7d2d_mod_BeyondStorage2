@@ -25,7 +25,7 @@ public static class VehicleRepair
         }
 
         // attempt to remove item from storage
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var countRemoved = context?.RemoveRemaining(itemValue, 1) ?? 0;
         ModLogger.DebugLog($"{d_MethodName} - Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
 

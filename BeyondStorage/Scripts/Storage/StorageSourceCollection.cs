@@ -8,15 +8,16 @@ namespace BeyondStorage.Scripts.Storage
     /// </summary>
     public class StorageSourceCollection
     {
-        public List<TileEntityDewCollector> DewCollectors { get; set; }
-        public List<ITileEntityLootable> Lootables { get; set; }
-        public List<EntityVehicle> Vehicles { get; set; }
-        public List<TileEntityWorkstation> Workstations { get; set; }
+        // Internal access for services within the Storage namespace
+        internal List<TileEntityDewCollector> DewCollectors { get; set; }
+        internal List<ITileEntityLootable> Lootables { get; set; }
+        internal List<EntityVehicle> Vehicles { get; set; }
+        internal List<TileEntityWorkstation> Workstations { get; set; }
 
-        public List<ItemStack> DewCollectorItems { get; set; }
-        public List<ItemStack> WorkstationItems { get; set; }
-        public List<ItemStack> ContainerItems { get; set; }
-        public List<ItemStack> VehicleItems { get; set; }
+        internal List<ItemStack> DewCollectorItems { get; set; }
+        internal List<ItemStack> WorkstationItems { get; set; }
+        internal List<ItemStack> ContainerItems { get; set; }
+        internal List<ItemStack> VehicleItems { get; set; }
 
         public StorageSourceCollection()
         {

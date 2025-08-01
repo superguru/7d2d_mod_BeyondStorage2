@@ -17,7 +17,7 @@ public static class Ranged
             return false;
         }
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var canReloadFromStorage = context?.HasItem(itemValue) ?? false;
 
         ModLogger.DebugLog($"{d_MethodName}: {canReloadFromStorage}");
@@ -32,7 +32,7 @@ public static class Ranged
     {
         const string d_MethodName = nameof(GetAmmoCount);
 
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         return context?.GetItemCount(itemValue) ?? 0;
     }
 
@@ -52,7 +52,7 @@ public static class Ranged
         }
 
         var ammoRequired = isPerMag ? 1 : maxMagSize - currentAmmo;
-        var context = StorageAccessContext.Create(d_MethodName);
+        var context = StorageContextFactory.Create(d_MethodName);
         var ammoRemovedFromStorage = context?.RemoveRemaining(ammoType, ammoRequired) ?? 0;
 
         ModLogger.DebugLog($"{d_MethodName} {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
