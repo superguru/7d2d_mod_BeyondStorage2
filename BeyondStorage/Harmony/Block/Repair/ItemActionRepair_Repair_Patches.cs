@@ -21,7 +21,7 @@ public class ItemActionRepairPatches
     private static IEnumerable<CodeInstruction> ItemActionRepair_canRemoveRequiredItem_Patch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
     {
         var targetMethodString = $"{typeof(ItemActionRepair)}.{nameof(ItemActionRepair.canRemoveRequiredItem)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
 
         var codes = instructions.ToList();
 
@@ -31,18 +31,18 @@ public class ItemActionRepairPatches
 
         var targetIndex = -1;
 
-        LogUtil.Info($"Looking for: {targetOpCode} for {targetType.Name} method {targetMethod}");
+        Logger.Info($"Looking for: {targetOpCode} for {targetType.Name} method {targetMethod}");
 
         for (var i = 0; i < codes.Count; i++)
         {
-            //LogUtil.Info($"opcode {i} is {codes[i].opcode}");
+            //Logger.Info($"opcode {i} is {codes[i].opcode}");
             if (codes[i].opcode.Name.Equals(targetOpCode))
             {
                 // Bag.GetItemCount is overloaded. Can be more acccurate with the method signature, but this is good enough
                 MethodInfo methodInfo = (MethodInfo)codes[i].operand;
                 if ((methodInfo.DeclaringType == targetType) && methodInfo.Name.Equals(targetMethod))
                 {
-                    //LogUtil.Info($"targetOpCode for {methodInfo.DeclaringType.Name} method {methodInfo.Name} means found");
+                    //Logger.Info($"targetOpCode for {methodInfo.DeclaringType.Name} method {methodInfo.Name} means found");
 
                     targetIndex = i;
                     break;
@@ -52,7 +52,7 @@ public class ItemActionRepairPatches
 
         if (targetIndex > -1)
         {
-            LogUtil.DebugLog("Adding method to count items from all storages");
+            Logger.DebugLog("Adding method to count items from all storages");
 
             List<CodeInstruction> newCode = [];
             // == New ==
@@ -83,12 +83,12 @@ public class ItemActionRepairPatches
             codes.InsertRange(targetIndex + 3, newCode);
             // == End New ==
 
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
         else
         {
 
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
 
         return codes.AsEnumerable();
@@ -105,7 +105,7 @@ public class ItemActionRepairPatches
         IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(ItemActionRepair)}.{nameof(ItemActionRepair.removeRequiredItem)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
         for (var i = 0; i < codes.Count; i++)
@@ -117,7 +117,7 @@ public class ItemActionRepairPatches
             }
 
             found = true;
-            LogUtil.DebugLog($"Patching {targetMethodString}");
+            Logger.DebugLog($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [
                 // _itemStack
@@ -132,11 +132,11 @@ public class ItemActionRepairPatches
 
         if (!found)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class PatchUtil
+public static class ILPatchEngine
 {
     /// <summary>
     /// Inserts replacement instructions at the specified position in the target list.
@@ -21,7 +21,7 @@ public static class PatchUtil
 
         if (request.ExtraLogging)
         {
-            LogUtil.DebugLog($"Inserted {replacementCount} instructions at index {replacementPosition} (original match at {originalMatchPosition}) in {request.TargetMethodName}");
+            Logger.DebugLog($"Inserted {replacementCount} instructions at index {replacementPosition} (original match at {originalMatchPosition}) in {request.TargetMethodName}");
         }
     }
 
@@ -74,13 +74,13 @@ public static class PatchUtil
 
             if (request.ExtraLogging)
             {
-                LogUtil.DebugLog($"Appended {instructionsToAppend} additional instructions to end of method in {request.TargetMethodName}");
+                Logger.DebugLog($"Appended {instructionsToAppend} additional instructions to end of method in {request.TargetMethodName}");
             }
         }
 
         if (request.ExtraLogging)
         {
-            LogUtil.DebugLog($"Overwrote {instructionsToOverwrite} instructions starting at index {replacementPosition}" +
+            Logger.DebugLog($"Overwrote {instructionsToOverwrite} instructions starting at index {replacementPosition}" +
                             (instructionsToAppend > 0 ? $" and appended {instructionsToAppend} additional instructions" : "") +
                             $" in {request.TargetMethodName}");
         }
@@ -94,7 +94,7 @@ public static class PatchUtil
     /// <returns>PatchResults indicating if any patches were applied</returns>
     public static PatchResponse ApplyPatches(PatchRequest request)
     {
-        LogUtil.Info($"Transpiling {request.TargetMethodName}");
+        Logger.Info($"Transpiling {request.TargetMethodName}");
 
         int searchIndex = 0;
         var response = new PatchResponse();
@@ -103,18 +103,18 @@ public static class PatchUtil
         {
             if (request.MaxPatches > 0 && response.Count >= request.MaxPatches)
             {
-                LogUtil.DebugLog($"Reached maximum patches ({request.MaxPatches}) for {request.TargetMethodName}. Stopping further patches.");
+                Logger.DebugLog($"Reached maximum patches ({request.MaxPatches}) for {request.TargetMethodName}. Stopping further patches.");
                 break;
             }
 
-            int matchIndex = CodesUtil.IndexOf(request.NewInstructions, request.SearchPattern, searchIndex, request.ExtraLogging);
+            int matchIndex = ILCodeMatcher.IndexOf(request.NewInstructions, request.SearchPattern, searchIndex, request.ExtraLogging);
             if (matchIndex < 0)
             {
                 // No more matches found
                 break;
             }
 
-            LogUtil.DebugLog($"Found patch point at index {matchIndex} in {request.TargetMethodName}");
+            Logger.DebugLog($"Found patch point at index {matchIndex} in {request.TargetMethodName}");
 
             // Calculate the actual replacement position
             int replacementPosition = matchIndex + request.ReplacementOffset;
@@ -125,7 +125,7 @@ public static class PatchUtil
             {
                 if (request.ExtraLogging)
                 {
-                    LogUtil.DebugLog($"Replacement position {replacementPosition} is below minimum safety offset {request.MinimumSafetyOffset}. Skipping patch of {request.TargetMethodName}");
+                    Logger.DebugLog($"Replacement position {replacementPosition} is below minimum safety offset {request.MinimumSafetyOffset}. Skipping patch of {request.TargetMethodName}");
                 }
                 searchIndex = matchIndex + 1;
                 continue;
@@ -135,7 +135,7 @@ public static class PatchUtil
             {
                 if (request.ExtraLogging)
                 {
-                    LogUtil.DebugLog($"Replacement position {replacementPosition} is out of bounds. Skipping patch of {request.TargetMethodName}");
+                    Logger.DebugLog($"Replacement position {replacementPosition} is out of bounds. Skipping patch of {request.TargetMethodName}");
                 }
 
                 searchIndex = matchIndex + 1;
@@ -156,16 +156,16 @@ public static class PatchUtil
                 searchIndex = replacementPosition + replacementCount;
             }
 
-            LogUtil.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {replacementPosition} (original match at {matchIndex})");
+            Logger.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {replacementPosition} (original match at {matchIndex})");
         }
 
         if (response.Count > 0)
         {
-            LogUtil.Info($"Successfully patched {request.TargetMethodName} in {response.Count} places");
+            Logger.Info($"Successfully patched {request.TargetMethodName} in {response.Count} places");
         }
         else
         {
-            LogUtil.Warning($"No patches applied to {request.TargetMethodName}");
+            Logger.Warning($"No patches applied to {request.TargetMethodName}");
         }
 
         return response;

@@ -8,8 +8,8 @@ using static XUiC_CraftingInfoWindow;
 namespace BeyondStorage.Scripts.ContainerLogic.Recipe;
 public static class WorkstationRecipe
 {
-    // Use MethodCallStatistics for tracking call performance
-    private static readonly MethodCallStatistics s_callStats = new("WorkstationRecipe");
+    // Use PerformanceProfiler for tracking call performance
+    private static readonly PerformanceProfiler s_callStats = new("WorkstationRecipe");
 
     /// <summary>
     /// This is called when the recipe finishes crafting on a workstation TE that is NOT open on a player screen
@@ -30,7 +30,7 @@ public static class WorkstationRecipe
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             var callCount = stats?.callCount ?? 0;
-            LogUtil.DebugLog($"{d_MethodName} starting call {callCount + 1}");
+            Logger.DebugLog($"{d_MethodName} starting call {callCount + 1}");
 
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
@@ -43,7 +43,7 @@ public static class WorkstationRecipe
             if (stats.HasValue)
             {
                 var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
-                LogUtil.DebugLog($"{d_MethodName} completed call {callCount} in {MethodCallStatistics.FormatNanoseconds(elapsedNs)} (avg: {MethodCallStatistics.FormatNanoseconds(avgTimeNs)})");
+                Logger.DebugLog($"{d_MethodName} completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
             }
         }
     }
@@ -67,7 +67,7 @@ public static class WorkstationRecipe
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             var callCount = stats?.callCount ?? 0;
-            LogUtil.DebugLog($"{d_MethodName} starting call {callCount + 1}");
+            Logger.DebugLog($"{d_MethodName} starting call {callCount + 1}");
 
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
@@ -80,7 +80,7 @@ public static class WorkstationRecipe
             if (stats.HasValue)
             {
                 var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
-                LogUtil.DebugLog($"{d_MethodName} completed call {callCount} in {MethodCallStatistics.FormatNanoseconds(elapsedNs)} (avg: {MethodCallStatistics.FormatNanoseconds(avgTimeNs)})");
+                Logger.DebugLog($"{d_MethodName} completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
             }
         }
     }
@@ -97,7 +97,7 @@ public static class WorkstationRecipe
             var worldPlayerContext = WorldPlayerContext.TryCreate(d_MethodName);
             if (worldPlayerContext == null)
             {
-                LogUtil.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}");
+                Logger.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}");
                 return;
             }
 
@@ -105,7 +105,7 @@ public static class WorkstationRecipe
             var xui = player.PlayerUI.xui;
             if (xui == null)
             {
-                LogUtil.Error($"{d_MethodName}: xui is null in call {callCount}");
+                Logger.Error($"{d_MethodName}: xui is null in call {callCount}");
                 return;
             }
 
@@ -194,7 +194,7 @@ public static class WorkstationRecipe
                 // Update UI only if changes were made
                 if (refreshCount > 0)
                 {
-                    LogUtil.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");
+                    Logger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");
                     recipeList.IsDirty = true;
                     recipeList.CraftCount.IsDirty = true;
 
@@ -216,7 +216,7 @@ public static class WorkstationRecipe
             if (stats.HasValue)
             {
                 var (totalCallCount, totalTimeNs, avgTimeNs) = stats.Value;
-                LogUtil.DebugLog($"{d_MethodName} completed in {MethodCallStatistics.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {MethodCallStatistics.FormatNanoseconds(avgTimeNs)})");
+                Logger.DebugLog($"{d_MethodName} completed in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
             }
         }
     }
@@ -246,7 +246,7 @@ public static class WorkstationRecipe
     public static void ClearStatistics()
     {
         s_callStats.Clear();
-        LogUtil.DebugLog("WorkstationRecipe: Call statistics cleared");
+        Logger.DebugLog("WorkstationRecipe: Call statistics cleared");
     }
 
     // Helper class to store workstation state

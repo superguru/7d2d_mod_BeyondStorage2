@@ -31,7 +31,7 @@ public class WorkstationRecipePatches
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(WorkstationRecipe), nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)))
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -44,14 +44,14 @@ public class WorkstationRecipePatches
             ExtraLogging = false
         };
 
-        var patchResult = PatchUtil.ApplyPatches(request);
+        var patchResult = ILPatchEngine.ApplyPatches(request);
 
         if (patchResult.IsPatched)
         {
             return request.NewInstructions;
         }
 
-        var response = PatchUtil.ApplyPatches(request);
+        var response = ILPatchEngine.ApplyPatches(request);
         return response.BestInstructions(request);
     }
 }

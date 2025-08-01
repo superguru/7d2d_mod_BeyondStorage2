@@ -43,7 +43,6 @@ public class XUiCItemActionListPatches
         ActionList_UpdateVisibleActions(__instance);
     }
 
-    // Update `RepairActionShown` in `ContainerUtils` if list contains Repair action
     private static void ActionList_UpdateVisibleActions(XUiC_ItemActionList itemActionList)
     {
         if (!ModConfig.EnableForItemRepair())

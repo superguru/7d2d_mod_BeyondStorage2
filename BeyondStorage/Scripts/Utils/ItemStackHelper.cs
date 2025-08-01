@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class ItemUtil
+public static class ItemStackHelper
 {
     public static string InfoItemStackToString(IEnumerable<ItemStack> stacks)
     {
@@ -125,7 +125,7 @@ public static class ItemUtil
         var result = uniqueTypes.ToArray();
         System.Array.Sort(result);
 
-        LogUtil.DebugLog($"{d_MethodName}: Found {result.Length} unique types from {stacks.Count} stacks: [{string.Join(", ", result)}]");
+        Logger.DebugLog($"{d_MethodName}: Found {result.Length} unique types from {stacks.Count} stacks: [{string.Join(", ", result)}]");
 
         return result;
     }

@@ -20,7 +20,7 @@ public class XUiCRecipeListPatches
     // IL_0084: callvirt ItemStack[] XUiC_ItemStackGrid::GetSlots()
     // IL_0089: callvirt System.Void System.Collections.Generic.List`1<ItemStack>::AddRange(System.Collections.Generic.IEnumerable`1<T>)
     // IL_008e: ldloc.0      // updateStackList List<ItemStack> [Label4]
-    // IL_008f: call System.Void BeyondStorage.Scripts.ContainerUtils::AddAllStorageStacks(System.Collections.Generic.List`1<ItemStack>)
+    // IL_008f: call AddPullableStorageStacks(List<ItemStack>)
     // IL_0094: ldarg.0      // this
     // IL_0095: ldloc.0      // updateStackList List<ItemStack>
     // IL_0096: call System.Void XUiC_RecipeList::BuildRecipeInfosList(System.Collections.Generic.List`1<ItemStack>)
@@ -49,7 +49,7 @@ public class XUiCRecipeListPatches
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks)))
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -62,7 +62,7 @@ public class XUiCRecipeListPatches
             ExtraLogging = false
         };
 
-        var patchResult = PatchUtil.ApplyPatches(request);
+        var patchResult = ILPatchEngine.ApplyPatches(request);
 
         if (patchResult.IsPatched)
         {
@@ -76,7 +76,7 @@ public class XUiCRecipeListPatches
                     var newLdlocIndex = patchResult.Positions[0]; // First replacement instruction (ldloc.0)
                     if (request.ExtraLogging)
                     {
-                        LogUtil.DebugLog($"{targetMethodName}: Moving {originalInstruction.labels.Count} labels from original ldarg.0 to new ldloc.0");
+                        Logger.DebugLog($"{targetMethodName}: Moving {originalInstruction.labels.Count} labels from original ldarg.0 to new ldloc.0");
                     }
 
                     // Move labels to the new ldloc.0 instruction
@@ -90,7 +90,7 @@ public class XUiCRecipeListPatches
                 else
                 {
                     // Could not find the label instruction, log an error
-                    LogUtil.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
+                    Logger.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
                     return originalInstructions; // Return original instructions if patch failed
                 }
             }

@@ -3,7 +3,7 @@ using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
 
-public static class DewCollectorUtils
+public static class DewCollectorStateManager
 {
 
     /// <summary>
@@ -12,11 +12,11 @@ public static class DewCollectorUtils
     public static void MarkDewCollectorModified(TileEntityDewCollector dewCollector)
     {
         const string d_method_name = "MarkDewCollectorModified";
-        LogUtil.DebugLog($"{d_method_name} | Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");
+        Logger.DebugLog($"{d_method_name} | Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");
 
         if (dewCollector == null)
         {
-            LogUtil.Error($"{d_method_name}: dew collector is null");
+            Logger.Error($"{d_method_name}: dew collector is null");
             return;
         }
 
@@ -32,17 +32,17 @@ public static class DewCollectorUtils
 
         if (dewCollector == null)
         {
-            LogUtil.Error($"{d_method_name}: dew collector is null");
+            Logger.Error($"{d_method_name}: dew collector is null");
             return;
         }
 
         var s = "";
 
         s = string.Join(",", dewCollector.fillValuesArr.Select(f => f.ToString()));
-        LogUtil.DebugLog($"{d_method_name} | Fill values after item removal: {s}");
+        Logger.DebugLog($"{d_method_name} | Fill values after item removal: {s}");
 
         s = string.Join(",", dewCollector.items.Select(stack => stack.count.ToString()));
-        LogUtil.DebugLog($"{d_method_name} | Slot counts after item removal: {s}");
+        Logger.DebugLog($"{d_method_name} | Slot counts after item removal: {s}");
 
         /* Scenario: 
          * - Dew Collector has these items counts in the slots 1, 2, 0; slot 0 is partially filled, slot 1 is full, slot 2 is producing

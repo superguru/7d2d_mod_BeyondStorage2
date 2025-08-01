@@ -47,16 +47,16 @@ public sealed class StorageAccessContext
 
             if (context.WorldPlayerContext == null)
             {
-                LogUtil.Error($"{methodName}: Created StorageAccessContext with null WorldPlayerContext");
+                Logger.Error($"{methodName}: Created StorageAccessContext with null WorldPlayerContext");
                 return null;
             }
 
-            LogUtil.DebugLog($"{methodName}: Created fresh StorageAccessContext with {context.GetSourceSummary()}");
+            Logger.DebugLog($"{methodName}: Created fresh StorageAccessContext with {context.GetSourceSummary()}");
             return context;
         }
         catch (Exception ex)
         {
-            LogUtil.Error($"{methodName}: Exception creating StorageAccessContext: {ex.Message}");
+            Logger.Error($"{methodName}: Exception creating StorageAccessContext: {ex.Message}");
             return null;
         }
     }
@@ -68,7 +68,7 @@ public sealed class StorageAccessContext
         WorldPlayerContext = WorldPlayerContext.TryCreate(nameof(StorageAccessContext));
         if (WorldPlayerContext == null)
         {
-            LogUtil.Error($"{nameof(StorageAccessContext)}: Failed to create WorldPlayerContext, aborting context creation.");
+            Logger.Error($"{nameof(StorageAccessContext)}: Failed to create WorldPlayerContext, aborting context creation.");
             DewCollectors = new List<TileEntityDewCollector>(0);
             Workstations = new List<TileEntityWorkstation>(0);
             Lootables = new List<ITileEntityLootable>(0);
@@ -89,15 +89,15 @@ public sealed class StorageAccessContext
         InitItemStackLists();
 
         CreatedAt = DateTime.Now;
-        LogUtil.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
+        Logger.DebugLog($"StorageAccessContext created: {Lootables.Count} lootables, {DewCollectors.Count} dew collectors, {Workstations.Count} workstations, {Vehicles.Count} vehicles");
     }
 
     private void InitSourceCollections()
     {
-        DewCollectors = ListProvider.GetEmptyDewCollectorList();
-        Workstations = ListProvider.GetEmptyWorkstationList();
-        Lootables = ListProvider.GetEmptyLootableList();
-        Vehicles = ListProvider.GetEmptyVehicleList();
+        DewCollectors = CollectionFactory.GetEmptyDewCollectorList();
+        Workstations = CollectionFactory.GetEmptyWorkstationList();
+        Lootables = CollectionFactory.GetEmptyLootableList();
+        Vehicles = CollectionFactory.GetEmptyVehicleList();
     }
 
     private void DiscoverSources()
@@ -302,13 +302,13 @@ public sealed class StorageAccessContext
 
         if (itemValue == null)
         {
-            LogUtil.Error($"{d_MethodName} | itemValue is null");
+            Logger.Error($"{d_MethodName} | itemValue is null");
             return 0;
         }
 
         var totalItemCountAdded = PullSourceItemStacks(itemValue);
 
-        LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
+        Logger.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
 
         return totalItemCountAdded;
     }
@@ -324,7 +324,7 @@ public sealed class StorageAccessContext
 
         var totalItemCountAdded = PullSourceItemStacks(filterTypes);
 
-        LogUtil.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} items with filter: {filterTypes}");
+        Logger.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} items with filter: {filterTypes}");
         return totalItemCountAdded;
     }
 
@@ -334,14 +334,14 @@ public sealed class StorageAccessContext
 
         if (itemValue == null)
         {
-            LogUtil.Error($"{d_MethodName} | itemValue is null");
+            Logger.Error($"{d_MethodName} | itemValue is null");
             return false;
         }
 
         var totalItemCount = GetItemCount(itemValue);
         var result = totalItemCount > 0;
 
-        LogUtil.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
+        Logger.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
         return result;
     }
 
@@ -357,7 +357,7 @@ public sealed class StorageAccessContext
         var totalItemCount = GetItemCount(filterTypes);
         var result = totalItemCount > 0;
 
-        LogUtil.DebugLog($"{d_MethodName} with filter: {filterTypes} is {result}");
+        Logger.DebugLog($"{d_MethodName} with filter: {filterTypes} is {result}");
 
         return result;
     }
@@ -369,13 +369,13 @@ public sealed class StorageAccessContext
         if (stillNeeded <= 0 || itemValue == null || itemValue.ItemClass == null || itemValue.type <= 0)
         {
 #if DEBUG
-            LogUtil.Error($"{d_MethodName} | stillNeeded {stillNeeded}; item null is {itemValue == null}");
+            Logger.Error($"{d_MethodName} | stillNeeded {stillNeeded}; item null is {itemValue == null}");
 #endif
             return 0;
         }
 
         var itemName = itemValue.ItemClass.GetItemName();
-        LogUtil.DebugLog($"{d_MethodName} | Trying to remove {stillNeeded} {itemName}");
+        Logger.DebugLog($"{d_MethodName} | Trying to remove {stillNeeded} {itemName}");
 
         int originalNeeded = stillNeeded;
 
@@ -384,13 +384,13 @@ public sealed class StorageAccessContext
         if (stillNeeded > 0 && config.PullFromDewCollectors)
         {
             RemoveItemsFromStorageInternal(d_MethodName, "DewCollectors", itemName, DewCollectors, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                dewCollector => dewCollector.items, dewCollector => DewCollectorUtils.MarkDewCollectorModified(dewCollector));
+                dewCollector => dewCollector.items, dewCollector => DewCollectorStateManager.MarkDewCollectorModified(dewCollector));
         }
 
         if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
         {
             RemoveItemsFromStorageInternal(d_MethodName, "WorkstationOutputs", itemName, Workstations, itemValue, ref stillNeeded, ignoreModdedItems, removedItems,
-                workstation => workstation.output, workstation => WorkstationUtils.MarkWorkstationModified(workstation));
+                workstation => workstation.output, workstation => WorkstationStateManager.MarkWorkstationModified(workstation));
         }
 
         if (stillNeeded > 0)
@@ -438,12 +438,12 @@ public sealed class StorageAccessContext
         }
 
         int removed = originalNeeded - stillNeeded;
-        LogUtil.DebugLog($"{d_method_name} | {storageName} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
+        Logger.DebugLog($"{d_method_name} | {storageName} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
 
 #if DEBUG
         if (stillNeeded < 0)
         {
-            LogUtil.Error($"{d_method_name} | stillNeeded after {storageName} should not be negative, but is {stillNeeded}");
+            Logger.Error($"{d_method_name} | stillNeeded after {storageName} should not be negative, but is {stillNeeded}");
             stillNeeded = 0;
         }
 #endif
@@ -505,7 +505,7 @@ public sealed class StorageAccessContext
 
         if (WorldPlayerContext == null)
         {
-            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
+            Logger.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
             return;
         }
 
@@ -556,9 +556,9 @@ public sealed class StorageAccessContext
 
                 var tileEntityWorldPos = tileEntity.ToWorldPos();
 
-                if (ContainerUtils.LockedTileEntities.Count > 0)
+                if (TileEntityLockManager.LockedTileEntities.Count > 0)
                 {
-                    if (ContainerUtils.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
+                    if (TileEntityLockManager.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != worldPlayerContext.PlayerEntityId)
                     {
                         continue;
                     }
@@ -632,7 +632,7 @@ public sealed class StorageAccessContext
             }
         }
 
-        LogUtil.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
+        Logger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
     private void DiscoverVehicleStorages()
@@ -641,7 +641,7 @@ public sealed class StorageAccessContext
 
         if (WorldPlayerContext == null)
         {
-            LogUtil.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
+            Logger.Error($"{d_MethodName}: WorldPlayerContext is null, aborting.");
             return;
         }
 
@@ -650,7 +650,7 @@ public sealed class StorageAccessContext
         var vehicles = VehicleManager.Instance?.vehiclesActive;
         if (vehicles == null)
         {
-            LogUtil.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
+            Logger.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
             return;
         }
 
@@ -712,7 +712,7 @@ public sealed class StorageAccessContext
                 totalItemCountAdded += stack.count;
             }
 
-            LogUtil.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
+            Logger.DebugLog($"{d_MethodName}: Using cached ItemStacks, found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
             return totalItemCountAdded;
         }
 
@@ -749,7 +749,7 @@ public sealed class StorageAccessContext
 
         MarkItemStacksCached(filterTypes);
 
-        LogUtil.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
+        Logger.DebugLog($"{d_MethodName}: Found {totalItemCountAdded} items from {DewCollectorItems.Count + WorkstationItems.Count + ContainerItems.Count + VehicleItems.Count} stacks - DC:{DewCollectorItems.Count}, WS:{WorkstationItems.Count}, CT:{ContainerItems.Count}, VH:{VehicleItems.Count} | {GetItemStackCacheInfo()}");
         return totalItemCountAdded;
     }
 
@@ -767,7 +767,7 @@ public sealed class StorageAccessContext
 
         if (sources == null)
         {
-            LogUtil.Error($"{d_MethodName}: {sourceName} pulled in 0 stacks (null source)");
+            Logger.Error($"{d_MethodName}: {sourceName} pulled in 0 stacks (null source)");
             return;
         }
 
@@ -809,7 +809,7 @@ public sealed class StorageAccessContext
     {
         if (WorldPlayerContext == null)
         {
-            LogUtil.Error($"{nameof(DiscoverTileEntitySources)}: WorldPlayerContext is null, aborting.");
+            Logger.Error($"{nameof(DiscoverTileEntitySources)}: WorldPlayerContext is null, aborting.");
             return;
         }
 
@@ -822,7 +822,7 @@ public sealed class StorageAccessContext
 
         s_globalInvalidationCounter++;
 
-        LogUtil.DebugLog($"StorageAccessContext cache invalidated (global invalidation counter: {s_globalInvalidationCounter})");
+        Logger.DebugLog($"StorageAccessContext cache invalidated (global invalidation counter: {s_globalInvalidationCounter})");
     }
 
     public static double GetCacheAge()

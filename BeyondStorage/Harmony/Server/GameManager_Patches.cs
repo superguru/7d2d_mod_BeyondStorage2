@@ -21,7 +21,7 @@ public class GameManagerPatches
             return;
         }
 
-        LogUtil.DebugLog($"Adding Postfix to {typeof(GameManager)}.{original.Name} | {original}");
+        Logger.DebugLog($"Adding Postfix to {typeof(GameManager)}.{original.Name} | {original}");
     }
 #endif
 

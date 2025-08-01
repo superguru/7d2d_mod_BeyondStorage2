@@ -37,7 +37,7 @@ public class ItemActionTextureBlockPatches
             new CodeInstruction(OpCodes.Ret)
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -50,12 +50,12 @@ public class ItemActionTextureBlockPatches
             ExtraLogging = false
         };
 
-        var response = PatchUtil.ApplyPatches(request);
+        var response = ILPatchEngine.ApplyPatches(request);
 
         if (response.IsPatched)
         {
             // Get rid of the original instructions by converting them to NOP
-            LogUtil.DebugLog($"{targetMethodName}: Successfully patched, changing the searchPattern instructions to NOP");
+            Logger.DebugLog($"{targetMethodName}: Successfully patched, changing the searchPattern instructions to NOP");
 
             var patched = response.BestInstructions(request);
 
@@ -77,7 +77,7 @@ public class ItemActionTextureBlockPatches
                             blocks = originalInstruction.blocks   // Preserve exception handling blocks
                         };
 
-                        LogUtil.DebugLog($"{targetMethodName}: Converted instruction at index {targetIndex} ({originalInstruction.opcode}) to NOP");
+                        Logger.DebugLog($"{targetMethodName}: Converted instruction at index {targetIndex} ({originalInstruction.opcode}) to NOP");
                     }
                 }
             }
@@ -135,7 +135,7 @@ public class ItemActionTextureBlockPatches
             new CodeInstruction(OpCodes.Ldloc_S, 4),    // load entityAvailableCount (which is now totalAvailableCount)
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = originalCode,
             SearchPattern = searchPattern,
@@ -148,7 +148,7 @@ public class ItemActionTextureBlockPatches
             ExtraLogging = false
         };
 
-        var response = PatchUtil.ApplyPatches(request);
+        var response = ILPatchEngine.ApplyPatches(request);
         return response.BestInstructions(request);
     }
 
@@ -191,7 +191,7 @@ public class ItemActionTextureBlockPatches
             new CodeInstruction(OpCodes.Ret),
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = originalCode,
             SearchPattern = searchPattern,
@@ -204,13 +204,13 @@ public class ItemActionTextureBlockPatches
             ExtraLogging = false
         };
 
-        var response = PatchUtil.ApplyPatches(request);
+        var response = ILPatchEngine.ApplyPatches(request);
         var result = response.BestInstructions(request);
 
         var sizeDiff = result.Count - originalCode.Count;
         if (request.ExtraLogging)
         {
-            LogUtil.DebugLog($"{targetMethodName}: patched code vs original size difference is {sizeDiff}");
+            Logger.DebugLog($"{targetMethodName}: patched code vs original size difference is {sizeDiff}");
         }
 
         if (sizeDiff >= 5)
@@ -221,12 +221,12 @@ public class ItemActionTextureBlockPatches
                 result[popIndex].opcode = OpCodes.Nop; // Convert the POP to a NOP
                 if (request.ExtraLogging)
                 {
-                    LogUtil.DebugLog($"{targetMethodName}: Converted POP to NOP at index {popIndex}");
+                    Logger.DebugLog($"{targetMethodName}: Converted POP to NOP at index {popIndex}");
                 }
             }
             else
             {
-                LogUtil.Error($"{targetMethodName}: Could not find POP to convert to NOP, this is unexpected. popIndex is {popIndex}");
+                Logger.Error($"{targetMethodName}: Could not find POP to convert to NOP, this is unexpected. popIndex is {popIndex}");
             }
         }
 

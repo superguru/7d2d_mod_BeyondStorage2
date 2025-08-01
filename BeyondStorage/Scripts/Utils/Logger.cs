@@ -2,7 +2,7 @@
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class LogUtil
+public static class Logger
 {
     private const string Prefix = "[BeyondStorage2]";
 

@@ -22,7 +22,7 @@ public class XUiCRecipeCraftCountPatches
         IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(XUiC_RecipeCraftCount)}.{nameof(XUiC_RecipeCraftCount.calcMaxCraftable)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
 
         // Append our itemStack array to current inventory
         var codes = new List<CodeInstruction>(instructions);
@@ -35,7 +35,7 @@ public class XUiCRecipeCraftCountPatches
                 continue;
             }
 
-            LogUtil.DebugLog("Appending our item stacks to current inventory");
+            Logger.DebugLog("Appending our item stacks to current inventory");
 
             // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetAllItemStacks()).ToArray()
             codes.Insert(i + 1,
@@ -47,11 +47,11 @@ public class XUiCRecipeCraftCountPatches
 
         if (!set)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

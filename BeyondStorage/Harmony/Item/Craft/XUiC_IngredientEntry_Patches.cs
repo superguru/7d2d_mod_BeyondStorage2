@@ -21,7 +21,7 @@ public class XUiCIngredientEntryPatches
     private static IEnumerable<CodeInstruction> XUiC_IngredientEntry_GetBindingValue_Patch(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(XUiC_IngredientEntry)}.{nameof(XUiC_IngredientEntry.GetBindingValue)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
 
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
@@ -34,7 +34,7 @@ public class XUiCIngredientEntryPatches
                 continue;
             }
 
-            LogUtil.DebugLog($"XUiC_IngredientEntry_GetBindingValue_Patch: Adding method to add item counts from all storages (patch #{++patchCount})");
+            Logger.DebugLog($"XUiC_IngredientEntry_GetBindingValue_Patch: Adding method to add item counts from all storages (patch #{++patchCount})");
 
             found = true;
             List<CodeInstruction> newCode = [
@@ -48,11 +48,11 @@ public class XUiCIngredientEntryPatches
 
         if (!found)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

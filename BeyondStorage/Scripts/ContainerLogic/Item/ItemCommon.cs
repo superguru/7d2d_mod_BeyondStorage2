@@ -15,7 +15,7 @@ public static class ItemCommon
 
         // stillNeeded = totalRequiredAmount (_count1) - originalResult (DecItem(...))
         var stillNeeded = totalRequiredAmount - originalResult;
-        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
+        Logger.DebugLog($"ItemRemoveRemaining | item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
 
         // If we don't need anything else return the original result
         if (stillNeeded <= 0)
@@ -28,7 +28,7 @@ public static class ItemCommon
         var totalRemoved = context?.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems) ?? 0;
 
         var newStillNeeded = stillNeeded - totalRemoved;
-        LogUtil.DebugLog($"ItemRemoveRemaining | item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
+        Logger.DebugLog($"ItemRemoveRemaining | item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
 
         return newStillNeeded;
     }
@@ -37,20 +37,20 @@ public static class ItemCommon
     {
         const string d_MethodName = nameof(ItemCommon_GetAllAvailableItemStacksFromXui);
 
-        var result = ListProvider.GetEmptyItemStackList();
+        var result = CollectionFactory.GetEmptyItemStackList();
         if (xui != null)
         {
-            LogUtil.DebugLog($"{d_MethodName} adding all player items");
+            Logger.DebugLog($"{d_MethodName} adding all player items");
             result.AddRange(xui.PlayerInventory.GetAllItemStacks());
-            LogUtil.DebugLog($"{d_MethodName} added {result.Count} player items (not stripped)");
+            Logger.DebugLog($"{d_MethodName} added {result.Count} player items (not stripped)");
         }
         else
         {
-            LogUtil.Error($"{d_MethodName} called with null xui");
+            Logger.Error($"{d_MethodName} called with null xui");
         }
 
         ItemCraft.ItemCraft_AddPullableSourceStorageStacks(result);
-        LogUtil.DebugLog($"{d_MethodName} returning {result.Count} items");
+        Logger.DebugLog($"{d_MethodName} returning {result.Count} items");
 
         return result;
     }

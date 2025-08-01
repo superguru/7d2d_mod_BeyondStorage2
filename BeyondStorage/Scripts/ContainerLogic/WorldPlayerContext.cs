@@ -84,21 +84,21 @@ public sealed class WorldPlayerContext
         var world = GameManager.Instance.World;
         if (world == null)
         {
-            LogUtil.Error($"{methodName}: World is null, aborting.");
+            Utils.Logger.Error($"{methodName}: World is null, aborting.");
             return null;
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            LogUtil.Error($"{methodName}: Player is null, aborting.");
+            Utils.Logger.Error($"{methodName}: Player is null, aborting.");
             return null;
         }
 
         var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
         if (chunkCacheCopy == null)
         {
-            LogUtil.Error($"{methodName}: chunkCacheCopy is null, aborting.");
+            Utils.Logger.Error($"{methodName}: chunkCacheCopy is null, aborting.");
             return null;
         }
 

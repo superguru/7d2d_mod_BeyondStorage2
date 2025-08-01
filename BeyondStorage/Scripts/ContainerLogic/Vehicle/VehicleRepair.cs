@@ -26,7 +26,7 @@ public static class VehicleRepair
         // attempt to remove item from storage
         var context = StorageAccessContext.Create(d_MethodName);
         var countRemoved = context?.RemoveRemaining(itemValue, 1) ?? 0;
-        LogUtil.DebugLog($"{d_MethodName} - Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
+        Logger.DebugLog($"{d_MethodName} - Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
 
         // if we didn't remove anything return back failed (0)
         if (countRemoved <= 0)
@@ -49,7 +49,7 @@ public static class VehicleRepair
 
         // Repair vehicle
         vehicle.RepairParts(1000, percent);
-        LogUtil.DebugLog($"{d_MethodName} - Repaired {vehicle}");
+        Logger.DebugLog($"{d_MethodName} - Repaired {vehicle}");
 
         // show stack removed on UI
         playerUi.xui.CollectedItemList.RemoveItemStack(new ItemStack(itemValue, 1));

@@ -23,7 +23,7 @@ public static class ServerUtils
             return;
         }
 
-        LogUtil.DebugLog($"client {data.ClientInfo}; isLocalPlayer {data.IsLocalPlayer}; entityId {data.EntityId}; respawn type {data.RespawnType}; pos {data.Position}");
+        Logger.DebugLog($"client {data.ClientInfo}; isLocalPlayer {data.IsLocalPlayer}; entityId {data.EntityId}; respawn type {data.RespawnType}; pos {data.Position}");
 
         if (data.ClientInfo == null)
         {
@@ -40,24 +40,24 @@ public static class ServerUtils
     private static void SendCurrentLockedDict(ClientInfo client)
     {
         // Skip if we have nothing to send
-        if (ContainerUtils.LockedTileEntities.IsEmpty)
+        if (TileEntityLockManager.LockedTileEntities.IsEmpty)
         {
             return;
         }
 
         var destinationId = client.entityId;
 #if DEBUG
-        LogUtil.DebugLog($"PlayerSpawnedInWorld called with {destinationId}");
+        Logger.DebugLog($"PlayerSpawnedInWorld called with {destinationId}");
         // skip if invalid entity ID or if we are the server just logging in
         if (destinationId == -1)
         {
-            LogUtil.Error("PlayerSpawnedInWorld called without a valid entity id");
+            Logger.Error("PlayerSpawnedInWorld called without a valid entity id");
             return;
         }
 
         if (!GameManager.IsDedicatedServer && destinationId == GameManager.Instance.myEntityPlayerLocal.entityId)
         {
-            LogUtil.DebugLog("Skipping local player starting server");
+            Logger.DebugLog("Skipping local player starting server");
             return;
         }
 #else
@@ -77,11 +77,11 @@ public static class ServerUtils
         }
 #endif 
         // send current locked entities to newly logging in player
-        var currentCopy = new Dictionary<Vector3i, int>(ContainerUtils.LockedTileEntities);
+        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
         client.SendPackage(NetPackageManager.GetPackage<NetPackageLockedTEs>().Setup(currentCopy));
         // SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(currentCopy), true, destinationId);
 #if DEBUG
-        LogUtil.DebugLog($"SendCurrentLockedDict to {destinationId}");
+        Logger.DebugLog($"SendCurrentLockedDict to {destinationId}");
 #endif
     }
 
@@ -91,7 +91,7 @@ public static class ServerUtils
         var newDictCount = newLockedDict.Count;
 
         // Skip if it was 0 and still is (before filtering)
-        if (ContainerUtils.LockedTileEntities.Count == 0 && newDictCount == 0)
+        if (TileEntityLockManager.LockedTileEntities.Count == 0 && newDictCount == 0)
         {
             return;
         }
@@ -99,7 +99,7 @@ public static class ServerUtils
         // TODO: investigate possible performance hit, if large consider moving to update every X delta?
         //          concurrent checking looks to take 1-8 ms for small dictionaries
         Dictionary<Vector3i, int> tempDict = new();
-        var currentCopy = new Dictionary<Vector3i, int>(ContainerUtils.LockedTileEntities);
+        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
         var currentCount = currentCopy.Count;
         var foundChange = false;
 
@@ -166,12 +166,12 @@ public static class ServerUtils
             return;
         }
 #if DEBUG
-        LogUtil.DebugLog($"Original Count: {newLockedDict.Count}; Filter Count: {newCount}");
+        Logger.DebugLog($"Original Count: {newLockedDict.Count}; Filter Count: {newCount}");
 #endif
         // Update clients with filtered list
         SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));
 
         // Update our own list as well
-        ContainerUtils.UpdateLockedTEs(tempDict);
+        TileEntityLockManager.UpdateLockedTEs(tempDict);
     }
 }

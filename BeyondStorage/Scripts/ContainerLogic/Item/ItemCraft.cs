@@ -15,23 +15,23 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            LogUtil.Error($"{d_MethodName} called with null items");
+            Logger.Error($"{d_MethodName} called with null items");
             return stacks;  // We're not fixing the caller's mistakes
         }
 
-        LogUtil.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
-        ItemUtil.PurgeInvalidItemStacks(stacks);
+        Logger.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
+        ItemStackHelper.PurgeInvalidItemStacks(stacks);
 
         var context = StorageAccessContext.Create(d_MethodName);
         if (context != null)
         {
             var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
             stacks.AddRange(storageStacks);
-            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            Logger.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
-            LogUtil.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+            Logger.Error($"{d_MethodName}: Failed to create StorageAccessContext");
         }
 
         return stacks;
@@ -47,14 +47,14 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            LogUtil.Error($"{d_MethodName} called with null items");
+            Logger.Error($"{d_MethodName} called with null items");
             return;
         }
 
-        LogUtil.DebugLog($"{d_MethodName} | stacks.Count at the start {stacks.Count} (not stripped)");
+        Logger.DebugLog($"{d_MethodName} | stacks.Count at the start {stacks.Count} (not stripped)");
 
-        ItemUtil.PurgeInvalidItemStacks(stacks);
-        LogUtil.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
+        ItemStackHelper.PurgeInvalidItemStacks(stacks);
+        Logger.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
         // Todo: Add item filtering here, if needed
         var context = StorageAccessContext.Create(d_MethodName);
@@ -62,11 +62,11 @@ public class ItemCraft
         {
             var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
             stacks.AddRange(storageStacks);
-            LogUtil.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            Logger.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
-            LogUtil.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+            Logger.Error($"{d_MethodName}: Failed to create StorageAccessContext");
         }
     }
 
@@ -87,12 +87,12 @@ public class ItemCraft
 
         if (storageCount > 0)
         {
-            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
+            Logger.DebugLog($"{d_MethodName} | item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
             entry.windowGroup.Controller.IsDirty = true;
         }
         else
         {
-            LogUtil.DebugLog($"{d_MethodName} | item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount} but resetting it to 0");
+            Logger.DebugLog($"{d_MethodName} | item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount} but resetting it to 0");
             storageCount = 0;
         }
 
@@ -130,7 +130,7 @@ public class ItemCraft
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;
 
-        LogUtil.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");
+        Logger.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");
         return result;
     }
 }

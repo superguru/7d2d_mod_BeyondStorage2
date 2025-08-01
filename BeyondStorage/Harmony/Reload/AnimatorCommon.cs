@@ -17,7 +17,7 @@ public static class AnimatorCommon
 
     internal static IEnumerable<CodeInstruction> GetCountToReload_Transpiler(string targetMethodString, IEnumerable<CodeInstruction> instructions)
     {
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         var codeInstructions = new List<CodeInstruction>(instructions);
         var lastRet = codeInstructions.FindLastIndex(codeInstruction => codeInstruction.opcode == OpCodes.Ret);
         if (lastRet != -1)
@@ -46,11 +46,11 @@ public static class AnimatorCommon
 
             // insert before last ret
             codeInstructions.InsertRange(lastRet, newCode);
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
         else
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
 
         return codeInstructions.AsEnumerable();

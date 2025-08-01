@@ -228,7 +228,7 @@ public static class ItemPropertiesCache
     public static void InvalidateHasModsCache()
     {
         s_hasModsCache.InvalidateCache();
-        LogUtil.DebugLog("ItemPropertiesCache: HasMods cache invalidated");
+        Logger.DebugLog("ItemPropertiesCache: HasMods cache invalidated");
     }
 
     /// <summary>

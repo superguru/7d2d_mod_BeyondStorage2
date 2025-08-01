@@ -11,12 +11,12 @@ public class ItemTexture
         const string d_MethodName = nameof(ItemTexture_checkAmmo);
 
 #if DEBUG
-        LogUtil.DebugLog($"{d_MethodName}: Starting");
+        Logger.DebugLog($"{d_MethodName}: Starting");
 #endif
         // Paint cost is 1 for everything in v2.x
         if (entityAvailableCount > 0)
         {
-            LogUtil.DebugLog($"{d_MethodName}: Entity has available count {entityAvailableCount}, no need to check ammo");
+            Logger.DebugLog($"{d_MethodName}: Entity has available count {entityAvailableCount}, no need to check ammo");
             return true;
         }
 
@@ -31,7 +31,7 @@ public class ItemTexture
 
         var hasAmmo = removalContext?.HasItem(ammoType) ?? false;
 
-        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
+        Logger.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
         return hasAmmo;
     }
 
@@ -57,7 +57,7 @@ public class ItemTexture
         var storageCount = removalContext?.GetItemCount(ammoType) ?? 0;
         var totalAvailableCount = storageCount + entityAvailableCount;
 
-        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
+        Logger.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
         return totalAvailableCount;
     }
 
@@ -84,7 +84,7 @@ public class ItemTexture
         batchContext?.AccumulateRemoval(ammoType, removedFromStorage);
         var stillNeeded = paintCost - removedFromStorage;
 
-        LogUtil.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
+        Logger.DebugLog($"{d_MethodName}: Batch is {removalContext != null}, ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
         return removedFromStorage;
     }
 

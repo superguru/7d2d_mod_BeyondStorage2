@@ -2,7 +2,7 @@
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class ListProvider
+public static class CollectionFactory
 {
     private const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16;
     private const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;

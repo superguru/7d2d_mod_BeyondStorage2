@@ -22,7 +22,7 @@ public static class ItemRepair
         }
 
         var currentValue = currentCount * itemValue.ItemClass.RepairAmount.Value;
-        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
+        Logger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
 
         if (currentValue > 0)
         {
@@ -33,7 +33,7 @@ public static class ItemRepair
         var storageCount = context?.GetItemCount(itemValue) ?? 0;
         var newCount = currentCount + storageCount;
 
-        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
+        Logger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
         return newCount;
     }
 
@@ -57,7 +57,7 @@ public static class ItemRepair
 
         var context = StorageAccessContext.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemValue) ?? 0;
-        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+        Logger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
 
         return storageCount;
     }

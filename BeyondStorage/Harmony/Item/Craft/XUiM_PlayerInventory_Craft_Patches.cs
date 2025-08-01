@@ -19,7 +19,7 @@ public class XUiMPlayerInventoryCraftPatches
     private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_HasItems_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodName = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.HasItems)}";
-        LogUtil.Info($"Transpiling {targetMethodName}");
+        Logger.Info($"Transpiling {targetMethodName}");
 
         var searchPattern = new List<CodeInstruction>
         {
@@ -44,7 +44,7 @@ public class XUiMPlayerInventoryCraftPatches
             new CodeInstruction(OpCodes.Ble_S, null) // The actual label will be preserved by the patch method
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -57,7 +57,7 @@ public class XUiMPlayerInventoryCraftPatches
             ExtraLogging = false
         };
 
-        var patchResult = PatchUtil.ApplyPatches(request);
+        var patchResult = ILPatchEngine.ApplyPatches(request);
 
         if (patchResult.IsPatched)
         {
@@ -75,7 +75,7 @@ public class XUiMPlayerInventoryCraftPatches
                 var oldLabels = oldInstruction.labels;
                 if (request.ExtraLogging)
                 {
-                    LogUtil.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
+                    Logger.DebugLog($"{targetMethodName} found label instruction {oldInstruction.opcode} at new index {newLabelIndex} replacing with {oldLabels.Count} old labels");
                 }
 
                 request.NewInstructions[newLabelIndex] = oldInstruction.Clone();
@@ -83,7 +83,7 @@ public class XUiMPlayerInventoryCraftPatches
             else
             {
                 // Could not find the label instruction, log an error
-                LogUtil.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
+                Logger.Error($"{targetMethodName} patch failed: Could not find the label instruction for the branch.");
                 return originalInstructions; // Return original instructions if patch failed
             }
         }

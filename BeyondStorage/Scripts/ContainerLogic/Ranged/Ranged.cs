@@ -19,7 +19,7 @@ public static class Ranged
         var context = StorageAccessContext.Create(d_MethodName);
         var canReloadFromStorage = context?.HasItem(itemValue) ?? false;
 
-        LogUtil.DebugLog($"{d_MethodName}: {canReloadFromStorage}");
+        Logger.DebugLog($"{d_MethodName}: {canReloadFromStorage}");
         return canReloadFromStorage;
     }
 
@@ -54,7 +54,7 @@ public static class Ranged
         var context = StorageAccessContext.Create(d_MethodName);
         var ammoRemovedFromStorage = context?.RemoveRemaining(ammoType, ammoRequired) ?? 0;
 
-        LogUtil.DebugLog($"{d_MethodName} {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
+        Logger.DebugLog($"{d_MethodName} {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;
     }
 }

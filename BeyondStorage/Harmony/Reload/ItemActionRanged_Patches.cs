@@ -22,7 +22,7 @@ public class ItemActionRangedPatches
         var targetMethodString = $"{typeof(ItemActionRanged)}.{nameof(ItemActionRanged.CanReload)}";
         var codeInstructions = new List<CodeInstruction>(instructions);
         var lastBgt = codeInstructions.FindLastIndex(instruction => instruction.opcode == OpCodes.Bgt);
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         if (lastBgt != -1)
         {
             // if (Ranged.CanReloadFromStorage(_itemValue) > 0)
@@ -39,11 +39,11 @@ public class ItemActionRangedPatches
             ];
             // Insert right below last BGT
             codeInstructions.InsertRange(lastBgt + 1, newCode);
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
         else
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
 
         return codeInstructions.AsEnumerable();

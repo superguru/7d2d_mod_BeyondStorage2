@@ -36,7 +36,7 @@ public class NetPackageLockedTEs : NetPackage
             StreamUtils.Write(binaryWriter, kvp.Key);
             binaryWriter.Write(kvp.Value);
 #if DEBUG
-            LogUtil.DebugLog($"pos {kvp.Key}, value {kvp.Value}");
+            Logger.DebugLog($"pos {kvp.Key}, value {kvp.Value}");
 #endif
         }
     }
@@ -62,7 +62,7 @@ public class NetPackageLockedTEs : NetPackage
             var pos = StreamUtils.ReadVector3i(binaryReader);
             var lockingEntityId = binaryReader.ReadInt32();
 #if DEBUG
-            LogUtil.DebugLog($"tePOS {pos}; lockingEntityId {lockingEntityId}");
+            Logger.DebugLog($"tePOS {pos}; lockingEntityId {lockingEntityId}");
 #endif
             LockedTileEntities.Add(pos, lockingEntityId);
         }
@@ -72,7 +72,7 @@ public class NetPackageLockedTEs : NetPackage
 
         UpdateLength();
 #if DEBUG
-        LogUtil.DebugLog($"count: {EntryCount}; LTE_Dict count {LockedTileEntities.Count}; length {Length}; oldLength {tempLength}");
+        Logger.DebugLog($"count: {EntryCount}; LTE_Dict count {LockedTileEntities.Count}; length {Length}; oldLength {tempLength}");
 #endif
     }
 
@@ -84,9 +84,9 @@ public class NetPackageLockedTEs : NetPackage
             return;
         }
 
-        ContainerUtils.UpdateLockedTEs(LockedTileEntities);
+        TileEntityLockManager.UpdateLockedTEs(LockedTileEntities);
 #if DEBUG
-        LogUtil.DebugLog($"NetPackageLockedTEs: size {Length}; count {EntryCount}");
+        Logger.DebugLog($"NetPackageLockedTEs: size {Length}; count {EntryCount}");
 #endif
     }
 

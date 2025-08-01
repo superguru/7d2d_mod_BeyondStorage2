@@ -5,11 +5,11 @@ using BeyondStorage.Scripts.Utils;
 
 namespace BeyondStorage.Scripts.ContainerLogic;
 
-public static class ContainerUtils
+public static class TileEntityLockManager
 {
     public static ConcurrentDictionary<Vector3i, int> LockedTileEntities { get; private set; }
 
-    private static readonly MethodCallStatistics s_methodStats = new("ContainerUtils");
+    private static readonly PerformanceProfiler s_methodStats = new("TileEntityLockManager");
 
     public static void Init()
     {
@@ -28,6 +28,6 @@ public static class ContainerUtils
     public static void UpdateLockedTEs(Dictionary<Vector3i, int> lockedTileEntities)
     {
         LockedTileEntities = new ConcurrentDictionary<Vector3i, int>(lockedTileEntities);
-        LogUtil.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
+        Logger.DebugLog($"UpdateLockedTEs: newCount {lockedTileEntities.Count}");
     }
 }

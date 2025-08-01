@@ -78,7 +78,7 @@ public sealed class TimeBasedDictionaryCache<TKey, TValue>
     public void InvalidateCache()
     {
         _cache.Clear();
-        LogUtil.DebugLog($"{_cacheTypeName} cache invalidated");
+        Logger.DebugLog($"{_cacheTypeName} cache invalidated");
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public sealed class TimeBasedDictionaryCache<TKey, TValue>
 
         if (keysToRemove.Count > 0)
         {
-            LogUtil.DebugLog($"{_cacheTypeName}: Cleaned up {keysToRemove.Count} expired entries");
+            Logger.DebugLog($"{_cacheTypeName}: Cleaned up {keysToRemove.Count} expired entries");
         }
     }
 

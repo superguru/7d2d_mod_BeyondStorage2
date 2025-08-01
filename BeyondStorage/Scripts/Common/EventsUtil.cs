@@ -8,17 +8,17 @@ public static class EventsUtil
 {
     public static void GameStartDone(ref SGameStartDoneData data)
     {
-        LogUtil.DebugLog("Game Start: Initializing...");
-        ContainerUtils.Init();
+        Logger.DebugLog("Game Start: Initializing...");
+        TileEntityLockManager.Init();
     }
 
     public static void GameShutdown(ref SGameShutdownData data)
     {
-        LogUtil.DebugLog("Game Shutdown: Cleaning up...");
-        ContainerUtils.Cleanup();
+        Logger.DebugLog("Game Shutdown: Cleaning up...");
+        TileEntityLockManager.Cleanup();
     }
 
     // public static void PlayerDisconnected(ClientInfo client, bool arg2) {
-    //     LogUtil.DebugLog($"Player Disconnected: {client}; somebool {arg2}");
+    //     Logger.DebugLog($"Player Disconnected: {client}; somebool {arg2}");
     // }
 }

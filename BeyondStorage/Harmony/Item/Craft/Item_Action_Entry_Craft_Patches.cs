@@ -33,7 +33,7 @@ public class ItemActionEntryCraftPatches
             new CodeInstruction(OpCodes.Stloc_1)
         };
 
-        var request = new PatchUtil.PatchRequest
+        var request = new ILPatchEngine.PatchRequest
         {
             OriginalInstructions = [.. originalInstructions],
             SearchPattern = searchPattern,
@@ -46,7 +46,7 @@ public class ItemActionEntryCraftPatches
             ExtraLogging = false
         };
 
-        var response = PatchUtil.ApplyPatches(request);
+        var response = ILPatchEngine.ApplyPatches(request);
         return response.BestInstructions(request);
     }
 }

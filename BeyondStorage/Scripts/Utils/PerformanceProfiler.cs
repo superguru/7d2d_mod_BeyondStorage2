@@ -11,7 +11,7 @@ namespace BeyondStorage.Scripts.Utils;
 /// Uses explicit call recording for clarity and accuracy with nanosecond precision.
 /// Includes internal stopwatch management for convenience.
 /// </summary>
-public sealed class MethodCallStatistics
+public sealed class PerformanceProfiler
 {
     private readonly Dictionary<string, (int callCount, long totalTimeNs, double avgTimeNs)> _callStats = new();
     private readonly Dictionary<string, Stopwatch> _activeStopwatches = new();
@@ -22,10 +22,10 @@ public sealed class MethodCallStatistics
     private static readonly double s_ticksToNanoseconds = 1_000_000_000.0 / Stopwatch.Frequency;
 
     /// <summary>
-    /// Initializes a new instance of MethodCallStatistics.
+    /// Initializes a new instance of PerformanceProfiler.
     /// </summary>
     /// <param name="trackerName">Name of the tracker for logging purposes</param>
-    public MethodCallStatistics(string trackerName)
+    public PerformanceProfiler(string trackerName)
     {
         _trackerName = trackerName ?? throw new ArgumentNullException(nameof(trackerName));
     }

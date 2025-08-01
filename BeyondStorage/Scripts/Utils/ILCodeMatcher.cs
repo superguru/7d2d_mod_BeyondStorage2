@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace BeyondStorage.Scripts.Utils;
 
-public static class CodesUtil
+public static class ILCodeMatcher
 {
     public static bool CodesMatch(CodeInstruction a, CodeInstruction b)
     {
@@ -42,34 +42,34 @@ public static class CodesUtil
 
         if (a == null || b == null)
         {
-            LogUtil.DebugLog($"{d_methodName}: {scenario} - One of the instructions is null: a={a}, b={b}");
+            Logger.DebugLog($"{d_methodName}: {scenario} - One of the instructions is null: a={a}, b={b}");
             return;
         }
 
         // Check if the opcodes match
         if (a.opcode != b.opcode)
         {
-            LogUtil.DebugLog($"{d_methodName}: {scenario} - Opcodes do not match: a={a.opcode}, b={b.opcode}");
+            Logger.DebugLog($"{d_methodName}: {scenario} - Opcodes do not match: a={a.opcode}, b={b.opcode}");
             return;
         }
 
         // If operands are null, they match
         if (a.operand == null && b.operand == null)
         {
-            LogUtil.DebugLog($"{d_methodName}: {scenario} - Both operands are null, they match");
+            Logger.DebugLog($"{d_methodName}: {scenario} - Both operands are null, they match");
             return;
         }
 
         // If one operand is null and the other is not, they do not match
         if (a.operand == null || b.operand == null)
         {
-            LogUtil.DebugLog($"{d_methodName}: {scenario} - One operand is null: a={a.operand}, b={b.operand}");
+            Logger.DebugLog($"{d_methodName}: {scenario} - One operand is null: a={a.operand}, b={b.operand}");
             return;
         }
 
         // Check if operands are equal
         var operandsMatch = OperandsMatch(a.operand, b.operand);
-        LogUtil.DebugLog($"{d_methodName}: {scenario} - OperandsMatch is {operandsMatch}");
+        Logger.DebugLog($"{d_methodName}: {scenario} - OperandsMatch is {operandsMatch}");
     }
 
     private static bool OperandsMatch(object a, object b)
@@ -132,10 +132,10 @@ public static class CodesUtil
 
         if (extraLogging)
         {
-            LogUtil.DebugLog($"IndexOf: Searching for pattern of {subCount} instructions in list of {mainCount} instructions, starting at index {startIndex}");
+            Logger.DebugLog($"IndexOf: Searching for pattern of {subCount} instructions in list of {mainCount} instructions, starting at index {startIndex}");
             for (int i = 0; i < subList.Count; i++)
             {
-                LogUtil.DebugLog($"IndexOf: Pattern[{i}] = {subList[i].opcode} {subList[i].operand}");
+                Logger.DebugLog($"IndexOf: Pattern[{i}] = {subList[i].opcode} {subList[i].operand}");
             }
         }
 
@@ -144,7 +144,7 @@ public static class CodesUtil
         {
             if (extraLogging)
             {
-                LogUtil.DebugLog($"IndexOf: Early validation failed - subCount={subCount}, mainCount={mainCount}, startIndex={startIndex}");
+                Logger.DebugLog($"IndexOf: Early validation failed - subCount={subCount}, mainCount={mainCount}, startIndex={startIndex}");
             }
             return -1;
         }
@@ -154,7 +154,7 @@ public static class CodesUtil
         {
             if (extraLogging)
             {
-                LogUtil.DebugLog("IndexOf: Using single element optimization");
+                Logger.DebugLog("IndexOf: Using single element optimization");
             }
 
             var target = subList[0];
@@ -162,14 +162,14 @@ public static class CodesUtil
             {
                 if (extraLogging)
                 {
-                    LogUtil.DebugLog($"IndexOf: Checking index {i}: {mainList[i].opcode} {mainList[i].operand} vs target {target.opcode} {target.operand}");
+                    Logger.DebugLog($"IndexOf: Checking index {i}: {mainList[i].opcode} {mainList[i].operand} vs target {target.opcode} {target.operand}");
                 }
 
                 if (CodesMatch(mainList[i], target))
                 {
                     if (extraLogging)
                     {
-                        LogUtil.DebugLog($"IndexOf: Single element match found at index {i}");
+                        Logger.DebugLog($"IndexOf: Single element match found at index {i}");
                     }
                     return i;
                 }
@@ -177,7 +177,7 @@ public static class CodesUtil
 
             if (extraLogging)
             {
-                LogUtil.DebugLog("IndexOf: Single element not found");
+                Logger.DebugLog("IndexOf: Single element not found");
             }
             return -1;
         }
@@ -187,7 +187,7 @@ public static class CodesUtil
         {
             if (extraLogging)
             {
-                LogUtil.DebugLog("IndexOf: Using two element optimization");
+                Logger.DebugLog("IndexOf: Using two element optimization");
             }
 
             var first = subList[0];
@@ -196,7 +196,7 @@ public static class CodesUtil
             {
                 if (extraLogging)
                 {
-                    LogUtil.DebugLog($"IndexOf: Checking two-element match at index {i}: [{mainList[i].opcode} {mainList[i].operand}] [{mainList[i + 1].opcode} {mainList[i + 1].operand}]");
+                    Logger.DebugLog($"IndexOf: Checking two-element match at index {i}: [{mainList[i].opcode} {mainList[i].operand}] [{mainList[i + 1].opcode} {mainList[i + 1].operand}]");
                 }
 
                 var codesMatchFirst = CodesMatch(mainList[i], first);
@@ -205,7 +205,7 @@ public static class CodesUtil
                 {
                     if (extraLogging)
                     {
-                        LogUtil.DebugLog($"IndexOf: Two element match found at index {i}");
+                        Logger.DebugLog($"IndexOf: Two element match found at index {i}");
                     }
                     return i;
                 }
@@ -213,7 +213,7 @@ public static class CodesUtil
 
             if (extraLogging)
             {
-                LogUtil.DebugLog("IndexOf: Two element pattern not found");
+                Logger.DebugLog("IndexOf: Two element pattern not found");
             }
             return -1;
         }
@@ -221,7 +221,7 @@ public static class CodesUtil
         // For longer patterns, use optimized search with skip table
         if (extraLogging)
         {
-            LogUtil.DebugLog("IndexOf: Using skip table optimization for longer pattern");
+            Logger.DebugLog("IndexOf: Using skip table optimization for longer pattern");
         }
         return IndexOfWithSkipTable(mainList, subList, startIndex, extraLogging);// false);  // extraLogging is false here to avoid excessive logging in the optimized path
     }
@@ -244,7 +244,7 @@ public static class CodesUtil
 
         if (extraLogging)
         {
-            LogUtil.DebugLog($"IndexOf: Built skip table with {skipTable.Count} entries using custom comparer");
+            Logger.DebugLog($"IndexOf: Built skip table with {skipTable.Count} entries using custom comparer");
         }
 
         int pos = startIndex;
@@ -254,7 +254,7 @@ public static class CodesUtil
             attempts++;
             if (extraLogging)
             {
-                LogUtil.DebugLog($"IndexOf: Attempt #{attempts} at position {pos}");
+                Logger.DebugLog($"IndexOf: Attempt #{attempts} at position {pos}");
             }
 
             // Start matching from the end of the pattern
@@ -263,7 +263,7 @@ public static class CodesUtil
             {
                 if (extraLogging)
                 {
-                    LogUtil.DebugLog($"IndexOf: Match at pattern index {i}, instruction: {mainList[pos + i].opcode} {mainList[pos + i].operand}");
+                    Logger.DebugLog($"IndexOf: Match at pattern index {i}, instruction: {mainList[pos + i].opcode} {mainList[pos + i].operand}");
                 }
                 i--;
             }
@@ -272,7 +272,7 @@ public static class CodesUtil
             {
                 if (extraLogging)
                 {
-                    LogUtil.DebugLog($"IndexOf: Complete pattern match found at position {pos} after {attempts} attempts");
+                    Logger.DebugLog($"IndexOf: Complete pattern match found at position {pos} after {attempts} attempts");
                 }
                 return pos; // Found match
             }
@@ -286,7 +286,7 @@ public static class CodesUtil
 
             if (extraLogging)
             {
-                LogUtil.DebugLog($"IndexOf: Mismatch at pattern index {i}, bad char: {badChar.opcode} {badChar.operand}, skip: {actualSkip}");
+                Logger.DebugLog($"IndexOf: Mismatch at pattern index {i}, bad char: {badChar.opcode} {badChar.operand}, skip: {actualSkip}");
             }
 
             pos += actualSkip;
@@ -294,7 +294,7 @@ public static class CodesUtil
 
         if (extraLogging)
         {
-            LogUtil.DebugLog($"IndexOf: Pattern not found after {attempts} attempts");
+            Logger.DebugLog($"IndexOf: Pattern not found after {attempts} attempts");
         }
         return -1;
     }

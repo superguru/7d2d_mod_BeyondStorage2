@@ -23,7 +23,7 @@ public class BlockRepair
         var context = StorageAccessContext.Create(d_MethodName);
         var result = context?.GetItemCount(itemValue) ?? 0;
 
-        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
+        Logger.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
         return result;
     }
 
@@ -45,7 +45,7 @@ public class BlockRepair
         // itemStack.count is total amount needed
         // currentCount is the amount removed previously in last DecItem
         var stillNeeded = itemStack.count - currentCount;
-        LogUtil.DebugLog($"{d_MethodName} | itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
+        Logger.DebugLog($"{d_MethodName} | itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
 
         // Skip if already 0
         if (stillNeeded == 0)
@@ -58,7 +58,7 @@ public class BlockRepair
         var removedFromStorage = context?.RemoveRemaining(itemStack.itemValue, stillNeeded) ?? 0;
 
         var totalRemoved = currentCount + removedFromStorage;
-        LogUtil.DebugLog($"{d_MethodName} | total removed {totalRemoved}; removedFromStorage {removedFromStorage}; stillNeeded {stillNeeded}");
+        Logger.DebugLog($"{d_MethodName} | total removed {totalRemoved}; removedFromStorage {removedFromStorage}; stillNeeded {stillNeeded}");
 
         return totalRemoved;
     }

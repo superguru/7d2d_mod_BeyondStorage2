@@ -33,7 +33,7 @@ public class EntityVehiclePatches
     private static IEnumerable<CodeInstruction> EntityVehicle_takeFuel_Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(EntityVehicle)}.{nameof(EntityVehicle.takeFuel)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
         for (var i = 0; i < codes.Count; i++)
@@ -43,7 +43,7 @@ public class EntityVehiclePatches
                 continue;
             }
 
-            LogUtil.DebugLog($"Patching {targetMethodString}");
+            Logger.DebugLog($"Patching {targetMethodString}");
 
             found = true;
             List<CodeInstruction> newCode = [
@@ -64,11 +64,11 @@ public class EntityVehiclePatches
 
         if (!found)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

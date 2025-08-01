@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace BeyondStorage.Scripts.Utils;
 
-internal static class FileUtil
+internal static class ModPathManager
 {
     internal static string ConfigAssetPath = "Config";
     internal static string GetConfigPath(bool create = false)
@@ -25,10 +25,10 @@ internal static class FileUtil
 
         if (string.IsNullOrEmpty(s_mod_assembly_path))
         {
-            LogUtil.Error("Failed to get mod assembly path.");
+            Logger.Error("Failed to get mod assembly path.");
             throw new InvalidOperationException("Mod assembly path is null or empty.");
         }
-        LogUtil.DebugLog($"Mod assembly path: {s_mod_assembly_path}");
+        Logger.DebugLog($"Mod assembly path: {s_mod_assembly_path}");
 
         return s_mod_assembly_path;
     }
@@ -36,7 +36,7 @@ internal static class FileUtil
     private static string GetAssetPath(string assetname, bool create = false)
     {
         var result = Path.Combine(GetModAssemblyPath(), assetname);
-        LogUtil.DebugLog($"Asset path for asset [{assetname}] is {result}");
+        Logger.DebugLog($"Asset path for asset [{assetname}] is {result}");
 
         if (create && !Directory.Exists(result))
         {

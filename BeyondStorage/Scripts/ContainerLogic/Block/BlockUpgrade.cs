@@ -21,7 +21,7 @@ public class BlockUpgrade
         var context = StorageAccessContext.Create(d_MethodName);
         var result = context?.GetItemCount(itemValue) ?? 0;
 
-        LogUtil.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; count {result}");
+        Logger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; count {result}");
         return result;
     }
 
@@ -46,14 +46,14 @@ public class BlockUpgrade
             return currentCount;
         }
 
-        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
+        Logger.DebugLog($"{d_MethodName} | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
 
         var context = StorageAccessContext.Create(d_MethodName);
         var removedFromStorage = context?.RemoveRemaining(itemValue, requiredCount - currentCount) ?? 0;
 
         // add amount removed from storage to previous removed count to update result
         var result = currentCount + removedFromStorage;
-        LogUtil.DebugLog($"{d_MethodName} | item {itemName}; removed {removedFromStorage}; new result {result}");
+        Logger.DebugLog($"{d_MethodName} | item {itemName}; removed {removedFromStorage}; new result {result}");
 
         return result;
     }

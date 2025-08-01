@@ -18,7 +18,7 @@ public class XUiMVehiclePatches
     private static IEnumerable<CodeInstruction> XUiM_Vehicle_RepairVehicle_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
     {
         var targetMethodString = $"{typeof(XUiM_Vehicle)}.{nameof(XUiM_Vehicle.RepairVehicle)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         var codes = new List<CodeInstruction>(instructions);
         var found = false;
         for (var i = 0; i < codes.Count; i++)
@@ -29,7 +29,7 @@ public class XUiMVehiclePatches
                 continue;
             }
 
-            LogUtil.DebugLog($"Patching {targetMethodString}");
+            Logger.DebugLog($"Patching {targetMethodString}");
 
             found = true;
             // define new lable
@@ -62,11 +62,11 @@ public class XUiMVehiclePatches
 
         if (!found)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

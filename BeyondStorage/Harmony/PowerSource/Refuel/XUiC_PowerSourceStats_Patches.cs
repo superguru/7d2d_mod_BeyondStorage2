@@ -29,7 +29,7 @@ public class XUiCPowerSourceStatsPatches
                 codeList[i].operand is MethodInfo mi &&
                 mi == AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
             {
-                LogUtil.DebugLog($"Patching {targetMethodString} at instruction {i}");
+                Logger.DebugLog($"Patching {targetMethodString} at instruction {i}");
 
                 // Ensure we have enough instructions before and after for safe patching
                 if (i - 5 >= 0 && i + 2 < codeList.Count)
@@ -55,7 +55,7 @@ public class XUiCPowerSourceStatsPatches
                 }
                 else
                 {
-                    LogUtil.Error($"Patch for {targetMethodString} failed: insufficient instruction context at index {i}.");
+                    Logger.Error($"Patch for {targetMethodString} failed: insufficient instruction context at index {i}.");
                 }
                 break;
             }
@@ -63,11 +63,11 @@ public class XUiCPowerSourceStatsPatches
 
         if (!patchApplied)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}: target instruction not found.");
+            Logger.Error($"Failed to patch {targetMethodString}: target instruction not found.");
         }
         else if (patchApplied)
         {
-            LogUtil.DebugLog($"Successfully patched {targetMethodString}");
+            Logger.DebugLog($"Successfully patched {targetMethodString}");
         }
 
         return codeList.AsEnumerable();

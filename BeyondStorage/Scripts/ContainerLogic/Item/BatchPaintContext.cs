@@ -48,16 +48,16 @@ public sealed class BatchPaintContext
             var storageContext = StorageAccessContext.Create(methodName);
             if (!StorageAccessContext.IsValidContext(storageContext))
             {
-                LogUtil.Error($"{methodName}: Failed to create StorageAccessContext with valid WorldPlayerContext");
+                Logger.Error($"{methodName}: Failed to create StorageAccessContext with valid WorldPlayerContext");
                 return null;
             }
 
-            LogUtil.DebugLog($"{methodName}: Created batch paint context with {storageContext.GetSourceSummary()}");
+            Logger.DebugLog($"{methodName}: Created batch paint context with {storageContext.GetSourceSummary()}");
             return new BatchPaintContext(storageContext);
         }
         catch (Exception ex)
         {
-            LogUtil.Error($"{methodName}: Exception creating BatchPaintContext: {ex.Message}");
+            Logger.Error($"{methodName}: Exception creating BatchPaintContext: {ex.Message}");
             return null;
         }
     }
@@ -69,7 +69,7 @@ public sealed class BatchPaintContext
     public static void InvalidateCache()
     {
         s_batchPaintCache.InvalidateCache();
-        LogUtil.DebugLog("Batch paint cache invalidated");
+        Logger.DebugLog("Batch paint cache invalidated");
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public sealed class BatchPaintContext
         s_batchPaintCache.InvalidateCache();
         StorageAccessContext.InvalidateCache();
         WorldPlayerContext.InvalidateCache();
-        LogUtil.DebugLog("All BatchPaintContext-related caches invalidated");
+        Logger.DebugLog("All BatchPaintContext-related caches invalidated");
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public sealed class BatchPaintContext
             _accumulatedRemovals[itemType] = currentCount + removedCount;
             _totalOperations++;
 
-            LogUtil.DebugLog($"BatchPaintContext: Accumulated {removedCount} of {itemValue.ItemClass.Name} (total: {_accumulatedRemovals[itemType]}, operations: {_totalOperations})");
+            Logger.DebugLog($"BatchPaintContext: Accumulated {removedCount} of {itemValue.ItemClass.Name} (total: {_accumulatedRemovals[itemType]}, operations: {_totalOperations})");
         }
     }
 

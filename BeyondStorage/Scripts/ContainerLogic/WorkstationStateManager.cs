@@ -2,7 +2,7 @@
 
 namespace BeyondStorage.Scripts.ContainerLogic;
 
-public static class WorkstationUtils
+public static class WorkstationStateManager
 {
     public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;
 
@@ -12,11 +12,11 @@ public static class WorkstationUtils
     public static void MarkWorkstationModified(TileEntityWorkstation workstation)
     {
         const string d_method_name = "MarkWorkstationModified";
-        LogUtil.DebugLog($"{d_method_name} | Marking Workstation '{workstation?.GetType().Name}' as modified");
+        Logger.DebugLog($"{d_method_name} | Marking Workstation '{workstation?.GetType().Name}' as modified");
 
         if (workstation == null)
         {
-            LogUtil.Error($"{d_method_name}: workstation is null");
+            Logger.Error($"{d_method_name}: workstation is null");
             return;
         }
 
@@ -27,7 +27,7 @@ public static class WorkstationUtils
         var workstationData = CraftingManager.GetWorkstationData(blockName);
         if (workstationData == null)
         {
-            LogUtil.Error($"{d_method_name}: No WorkstationData found for block '{blockName}'");
+            Logger.Error($"{d_method_name}: No WorkstationData found for block '{blockName}'");
             return;
         }
 
@@ -35,14 +35,14 @@ public static class WorkstationUtils
             ? workstationData.WorkstationWindow
             : $"workstation_{blockName}";
 
-        LogUtil.DebugLog($"{d_method_name}: blockName '{blockName}', windowName '{windowName}'");
+        Logger.DebugLog($"{d_method_name}: blockName '{blockName}', windowName '{windowName}'");
 
         var player = GameManager.Instance.World.GetPrimaryPlayer();
 
         var windowGroup = player.windowManager.GetWindow(windowName) as XUiWindowGroup;
         if (windowGroup == null)
         {
-            LogUtil.DebugLog($"{d_method_name}: windowGroup is null for '{windowName}'");
+            Logger.DebugLog($"{d_method_name}: windowGroup is null for '{windowName}'");
             return;
         }
 
@@ -54,17 +54,17 @@ public static class WorkstationUtils
         var workstationWindowGroup = windowGroup.Controller as XUiC_WorkstationWindowGroup;
         if (workstationWindowGroup == null)
         {
-            LogUtil.DebugLog($"{d_method_name}: WorkstationWindowGroup is null for '{windowName}'");
+            Logger.DebugLog($"{d_method_name}: WorkstationWindowGroup is null for '{windowName}'");
             return;
         }
 
         if (workstationWindowGroup.WorkstationData == null)
         {
-            LogUtil.Error($"{d_method_name}: WorkstationData is null for '{windowName}'");
+            Logger.Error($"{d_method_name}: WorkstationData is null for '{windowName}'");
             return;
         }
 
-        LogUtil.DebugLog($"{d_method_name}: Syncing UI from TE for '{windowName}'");
+        Logger.DebugLog($"{d_method_name}: Syncing UI from TE for '{windowName}'");
         workstationWindowGroup.syncUIfromTE();
     }
 }

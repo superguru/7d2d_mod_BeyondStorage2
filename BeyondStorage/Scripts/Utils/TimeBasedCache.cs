@@ -48,7 +48,7 @@ public sealed class TimeBasedCache<T> where T : class
                 var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
                 if (age < _cacheDurationSeconds)
                 {
-                    LogUtil.DebugLog($"{methodName}: Using cached {_cacheTypeName} (age: {age:F3}s)");
+                    Logger.DebugLog($"{methodName}: Using cached {_cacheTypeName} (age: {age:F3}s)");
                     return _cachedItem;
                 }
             }
@@ -59,13 +59,13 @@ public sealed class TimeBasedCache<T> where T : class
             {
                 _cachedItem = newItem;
                 _cacheTimestamp = DateTime.Now;
-                //LogUtil.DebugLog($"{methodName}: Created fresh {_cacheTypeName}");
+                //Logger.DebugLog($"{methodName}: Created fresh {_cacheTypeName}");
             }
             else
             {
                 // Clear cache if factory returns null
                 _cachedItem = null;
-                //LogUtil.DebugLog($"{methodName}: Factory returned null for {_cacheTypeName}, cache cleared");
+                //Logger.DebugLog($"{methodName}: Factory returned null for {_cacheTypeName}, cache cleared");
             }
 
             return newItem;
@@ -80,7 +80,7 @@ public sealed class TimeBasedCache<T> where T : class
         lock (_cacheLock)
         {
             _cachedItem = null;
-            LogUtil.DebugLog($"{_cacheTypeName} cache invalidated");
+            Logger.DebugLog($"{_cacheTypeName} cache invalidated");
         }
     }
 

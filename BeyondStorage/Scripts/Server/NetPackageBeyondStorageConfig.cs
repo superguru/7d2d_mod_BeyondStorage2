@@ -15,7 +15,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
 
     public override void write(PooledBinaryWriter _writer)
     {
-        LogUtil.DebugLog($"Sending config, version {ConfigVersion}, to client.");
+        Logger.DebugLog($"Sending config, version {ConfigVersion}, to client.");
 
         base.write(_writer);
 
@@ -58,16 +58,16 @@ public class NetPackageBeyondStorageConfig : NetPackage
     {
         var configVersion = reader.ReadUInt16();
         var sentBoolCount = reader.ReadUInt16();
-        LogUtil.DebugLog($"Received config from server. Version {configVersion}; sentBoolCount {sentBoolCount}; localBoolCount {BoolCount}.");
+        Logger.DebugLog($"Received config from server. Version {configVersion}; sentBoolCount {sentBoolCount}; localBoolCount {BoolCount}.");
         // check if we got the same, newer, or older version of the config.
         switch (configVersion)
         {
             case > ConfigVersion:
-                LogUtil.Warning("Newer configuration version received from server! You might be missing features present on the server and is advised to use the same version.");
+                Logger.Warning("Newer configuration version received from server! You might be missing features present on the server and is advised to use the same version.");
                 break;
             case < ConfigVersion:
                 // TODO: maybe extract what we can from server settings
-                LogUtil.Error(
+                Logger.Error(
                     "Older configuration version received from server, failed to sync server settings! Either downgrade client mod to the version on the server OR have the server upgrade to client's mod version.");
                 return;
         }
@@ -102,26 +102,26 @@ public class NetPackageBeyondStorageConfig : NetPackage
         }
 
 #if DEBUG
-        LogUtil.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
+        Logger.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
+        Logger.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
+        Logger.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
+        Logger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
+        Logger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
 
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockTexture {ModConfig.ServerConfig.enableForBlockTexture}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForGeneratorRefuel {ModConfig.ServerConfig.enableForGeneratorRefuel}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForItemRepair {ModConfig.ServerConfig.enableForItemRepair}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForReload {ModConfig.ServerConfig.enableForReload}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRefuel {ModConfig.ServerConfig.enableForVehicleRefuel}");
-        LogUtil.DebugLog($"ModConfig.ServerConfig.enableForVehicleRepair {ModConfig.ServerConfig.enableForVehicleRepair}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForBlockTexture {ModConfig.ServerConfig.enableForBlockTexture}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForBlockUpgrade {ModConfig.ServerConfig.enableForBlockUpgrade}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForGeneratorRefuel {ModConfig.ServerConfig.enableForGeneratorRefuel}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForItemRepair {ModConfig.ServerConfig.enableForItemRepair}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForReload {ModConfig.ServerConfig.enableForReload}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForVehicleRefuel {ModConfig.ServerConfig.enableForVehicleRefuel}");
+        Logger.DebugLog($"ModConfig.ServerConfig.enableForVehicleRepair {ModConfig.ServerConfig.enableForVehicleRepair}");
 #endif
     }
 
     public override void ProcessPackage(World world, GameManager callbacks)
     {
-        LogUtil.DebugLog("Updated client config to use server settings.");
+        Logger.DebugLog("Updated client config to use server settings.");
     }
 
     public override int GetLength()

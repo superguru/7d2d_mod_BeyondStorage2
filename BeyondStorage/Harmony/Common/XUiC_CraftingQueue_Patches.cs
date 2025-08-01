@@ -19,8 +19,8 @@ public class XUiCCraftingQueuePatches
             return true;
         }
 
-        LogUtil.Error("XUiC_CraftingQueue.AddRecipeToCraftAtIndex OutOfBounds!");
-        LogUtil.DebugLog($"Queue Length: {__instance.queueItems.Length}; _index: {_index}; {_index >= __instance.queueItems.Length}");
+        Logger.Error("XUiC_CraftingQueue.AddRecipeToCraftAtIndex OutOfBounds!");
+        Logger.DebugLog($"Queue Length: {__instance.queueItems.Length}; _index: {_index}; {_index >= __instance.queueItems.Length}");
 
         __result = false;
         return false;

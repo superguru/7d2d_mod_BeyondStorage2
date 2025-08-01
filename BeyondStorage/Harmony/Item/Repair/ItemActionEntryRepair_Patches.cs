@@ -21,14 +21,14 @@ public class ItemActionEntryRepairPatches
     private static IEnumerable<CodeInstruction> ItemActionEntryRepair_OnActivated_Patch(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryRepair)}.{nameof(ItemActionEntryRepair.OnActivated)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
 
         var codes = instructions.ToList();
         var startIndex = codes.FindIndex(instruction => instruction.opcode == OpCodes.Ldloc_1);
 
         if (startIndex != -1)
         {
-            LogUtil.Info($"Patching {targetMethodString}");
+            Logger.Info($"Patching {targetMethodString}");
 
             List<CodeInstruction> newCode = [
                 // ldloc.s      itemClass                                                                     
@@ -54,11 +54,11 @@ public class ItemActionEntryRepairPatches
             // Insert below start
             codes.InsertRange(startIndex + 9, newCode);
 
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
         else
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
 
         return codes.AsEnumerable();
@@ -74,7 +74,7 @@ public class ItemActionEntryRepairPatches
     private static IEnumerable<CodeInstruction> ItemActionEntryRepair_RefreshEnabled_Patch(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryRepair)}.{nameof(ItemActionEntryRepair.RefreshEnabled)}";
-        LogUtil.Info($"Transpiling {targetMethodString}");
+        Logger.Info($"Transpiling {targetMethodString}");
         var startIndex = -1;
         var endIndex = -1;
         var codes = new List<CodeInstruction>(instructions);
@@ -117,7 +117,7 @@ public class ItemActionEntryRepairPatches
                 // Small smoke test that we're copying the code we expect
                 if (startIndex + 8 != endIndex + 1)
                 {
-                    LogUtil.Error($"{targetMethodString} patch: Expected Equals False | Start+8 {startIndex + 8} == End+1 {endIndex + 1}");
+                    Logger.Error($"{targetMethodString} patch: Expected Equals False | Start+8 {startIndex + 8} == End+1 {endIndex + 1}");
                 }
 
                 break;
@@ -136,11 +136,11 @@ public class ItemActionEntryRepairPatches
 
         if (startIndex == -1 || endIndex == -1)
         {
-            LogUtil.Error($"Failed to patch {targetMethodString}");
+            Logger.Error($"Failed to patch {targetMethodString}");
         }
         else
         {
-            LogUtil.Info($"Successfully patched {targetMethodString}");
+            Logger.Info($"Successfully patched {targetMethodString}");
         }
 
         return codes.AsEnumerable();

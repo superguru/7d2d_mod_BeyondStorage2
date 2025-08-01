@@ -33,7 +33,7 @@ public static class VehicleRefuel
         var context = StorageAccessContext.Create(d_MethodName);
         var removedFromStorage = context?.RemoveRemaining(itemValue, newRequiredCount) ?? 0;
 
-        LogUtil.DebugLog($"{d_MethodName} - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
+        Logger.DebugLog($"{d_MethodName} - item {itemName}; lastRemoved {lastRemovedCount}; totalRequired {totalRequired}; newReqAmt {newRequiredCount}; removedFromStorage {removedFromStorage}; newResult {lastRemovedCount + removedFromStorage}");
         return lastRemovedCount + removedFromStorage;  // return new refueled count
     }
 
@@ -57,7 +57,7 @@ public static class VehicleRefuel
         var fuelItemValue = ItemClass.GetItem(fuelItem);
         var context = StorageAccessContext.Create(d_MethodName);
         var storageHas = context?.HasItem(fuelItemValue) ?? false;
-        LogUtil.DebugLog($"{d_MethodName} - fuelItem {fuelItem}; storageHas {storageHas}");
+        Logger.DebugLog($"{d_MethodName} - fuelItem {fuelItem}; storageHas {storageHas}");
 
         return storageHas;
     }
