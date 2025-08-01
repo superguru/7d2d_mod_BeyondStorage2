@@ -52,7 +52,7 @@ namespace BeyondStorage.Scripts.Storage
                 return totalItemCountAdded;
             }
 
-            sources.ClearItemStacks();
+            sources.ClearAll();
             cacheManager.ClearCache();
 
             if (config.PullFromDewCollectors)

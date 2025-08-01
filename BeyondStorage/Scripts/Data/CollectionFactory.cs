@@ -7,6 +7,7 @@ public static class CollectionFactory
     private const int DEFAULT_DEW_COLLECTOR_LIST_CAPACITY = 16;
     private const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
     private const int DEFAULT_LOOTBLE_LIST_CAPACITY = 16;
+    private const int DEFAULT_STORAGESOURCE_LIST_CAPACITY = 32;
     private const int DEFAULT_VEHICLE_LIST_CAPACITY = 8;
     private const int DEFAULT_WORKSTATION_LIST_CAPACITY = 16;
 
@@ -23,6 +24,11 @@ public static class CollectionFactory
     public static List<ITileEntityLootable> CreateLootableList()
     {
         return new List<ITileEntityLootable>(DEFAULT_LOOTBLE_LIST_CAPACITY);
+    }
+
+    public static List<IStorageSource> CreateStorageSourceList()
+    {
+        return new List<IStorageSource>(DEFAULT_STORAGESOURCE_LIST_CAPACITY);
     }
 
     public static List<EntityVehicle> CreateVehicleList()
