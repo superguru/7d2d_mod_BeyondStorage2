@@ -1,28 +1,71 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using BeyondStorage.Scripts.Diagnostics;
 using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
 internal class StorageSourceAdapter<T> : IStorageSource where T : class
 {
-    private readonly T _storageSource;
-    private readonly StorageSourceItemDataStore _dataStore;
-    private readonly Action<T> _markModifiedAction;
-    private readonly Func<T, ItemStack[]> _getItemsFunc;
-    private readonly Func<T, T, bool> _equalsFunc;
+    // Replace the private readonly field and explicit property with an auto-property
+    public T StorageSource { get; }
 
-    public StorageSourceAdapter(T storageSource, StorageSourceItemDataStore dataStore, Action<T> markModifiedAction, Func<T, ItemStack[]> getItemsFunc, Func<T, T, bool> equalsFunc)
+    private readonly Type _storageSourceType;
+
+    private readonly Func<T, T, bool> _equalsFunc;
+    private readonly Func<T, ItemStack[]> _getItemStacksFunc;
+    private readonly Action<T> _markModifiedAction;
+
+    public StorageSourceAdapter(
+        T storageSource,
+        Func<T, T, bool> equalsFunc,
+        Func<T, ItemStack[]> getItemStacksFunc,
+        Action<T> markModifiedAction)
     {
-        _storageSource = storageSource ?? throw new ArgumentNullException(nameof(storageSource));
-        _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
-        _markModifiedAction = markModifiedAction ?? throw new ArgumentNullException(nameof(markModifiedAction));
-        _getItemsFunc = getItemsFunc ?? throw new ArgumentNullException(nameof(getItemsFunc));
-        _equalsFunc = equalsFunc ?? throw new ArgumentNullException(nameof(equalsFunc));
+        const string d_MethodName = nameof(StorageSourceAdapter<T>);
+
+        if (storageSource == null)
+        {
+            var error = $"{d_MethodName}: {nameof(storageSource)} cannot be null";
+            ModLogger.Error(error);
+            throw new ArgumentNullException(nameof(storageSource), error);
+        }
+
+        if (equalsFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(equalsFunc)} cannot be null";
+            ModLogger.Error(error);
+            throw new ArgumentNullException(nameof(equalsFunc), error);
+        }
+
+        if (getItemStacksFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(getItemStacksFunc)} cannot be null";
+            ModLogger.Error(error);
+            throw new ArgumentNullException(nameof(getItemStacksFunc), error);
+        }
+
+        if (markModifiedAction == null)
+        {
+            var error = $"{d_MethodName}: {nameof(markModifiedAction)} cannot be null";
+            ModLogger.Error(error);
+            throw new ArgumentNullException(nameof(markModifiedAction), error);
+        }
+
+        StorageSource = storageSource;
+
+        _storageSourceType = storageSource.GetType();
+        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+
+        _equalsFunc = equalsFunc;
+        _getItemStacksFunc = getItemStacksFunc;
+        _markModifiedAction = markModifiedAction;
     }
 
-    public T StorageSource => _storageSource;
-
-    public StorageSourceItemDataStore DataStore => _dataStore;
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as IStorageSource);
+    }
 
     public bool Equals(IStorageSource other)
     {
@@ -36,40 +79,78 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             return true;
         }
 
-        // If the other is also a StorageSourceAdapter<T>, use the custom equals function
         if (other is StorageSourceAdapter<T> otherAdapter)
         {
-            return _equalsFunc(_storageSource, otherAdapter._storageSource);
+            return _equalsFunc(StorageSource, otherAdapter.StorageSource);
         }
 
         return false;
     }
 
-    public override bool Equals(object obj)
-    {
-        return Equals(obj as IStorageSource);
-    }
-
     public override int GetHashCode()
     {
-        return _storageSource?.GetHashCode() ?? 0;
+        if (StorageSource == null)
+        {
+            return typeof(T).GetHashCode();
+        }
+
+        unchecked
+        {
+            int hash = RuntimeHelpers.GetHashCode(StorageSource);
+            hash = (hash * 397) ^ typeof(T).GetHashCode();
+            return hash;
+        }
     }
 
-    public ItemStack[] GetItems()
+    public ItemStack[] GetItemStacks()
     {
+        const string d_MethodName = nameof(GetItemStacks);
+        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+
         try
         {
-            return _getItemsFunc(_storageSource) ?? Array.Empty<ItemStack>();
+            var items = _getItemStacksFunc(StorageSource);
+            if (items == null)
+            {
+                ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Returned null items, using empty array");
+                return [];
+            }
+            return items;
+        }
+        catch (NullReferenceException ex)
+        {
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Null reference accessing items: {ex.Message}. Storage source may have been disposed.");
+            return [];
         }
         catch (Exception ex)
         {
-            ModLogger.Error($"Error getting items from storage source of type {typeof(T).Name}: {ex.Message}");
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}");
             return [];
         }
     }
 
+    public Type GetSourceType()
+    {
+        return _storageSourceType;
+    }
+
     public void MarkModified()
     {
-        _markModifiedAction(_storageSource);
+        const string d_MethodName = nameof(MarkModified);
+        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+
+        try
+        {
+            _markModifiedAction(StorageSource);
+        }
+        catch (Exception ex)
+        {
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error marking source as modified: {ex.Message}");
+        }
+    }
+
+    public override string ToString()
+    {
+        return $"{typeof(T).Name}: {StorageSource}";
     }
 }

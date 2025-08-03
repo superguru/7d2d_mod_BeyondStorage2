@@ -7,23 +7,16 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Storage;
 
-/// <summary>
-/// Provides access to storage sources and operations within a specific context.
-/// This class serves as a facade that coordinates between various storage services.
-/// </summary>
 public sealed class StorageContext
 {
     internal ConfigSnapshot Config { get; }
     internal WorldPlayerContext WorldPlayerContext { get; }
-    internal StorageSourceManager Sources { get; }
+    internal StorageDataManager Sources { get; }
     internal ItemStackCacheManager CacheManager { get; }
 
     private DateTime CreatedAt { get; }
 
-    /// <summary>
-    /// Internal constructor used by StorageContextFactory.
-    /// </summary>
-    internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageSourceManager sources, ItemStackCacheManager cacheManager)
+    internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageDataManager sources, ItemStackCacheManager cacheManager)
     {
         Config = config ?? throw new ArgumentNullException(nameof(config));
         WorldPlayerContext = worldPlayerContext ?? throw new ArgumentNullException(nameof(worldPlayerContext));
@@ -34,7 +27,46 @@ public sealed class StorageContext
         ModLogger.DebugLog($"StorageContext created: {Sources.GetSourceSummary()}");
     }
 
-    #region Cache Management
+    #region Cache Management (Enhanced)
+
+    /// <summary>
+    /// Ensures cache is valid for the specified filter, refreshing if necessary.
+    /// </summary>
+    /// <param name="filter">The filter to validate cache for</param>
+    /// <param name="methodName">Calling method name for logging</param>
+    /// <returns>True if cache was valid (hit), false if refresh was needed (miss)</returns>
+    private bool EnsureCacheValid(UniqueItemTypes filter, string methodName)
+    {
+        filter ??= UniqueItemTypes.Unfiltered;
+        var hit = CacheManager.IsCachedForFilter(filter);
+
+        if (!hit)
+        {
+            try
+            {
+                ModLogger.DebugLog($"{methodName} | Cache miss, discovering items for filter: {filter}");
+
+                CacheManager.ClearCache();
+                Sources.ClearAll();
+                Sources.DataStore.CurrentFilter = filter;
+
+                ItemDiscoveryService.DiscoverItems(this);
+                CacheManager.MarkCached(filter);
+
+                ModLogger.DebugLog($"{methodName} | Item discovery completed successfully");
+            }
+            catch (System.Exception ex)
+            {
+                ModLogger.Error($"{methodName} | Failed during item discovery: {ex.Message}", ex);
+                return false;
+            }
+        }
+
+        var cacheStatus = hit ? "HIT" : "MISS";
+        ModLogger.DebugLog($"{methodName} | Cache {cacheStatus} for filter: {filter}");
+        return hit;
+    }
+
     public bool IsCachedForFilter(UniqueItemTypes filterTypes)
     {
         return CacheManager.IsCachedForFilter(filterTypes);
@@ -52,74 +84,65 @@ public sealed class StorageContext
     #endregion
 
     #region Query Operations - Delegate to StorageQueryService
-    public int GetTotalItemCount()
+    public IReadOnlyCollection<ItemStack> GetAllAvailableItemStacks(UniqueItemTypes filterTypes)
     {
-        return StorageQueryService.GetTotalItemCount(Sources, Config, CacheManager);
-    }
-
-    public int GetTotalStackCount()
-    {
-        return StorageQueryService.GetTotalStackCount(Sources, Config, CacheManager);
-    }
-
-    public List<ItemStack> GetAllAvailableItemStacks(UniqueItemTypes filterTypes)
-    {
-        return StorageQueryService.GetAllAvailableItemStacks(Sources, Config, CacheManager, filterTypes);
-    }
-
-    public string GetFilteringStats()
-    {
-        // Ensure ItemStacks are pulled through consistent service call
-        GetTotalItemCount(); // This ensures extraction happens
-        return ItemStackExtractionService.GetExtractionStats(Sources, CacheManager);
+        const string d_MethodName = nameof(GetAllAvailableItemStacks);
+        EnsureCacheValid(filterTypes, d_MethodName);
+        return StorageQueryService.GetAllAvailableItemStacks(this, filterTypes);
     }
 
     public int GetItemCount(ItemValue itemValue)
     {
-        return StorageQueryService.GetItemCount(Sources, Config, CacheManager, itemValue);
+        const string d_MethodName = nameof(GetItemCount);
+        var filter = UniqueItemTypes.FromItemValue(itemValue);
+        EnsureCacheValid(filter, d_MethodName);
+        return StorageQueryService.GetItemCount(this, itemValue);
     }
 
     public int GetItemCount(UniqueItemTypes filterTypes)
     {
-        return StorageQueryService.GetItemCount(Sources, Config, CacheManager, filterTypes);
+        const string d_MethodName = nameof(GetItemCount);
+        EnsureCacheValid(filterTypes, d_MethodName);
+        return StorageQueryService.GetItemCount(this, filterTypes);
     }
 
     public bool HasItem(ItemValue itemValue)
     {
-        return StorageQueryService.HasItem(Sources, Config, CacheManager, itemValue);
+        const string d_MethodName = nameof(HasItem);
+        var filter = UniqueItemTypes.FromItemValue(itemValue);
+        EnsureCacheValid(filter, d_MethodName);
+        return StorageQueryService.HasItem(this, itemValue);
     }
 
     public bool HasItem(UniqueItemTypes filterTypes)
     {
-        return StorageQueryService.HasItem(Sources, Config, CacheManager, filterTypes);
+        const string d_MethodName = nameof(HasItem);
+        EnsureCacheValid(filterTypes, d_MethodName);
+        return StorageQueryService.HasItem(this, filterTypes);
     }
     #endregion
 
     #region Removal Operations - Delegate to StorageItemRemovalService
     public int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-        return StorageItemRemovalService.RemoveItems(Sources, Config, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+        const string d_MethodName = nameof(RemoveRemaining);
+        var filter = UniqueItemTypes.FromItemValue(itemValue);
+        EnsureCacheValid(filter, d_MethodName);
+        return StorageItemRemovalService.RemoveItems(this, itemValue, stillNeeded, ignoreModdedItems, removedItems);
     }
     #endregion
 
     #region Diagnostics and Statistics
     public double AgeInSeconds => (DateTime.Now - CreatedAt).TotalSeconds;
 
-    public double WorldPlayerContextAgeInSeconds => WorldPlayerContext?.AgeInSeconds ?? -1;
-
-    public bool HasExpired(double lifetimeSeconds) => AgeInSeconds > lifetimeSeconds;
-
     public string GetSourceSummary()
     {
         return $"{Sources.GetSourceSummary()}, Age: {AgeInSeconds:F1}s";
     }
 
-    public string GetItemStackSummary()
+    internal IReadOnlyCollection<Type> GetAllowedSourceTypes()
     {
-        var cacheInfo = GetItemStackCacheInfo();
-        var filterStats = GetFilteringStats();
-        var totalItems = GetTotalItemCount();
-        return $"{Sources.GetItemStackSummary()}, {totalItems} items | {cacheInfo} | {filterStats}";
+        return Sources.DataStore.GetAllowedSourceTypes();
     }
     #endregion
 }

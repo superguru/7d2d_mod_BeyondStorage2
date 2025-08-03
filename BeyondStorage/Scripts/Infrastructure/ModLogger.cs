@@ -1,4 +1,6 @@
-﻿using BeyondStorage.Scripts.Configuration;
+﻿using System;
+using BeyondStorage.Scripts.Configuration;
+using BeyondStorage.Scripts.Diagnostics;
 
 namespace BeyondStorage.Scripts.Infrastructure;
 
@@ -11,9 +13,12 @@ public static class ModLogger
         Log.Out($"{Prefix}(Info) {text}");
     }
 
-    public static void Error(string text)
+    public static void Error(string error, Exception e = null)
     {
-        Log.Error($"{Prefix}(Error) {text}");
+#if DEBUG
+        error = StackTraceProvider.AppendStackTrace(error, e);
+#endif
+        Log.Error($"{Prefix}(Error) {error}");
     }
 
     /// <summary>

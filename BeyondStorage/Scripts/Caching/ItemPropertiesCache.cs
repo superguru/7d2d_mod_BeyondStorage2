@@ -23,16 +23,10 @@ public static class ItemPropertiesCache
     /// <summary>
     /// Cached item properties data structure.
     /// </summary>
-    private readonly struct ItemProperties
+    private readonly struct ItemProperties(bool hasModSlots, bool canStack)
     {
-        public readonly bool HasModSlots;
-        public readonly bool CanStack;
-
-        public ItemProperties(bool hasModSlots, bool canStack)
-        {
-            HasModSlots = hasModSlots;
-            CanStack = canStack;
-        }
+        public readonly bool HasModSlots = hasModSlots;
+        public readonly bool CanStack = canStack;
     }
 
     /// <summary>

@@ -11,7 +11,7 @@ public static class DewCollectorStateManager
     /// </summary>
     public static void MarkDewCollectorModified(TileEntityDewCollector dewCollector)
     {
-        const string d_method_name = "MarkDewCollectorModified";
+        const string d_method_name = "MarkModifiedDewCollectorFunc";
         ModLogger.DebugLog($"{d_method_name} | Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");
 
         if (dewCollector == null)
@@ -28,7 +28,7 @@ public static class DewCollectorStateManager
 
     private static void PackDewCollector(TileEntityDewCollector dewCollector)
     {
-        const string d_method_name = "MarkDewCollectorModified.PackDewCollector";
+        const string d_method_name = "MarkModifiedDewCollectorFunc.PackDewCollector";
 
         if (dewCollector == null)
         {

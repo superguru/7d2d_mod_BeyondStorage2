@@ -113,10 +113,10 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool OnlyStorageCrates()
+    public static bool PullFromDrones()
     {
-        bool serverValue = ServerConfig.onlyStorageCrates;
-        bool clientValue = ClientConfig.onlyStorageCrates;
+        bool serverValue = ServerConfig.pullFromDrones;
+        bool clientValue = ClientConfig.pullFromDrones;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -137,6 +137,16 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromWorkstationOutputs;
         bool clientValue = ClientConfig.pullFromWorkstationOutputs;
+#if DEBUG
+        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
+#endif
+        return ServerUtils.HasServerConfig ? serverValue : clientValue;
+    }
+
+    public static bool OnlyStorageCrates()
+    {
+        bool serverValue = ServerConfig.onlyStorageCrates;
+        bool clientValue = ClientConfig.onlyStorageCrates;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -255,18 +265,21 @@ public static class ModConfig
         // How far to pull from (-1 is infinite range, only limited by chunks loaded)
         public float range = -1.0f;
 
-        // if set to true it will ignore tile entities that aren't Storage Containers (crates)
-        // otherwise will check all lootable containers placed by player(s)
-        public bool onlyStorageCrates = false;
+        // if set to true it will try and pull items from nearby dew collectors
+        public bool pullFromDrones = true;
 
         // if set to true it will try and pull items from nearby dew collectors
         public bool pullFromDewCollectors = true;
 
-        // if set to true it will try and pull items from nearby vehicle storages
-        public bool pullFromVehicleStorage = true;
-
         // if set to true it will try and pull items from nearby workstation output stacks
         public bool pullFromWorkstationOutputs = true;
+
+        // if set to true it will ignore tile entities that aren't Storage Containers (crates)
+        // otherwise will check all lootable containers placed by player(s)
+        public bool onlyStorageCrates = false;
+
+        // if set to true it will try and pull items from nearby vehicle storages
+        public bool pullFromVehicleStorage = true;
 
         // ========== Functionality =========
         // if set true will allow block repairs

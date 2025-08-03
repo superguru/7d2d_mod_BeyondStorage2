@@ -11,7 +11,7 @@ public static class WorkstationStateManager
     /// </summary>
     public static void MarkWorkstationModified(TileEntityWorkstation workstation)
     {
-        const string d_method_name = "MarkWorkstationModified";
+        const string d_method_name = "MarkModifiedWorkstationFunc";
         ModLogger.DebugLog($"{d_method_name} | Marking Workstation '{workstation?.GetType().Name}' as modified");
 
         if (workstation == null)

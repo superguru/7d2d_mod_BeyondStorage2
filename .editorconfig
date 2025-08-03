@@ -93,6 +93,9 @@ dotnet_diagnostic.ca2208.severity = error
 
 # C# files
 [*.cs]
+# Disable IDE0008 - Use explicit type instead of 'var'
+dotnet_diagnostic.IDE0008.severity = none
+
 # New line preferences
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true

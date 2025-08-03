@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BeyondStorage.Scripts.Data;
 
@@ -7,8 +8,15 @@ public sealed class UniqueItemTypes
 {
     private readonly int[] _itemTypes;
 
-    private static readonly int[] s_unfiltered_itemTypes = new int[] { -1 };
-    private static readonly UniqueItemTypes s_unfiltered = new UniqueItemTypes(s_unfiltered_itemTypes);
+    private static int[] SUnfilteredItemTypes { get; } = [-1];
+    private static readonly Lazy<UniqueItemTypes> s_unfiltered = new(() =>
+    {
+        var instance = new UniqueItemTypes([-1]);
+        // Logging happens here, after mod is fully initialized
+        return instance;
+    });
+
+    public static UniqueItemTypes Unfiltered => s_unfiltered.Value;
 
     public int Count => _itemTypes.Length;
 
@@ -16,11 +24,13 @@ public sealed class UniqueItemTypes
 
     public bool IsFiltered => !IsUnfiltered;
 
+    public UniqueItemTypes(int itemType) : this([itemType]) { }
+
     public UniqueItemTypes(IEnumerable<int> itemTypes)
     {
         if (itemTypes == null)
         {
-            _itemTypes = s_unfiltered_itemTypes;
+            _itemTypes = SUnfilteredItemTypes;
             return;
         }
 
@@ -55,7 +65,7 @@ public sealed class UniqueItemTypes
             {
                 throw new ArgumentException("When -1 (wildcard) is provided, all item types must be -1. Mixed wildcard and specific types are not allowed.");
             }
-            _itemTypes = s_unfiltered_itemTypes;
+            _itemTypes = SUnfilteredItemTypes;
         }
         else if (validTypes.Count == 0)
         {
@@ -64,13 +74,14 @@ public sealed class UniqueItemTypes
         else
         {
             // Valid specific item types
-            _itemTypes = [.. validTypes];
+#pragma warning disable IDE0305 // Simplify collection initialization
+            _itemTypes = validTypes.ToArray();  // Faster than collection expression, avoids unnecessary allocations
+#pragma warning restore IDE0305
+            Array.Sort(_itemTypes);
         }
 
         ValidateInvariants();
     }
-
-    public UniqueItemTypes(params int[] itemTypes) : this((IEnumerable<int>)itemTypes) { }
 
     private void ValidateInvariants()
     {
@@ -88,8 +99,6 @@ public sealed class UniqueItemTypes
                 return; // Valid
             }
         }
-
-        Array.Sort(_itemTypes);
 
         // Invariant: No element can be 0
         // Invariant: If -1 is present, it must be the only element
@@ -119,6 +128,42 @@ public sealed class UniqueItemTypes
         }
     }
 
+    public static bool IsPopulatedStack(ItemStack stack)
+    {
+        var isValidStack = IsValidStack(stack);
+        var isValidItemValue = isValidStack && IsValidItemValue(stack.itemValue);
+
+        return isValidItemValue;
+    }
+
+    public bool Contains(ItemStack stack)
+    {
+        if (!IsValidStack(stack))
+        {
+            // This stack is invalid, skip it.
+            return false;
+        }
+
+        var itemValue = stack.itemValue;
+        var result = Contains(itemValue);
+
+        return result;
+    }
+
+    public bool Contains(ItemValue itemValue)
+    {
+        if (!IsValidItemValue(itemValue))
+        {
+            // This item is invalid, skip it.
+            return false;
+        }
+
+        var itemType = itemValue.type;
+
+        var result = Contains(itemType);
+        return result;
+    }
+
     public bool Contains(int itemType)
     {
         if (itemType == 0)
@@ -139,79 +184,82 @@ public sealed class UniqueItemTypes
             return false;
         }
 
-        // Check for wildcard first
+        // Check for wildcard first (must be sole element and at index 0 after sorting)
         if (_itemTypes.Length == 1 && _itemTypes[0] == -1)
         {
             return true; // Wildcard matches any valid item type > 0
         }
 
-        // Optimized search for small collections
-        switch (_itemTypes.Length)
-        {
-            case 1:
-                return _itemTypes[0] == itemType;
-            case 2:
-                return _itemTypes[0] == itemType || _itemTypes[1] == itemType;
-            case 3:
-                return _itemTypes[0] == itemType || _itemTypes[1] == itemType ||
-                       _itemTypes[2] == itemType;
-            case 4:
-                return _itemTypes[0] == itemType || _itemTypes[1] == itemType ||
-                       _itemTypes[2] == itemType || _itemTypes[3] == itemType;
-            case 5:
-                return _itemTypes[0] == itemType || _itemTypes[1] == itemType ||
-                       _itemTypes[2] == itemType || _itemTypes[3] == itemType ||
-                       _itemTypes[4] == itemType;
-        }
-
-        for (int i = 5; i < _itemTypes.Length; i++)
-        {
-            if (_itemTypes[i] == itemType)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        // Since _itemTypes is sorted and contains only positive integers (no -1 case here),
+        // we can use binary search for O(log n) performance
+        return Array.BinarySearch(_itemTypes, itemType) >= 0;
     }
 
     /// <summary>
-    /// Determines if two UniqueItemTypes instances are equivalent.
-    /// Two instances are considered equivalent if they represent the same set of item types.
+    /// Determines if the cached filter can satisfy the requested filter.
+    /// Returns true if the cached data contains all item types needed by the requested filter.
     /// </summary>
-    /// <param name="cached">The first UniqueItemTypes to compare</param>
-    /// <param name="requested">The second UniqueItemTypes to compare</param>
-    /// <returns>True if both instances are equivalent, false otherwise</returns>
-    public static bool IsEquivalent(UniqueItemTypes cached, UniqueItemTypes requested)
+    /// <param name="cached">The cached filter representing what data is available</param>
+    /// <param name="requested">The requested filter representing what data is needed</param>
+    /// <returns>True if cached can satisfy requested, false otherwise</returns>
+    public static bool CanSatisfy(UniqueItemTypes cached, UniqueItemTypes requested)
     {
+        // Null filters cannot satisfy anything or be satisfied
         if (cached == null || requested == null)
         {
-            return cached == requested;
-        }
-
-        if (cached.IsUnfiltered && requested.IsUnfiltered)
-        {
-            return true;
-        }
-
-        if (cached.IsUnfiltered != requested.IsUnfiltered)
-        {
             return false;
         }
 
-        if (cached.Count != requested.Count)
+        var cachedIsUnfiltered = cached.IsUnfiltered;
+        var requestedIsUnfiltered = requested.IsUnfiltered;
+
+        // If cached is unfiltered, it can satisfy any request
+        if (cachedIsUnfiltered)
         {
-            return false;
+            return true; // Unfiltered cache has everything
         }
 
-        foreach (int type in requested)
+        // If requested is unfiltered, only unfiltered cache can satisfy it
+        if (requestedIsUnfiltered)
         {
-            if (!cached.Contains(type))
+            return false; // Filtered cache cannot provide "everything"
+        }
+
+        // Both are filtered - check if cached contains all requested types
+        // Since arrays are sorted, we can use a two-pointer approach
+        int cachedIndex = 0;
+        int requestedIndex = 0;
+
+        while (requestedIndex < requested._itemTypes.Length)
+        {
+            // If we've exhausted cached types, we can't satisfy the rest
+            if (cachedIndex >= cached._itemTypes.Length)
             {
+                return false;
+            }
+
+            int cachedType = cached._itemTypes[cachedIndex];
+            int requestedType = requested._itemTypes[requestedIndex];
+
+            if (cachedType == requestedType)
+            {
+                // Found a match, advance both pointers
+                cachedIndex++;
+                requestedIndex++;
+            }
+            else if (cachedType < requestedType)
+            {
+                // Cached type is smaller, advance cached pointer
+                cachedIndex++;
+            }
+            else
+            {
+                // Requested type is smaller and not in cached, cannot satisfy
                 return false;
             }
         }
 
+        // All requested types were found in cached
         return true;
     }
 
@@ -219,7 +267,7 @@ public sealed class UniqueItemTypes
     {
         if (stacks == null || stacks.Count == 0)
         {
-            return s_unfiltered;
+            return Unfiltered;
         }
 
         var uniqueTypes = new HashSet<int>();
@@ -251,69 +299,73 @@ public sealed class UniqueItemTypes
 
         if (!hasValidItems || uniqueTypes.Count == 0)
         {
-            return s_unfiltered;
+            return Unfiltered;
         }
 
         return new UniqueItemTypes(uniqueTypes);
     }
 
-    public static UniqueItemTypes FromItemType(int itemType)
+    public static bool IsValidStack(ItemStack stack)
     {
-        if (itemType <= 0)
+        if (stack?.count <= 0)
         {
-            return s_unfiltered;
+            return false;
         }
 
-        return new UniqueItemTypes(itemType);
+        return true;
     }
 
     public static UniqueItemTypes FromItemStack(ItemStack stack)
     {
-        if (stack?.count <= 0)
+        if (IsValidStack(stack))
         {
-            return s_unfiltered;
+            return FromItemValue(stack.itemValue);
         }
 
-        var itemValue = stack.itemValue;
+        return Unfiltered;
+    }
+
+    public static UniqueItemTypes FromItemValue(ItemValue itemValue)
+    {
+        if (IsValidItemValue(itemValue))
+        {
+            return new UniqueItemTypes(itemValue.type);
+        }
+
+        return Unfiltered;
+    }
+
+    private static bool IsValidItemValue(ItemValue itemValue)
+    {
         if (itemValue?.ItemClass == null)
         {
-            return s_unfiltered;
+            return false;
         }
 
-        int itemType = itemValue.type;
-        if (itemType <= 0)
+        if (itemValue.type <= 0)
         {
-            return s_unfiltered;
+            // Rule: itemType 0 is never valid
+            return false;
         }
 
-        return new UniqueItemTypes(itemType);
-    }
-
-    public static UniqueItemTypes Unfiltered => s_unfiltered;
-
-    public override string ToString()
-    {
-        if (IsUnfiltered)
-        {
-            return "UniqueItemTypes: unfiltered (wildcard)";
-        }
-
-        return $"UniqueItemTypes: {Count} filtered types";
-    }
-
-    public string GetStatistics()
-    {
-        if (IsUnfiltered)
-        {
-            return "UniqueItemTypes: unfiltered (wildcard), matches any valid item type";
-        }
-
-        var typeInfo = Count == 1 ? "single type" : $"{Count} types";
-        return $"UniqueItemTypes: filtered, {typeInfo}";
+        return true;
     }
 
     public IEnumerator<int> GetEnumerator()
     {
         return ((IEnumerable<int>)_itemTypes).GetEnumerator();
+    }
+
+    public override string ToString()
+    {
+        return GetDiagnosticInfo();
+    }
+
+    public string GetDiagnosticInfo()
+    {
+        var info = $"Filters: {_itemTypes.Length}";
+        var details = string.Join(", ", _itemTypes.Select(itemType => ItemTypeNameLookupCache.GetItemTypeName(itemType)));
+
+        return info + " [" + details + "]";
     }
 }

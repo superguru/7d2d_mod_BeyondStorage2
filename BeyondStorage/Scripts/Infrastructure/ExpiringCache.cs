@@ -11,7 +11,7 @@ public sealed class ExpiringCache<T> where T : class
 {
     private T _cachedItem;
     private DateTime _cacheTimestamp;
-    private readonly object _cacheLock = new object();
+    private readonly object _cacheLock = new();
     private readonly double _cacheDurationSeconds;
     private readonly string _cacheTypeName;
 
@@ -23,7 +23,7 @@ public sealed class ExpiringCache<T> where T : class
     public ExpiringCache(double cacheDurationSeconds, string cacheTypeName = null)
     {
         _cacheDurationSeconds = cacheDurationSeconds;
-        _cacheTypeName = cacheTypeName ?? typeof(T).Name;
+        _cacheTypeName = string.IsNullOrEmpty(cacheTypeName) ? typeof(T).Name : cacheTypeName;
     }
 
     /// <summary>

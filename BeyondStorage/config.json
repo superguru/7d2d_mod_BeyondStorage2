@@ -1,8 +1,9 @@
 {
     "range": -1.0,
-    "onlyStorageCrates": false,
+    "pullFromDrones": true,
     "pullFromDewCollectors": true,
     "pullFromWorkstationOutputs": true,
+    "onlyStorageCrates": false,
     "pullFromVehicleStorage": true,
     "enableForBlockRepair": true,
     "enableForBlockTexture": true,

@@ -8,7 +8,18 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 
 * As of v2.1.0, items can be pulled from nearby Workstations (configurable).
 * As of v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
-* As of v2.1.4, Paint can be used by the Paintbrush tool from nearby storage.
+* As of v2.1.5, paint from nearby storage can be used by the Paintbrush tool (configurable).
+* As of v2.2.0, items can be pulled from nearby Drones (configurable).
+
+#### Pull Order:
+  - Player Backpack (as per vanilla game)
+  - Player Toolbelt (as per vanilla game)
+  - Then:
+    1. Drones <<== Added this because of community requests
+    2. Dew Collectors
+    3. Workstations
+    4. Containers (storage crates, etc.)
+    5. Vehicles
 
 ## Installation
 

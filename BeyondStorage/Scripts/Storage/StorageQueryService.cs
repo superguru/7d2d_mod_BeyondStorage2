@@ -1,269 +1,125 @@
-﻿using System;
-using System.Collections.Generic;
-using BeyondStorage.Scripts.Configuration;
+﻿using System.Collections.Generic;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 
-namespace BeyondStorage.Scripts.Storage
+namespace BeyondStorage.Scripts.Storage;
+
+/// <summary>
+/// Service responsible for querying storage sources for item availability and counts.
+/// Provides read-only operations for checking what items are available in storage.
+/// Assumes cache validation has already been performed by the calling context.
+/// </summary>
+public static class StorageQueryService
 {
     /// <summary>
-    /// Service responsible for querying storage sources for item availability and counts.
-    /// Provides read-only operations for checking what items are available in storage.
+    /// Validates common parameters used by all query methods.
     /// </summary>
-    public static class StorageQueryService
+    /// <returns>True if all parameters are valid</returns>
+    private static bool ValidateParameters(string methodName, StorageContext context)
     {
-        /// <summary>
-        /// Gets the count of a specific item type across all storage sources.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <param name="itemValue">The item to count</param>
-        /// <returns>Total count of the specified item</returns>
-        public static int GetItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
+        if (context == null)
         {
-            const string d_MethodName = nameof(GetItemCount);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return 0;
-            }
-
-            if (itemValue == null)
-            {
-                ModLogger.Error($"{d_MethodName} | itemValue is null");
-                return 0;
-            }
-
-            try
-            {
-                var totalItemCountAdded = ItemStackExtractionService.ExtractItemStacks(sources, config, itemValue, cacheManager);
-                ModLogger.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} of '{itemValue.ItemClass?.Name}'");
-                return totalItemCountAdded;
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return 0;
-            }
+            ModLogger.Error($"{methodName} | Context is null");
+            return false;
         }
 
-        /// <summary>
-        /// Gets the count of items matching the specified filter types.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <param name="filterTypes">The filter types to count</param>
-        /// <returns>Total count of items matching the filter</returns>
-        public static int GetItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        return true;
+    }
+
+    public static int GetItemCount(StorageContext context, ItemValue filterItem)
+    {
+        const string d_MethodName = nameof(GetItemCount);
+
+        if (!ValidateParameters(d_MethodName, context))
         {
-            const string d_MethodName = nameof(GetItemCount);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return 0;
-            }
-
-            filterTypes ??= UniqueItemTypes.Unfiltered;
-
-            try
-            {
-                var totalItemCountAdded = ItemStackExtractionService.ExtractItemStacks(sources, config, filterTypes, cacheManager);
-                ModLogger.DebugLog($"{d_MethodName} | Found {totalItemCountAdded} items with filter: {filterTypes}");
-                return totalItemCountAdded;
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return 0;
-            }
+            return 0;
         }
 
-        /// <summary>
-        /// Checks if a specific item is available in storage.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <param name="itemValue">The item to check for</param>
-        /// <returns>True if the item is available in storage</returns>
-        public static bool HasItem(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, ItemValue itemValue)
+        var filter = UniqueItemTypes.FromItemValue(filterItem);
+
+        return GetItemCount(context, filter);
+    }
+
+    public static int GetItemCount(StorageContext context, UniqueItemTypes filter)
+    {
+        // No cache handling here - just pure query logic
+        if (!ValidateParameters(nameof(GetItemCount), context))
         {
-            const string d_MethodName = nameof(HasItem);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return false;
-            }
-
-            if (itemValue == null)
-            {
-                ModLogger.Error($"{d_MethodName} | itemValue is null");
-                return false;
-            }
-
-            try
-            {
-                var totalItemCount = GetItemCount(sources, config, cacheManager, itemValue);
-                var result = totalItemCount > 0;
-                ModLogger.DebugLog($"{d_MethodName} for '{itemValue?.ItemClass?.Name}' is {result}");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return false;
-            }
+            return 0;
         }
 
-        /// <summary>
-        /// Checks if items matching the filter types are available in storage.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <param name="filterTypes">The filter types to check for</param>
-        /// <returns>True if items matching the filter are available</returns>
-        public static bool HasItem(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        return context.Sources.CountCachedItems(filter);
+    }
+
+    public static bool HasItem(StorageContext context, ItemValue filterItem)
+    {
+        const string d_MethodName = nameof(HasItem);
+
+        if (!ValidateParameters(d_MethodName, context))
         {
-            const string d_MethodName = nameof(HasItem);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return false;
-            }
-
-            filterTypes ??= UniqueItemTypes.Unfiltered;
-
-            try
-            {
-                var totalItemCount = GetItemCount(sources, config, cacheManager, filterTypes);
-                var result = totalItemCount > 0;
-                ModLogger.DebugLog($"{d_MethodName} with filter: {filterTypes} is {result}");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return false;
-            }
+            return false;
         }
 
-        /// <summary>
-        /// Gets all available item stacks from storage sources with optional filtering.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <param name="filterTypes">Optional filter to limit results to specific item types</param>
-        /// <returns>List of all available item stacks from storage sources</returns>
-        public static List<ItemStack> GetAllAvailableItemStacks(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, UniqueItemTypes filterTypes)
+        var filter = UniqueItemTypes.FromItemValue(filterItem);
+
+        return HasItem(context, filter);
+    }
+
+    public static bool HasItem(StorageContext context, UniqueItemTypes filter)
+    {
+        if (!ValidateParameters(nameof(HasItem), context))
         {
-            const string d_MethodName = nameof(GetAllAvailableItemStacks);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return new List<ItemStack>();
-            }
-
-            try
-            {
-                ItemStackExtractionService.ExtractItemStacks(sources, config, filterTypes, cacheManager);
-                return ItemStackExtractionService.GetAllItemStacks(sources);
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return new List<ItemStack>();
-            }
+            return false;
         }
 
-        /// <summary>
-        /// Gets the total count of all items across all storage sources.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <returns>Total count of all items</returns>
-        public static int GetTotalItemCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
+        return context.Sources.DataStore.AnyItemsLeft();
+    }
+
+    /// <summary>
+    /// Gets all available item stacks from storage sources with optional filtering.
+    /// </summary>
+    public static IReadOnlyCollection<ItemStack> GetAllAvailableItemStacks(StorageContext context, UniqueItemTypes filterTypes)
+    {
+        const string d_MethodName = nameof(GetAllAvailableItemStacks);
+
+        if (!ValidateParameters(d_MethodName, context))
         {
-            const string d_MethodName = nameof(GetTotalItemCount);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return 0;
-            }
-
-            try
-            {
-                ItemStackExtractionService.ExtractItemStacks(sources, config, cacheManager.CurrentFilterTypes, cacheManager);
-                return ItemStackExtractionService.CountCachedItems(sources);
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return 0;
-            }
+            ModLogger.DebugLog($"{d_MethodName} | Validation failed, returning empty collection");
+#pragma warning disable IDE0301 // Simplify collection initialization
+            return System.Array.Empty<ItemStack>(); // Prefer this, as it will not allocate a new array each time
+#pragma warning restore IDE0301
         }
 
-        /// <summary>
-        /// Gets the total number of ItemStack instances across all storage sources.
-        /// </summary>
-        /// <param name="sources">The storage sources to query</param>
-        /// <param name="config">Configuration for which storage types to include</param>
-        /// <param name="cacheManager">Cache manager for tracking cache state</param>
-        /// <returns>Total number of ItemStack instances</returns>
-        public static int GetTotalStackCount(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager)
+        var result = CollectionFactory.CreateItemStackList();
+        result.AddRange(context.Sources.DataStore.GetAllItemStacks(filterTypes));
+
+        ModLogger.DebugLog($"{d_MethodName} | Returning {result.Count} item stacks with filter: {filterTypes}");
+        return result;
+    }
+
+    /// <summary>
+    /// Removes items from storage with proper cache validation.
+    /// </summary>
+    /// <param name="context">The storage context</param>
+    /// <param name="itemValue">The item type to remove</param>
+    /// <param name="stillNeeded">The amount still needed to remove</param>
+    /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
+    /// <param name="removedItems">Optional list to track removed items</param>
+    /// <returns>The actual amount removed</returns>
+    public static int RemoveItems(StorageContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    {
+        const string d_MethodName = nameof(RemoveItems);
+
+        if (!ValidateParameters(d_MethodName, context))
         {
-            const string d_MethodName = nameof(GetTotalStackCount);
-
-            if (!ValidateParameters(sources, config, cacheManager, d_MethodName))
-            {
-                return 0;
-            }
-
-            try
-            {
-                ItemStackExtractionService.ExtractItemStacks(sources, config, cacheManager.CurrentFilterTypes, cacheManager);
-                return ItemStackExtractionService.GetTotalStackCount(sources);
-            }
-            catch (Exception ex)
-            {
-                ModLogger.Error($"{d_MethodName} | Exception occurred: {ex.Message}");
-                return 0;
-            }
+            return 0;
         }
 
-        /// <summary>
-        /// Validates common parameters used by all query methods.
-        /// </summary>
-        /// <param name="sources">Storage sources to validate</param>
-        /// <param name="config">Configuration to validate</param>
-        /// <param name="cacheManager">Cache manager to validate</param>
-        /// <param name="methodName">Calling method name for logging</param>
-        /// <returns>True if all parameters are valid</returns>
-        private static bool ValidateParameters(StorageSourceManager sources, ConfigSnapshot config, ItemStackCacheManager cacheManager, string methodName)
-        {
-            if (sources == null)
-            {
-                ModLogger.Error($"{methodName} | sources is null");
-                return false;
-            }
+        var filter = UniqueItemTypes.FromItemValue(itemValue);
 
-            if (config == null)
-            {
-                ModLogger.Error($"{methodName} | config is null");
-                return false;
-            }
+        var itemName = itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
+        ModLogger.DebugLog($"{d_MethodName} | Removing {stillNeeded} {itemName}");
 
-            if (cacheManager == null)
-            {
-                ModLogger.Error($"{methodName} | cacheManager is null");
-                return false;
-            }
-
-            return true;
-        }
+        return StorageItemRemovalService.RemoveItems(context, itemValue, stillNeeded, ignoreModdedItems, removedItems);
     }
 }

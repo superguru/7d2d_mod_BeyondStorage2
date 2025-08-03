@@ -27,13 +27,13 @@ public class ItemCraft
         var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
-            var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
+            var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
             ModLogger.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
-            ModLogger.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
         }
 
         return stacks;
@@ -58,17 +58,17 @@ public class ItemCraft
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
         ModLogger.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
 
-        // Todo: Add item filtering here, if needed
+        // Todo: Add item filtering here, if possible, to avoid pulling all items from all storage sources
         var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
-            var storageStacks = context.GetAllAvailableItemStacks(filterTypes: null);
+            var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
             ModLogger.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
-            ModLogger.Error($"{d_MethodName}: Failed to create StorageAccessContext");
+            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
         }
     }
 
@@ -78,8 +78,6 @@ public class ItemCraft
     public static int EntryBinding_AddPullableSourceStorageItemCount(int entityAvailableCount, XUiC_IngredientEntry entry)
     {
         const string d_MethodName = nameof(EntryBinding_AddPullableSourceStorageItemCount);
-
-        // Todo: this should use an upper limit for the number if items required
 
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
@@ -127,12 +125,15 @@ public class ItemCraft
             return stillNeeded;
         }
 
+        var itemName = itemStack.itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
+        ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}; itemStack {itemStack}");
+
         // Get storage count and return result
         var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;
 
-        ModLogger.DebugLog($"{d_MethodName} | item {itemStack.itemValue.ItemClass.GetItemName()}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");
+        ModLogger.DebugLog($"{d_MethodName} | End: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context == null}");
         return result;
     }
 }

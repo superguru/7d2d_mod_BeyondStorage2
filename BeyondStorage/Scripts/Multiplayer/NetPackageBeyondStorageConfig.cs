@@ -8,8 +8,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
 {
     private const ushort ConfigVersion = 2;
 
-    // TODO: Update number if more options being sent
-    private const ushort BoolCount = 11;
+    // IMPORTANT: Update number if more options being sent
+    private const ushort BoolCount = 13;  // 13 as of v2.2.0, which introduces pullFromDrones and enableForBlockTexture
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
 
@@ -43,6 +43,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
         binaryWriter.Write(ModConfig.ClientConfig.enableForBlockTexture);
+        binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
 
         // #if DEBUG
         //         // testing backwards compatibility if we are sending more than expecting to receive (EX: newer config sent by server to client running older mod version)
@@ -87,6 +88,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModConfig.ServerConfig.pullFromWorkstationOutputs = reader.ReadBoolean();
         ModConfig.ServerConfig.pullFromDewCollectors = reader.ReadBoolean();
         ModConfig.ServerConfig.enableForBlockTexture = reader.ReadBoolean();
+        ModConfig.ServerConfig.pullFromDrones = reader.ReadBoolean();
 
         // Set HasServerConfig = true
         ServerUtils.HasServerConfig = true;
@@ -103,10 +105,11 @@ public class NetPackageBeyondStorageConfig : NetPackage
 
 #if DEBUG
         ModLogger.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDrones}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.onlyStorageCrates}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
 
         ModLogger.DebugLog($"ModConfig.ServerConfig.enableForBlockRepair {ModConfig.ServerConfig.enableForBlockRepair}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.enableForBlockTexture {ModConfig.ServerConfig.enableForBlockTexture}");
@@ -130,6 +133,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // kept it 6 after introducing pullFromWorkstationOutputs
         // kept it 6 after introducing pullFromDewCollectors
         // kept it 6 after introducing enableForBlockTexture
+        // kept it 6 after introducing pullfromDrones
         const int futureReservedSpace = 6;
         const int ushortSize = 2;
         const int floatSize = 4;

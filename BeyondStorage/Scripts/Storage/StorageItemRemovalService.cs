@@ -1,162 +1,161 @@
 ﻿using System;
 using System.Collections.Generic;
 using BeyondStorage.Scripts.Caching;
-using BeyondStorage.Scripts.Configuration;
+using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Diagnostics;
 using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.TileEntities;
 
-namespace BeyondStorage.Scripts.Storage
+namespace BeyondStorage.Scripts.Storage;
+
+/// <summary>
+/// Service responsible for removing items from various storage sources.
+/// Handles the complex logic of item removal across different storage types.
+/// </summary>
+public static class StorageItemRemovalService
 {
     /// <summary>
-    /// Service responsible for removing items from various storage sources.
-    /// Handles the complex logic of item removal across different storage types.
+    /// Removes the specified amount of items from available storage sources.
     /// </summary>
-    public static class StorageItemRemovalService
+    /// <param name="sources">The storage sources to remove items from</param>
+    /// <param name="config">Configuration for which storage types to use</param>
+    /// <param name="itemValue">The item type to remove</param>
+    /// <param name="stillNeeded">The amount still needed to remove</param>
+    /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
+    /// <param name="removedItems">Optional list to track removed items</param>
+    /// <returns>The actual amount removed</returns>
+    public static int RemoveItems(StorageContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-        /// <summary>
-        /// Removes the specified amount of items from available storage sources.
-        /// </summary>
-        /// <param name="sources">The storage sources to remove items from</param>
-        /// <param name="config">Configuration for which storage types to use</param>
-        /// <param name="itemValue">The item type to remove</param>
-        /// <param name="stillNeeded">The amount still needed to remove</param>
-        /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
-        /// <param name="removedItems">Optional list to track removed items</param>
-        /// <returns>The actual amount removed</returns>
-        public static int RemoveItems(StorageSourceManager sources, ConfigSnapshot config, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+        const string d_MethodName = nameof(RemoveItems);
+
+        if (stillNeeded <= 0)
         {
-            const string d_MethodName = nameof(RemoveItems);
-
-            if (stillNeeded <= 0 || itemValue == null || itemValue.ItemClass == null || itemValue.type <= 0)
-            {
-                return 0;
-            }
-
-            var itemName = itemValue.ItemClass.GetItemName();
-            ModLogger.DebugLog($"{d_MethodName} | Trying to remove {stillNeeded} {itemName}");
-
-            int originalNeeded = stillNeeded;
-
-            if (stillNeeded > 0 && config.PullFromDewCollectors)
-            {
-                RemoveFromStorageType(d_MethodName, "DewCollectors", itemName, sources.DewCollectors, itemValue,
-                    ref stillNeeded, ignoreModdedItems, removedItems,
-                    dewCollector => dewCollector.items, dewCollector => DewCollectorStateManager.MarkDewCollectorModified(dewCollector));
-            }
-
-            if (stillNeeded > 0 && config.PullFromWorkstationOutputs)
-            {
-                RemoveFromStorageType(d_MethodName, "WorkstationOutputs", itemName, sources.Workstations, itemValue,
-                    ref stillNeeded, ignoreModdedItems, removedItems,
-                    workstation => workstation.output, workstation => WorkstationStateManager.MarkWorkstationModified(workstation));
-            }
-
-            if (stillNeeded > 0)
-            {
-                RemoveFromStorageType(d_MethodName, "Containers", itemName, sources.Lootables, itemValue,
-                    ref stillNeeded, ignoreModdedItems, removedItems,
-                    lootable => lootable.items, lootable => lootable.SetModified());
-            }
-
-            if (stillNeeded > 0 && config.PullFromVehicleStorage)
-            {
-                RemoveFromStorageType(d_MethodName, "Vehicles", itemName, sources.Vehicles, itemValue,
-                    ref stillNeeded, ignoreModdedItems, removedItems,
-                    vehicle => vehicle.bag.items, vehicle => vehicle.SetBagModified());
-            }
-
-            return originalNeeded - stillNeeded;
+            return 0;
         }
 
-        private static void RemoveFromStorageType<T>(
-            string methodName,
-            string storageName,
-            string itemName,
-            List<T> storages,
-            ItemValue itemValue,
-            ref int stillNeeded,
-            bool ignoreModdedItems,
-            IList<ItemStack> removedItems,
-            Func<T, IEnumerable<ItemStack>> getItems,
-            Action<T> markModified)
-        {
-            int originalNeeded = stillNeeded;
+        var itemName = itemValue?.ItemClass?.GetItemName();
+        ModLogger.DebugLog($"{d_MethodName} | {itemName} trying to remove {stillNeeded}");
+        ModLogger.DebugLog($"{d_MethodName} | {itemName} {context.Sources.DataStore.GetDiagnosticInfo()}");
 
-            foreach (var storage in storages)
+        int originalNeeded = stillNeeded;
+        var itemFilter = UniqueItemTypes.FromItemValue(itemValue);
+        bool itemCanStack = ItemPropertiesCache.GetCanStack(itemValue);
+
+        var allowedSourceTypes = context.GetAllowedSourceTypes();
+        foreach (var sourceType in allowedSourceTypes)
+        {
+            if (stillNeeded <= 0)
+            {
+                break;
+            }
+
+            if (sourceType == null)
+            {
+                ModLogger.Error($"{d_MethodName} | Skipping null source type");
+                continue;
+            }
+
+            var nameInfo = NameLookups.GetNameInfo(sourceType);
+            var fullSourceTypeName = NameLookups.GetFullName(nameInfo);
+
+            var sourcesByType = context.Sources.DataStore.GetSourcesByType(sourceType);
+            var sourceCount = sourcesByType.Count;
+            ModLogger.DebugLog($"{d_MethodName} | Processing {sourceCount} of {fullSourceTypeName}/{sourceType.Name}, stillNeeded {stillNeeded}");
+
+            for (var iSource = 0; iSource < sourceCount; iSource++)
             {
                 if (stillNeeded <= 0)
                 {
                     break;
                 }
 
-                int newNeeded = RemoveItemsFromItemStacks(getItems(storage), itemValue, stillNeeded, ignoreModdedItems, removedItems);
-                if (stillNeeded != newNeeded)
+                var source = sourcesByType[iSource];
+                if (source == null)
                 {
-                    markModified(storage);
-                    stillNeeded = newNeeded;
+                    ModLogger.Error($"{d_MethodName} | Skipping null source at index {iSource} for type {fullSourceTypeName}");
+                    continue;
                 }
+
+                RemoveFromSource(d_MethodName, source, nameInfo, itemName, itemFilter, itemCanStack, ref stillNeeded, ignoreModdedItems, removedItems);
+            }
+        }
+
+        return originalNeeded - stillNeeded;
+    }
+
+    private static void RemoveFromSource(string methodName, IStorageSource source, NameLookups.TypeNameInfo nameInfo, string itemName,
+        UniqueItemTypes filter, bool itemCanStack, ref int stillNeeded, bool ignoreModdedItems, IList<ItemStack> removedItems)
+    {
+
+        int originalNeeded = stillNeeded;
+
+        var itemStacks = source.GetItemStacks();
+        var stackLength = itemStacks.Length;
+
+        for (var iStack = 0; iStack < stackLength; iStack++)
+        {
+            if (stillNeeded <= 0)
+            {
+                break;
             }
 
-            int removed = originalNeeded - stillNeeded;
-            ModLogger.DebugLog($"{methodName} | {storageName} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
+            var stack = itemStacks[iStack];
+
+            if (stack?.count <= 0)
+            {
+                // This happens a lot, especially after previous removals.
+                continue;
+            }
+
+            if (!filter.Contains(stack))
+            {
+                continue;
+            }
+
+            var itemValue = stack.itemValue;
+            if (ItemPropertiesCache.ShouldIgnoreModdedItem(itemValue, ignoreModdedItems))
+            {
+                continue;
+            }
+
+            if (itemCanStack)
+            {
+                var countToRemove = Math.Min(stack.count, stillNeeded);
+
+                stack.count -= countToRemove;
+                stillNeeded -= countToRemove;
+
+                if (stack.count == 0)
+                {
+                    stack.Clear();
+                }
+
+                // This Clone operation is expensive, but in 7d2d 2.x removedItems is always null, so leaving it in for those edge cases
+                removedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
+            }
+            else
+            {
+                stack.Clear();
+                --stillNeeded;
+
+                // This Clone operation is expensive, but in 7d2d 2.x removedItems is always null, so leaving it in for those edge cases
+                removedItems?.Add(stack.Clone());
+            }
+        }
+
+        int removed = originalNeeded - stillNeeded;
+        //ModLogger.DebugLog($"{methodName} | {nameInfo.Abbrev} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
+
+        if (removed != 0)
+        {
+            source.MarkModified();
+        }
 
 #if DEBUG
-            if (stillNeeded < 0)
-            {
-                ModLogger.Error($"{methodName} | stillNeeded after {storageName} should not be negative, but is {stillNeeded}");
-                stillNeeded = 0;
-            }
-#endif
-        }
-
-        private static int RemoveItemsFromItemStacks(IEnumerable<ItemStack> items, ItemValue desiredItem, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+        if (stillNeeded < 0)
         {
-            int filterType = desiredItem.type;
-            bool itemCanStack = ItemPropertiesCache.GetCanStack(desiredItem);
-
-            foreach (var stack in items)
-            {
-                if (stillNeeded <= 0)
-                {
-                    break;
-                }
-
-                if (stack?.count <= 0)
-                {
-                    continue;
-                }
-
-                var itemValue = stack.itemValue;
-                if (itemValue?.type != filterType)
-                {
-                    continue;
-                }
-
-                if (ItemPropertiesCache.ShouldIgnoreModdedItem(itemValue, ignoreModdedItems))
-                {
-                    continue;
-                }
-
-                if (itemCanStack)
-                {
-                    var countToRemove = Math.Min(stack.count, stillNeeded);
-                    removedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
-                    stack.count -= countToRemove;
-                    stillNeeded -= countToRemove;
-                    if (stack.count <= 0)
-                    {
-                        stack.Clear();
-                    }
-                }
-                else
-                {
-                    removedItems?.Add(stack.Clone());
-                    stack.Clear();
-                    --stillNeeded;
-                }
-            }
-
-            return stillNeeded;
+            ModLogger.Error($"{methodName} | stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
+            stillNeeded = 0;
         }
+#endif
     }
 }

@@ -6,16 +6,16 @@ namespace BeyondStorage.Scripts.Infrastructure;
 
 internal static class ModPathManager
 {
-    internal static string ConfigAssetPath = "Config";
+    internal static string s_configAssetPath = "Config";
     internal static string GetConfigPath(bool create = false)
     {
-        var result = GetAssetPath(ConfigAssetPath, create);
+        var result = GetAssetPath(s_configAssetPath, create);
 
         return result;
     }
 
     private static string s_mod_assembly_path = "";
-    private static string GetModAssemblyPath(bool create = false)
+    private static string GetModAssemblyPath()
     {
         if (string.IsNullOrEmpty(s_mod_assembly_path))
         {
