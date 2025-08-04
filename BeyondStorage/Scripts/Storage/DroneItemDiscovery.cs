@@ -36,7 +36,7 @@ internal static class DroneItemDiscovery
             }
 
             // Check accessibility
-            if (world.IsOwnedbyLocalUser(drone))
+            if (!world.IsOwnedbyLocalUser(drone))
             {
                 continue;
             }
