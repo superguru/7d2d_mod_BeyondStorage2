@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -93,74 +90,5 @@ public class ItemTexture
 
         ModLogger.DebugLog($"{d_MethodName}: StorageContext is {storageContext != null}, ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
         return removedFromStorage;
-    }
-
-    /// <summary>
-    /// Forces invalidation of the storage context cache. 
-    /// Call this when paint operations are complete or when world state changes significantly.
-    /// </summary>
-    public static void InvalidatePaintCache()
-    {
-        StorageContextFactory.InvalidateCache();
-    }
-
-    /// <summary>
-    /// Gets storage context cache statistics for debugging.
-    /// </summary>
-    public static string GetPaintCacheStats()
-    {
-        return StorageContextFactory.GetCacheStats();
-    }
-
-    /// <summary>
-    /// Forces invalidation of all related caches (storage context and all related caches).
-    /// </summary>
-    public static void InvalidateAllCaches()
-    {
-        StorageContextFactory.InvalidateAllCaches();
-    }
-
-    /// <summary>
-    /// Gets comprehensive cache statistics for all related caches and paint-specific tracking.
-    /// </summary>
-    public static string GetComprehensiveCacheStats()
-    {
-        var contextStats = StorageContextFactory.GetCacheStats();
-        var worldPlayerStats = WorldPlayerContext.GetCacheStats();
-        var itemPropsStats = ItemPropertiesCache.GetCacheStats();
-        var globalInvalidations = ItemStackCacheManager.GetGlobalInvalidationCounter();
-
-        // AddStackRangeForFilter paint-specific tracking statistics
-        var totalPaintRemovals = s_paintRemovals.Values.Sum();
-        var uniquePaintItems = s_paintRemovals.Count;
-        var paintStats = $"PaintRemovals: {totalPaintRemovals} items, {uniquePaintItems} types";
-
-        return $"StorageContext: {contextStats} | WorldPlayerContext: {worldPlayerStats} | {itemPropsStats} | {paintStats} | Global invalidations: {globalInvalidations}";
-    }
-
-    /// <summary>
-    /// Gets paint-specific removal statistics.
-    /// </summary>
-    public static string GetPaintRemovalStats()
-    {
-        if (s_paintRemovals.Count == 0)
-        {
-            return "Paint removals: None";
-        }
-
-        var totalRemovals = s_paintRemovals.Values.Sum();
-        var details = string.Join(", ", s_paintRemovals.Select(kvp =>
-            $"{ItemTypeNameLookupCache.GetItemTypeName(kvp.Key)}:{kvp.Value}"));
-
-        return $"Paint removals: {totalRemovals} total ({details})";
-    }
-
-    /// <summary>
-    /// Clears paint removal tracking statistics.
-    /// </summary>
-    public static void ClearPaintStats()
-    {
-        s_paintRemovals.Clear();
-        ModLogger.DebugLog("Paint removal statistics cleared");
     }
 }
