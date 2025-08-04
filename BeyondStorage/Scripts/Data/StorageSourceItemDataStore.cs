@@ -226,8 +226,6 @@ internal class StorageSourceItemDataStore
     /// <returns>Prebuilt list of item stacks for the specified filter</returns>
     internal IList<ItemStack> GetItemStacksForFilter(UniqueItemTypes filter)
     {
-        const string d_MethodName = nameof(GetItemStacksForFilter);
-
         filter ??= UniqueItemTypes.Unfiltered;
 
         // Since we prebuild all filters during registration, the list should exist
@@ -237,7 +235,7 @@ internal class StorageSourceItemDataStore
         }
 
         // If we reach here, it means the filter wasn't prebuilt (no items of this type exist)
-        ModLogger.Error($"{d_MethodName} | Filter '{filter}' not found - no items of this type were discovered");
+        // It's not an error, just return an empty list, because there are no items matching this filter
         return CollectionFactory.EmptyItemStackList;
     }
 
