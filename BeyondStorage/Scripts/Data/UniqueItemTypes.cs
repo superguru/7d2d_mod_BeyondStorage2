@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace BeyondStorage.Scripts.Data;
 
-public sealed class UniqueItemTypes
+public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 {
     private readonly int[] _itemTypes;
 
@@ -12,7 +12,7 @@ public sealed class UniqueItemTypes
     private static readonly Lazy<UniqueItemTypes> s_unfiltered = new(() =>
     {
         var instance = new UniqueItemTypes([-1]);
-        // Logging happens here, after mod is fully initialized
+        // Lazy so logging can happen here, after mod is fully initialized
         return instance;
     });
 
@@ -367,5 +367,108 @@ public sealed class UniqueItemTypes
         var details = string.Join(", ", _itemTypes.Select(itemType => ItemTypeNameLookupCache.GetItemTypeName(itemType)));
 
         return info + " [" + details + "]";
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current UniqueItemTypes instance.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance</param>
+    /// <returns>True if the specified object is equal to the current instance; otherwise, false</returns>
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as UniqueItemTypes);
+    }
+
+    /// <summary>
+    /// Determines whether the specified UniqueItemTypes instance is equal to the current instance.
+    /// Two UniqueItemTypes instances are equal if they contain the same set of item types.
+    /// </summary>
+    /// <param name="other">The UniqueItemTypes instance to compare with the current instance</param>
+    /// <returns>True if the instances are equal; otherwise, false</returns>
+    public bool Equals(UniqueItemTypes other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        // Quick check: if lengths differ, they can't be equal
+        if (_itemTypes.Length != other._itemTypes.Length)
+        {
+            return false;
+        }
+
+        // Since both arrays are guaranteed to be sorted (from constructor),
+        // we can do element-by-element comparison for efficiency
+        for (int i = 0; i < _itemTypes.Length; i++)
+        {
+            if (_itemTypes[i] != other._itemTypes[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Returns a hash code for the current UniqueItemTypes instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance</returns>
+    public override int GetHashCode()
+    {
+        if (_itemTypes == null || _itemTypes.Length == 0)
+        {
+            return 0;
+        }
+
+        // Use a simple but effective hash combining algorithm
+        // Since arrays are sorted, order matters for the hash
+        unchecked
+        {
+            int hash = 17;
+            for (int i = 0; i < _itemTypes.Length; i++)
+            {
+                hash = hash * 31 + _itemTypes[i];
+            }
+            return hash;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether two UniqueItemTypes instances are equal.
+    /// </summary>
+    /// <param name="left">The first instance to compare</param>
+    /// <param name="right">The second instance to compare</param>
+    /// <returns>True if the instances are equal; otherwise, false</returns>
+    public static bool operator ==(UniqueItemTypes left, UniqueItemTypes right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two UniqueItemTypes instances are not equal.
+    /// </summary>
+    /// <param name="left">The first instance to compare</param>
+    /// <param name="right">The second instance to compare</param>
+    /// <returns>True if the instances are not equal; otherwise, false</returns>
+    public static bool operator !=(UniqueItemTypes left, UniqueItemTypes right)
+    {
+        return !(left == right);
     }
 }

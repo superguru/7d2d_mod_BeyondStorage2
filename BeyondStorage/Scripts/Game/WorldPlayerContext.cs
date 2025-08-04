@@ -136,6 +136,11 @@ public sealed class WorldPlayerContext
         return lockable == null || !lockable.IsLocked() || lockable.IsUserAllowed(InternalLocalUserIdentifier);
     }
 
+    public bool IsOwnedbyLocalUser(EntityDrone entity)
+    {
+        return entity == null || entity.IsOwner(InternalLocalUserIdentifier);
+    }
+
     /// <summary>
     /// Gets the age of this context instance in seconds.
     /// </summary>

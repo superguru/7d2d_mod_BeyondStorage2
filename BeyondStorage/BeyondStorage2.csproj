@@ -112,6 +112,7 @@
     <Compile Include="Scripts\Storage\StorageQueryService.cs" />
     <Compile Include="Scripts\Storage\StorageDataManager.cs" />
     <Compile Include="Scripts\Storage\TileEntityItemDiscovery.cs" />
+    <Compile Include="Scripts\Storage\DroneItemDiscovery.cs" />
     <Compile Include="Scripts\Storage\VehicleItemDiscovery.cs" />
     <Compile Include="Scripts\TileEntities\DewCollectorStateManager.cs" />
     <Compile Include="Scripts\TileEntities\WorkstationStateManager.cs" />

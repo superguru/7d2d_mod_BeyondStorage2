@@ -26,6 +26,12 @@ internal sealed class AllowedSourcesSnapshot
 
         // The order is important
 
+        // Drones
+        if (config.PullFromDrones)
+        {
+            _allowSourceTypes.Add(typeof(EntityDrone));
+        }
+
         // Dew Collectors
         if (config.PullFromDewCollectors)
         {

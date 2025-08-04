@@ -1,40 +1,194 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Storage;
 
 /// <summary>
-/// Manages ItemStack caching with filtering support and global invalidation tracking.
+/// Manages ItemStack caching with a master unfiltered cache and filtered views.
+/// All filtered caches are views on the master cache, not separate data stores.
 /// </summary>
 public class ItemStackCacheManager
 {
     private const double ITEMSTACK_CACHE_DURATION = 0.5;
+    private const int LRU_SUBFILTER_MAX = 10;
+    private const int LRU_SUBFILTER_DISPLAY_MAX = LRU_SUBFILTER_MAX >> 1;
+
     private static long s_globalInvalidationCounter = 0;
 
+    // Master cache - always unfiltered, contains all discovered items
+    private bool _masterCacheValid = false;
+    private DateTime _masterCacheTime = DateTime.MinValue;
+    private long _masterCacheInvalidationCounter = 0;
+
+    // Subfilter view tracking - these are logical views, not data caches
+    private readonly Dictionary<UniqueItemTypes, FilteredCacheView> _filteredViews = [];
+
     /// <summary>
-    /// Gets whether the cache is currently filtered.
+    /// Represents a filtered view on the master cache.
+    /// This is not a data cache - it's just metadata about access time.
     /// </summary>
-    public bool IsFiltered => _lastFilterTypes.IsFiltered;
+    private class FilteredCacheView
+    {
+        public DateTime LastAccessTime { get; set; } = DateTime.Now;
+
+        public FilteredCacheView() { }
+    }
 
     /// <summary>
-    /// Gets the current filter types applied to the cache.
+    /// Gets whether the master cache contains all items (always true when valid).
     /// </summary>
-    public UniqueItemTypes CurrentFilterTypes => _lastFilterTypes;
-
-    private bool _itemStacksCached { get; set; } = false;
-    private DateTime _itemStacksCacheTime { get; set; } = DateTime.MinValue;
-    private long _itemStacksInvalidationCounter { get; set; } = 0;
-    private UniqueItemTypes _lastFilterTypes { get; set; } = UniqueItemTypes.Unfiltered;
+    public bool IsFiltered => false; // Master cache is always unfiltered
 
     /// <summary>
-    /// Checks if the cache is valid for the specified filter types.
+    /// Gets the current filter types of the master cache (always unfiltered).
+    /// </summary>
+    public UniqueItemTypes CurrentFilterTypes => UniqueItemTypes.Unfiltered;
+
+    /// <summary>
+    /// Checks if we have valid cached data for the specified filter types.
     /// </summary>
     /// <param name="filterTypes">The filter types to check against</param>
-    /// <returns>True if the cache is valid for the filter types</returns>
+    /// <returns>True if we can satisfy the request from cached data</returns>
     public bool IsCachedForFilter(UniqueItemTypes filterTypes)
     {
-        if (!_itemStacksCached)
+        filterTypes ??= UniqueItemTypes.Unfiltered;
+
+        if (!IsMasterCacheValid())
+        {
+            return false;
+        }
+
+        // Consistently track all filter access for accurate LRU
+        if (filterTypes.IsFiltered)
+        {
+            CreateOrUpdateFilteredView(filterTypes);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if we have valid cached data for the specified filter item.
+    /// </summary>
+    /// <param name="filterItem">The item to check against</param>
+    /// <returns>True if we can satisfy the request from cached data</returns>
+    public bool IsCachedForFilter(ItemValue filterItem)
+    {
+        var filterTypes = UniqueItemTypes.FromItemValue(filterItem);
+        return IsCachedForFilter(filterTypes);
+    }
+
+    /// <summary>
+    /// Marks the master cache as valid. Since we always cache unfiltered data,
+    /// this also creates or updates a filtered view if a specific filter was requested.
+    /// </summary>
+    /// <param name="filterTypes">The filter types that were requested (for view tracking)</param>
+    public void MarkCached(UniqueItemTypes filterTypes)
+    {
+        // Master cache is always marked as unfiltered (we discover everything)
+        _masterCacheValid = true;
+        _masterCacheTime = DateTime.Now;
+        _masterCacheInvalidationCounter = s_globalInvalidationCounter;
+
+        // If a specific filter was requested, create/update a view for it
+        filterTypes ??= UniqueItemTypes.Unfiltered;
+        if (filterTypes.IsFiltered)
+        {
+            CreateOrUpdateFilteredView(filterTypes);
+        }
+
+        ModLogger.DebugLog($"Master cache marked valid. Filter view for {filterTypes} updated.");
+    }
+
+    /// <summary>
+    /// Gets filtered data on-demand from the master cache.
+    /// This method should be called by StorageSourceItemDataStore.GetAllItemStacks().
+    /// </summary>
+    /// <param name="filterTypes">The filter to apply</param>
+    /// <param name="allItemStacks">All item stacks from the master cache</param>
+    /// <returns>Filtered view of the item stacks</returns>
+    public IEnumerable<ItemStack> GetFilteredView(UniqueItemTypes filterTypes, IEnumerable<ItemStack> allItemStacks)
+    {
+        filterTypes ??= UniqueItemTypes.Unfiltered;
+
+        // If unfiltered, return everything
+        if (filterTypes.IsUnfiltered)
+        {
+            return allItemStacks;
+        }
+
+        // Update view access time
+        CreateOrUpdateFilteredView(filterTypes);
+        // Apply filter on-demand
+        return allItemStacks.Where(stack => filterTypes.Contains(stack));
+    }
+
+    /// <summary>
+    /// Invalidates the master cache and all filtered views.
+    /// </summary>
+    public void InvalidateCache()
+    {
+        _masterCacheValid = false;
+        _masterCacheTime = DateTime.MinValue;
+        _masterCacheInvalidationCounter = s_globalInvalidationCounter;
+
+        // Clear all filtered views since they depend on the master cache
+        _filteredViews.Clear();
+
+        ModLogger.DebugLog("Master cache and all filtered views invalidated");
+    }
+
+    /// <summary>
+    /// Clears the cache and resets all cache state.
+    /// </summary>
+    public void ClearCache()
+    {
+        InvalidateCache(); // Same behavior as invalidate for this design
+    }
+
+    /// <summary>
+    /// Creates or updates a filtered view entry.
+    /// </summary>
+    /// <param name="filterTypes">The filter types for the view</param>
+    private void CreateOrUpdateFilteredView(UniqueItemTypes filterTypes)
+    {
+        if (_filteredViews.TryGetValue(filterTypes, out var existingView))
+        {
+            existingView.LastAccessTime = DateTime.Now;
+        }
+        else
+        {
+            _filteredViews[filterTypes] = new FilteredCacheView();
+        }
+
+        // Clean up old views periodically (keep most recent LRU_SUBFILTER_MAX)
+        if (_filteredViews.Count > LRU_SUBFILTER_MAX)
+        {
+            // More explicit about how many to remove
+            var excessCount = _filteredViews.Count - LRU_SUBFILTER_MAX;
+            var oldestKeys = _filteredViews
+                .OrderBy(kvp => kvp.Value.LastAccessTime)
+                .Take(excessCount)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var oldKey in oldestKeys)
+            {
+                _filteredViews.Remove(oldKey);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if the master cache is currently valid.
+    /// </summary>
+    /// <returns>True if master cache is valid</returns>
+    private bool IsMasterCacheValid()
+    {
+        if (!_masterCacheValid)
         {
             return false;
         }
@@ -45,65 +199,14 @@ public class ItemStackCacheManager
             return false;
         }
 
-        var cacheAge = (DateTime.Now - _itemStacksCacheTime).TotalSeconds;
+        var cacheAge = (DateTime.Now - _masterCacheTime).TotalSeconds;
         if (cacheAge > ITEMSTACK_CACHE_DURATION)
         {
-            _itemStacksCached = false;
+            InvalidateCache();
             return false;
         }
 
-        if (ReferenceEquals(_lastFilterTypes, filterTypes))
-        {
-            return true;
-        }
-
-        return UniqueItemTypes.CanSatisfy(_lastFilterTypes, filterTypes);
-    }
-
-    /// <summary>
-    /// Checks if the cache is valid for the specified filter item.
-    /// </summary>
-    /// <param name="filterItem">The item to check against</param>
-    /// <returns>True if the cache is valid for the filter item</returns>
-    public bool IsCachedForFilter(ItemValue filterItem)
-    {
-        var filterTypes = UniqueItemTypes.FromItemValue(filterItem);
-
-        return IsCachedForFilter(filterTypes);
-    }
-
-    /// <summary>
-    /// Marks the cache as valid for the specified filter types.
-    /// </summary>
-    /// <param name="filterTypes">The filter types to mark as cached</param>
-    public void MarkCached(UniqueItemTypes filterTypes)
-    {
-        _lastFilterTypes = filterTypes ?? UniqueItemTypes.Unfiltered;
-        _itemStacksCached = true;
-        _itemStacksCacheTime = DateTime.Now;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
-    }
-
-    /// <summary>
-    /// Invalidates the current cache state.
-    /// </summary>
-    public void InvalidateCache()
-    {
-        _itemStacksCached = false;
-        _lastFilterTypes = UniqueItemTypes.Unfiltered;
-        _itemStacksCacheTime = DateTime.MinValue;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
-    }
-
-    /// <summary>
-    /// Clears the cache and resets all cache state.
-    /// </summary>
-    public void ClearCache()
-    {
-        _itemStacksCached = false;
-        _lastFilterTypes = UniqueItemTypes.Unfiltered;
-        _itemStacksCacheTime = DateTime.MinValue;
-        _itemStacksInvalidationCounter = s_globalInvalidationCounter;
+        return true;
     }
 
     /// <summary>
@@ -112,21 +215,38 @@ public class ItemStackCacheManager
     /// <returns>String containing cache information</returns>
     public string GetCacheInfo()
     {
-        if (!_itemStacksCached)
+        if (!_masterCacheValid)
         {
-            return "ItemStacks: Not cached";
+            return "ItemStacks: Master cache not valid";
         }
 
-        var cacheAge = (DateTime.Now - _itemStacksCacheTime).TotalSeconds;
-        var isValid = cacheAge <= ITEMSTACK_CACHE_DURATION && !HasGlobalInvalidationOccurred();
+        var cacheAge = (DateTime.Now - _masterCacheTime).TotalSeconds;
+        var isValid = IsMasterCacheValid(); // This handles global invalidation
 
-        var filterInfo = _lastFilterTypes.IsFiltered
-            ? $"filtered for {_lastFilterTypes.Count} types"
-            : "unfiltered (all items)";
+        var viewCount = _filteredViews.Count;
+        var viewInfo = viewCount > 0 ? $", {viewCount} filtered views" : "";
 
-        var globalInvalidationInfo = HasGlobalInvalidationOccurred() ? ", globally invalidated" : "";
+        return $"ItemStacks: Master cached {cacheAge:F3}s ago (unfiltered), valid:{isValid}{viewInfo}";
+    }
 
-        return $"ItemStacks: Cached {cacheAge:F2}s ago, {filterInfo}, valid:{isValid}{globalInvalidationInfo}";
+    /// <summary>
+    /// Gets diagnostic information about filtered views.
+    /// </summary>
+    /// <returns>String containing filtered view information</returns>
+    public string GetFilteredViewsInfo()
+    {
+        if (_filteredViews.Count == 0)
+        {
+            return "No filtered views";
+        }
+
+        var viewDetails = _filteredViews
+            .OrderByDescending(kvp => kvp.Value.LastAccessTime)
+            .Take(LRU_SUBFILTER_DISPLAY_MAX)
+            .Select(kvp => $"{kvp.Key}(age:{(DateTime.Now - kvp.Value.LastAccessTime).TotalSeconds:F1}s)")
+            .ToList();
+
+        return $"Filtered views ({_filteredViews.Count}): {string.Join(", ", viewDetails)}";
     }
 
     /// <summary>
@@ -135,7 +255,7 @@ public class ItemStackCacheManager
     /// <returns>True if global invalidation has occurred</returns>
     private bool HasGlobalInvalidationOccurred()
     {
-        return s_globalInvalidationCounter != _itemStacksInvalidationCounter;
+        return s_globalInvalidationCounter != _masterCacheInvalidationCounter;
     }
 
     /// <summary>

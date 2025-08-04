@@ -33,8 +33,7 @@ public static class StorageItemRemovalService
         }
 
         var itemName = itemValue?.ItemClass?.GetItemName();
-        ModLogger.DebugLog($"{d_MethodName} | {itemName} trying to remove {stillNeeded}");
-        ModLogger.DebugLog($"{d_MethodName} | {itemName} {context.Sources.DataStore.GetDiagnosticInfo()}");
+        ModLogger.DebugLog($"{d_MethodName} | trying to remove {stillNeeded} {itemName}");
 
         int originalNeeded = stillNeeded;
         var itemFilter = UniqueItemTypes.FromItemValue(itemValue);
@@ -59,7 +58,7 @@ public static class StorageItemRemovalService
 
             var sourcesByType = context.Sources.DataStore.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType.Count;
-            ModLogger.DebugLog($"{d_MethodName} | Processing {sourceCount} of {fullSourceTypeName}/{sourceType.Name}, stillNeeded {stillNeeded}");
+            //ModLogger.DebugLog($"{d_MethodName} | Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
 
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {

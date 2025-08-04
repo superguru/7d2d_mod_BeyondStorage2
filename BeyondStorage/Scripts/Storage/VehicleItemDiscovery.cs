@@ -57,12 +57,6 @@ internal static class VehicleItemDiscovery
             return;
         }
 
-        // TODO: add this check once the rest of the code works
-        //if (!vehicle.IsUserAllowed(context.WorldPlayerContext.InternalLocalUserIdentifier))
-        //{
-        //    return;
-        //}
-
         var sources = context.Sources;
 
         var sourceAdapter = new StorageSourceAdapter<EntityVehicle>(

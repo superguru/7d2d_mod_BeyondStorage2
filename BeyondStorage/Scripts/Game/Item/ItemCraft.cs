@@ -21,7 +21,7 @@ public class ItemCraft
             return stacks;  // We're not fixing the caller's mistakes
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks.Count before {stacks.Count}");
+        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX before {stacks.Count}");
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
 
         var context = StorageContextFactory.Create(d_MethodName);
@@ -29,7 +29,7 @@ public class ItemCraft
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks.Count after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
@@ -53,10 +53,10 @@ public class ItemCraft
             return;
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks.Count at the start {stacks.Count} (not stripped)");
+        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX at the start {stacks.Count} (not stripped)");
 
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
-        ModLogger.DebugLog($"{d_MethodName} | stacks.Count after stripping {stacks.Count}");
+        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after stripping {stacks.Count}");
 
         // Todo: Add item filtering here, if possible, to avoid pulling all items from all storage sources
         var context = StorageContextFactory.Create(d_MethodName);
@@ -64,7 +64,7 @@ public class ItemCraft
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks.Count after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {

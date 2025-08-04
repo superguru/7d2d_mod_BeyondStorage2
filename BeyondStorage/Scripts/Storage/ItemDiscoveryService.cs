@@ -27,6 +27,9 @@ public static class ItemDiscoveryService
         ModLogger.DebugLog($"{d_MethodName} | Finding vehicles");
         VehicleItemDiscovery.FindItems(context);
 
+        ModLogger.DebugLog($"{d_MethodName} | Finding drones");
+        DroneItemDiscovery.FindItems(context);
+
         LogDiscoveryDiagnostics(context, d_MethodName);
     }
 

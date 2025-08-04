@@ -290,19 +290,19 @@ public sealed class PerformanceProfiler
         // Format average time
         if (avgTimeNs < 1_000) // Less than 1 microsecond
         {
-            avgDisplay = $"{avgTimeNs:F2}ns";
+            avgDisplay = $"{avgTimeNs:F3}ns";
         }
         else if (avgTimeNs < 1_000_000) // Less than 1 millisecond
         {
-            avgDisplay = $"{avgTimeNs / 1_000.0:F2}μs";
+            avgDisplay = $"{avgTimeNs / 1_000.0:F3}μs";
         }
         else if (avgTimeNs < 1_000_000_000) // Less than 1 second
         {
-            avgDisplay = $"{avgTimeNs / 1_000_000.0:F2}ms";
+            avgDisplay = $"{avgTimeNs / 1_000_000.0:F3}ms";
         }
         else
         {
-            avgDisplay = $"{avgTimeNs / 1_000_000_000.0:F2}s";
+            avgDisplay = $"{avgTimeNs / 1_000_000_000.0:F3}s";
         }
 
         // Format total time
@@ -312,15 +312,15 @@ public sealed class PerformanceProfiler
         }
         else if (totalTimeNs < 1_000_000) // Less than 1 millisecond
         {
-            totalDisplay = $"{totalTimeNs / 1_000.0:F2}μs";
+            totalDisplay = $"{totalTimeNs / 1_000.0:F3}μs";
         }
         else if (totalTimeNs < 1_000_000_000) // Less than 1 second
         {
-            totalDisplay = $"{totalTimeNs / 1_000_000.0:F2}ms";
+            totalDisplay = $"{totalTimeNs / 1_000_000.0:F3}ms";
         }
         else
         {
-            totalDisplay = $"{totalTimeNs / 1_000_000_000.0:F2}s";
+            totalDisplay = $"{totalTimeNs / 1_000_000_000.0:F3}s";
         }
 
         return (avgDisplay, totalDisplay);
@@ -335,19 +335,19 @@ public sealed class PerformanceProfiler
     {
         if (nanoseconds < 1_000) // Less than 1 microsecond
         {
-            return $"{nanoseconds:F2}ns";
+            return $"{nanoseconds:F3}ns";
         }
         else if (nanoseconds < 1_000_000) // Less than 1 millisecond
         {
-            return $"{nanoseconds / 1_000.0:F2}μs";
+            return $"{nanoseconds / 1_000.0:F3}μs";
         }
         else if (nanoseconds < 1_000_000_000) // Less than 1 second
         {
-            return $"{nanoseconds / 1_000_000.0:F2}ms";
+            return $"{nanoseconds / 1_000_000.0:F3}ms";
         }
         else
         {
-            return $"{nanoseconds / 1_000_000_000.0:F2}s";
+            return $"{nanoseconds / 1_000_000_000.0:F3}s";
         }
     }
 
@@ -437,7 +437,7 @@ public sealed class PerformanceProfiler
     public static string GetTimingInfo()
     {
         return $"Stopwatch Frequency: {Stopwatch.Frequency:N0} Hz, " +
-               $"Resolution: {s_ticksToNanoseconds:F2}ns per tick, " +
+               $"Resolution: {s_ticksToNanoseconds:F3}ns per tick, " +
                $"High Resolution: {Stopwatch.IsHighResolution}";
     }
 }

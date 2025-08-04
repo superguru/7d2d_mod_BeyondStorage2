@@ -137,7 +137,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         const int futureReservedSpace = 6;
         const int ushortSize = 2;
         const int floatSize = 4;
-        // Future Space + ConfigVersion + BoolCount + Range + (Bool(1) * Count)
+        // Future Space + ConfigVersion + BoolCount + Range + (Bool(1) * LRU_SUBFILTER_DISPLAY_MAX)
         return futureReservedSpace + ushortSize + ushortSize + floatSize + BoolCount;
     }
 }

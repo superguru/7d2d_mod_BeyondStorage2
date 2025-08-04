@@ -135,7 +135,7 @@ public sealed class ExpiringCache<T> where T : class
 
             var age = GetCacheAge();
             var isValid = age < _cacheDurationSeconds;
-            return $"{_cacheTypeName} Cache: Age={age:F2}s, Valid={isValid}, Duration={_cacheDurationSeconds}s";
+            return $"{_cacheTypeName} Cache: Age={age:F3}s, Valid={isValid}, Duration={_cacheDurationSeconds}s";
         }
     }
 

@@ -6,20 +6,23 @@
 /// </summary>
 public sealed class ConfigSnapshot
 {
+    public bool PullFromDrones { get; }
     public bool PullFromDewCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
-    public bool PullFromVehicleStorage { get; }
     public bool OnlyStorageCrates { get; }
+    public bool PullFromVehicleStorage { get; }
     public float Range { get; }
 
     private ConfigSnapshot()
     {
+        PullFromDrones = ModConfig.PullFromDrones();
         PullFromDewCollectors = ModConfig.PullFromDewCollectors();
         PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
-        PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
         OnlyStorageCrates = ModConfig.OnlyStorageCrates();
+        PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
+
         Range = ModConfig.Range();
     }
 
-    public static ConfigSnapshot Current => new ConfigSnapshot();
+    public static ConfigSnapshot Current => new();
 }

@@ -14,44 +14,45 @@ internal class StorageSourceItemDataStore
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
 
     internal AllowedSourcesSnapshot AllowedSources { get; }
+    private readonly ItemStackCacheManager _cacheManager;
 
-    public IReadOnlyList<Type> GetAllowedSourceTypes()
-    {
-        return AllowedSources.GetAllowedSourceTypes();
-    }
-
-    public bool IsAllowedSource(Type sourceType)
-    {
-        return AllowedSources.IsAllowedSource(sourceType);
-    }
-
-    private UniqueItemTypes _currentFilter;
-    public UniqueItemTypes CurrentFilter
-    {
-        get => _currentFilter;
-        set
-        {
-            var newFilter = value ?? UniqueItemTypes.Unfiltered;
-            if (!UniqueItemTypes.CanSatisfy(_currentFilter, newFilter))
-            {
-                Clear();
-                _currentFilter = newFilter;
-            }
-        }
-    }
-
-    internal StorageSourceItemDataStore(AllowedSourcesSnapshot allowedSources, UniqueItemTypes filterTypes)
+    internal StorageSourceItemDataStore(AllowedSourcesSnapshot allowedSources, ItemStackCacheManager cacheManager)
     {
         if (allowedSources == null)
         {
             var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(allowedSources)} cannot be null.";
             ModLogger.Error(error);
-
             throw new ArgumentNullException(nameof(allowedSources), error);
         }
 
+        if (cacheManager == null)
+        {
+            var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(cacheManager)} cannot be null.";
+            ModLogger.Error(error);
+            throw new ArgumentNullException(nameof(cacheManager), error);
+        }
+
         AllowedSources = allowedSources;
-        _currentFilter = filterTypes ?? UniqueItemTypes.Unfiltered;
+        _cacheManager = cacheManager;
+    }
+
+    /// <summary>
+    /// Gets the list of allowed source types from configuration.
+    /// </summary>
+    /// <returns>Read-only list of allowed source types</returns>
+    internal IReadOnlyList<Type> GetAllowedSourceTypes()
+    {
+        return AllowedSources.GetAllowedSourceTypes();
+    }
+
+    /// <summary>
+    /// Checks if a source type is allowed based on current configuration.
+    /// </summary>
+    /// <param name="sourceType">The source type to check</param>
+    /// <returns>True if the source type is allowed</returns>
+    internal bool IsAllowedSource(Type sourceType)
+    {
+        return AllowedSources.IsAllowedSource(sourceType);
     }
 
     /// <summary>
@@ -62,17 +63,14 @@ internal class StorageSourceItemDataStore
         _itemStacksBySource.Clear();
         _sourcesByItemStack.Clear();
         _sourcesByType.Clear();
-    }
 
-    public void ClearAll()
-    {
-        Clear();
-        _currentFilter = UniqueItemTypes.Unfiltered;
+        // We've cleared the data store, so we need to invalidate the cache
+        _cacheManager.InvalidateCache();
     }
 
     /// <summary>
     /// Registers a storage source and its item stacks with the data store.
-    /// Skips null or invalid item stacks to avoid invalid relationships.
+    /// Always registers ALL valid stacks - filtering is handled at query time.
     /// </summary>
     /// <param name="source">The storage source to register</param>
     /// <param name="validStacksRegistered">The number of valid item stacks that were successfully registered</param>
@@ -83,11 +81,9 @@ internal class StorageSourceItemDataStore
 
         if (source == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}(NULL) null storage supplied");
+            ModLogger.DebugLog($"{d_MethodName}(NULL) | Null storage source supplied");
             return;
         }
-
-        ModLogger.DebugLog($"{d_MethodName} | Registering source: {source}");
 
         var sourceType = source.GetSourceType();
         var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
@@ -104,16 +100,15 @@ internal class StorageSourceItemDataStore
         ItemStack[] stacks = source.GetItemStacks();
         if (stacks == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) null stacks supplied for source {source}");
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Null stacks supplied for source {source}");
             return;
         }
 
         ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Source has {stacks.Length} item stacks to process");
 
-        var filter = CurrentFilter;
-        int filteredOut = 0;
         int invalidStacks = 0;
 
+        // Always register ALL valid stacks - no filtering at registration time
         for (int i = 0; i < stacks.Length; i++)
         {
             var stack = stacks[i];
@@ -125,51 +120,42 @@ internal class StorageSourceItemDataStore
                 continue;
             }
 
-            if (filter.IsFiltered && !filter.Contains(stack))
-            {
-                filteredOut++;
-                ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Stack {i} ({stack?.itemValue?.ItemClass?.Name}) filtered out by {filter}");
-                continue;
-            }
-
-            //Disable for now: ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Registering stack {i}: {stack?.itemValue?.ItemClass?.Name} (count: {stack?.count})");
-
-            // Only increment validStacksRegistered when the stack is actually added
+            // No filtering here - always register valid stacks
             if (RegisterStack(source, stack))
             {
                 validStacksRegistered++;
             }
         }
 
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) - Valid: {validStacksRegistered}, Filtered: {filteredOut}, Invalid: {invalidStacks}, Total: {stacks.Length}");
+        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Valid: {validStacksRegistered}, Invalid: {invalidStacks}, Total: {stacks.Length}");
     }
 
     private bool RegisterStack(IStorageSource source, ItemStack stack)
     {
         const string d_MethodName = nameof(RegisterStack);
 
-        // All of the stack validation is done in the caller, so we assume stack is valid here.
+        // All stack validation is done in the caller, so we assume stack is valid here
 
-        // Is this stack already in the data store
+        // Check if this stack is already in the data store
         if (_sourcesByItemStack.TryGetValue(stack, out var existingStorageSource))
         {
             var sourceTypeName = NameLookups.GetName(source.GetSourceType());
-            var itemName = stack?.itemValue?.ItemClass?.Name;
+            var itemName = stack?.itemValue?.ItemClass?.Name ?? "Unknown";
 
-            // It's not good either way
+            // Log the duplicate registration attempt
             if (existingStorageSource.Equals(source))
             {
-                ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with a {sourceTypeName} source.");
+                ModLogger.DebugLog($"{d_MethodName} | ItemStack '{itemName}' is already associated with this {sourceTypeName} source");
             }
             else
             {
-                ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with another source {source?.GetType().ToString()}.");
+                ModLogger.DebugLog($"{d_MethodName} | ItemStack '{itemName}' is already associated with a different source");
             }
 
             return false; // Stack was not added (duplicate)
         }
 
-        // Now we associate the stack with the source
+        // Associate the stack with the source
         if (!_itemStacksBySource.TryGetValue(source, out var itemStacks))
         {
             // Add to source tracking
@@ -209,6 +195,7 @@ internal class StorageSourceItemDataStore
         }
 
         var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
+        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Finding sources for type: {sourceType.Name}");
 
         // Use the generic helper to find all matching source lists
         var matchingSourceLists = TypeMatchingHelper.FindAllAssignableMatches(sourceType, _sourcesByType);
@@ -220,6 +207,7 @@ internal class StorageSourceItemDataStore
             result.AddRange(sourceList);
         }
 
+        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Found {result.Count} sources");
         return result.AsReadOnly();
     }
 
@@ -247,31 +235,35 @@ internal class StorageSourceItemDataStore
         return false;
     }
 
+    /// <summary>
+    /// Gets all item stacks, optionally filtered by the specified filter.
+    /// Uses the cache manager to apply filtering on-demand.
+    /// </summary>
+    /// <param name="filter">The filter to apply (null means unfiltered)</param>
+    /// <returns>Filtered enumerable of item stacks</returns>
     internal IEnumerable<ItemStack> GetAllItemStacks(UniqueItemTypes filter)
     {
-        foreach (var stack in _sourcesByItemStack.Keys)
-        {
-            if (filter.Contains(stack))
-            {
-                yield return stack;
-            }
-        }
+        var allStacks = _sourcesByItemStack.Keys; // Master data (always unfiltered)
+        return _cacheManager.GetFilteredView(filter, allStacks);
     }
 
     internal int CountCachedItems(UniqueItemTypes filter)
     {
-        //TODO: remove debug logging in production code
-        ModLogger.DebugLog($"DataStore_CountCachedItems called with filter: {filter}");
+        const string d_MethodName = nameof(CountCachedItems);
+
+        ModLogger.DebugLog($"{d_MethodName} | Called with filter: {filter}");
+
         int result = 0;
         foreach (var stack in GetAllItemStacks(filter))
         {
             result += stack?.count ?? 0;
         }
-        ModLogger.DebugLog($"DataStore_CountCachedItems result count: {result}");
+
+        ModLogger.DebugLog($"{d_MethodName} | Result count: {result}");
         return result;
     }
 
-    // Make these internal for better encapsulation
+    // Internal methods for better encapsulation
     internal bool GetSourceByItemStack(ItemStack stack, out IStorageSource source)
     {
         return _sourcesByItemStack.TryGetValue(stack, out source);
@@ -296,15 +288,37 @@ internal class StorageSourceItemDataStore
         var totalStacks = _sourcesByItemStack.Count;
         var totalTypes = _sourcesByType.Count;
 
-        var info = $"[DataSource] Sources: {totalSources}, Stacks: {totalStacks}, {CurrentFilter}, Types: {totalTypes}";
-        var details = string.Join(", ", _sourcesByType.Select(kvp =>
-        {
-            var sourceType = kvp.Key;
-            var abbrev = NameLookups.GetAbbrev(sourceType);
-            var count = kvp.Value.Count;
-            return $"{abbrev}:{count}";
-        }));
+        var info = $"[DataStore] Sources: {totalSources}, Stacks: {totalStacks} (unfiltered), Types: {totalTypes}";
 
-        return info + " [" + details + "]";
+        if (_sourcesByType.Count > 0)
+        {
+            var details = string.Join(", ", _sourcesByType.Select(kvp =>
+            {
+                var sourceType = kvp.Key;
+                var abbrev = NameLookups.GetAbbrev(sourceType);
+                var count = kvp.Value.Count;
+                return $"{abbrev}:{count}";
+            }));
+            info += " [" + details + "]";
+        }
+
+        return info;
+    }
+
+    /// <summary>
+    /// Gets comprehensive diagnostic information including cache state.
+    /// </summary>
+    public string GetComprehensiveDiagnosticInfo()
+    {
+        var dataStoreInfo = GetDiagnosticInfo();
+        var cacheInfo = _cacheManager.GetCacheInfo();
+        var viewsInfo = _cacheManager.GetFilteredViewsInfo();
+
+        return $"{dataStoreInfo} | Cache: {cacheInfo} | Views: {viewsInfo}";
+    }
+
+    internal bool SameCacheManager(ItemStackCacheManager cacheManager)
+    {
+        return ReferenceEquals(_cacheManager, cacheManager);
     }
 }

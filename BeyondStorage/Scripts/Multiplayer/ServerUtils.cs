@@ -166,7 +166,7 @@ public static class ServerUtils
             return;
         }
 #if DEBUG
-        ModLogger.DebugLog($"Original Count: {newLockedDict.Count}; Filter Count: {newCount}");
+        ModLogger.DebugLog($"Original LRU_SUBFILTER_DISPLAY_MAX: {newLockedDict.Count}; Filter LRU_SUBFILTER_DISPLAY_MAX: {newCount}");
 #endif
         // Update clients with filtered list
         SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));
