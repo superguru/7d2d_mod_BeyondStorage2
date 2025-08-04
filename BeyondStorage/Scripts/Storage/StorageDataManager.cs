@@ -16,7 +16,6 @@ public class StorageDataManager
     internal readonly StorageSourceItemDataStore _dataStore;
     internal StorageSourceItemDataStore DataStore => _dataStore;
 
-    // TODO: proper compare function for Drones, Dew Collectors, Workstations, Lootables, Vehicles
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dc) => dc.lootContainer.items;
     public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dc) => dc.lootContainer.setModified();

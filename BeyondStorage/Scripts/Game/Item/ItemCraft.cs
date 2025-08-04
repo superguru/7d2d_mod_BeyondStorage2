@@ -58,7 +58,6 @@ public class ItemCraft
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
         ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after stripping {stacks.Count}");
 
-        // Todo: Add item filtering here, if possible, to avoid pulling all items from all storage sources
         var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
