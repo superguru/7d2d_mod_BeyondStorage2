@@ -212,4 +212,73 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
     {
         _facesToPaint.Remove(operationId);
     }
+
+    // Add these methods to your existing ItemActionTextureBlockExposed class
+
+    public void CountAreaPaint(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, Guid operationId)
+    {
+        // Initialize face list for this operation
+        _facesToPaint[operationId] = [];
+
+        // Iterate through area grid
+        for (float x = -_radius; x <= _radius; x += 0.5f)
+        {
+            for (float y = -_radius; y <= _radius; y += 0.5f)
+            {
+                Vector3 direction = _pos + x * _dir1 + y * _dir2 - _origin;
+                int hitMask = 69;
+
+                if (Voxel.Raycast(_world, new Ray(_origin, direction), 50f /* Range */, -555528197, hitMask, 0f))
+                {
+                    WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo.Clone();
+                    BlockValue blockValue = hitInfo.hit.blockValue;
+                    Vector3i blockPos = hitInfo.hit.blockPos;
+
+                    Vector3 hitFaceCenter;
+                    Vector3 hitFaceNormal;
+                    BlockFace blockFace = GameUtils.GetBlockFaceFromHitInfo(blockPos, blockValue, hitInfo.hitCollider, hitInfo.hitTriangleIdx, out hitFaceCenter, out hitFaceNormal);
+
+                    if (blockFace != BlockFace.None)
+                    {
+                        CountPaintBlock(_world, _cc, _entityId, _actionData, blockPos, blockFace, blockValue, _lpRelative, _actionData.channelMask, operationId);
+                    }
+                }
+            }
+        }
+    }
+
+    public void ExecuteAreaPaint(int _entityId, ItemActionTextureBlockData _actionData, Guid operationId)
+    {
+        // Use the stored faces instead of running area paint again
+        if (!_facesToPaint.TryGetValue(operationId, out var facesToPaint))
+        {
+            return; // No faces stored for this operation
+        }
+
+        try
+        {
+            // Paint faces in order until we run out of paint
+            foreach (var faceData in facesToPaint)
+            {
+                if (!ItemTexture.ShouldPaintFace(operationId))
+                {
+                    break; // No more paint available
+                }
+
+                // Apply the texture
+                GameManager.Instance.SetBlockTextureServer(
+                    faceData.BlockPos,
+                    faceData.BlockFace,
+                    _actionData.idx,
+                    _entityId,
+                    (byte)faceData.Channel
+                );
+            }
+        }
+        finally
+        {
+            // Clean up the stored faces
+            _facesToPaint.Remove(operationId);
+        }
+    }
 }

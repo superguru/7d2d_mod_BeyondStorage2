@@ -62,6 +62,7 @@
     <Compile Include="HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />
+    <Compile Include="HarmonyPatches\Item\Texture\ItemActionTextureBlock_fireShotLater_Patch.cs" />
     <Compile Include="HarmonyPatches\Item\Texture\ItemActionTextureBlock_FloodFill_Patch.cs" />
     <Compile Include="HarmonyPatches\UI\XUiC_CraftingQueue_Patches.cs" />
     <Compile Include="HarmonyPatches\Item\Craft\XUiC_IngredientEntry_Patches.cs" />

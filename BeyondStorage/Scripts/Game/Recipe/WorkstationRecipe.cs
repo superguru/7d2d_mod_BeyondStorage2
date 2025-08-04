@@ -54,8 +54,13 @@ public static class WorkstationRecipe
     /// </summary>
     public static void ForegroundWorkstation_CraftCompleted()
     {
+        // TODO: Need to invalidate the master cache when something is crafted in the background,
+        // or maybe intelligently update the cache based on what was crafted?
+        // This way, the recipe list will always show the correct items available.
         if (!ModConfig.PullFromWorkstationOutputs())
         {
+            // If we don't pull from outputs, we don't need to update the workstation windows, as nothing that
+            // was crafted will be available or affect the UI.
             return;
         }
 

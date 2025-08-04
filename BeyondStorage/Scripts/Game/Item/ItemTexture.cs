@@ -252,4 +252,44 @@ public class ItemTexture
             FinishPaintOperation(operationId);
         }
     }
+
+    public static void SmartAreaPaint(ItemActionTextureBlock tb, World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, string _mode)
+    {
+        const string d_MethodName = nameof(SmartAreaPaint);
+        ModLogger.DebugLog($"{d_MethodName}: Starting smart {_mode} paint with radius {_radius}");
+
+        var exposed = tb as ItemActionTextureBlockExposed ?? new ItemActionTextureBlockExposed();
+        var ammoType = tb.currentMagazineItem;
+
+        // Start paint operation
+        var operationId = StartPaintOperation(_actionData, ammoType);
+
+        try
+        {
+            // Phase 1: Count paint usage and store faces to paint
+            ModLogger.DebugLog($"{d_MethodName}: Phase 1 - Counting paint usage for {_mode} mode");
+            exposed.CountAreaPaint(_world, _cc, _entityId, _actionData, _lpRelative, _pos, _origin, _dir1, _dir2, _radius, operationId);
+
+            // Phase 2: Calculate resources and switch to execution
+            var canProceed = SwitchToExecutionPhase(operationId);
+            if (!canProceed)
+            {
+                ModLogger.DebugLog($"{d_MethodName}: No paint available, aborting operation");
+                return;
+            }
+
+            var context = GetOperationContext(operationId);
+            ModLogger.DebugLog($"{d_MethodName}: Will paint {context?.FacesToPaint} out of {context?.TotalPaintRequired} required faces");
+
+            // Phase 3: Execute painting using stored faces
+            ModLogger.DebugLog($"{d_MethodName}: Phase 3 - Executing {_mode} painting from stored faces");
+            exposed.ExecuteAreaPaint(_entityId, _actionData, operationId);
+        }
+        finally
+        {
+            // Cleanup both operation context and stored faces
+            exposed.CleanupOperation(operationId);
+            FinishPaintOperation(operationId);
+        }
+    }
 }
