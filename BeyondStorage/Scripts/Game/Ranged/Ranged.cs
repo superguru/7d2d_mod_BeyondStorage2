@@ -24,10 +24,10 @@ public static class Ranged
         return canReloadFromStorage;
     }
 
-    // TODO: Update this to return early if we hit the max ammo for mag
+    // TODO: SetStacksForFilter this to return early if we hit the max ammo for mag
     // Used By:
-    //      AnimatorRangedReloadState.GetAmmoCount (Weapon Reload - Get Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
-    //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - Get Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
+    //      AnimatorRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
+    //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
     public static int GetAmmoCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(GetAmmoCount);
@@ -37,8 +37,8 @@ public static class Ranged
     }
 
     // Used By:
-    //      AnimatorRangedReloadState.GetAmmoCountToReload (Weapon Reload - Remove Items For Reload)
-    //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - Remove Items For Reload)
+    //      AnimatorRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
+    //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
     public static int RemoveAmmoForReload(ItemValue ammoType, bool isPerMag, int maxMagSize, int currentAmmo)
     {
         const string d_MethodName = nameof(RemoveAmmoForReload);

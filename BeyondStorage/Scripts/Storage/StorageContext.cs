@@ -48,14 +48,6 @@ public sealed class StorageContext
             throw new ArgumentNullException(nameof(cacheManager), error);
         }
 
-        // Validate cache manager integration using reference equality
-        if (!sources.SameCacheManager(cacheManager))
-        {
-            var error = $"{d_MethodName}: StorageDataManager must use the same ItemStackCacheManager instance.";
-            ModLogger.Error(error);
-            throw new InvalidOperationException(error);
-        }
-
         Config = config;
         WorldPlayerContext = worldPlayerContext;
         Sources = sources;
@@ -65,7 +57,7 @@ public sealed class StorageContext
         ModLogger.DebugLog($"StorageContext created: {Sources.GetSourceSummary()}");
     }
 
-    #region Cache Management (Enhanced)
+    #region Cache Management
 
     /// <summary>
     /// Ensures cache is valid for the specified filter, refreshing if necessary.
@@ -73,30 +65,23 @@ public sealed class StorageContext
     /// <param name="filter">The filter to validate cache for</param>
     /// <param name="methodName">Calling method name for logging</param>
     /// <returns>True if cache was valid (hit), false if refresh was needed (miss)</returns>
-    private bool EnsureCacheValid(UniqueItemTypes filter, string methodName)
+    private bool EnsureValidCache(string methodName)
     {
-        filter ??= UniqueItemTypes.Unfiltered;
-        var hit = CacheManager.IsCachedForFilter(filter);
+        var hit = CacheManager.IsMasterCacheValid();
 
         if (!hit)
         {
             try
             {
-                ModLogger.DebugLog($"{methodName} | Cache miss, rediscovering items for master cache");
-
                 // Clear data first, then invalidate cache atomically
                 Sources.Clear();
                 CacheManager.InvalidateCache();
 
                 // Always discover everything for master cache
                 ItemDiscoveryService.DiscoverItems(this);
+                CacheManager.MarkCached();
 
-                // Always mark as unfiltered since we discover everything
-                CacheManager.MarkCached(UniqueItemTypes.Unfiltered);
-
-                ModLogger.DebugLog($"{methodName} | Master cache item discovery completed successfully");
-                // Cache refresh succeeded
-                hit = true; // ✅ Update hit to reflect successful refresh
+                hit = true; // Cache refresh succeeded
             }
             catch (System.Exception ex)
             {
@@ -110,39 +95,44 @@ public sealed class StorageContext
             }
         }
 
-        var cacheStatus = hit ? "HIT" : "MISS";
-        ModLogger.DebugLog($"{methodName} | CACHE_CHECK_{cacheStatus} for requested filter: {filter}");
+        //var cacheStatus = hit ? "HIT" : "MISS";
+        //ModLogger.DebugLog($"{methodName} | CACHE_CHECK_{cacheStatus}");
         return hit;
     }
 
-    public bool IsCachedForFilter(UniqueItemTypes filterTypes)
-    {
-        return CacheManager.IsCachedForFilter(filterTypes);
-    }
-
-    public bool IsCachedForFilter(ItemValue filterItem)
-    {
-        return CacheManager.IsCachedForFilter(filterItem);
-    }
-
+    /// <summary>
+    /// Gets information about the current cache state.
+    /// </summary>
+    /// <returns>String containing cache information</returns>
     public string GetItemStackCacheInfo()
     {
         return CacheManager.GetCacheInfo();
     }
+
+    /// <summary>
+    /// Gets comprehensive diagnostic information including both cache and data store state.
+    /// </summary>
+    /// <returns>String containing comprehensive diagnostic information</returns>
+    public string GetComprehensiveDiagnosticInfo()
+    {
+        var cacheInfo = CacheManager.GetCacheInfo();
+        var dataStoreInfo = Sources.DataStore.GetComprehensiveDiagnosticInfo();
+        return $"{cacheInfo} | {dataStoreInfo}";
+    }
     #endregion
 
     #region Query Operations - Delegate to StorageQueryService
-    public IReadOnlyCollection<ItemStack> GetAllAvailableItemStacks(UniqueItemTypes filterTypes)
+    public IList<ItemStack> GetAllAvailableItemStacks(UniqueItemTypes filter)
     {
         const string d_MethodName = nameof(GetAllAvailableItemStacks);
 
-        if (!EnsureCacheValid(filterTypes, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning empty collection");
-            return Array.Empty<ItemStack>();
+            return CollectionFactory.EmptyItemStackList;
         }
 
-        return StorageQueryService.GetAllAvailableItemStacks(this, filterTypes);
+        return StorageQueryService.GetAllAvailableItemStacks(this, filter);
     }
 
     public int GetItemCount(ItemValue itemValue)
@@ -150,7 +140,7 @@ public sealed class StorageContext
         const string d_MethodName = nameof(GetItemCount);
         var filter = UniqueItemTypes.FromItemValue(itemValue);
 
-        if (!EnsureCacheValid(filter, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
             return 0;
@@ -159,17 +149,17 @@ public sealed class StorageContext
         return StorageQueryService.GetItemCount(this, itemValue);
     }
 
-    public int GetItemCount(UniqueItemTypes filterTypes)
+    public int GetItemCount(UniqueItemTypes filter)
     {
         const string d_MethodName = nameof(GetItemCount);
 
-        if (!EnsureCacheValid(filterTypes, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
             return 0;
         }
 
-        return StorageQueryService.GetItemCount(this, filterTypes);
+        return StorageQueryService.GetItemCount(this, filter);
     }
 
     public bool HasItem(ItemValue itemValue)
@@ -177,7 +167,7 @@ public sealed class StorageContext
         const string d_MethodName = nameof(HasItem);
         var filter = UniqueItemTypes.FromItemValue(itemValue);
 
-        if (!EnsureCacheValid(filter, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning false");
             return false;
@@ -186,17 +176,17 @@ public sealed class StorageContext
         return StorageQueryService.HasItem(this, itemValue);
     }
 
-    public bool HasItem(UniqueItemTypes filterTypes)
+    public bool HasItem(UniqueItemTypes filter)
     {
         const string d_MethodName = nameof(HasItem);
 
-        if (!EnsureCacheValid(filterTypes, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning false");
             return false;
         }
 
-        return StorageQueryService.HasItem(this, filterTypes);
+        return StorageQueryService.HasItem(this, filter);
     }
     #endregion
 
@@ -206,7 +196,7 @@ public sealed class StorageContext
         const string d_MethodName = nameof(RemoveRemaining);
         var filter = UniqueItemTypes.FromItemValue(itemValue);
 
-        if (!EnsureCacheValid(filter, d_MethodName))
+        if (!EnsureValidCache(d_MethodName))
         {
             ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
             return 0;

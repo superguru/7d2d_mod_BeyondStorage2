@@ -31,8 +31,8 @@ public class XUiMPlayerInventoryCommonPatches
     }
 
     // Used For:
-    //          Item Crafting (Remove items on craft)
-    //          Item Repair (Remove items on repair)
+    //          Item Crafting (ClearStacksForFilter items on craft)
+    //          Item Repair (ClearStacksForFilter items on repair)
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
 #if DEBUG

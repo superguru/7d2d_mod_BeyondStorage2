@@ -69,7 +69,7 @@ public class ItemActionRepairPatches
             // Apply our label to this CI
             ci.labels.Add(newLabel);
             newCode.Add(ci);
-            // Get itemValue
+            // GetStacksForFilter itemValue
             newCode.Add(new CodeInstruction(OpCodes.Ldfld,
                 AccessTools.Field(typeof(ItemStack), nameof(ItemStack.itemValue))));
             // GetItemCount(itemValue)

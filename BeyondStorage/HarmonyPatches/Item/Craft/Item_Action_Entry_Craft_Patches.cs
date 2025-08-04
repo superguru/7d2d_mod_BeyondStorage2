@@ -18,7 +18,7 @@ public class ItemActionEntryCraftPatches
     {
         var targetMethodString = $"{typeof(ItemActionEntryCraft)}.{nameof(ItemActionEntryCraft.HasItems)}";
 
-        // Create search pattern for GetAllItemStacks method call
+        // Create search pattern for GetItemStacksForFilter method call
         var searchPattern = new List<CodeInstruction>
         {
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetAllItemStacks)))

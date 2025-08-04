@@ -84,9 +84,11 @@
     <Compile Include="HarmonyPatches\Vehicle\Repair\XUiM_Vehicle_Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\Data\IStorageSource.cs" />
+    <Compile Include="Scripts\Data\FilterStacksStore.cs" />
     <Compile Include="Scripts\Data\ItemStackReferenceComparer.cs" />
     <Compile Include="Scripts\Data\StorageSourceAdapter.cs" />
     <Compile Include="Scripts\Data\StorageSourceItemDataStore.cs" />
+    <Compile Include="Scripts\Data\UniqueItemTypeCache.cs" />
     <Compile Include="Scripts\Diagnostics\NameLookups.cs" />
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />

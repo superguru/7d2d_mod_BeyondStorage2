@@ -96,7 +96,7 @@ public static class ItemPropertiesCache
         // Generate a cache key that represents this specific item instance
         var cacheKey = GenerateItemInstanceKey(itemValue);
 
-        // Get cached result or compute new one
+        // GetStacksForFilter cached result or compute new one
         return s_hasModsCache.GetOrCreate(cacheKey, _ => itemValue.HasMods());
     }
 
@@ -136,14 +136,14 @@ public static class ItemPropertiesCache
         var keyBuilder = new System.Text.StringBuilder();
         keyBuilder.Append(itemValue.type);
 
-        // Add quality if it affects mod slots
+        // AddStackRangeForFilter quality if it affects mod slots
         if (itemValue.HasQuality)
         {
             keyBuilder.Append('_');
             keyBuilder.Append(itemValue.Quality);
         }
 
-        // Add a hash of the mods array to detect changes
+        // AddStackRangeForFilter a hash of the mods array to detect changes
         if (itemValue.Modifications != null && itemValue.Modifications.Length > 0)
         {
             keyBuilder.Append('_');

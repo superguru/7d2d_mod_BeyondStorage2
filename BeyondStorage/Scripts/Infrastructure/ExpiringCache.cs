@@ -7,24 +7,26 @@ namespace BeyondStorage.Scripts.Infrastructure;
 /// Thread-safe and provides methods for cache management and diagnostics.
 /// </summary>
 /// <typeparam name="T">The type of object to cache</typeparam>
-public sealed class ExpiringCache<T> where T : class
+/// <remarks>
+/// Initializes a new instance of the ExpiringCache.
+/// </remarks>
+/// <param name="cacheDurationSeconds">How long items should be cached in seconds</param>
+/// <param name="cacheTypeName">Name for logging purposes (optional)</param>
+public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTypeName = null) where T : class
 {
     private T _cachedItem;
     private DateTime _cacheTimestamp;
     private readonly object _cacheLock = new();
-    private readonly double _cacheDurationSeconds;
-    private readonly string _cacheTypeName;
 
     /// <summary>
-    /// Initializes a new instance of the ExpiringCache.
+    /// Gets the configured cache duration in seconds.
     /// </summary>
-    /// <param name="cacheDurationSeconds">How long items should be cached in seconds</param>
-    /// <param name="cacheTypeName">Name for logging purposes (optional)</param>
-    public ExpiringCache(double cacheDurationSeconds, string cacheTypeName = null)
-    {
-        _cacheDurationSeconds = cacheDurationSeconds;
-        _cacheTypeName = string.IsNullOrEmpty(cacheTypeName) ? typeof(T).Name : cacheTypeName;
-    }
+    public double CacheDurationSeconds { get; } = cacheDurationSeconds;
+
+    /// <summary>
+    /// Gets the cache type name used for logging.
+    /// </summary>
+    public string CacheTypeName { get; } = string.IsNullOrEmpty(cacheTypeName) ? typeof(T).Name : cacheTypeName;
 
     /// <summary>
     /// Gets an item from cache or creates a new one using the provided factory function.
@@ -46,9 +48,9 @@ public sealed class ExpiringCache<T> where T : class
             if (!forceRefresh && _cachedItem != null)
             {
                 var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
-                if (age < _cacheDurationSeconds)
+                if (age < CacheDurationSeconds)
                 {
-                    ModLogger.DebugLog($"{methodName}: Using cached {_cacheTypeName} (age: {age:F3}s)");
+                    ModLogger.DebugLog($"{methodName}: Using cached {CacheTypeName} (age: {age:F3}s)");
                     return _cachedItem;
                 }
             }
@@ -80,7 +82,7 @@ public sealed class ExpiringCache<T> where T : class
         lock (_cacheLock)
         {
             _cachedItem = null;
-            ModLogger.DebugLog($"{_cacheTypeName} cache invalidated");
+            ModLogger.DebugLog($"{CacheTypeName} cache invalidated");
         }
     }
 
@@ -116,7 +118,7 @@ public sealed class ExpiringCache<T> where T : class
             }
 
             var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
-            return age < _cacheDurationSeconds;
+            return age < CacheDurationSeconds;
         }
     }
 
@@ -130,22 +132,12 @@ public sealed class ExpiringCache<T> where T : class
         {
             if (_cachedItem == null)
             {
-                return $"{_cacheTypeName} Cache: Empty";
+                return $"{CacheTypeName} Cache: Empty";
             }
 
             var age = GetCacheAge();
-            var isValid = age < _cacheDurationSeconds;
-            return $"{_cacheTypeName} Cache: Age={age:F3}s, Valid={isValid}, Duration={_cacheDurationSeconds}s";
+            var isValid = age < CacheDurationSeconds;
+            return $"{CacheTypeName} Cache: Age={age:F3}s, Valid={isValid}, Duration={CacheDurationSeconds}s";
         }
     }
-
-    /// <summary>
-    /// Gets the configured cache duration in seconds.
-    /// </summary>
-    public double CacheDurationSeconds => _cacheDurationSeconds;
-
-    /// <summary>
-    /// Gets the cache type name used for logging.
-    /// </summary>
-    public string CacheTypeName => _cacheTypeName;
 }

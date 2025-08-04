@@ -15,11 +15,17 @@ public static class StorageQueryService
     /// Validates common parameters used by all query methods.
     /// </summary>
     /// <returns>True if all parameters are valid</returns>
-    private static bool ValidateParameters(string methodName, StorageContext context)
+    private static bool ValidateParameters(string methodName, StorageContext context, UniqueItemTypes filter)
     {
         if (context == null)
         {
             ModLogger.Error($"{methodName} | Context is null");
+            return false;
+        }
+
+        if (filter == null)
+        {
+            ModLogger.Error($"{methodName} | Filter is null");
             return false;
         }
 
@@ -30,20 +36,19 @@ public static class StorageQueryService
     {
         const string d_MethodName = nameof(GetItemCount);
 
-        if (!ValidateParameters(d_MethodName, context))
+        if (filterItem == null)
         {
+            ModLogger.Error($"{d_MethodName} | filterItem is null");
             return 0;
         }
 
         var filter = UniqueItemTypes.FromItemValue(filterItem);
-
         return GetItemCount(context, filter);
     }
 
     public static int GetItemCount(StorageContext context, UniqueItemTypes filter)
     {
-        // No cache handling here - just pure query logic
-        if (!ValidateParameters(nameof(GetItemCount), context))
+        if (!ValidateParameters(nameof(GetItemCount), context, filter))
         {
             return 0;
         }
@@ -55,8 +60,9 @@ public static class StorageQueryService
     {
         const string d_MethodName = nameof(HasItem);
 
-        if (!ValidateParameters(d_MethodName, context))
+        if (filterItem == null)
         {
+            ModLogger.Error($"{d_MethodName} | filterItem is null");
             return false;
         }
 
@@ -67,59 +73,30 @@ public static class StorageQueryService
 
     public static bool HasItem(StorageContext context, UniqueItemTypes filter)
     {
-        if (!ValidateParameters(nameof(HasItem), context))
+        if (!ValidateParameters(nameof(HasItem), context, filter))
         {
             return false;
         }
 
-        return context.Sources.DataStore.AnyItemsLeft();
+        return context.Sources.DataStore.AnyItemsLeft(filter);
     }
 
     /// <summary>
-    /// Gets all available item stacks from storage sources with optional filtering.
+    /// Gets all available item stacks from storage sources
     /// </summary>
-    public static IReadOnlyCollection<ItemStack> GetAllAvailableItemStacks(StorageContext context, UniqueItemTypes filterTypes)
+    public static IList<ItemStack> GetAllAvailableItemStacks(StorageContext context, UniqueItemTypes filter)
     {
         const string d_MethodName = nameof(GetAllAvailableItemStacks);
 
-        if (!ValidateParameters(d_MethodName, context))
+        if (!ValidateParameters(d_MethodName, context, filter))
         {
             ModLogger.DebugLog($"{d_MethodName} | Validation failed, returning empty collection");
-#pragma warning disable IDE0301 // Simplify collection initialization
-            return System.Array.Empty<ItemStack>(); // Prefer this, as it will not allocate a new array each time
-#pragma warning restore IDE0301
+            return CollectionFactory.EmptyItemStackList;
         }
 
-        var result = CollectionFactory.CreateItemStackList();
-        result.AddRange(context.Sources.DataStore.GetAllItemStacks(filterTypes));
+        var result = context.Sources.DataStore.GetItemStacksForFilter(filter);
 
-        ModLogger.DebugLog($"{d_MethodName} | Returning {result.Count} item stacks with filter: {filterTypes}");
+        //ModLogger.DebugLog($"{d_MethodName} | Returning {result.Count} item stacks with filter: {filter}");
         return result;
-    }
-
-    /// <summary>
-    /// Removes items from storage with proper cache validation.
-    /// </summary>
-    /// <param name="context">The storage context</param>
-    /// <param name="itemValue">The item type to remove</param>
-    /// <param name="stillNeeded">The amount still needed to remove</param>
-    /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
-    /// <param name="removedItems">Optional list to track removed items</param>
-    /// <returns>The actual amount removed</returns>
-    public static int RemoveItems(StorageContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
-    {
-        const string d_MethodName = nameof(RemoveItems);
-
-        if (!ValidateParameters(d_MethodName, context))
-        {
-            return 0;
-        }
-
-        var filter = UniqueItemTypes.FromItemValue(itemValue);
-
-        var itemName = itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
-        ModLogger.DebugLog($"{d_MethodName} | Removing {stillNeeded} {itemName}");
-
-        return StorageItemRemovalService.RemoveItems(context, itemValue, stillNeeded, ignoreModdedItems, removedItems);
     }
 }

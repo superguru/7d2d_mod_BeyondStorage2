@@ -19,7 +19,7 @@ public class ItemActionTextureBlockPatches
     {
         var targetMethodName = $"{typeof(ItemActionTextureBlock)}.{nameof(ItemActionTextureBlock.checkAmmo)}";
 
-        // Create search pattern for GetAllItemStacks method call
+        // Create search pattern for GetItemStacksForFilter method call
         var searchPattern = new List<CodeInstruction>
         {
             new CodeInstruction(OpCodes.Ldc_I4_0),
@@ -56,7 +56,7 @@ public class ItemActionTextureBlockPatches
 
         if (response.IsPatched)
         {
-            // Get rid of the original instructions by converting them to NOP
+            // GetStacksForFilter rid of the original instructions by converting them to NOP
             ModLogger.DebugLog($"{targetMethodName}: Successfully patched, changing the searchPattern instructions to NOP");
 
             var patched = response.BestInstructions(request);
@@ -120,7 +120,7 @@ public class ItemActionTextureBlockPatches
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Inventory), nameof(Inventory.GetItemCount), [typeof(ItemValue), typeof(bool), typeof(int), typeof(int), typeof(bool)])),
             new CodeInstruction(OpCodes.Stloc_S, 4),    // stloc.s 4, which is entityAvailableCount
             new CodeInstruction(OpCodes.Ldloc_S, 4),    // load entityAvailableCount
-            new CodeInstruction(OpCodes.Add),           // Add bag count + inventory count
+            new CodeInstruction(OpCodes.Add),           // AddStackRangeForFilter bag count + inventory count
             // New code goes here, which means ReplacementOffset = 5
         };
 

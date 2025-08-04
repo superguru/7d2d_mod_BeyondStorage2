@@ -9,8 +9,8 @@ public static class ItemCommon
 {
     // Used By:
     //      XUiM_PlayerInventory.RemoveItems
-    //          Item Crafting (Remove items on craft)
-    //          Item Repair (Remove items on repair)
+    //          Item Crafting (ClearStacksForFilter items on craft)
+    //          Item Repair (ClearStacksForFilter items on repair)
     public static int ItemRemoveRemaining(int originalResult, ItemValue itemValue, int totalRequiredAmount, bool ignoreModdedItems = false, List<ItemStack> removedItems = null)
     {
         var itemName = itemValue.ItemClass.GetItemName();
@@ -25,7 +25,7 @@ public static class ItemCommon
             return originalResult;
         }
 
-        // Get what we can from storage up to required amount
+        // GetStacksForFilter what we can from storage up to required amount
         var context = StorageContextFactory.Create(nameof(ItemRemoveRemaining));
         var totalRemoved = context?.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems) ?? 0;
 

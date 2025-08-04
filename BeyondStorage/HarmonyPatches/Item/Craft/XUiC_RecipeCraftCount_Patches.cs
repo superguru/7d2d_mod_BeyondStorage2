@@ -37,7 +37,7 @@ public class XUiCRecipeCraftCountPatches
 
             ModLogger.DebugLog("Appending our item stacks to current inventory");
 
-            // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetAllItemStacks()).ToArray()
+            // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetItemStacksForFilter()).ToArray()
             codes.Insert(i + 1,
                 new CodeInstruction(OpCodes.Call,
                     AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks))));

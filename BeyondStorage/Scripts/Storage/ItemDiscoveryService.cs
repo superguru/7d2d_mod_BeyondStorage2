@@ -21,13 +21,13 @@ public static class ItemDiscoveryService
             return;
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | Finding tile entities");
+        //ModLogger.DebugLog($"{d_MethodName} | Finding tile entities");
         TileEntityItemDiscovery.FindItems(context);
 
-        ModLogger.DebugLog($"{d_MethodName} | Finding vehicles");
+        //ModLogger.DebugLog($"{d_MethodName} | Finding vehicles");
         VehicleItemDiscovery.FindItems(context);
 
-        ModLogger.DebugLog($"{d_MethodName} | Finding drones");
+        // ModLogger.DebugLog($"{d_MethodName} | Finding drones");
         DroneItemDiscovery.FindItems(context);
 
         LogDiscoveryDiagnostics(context, d_MethodName);

@@ -11,24 +11,16 @@ namespace BeyondStorage.Scripts.Infrastructure;
 /// Uses explicit call recording for clarity and accuracy with nanosecond precision.
 /// Includes internal stopwatch management for convenience.
 /// </summary>
-public sealed class PerformanceProfiler
+/// <remarks>
+/// Initializes a new instance of PerformanceProfiler.
+/// </remarks>
+/// <param name="trackerName">Name of the tracker for logging purposes</param>
+public sealed class PerformanceProfiler(string trackerName)
 {
-    private readonly Dictionary<string, (int callCount, long totalTimeNs, double avgTimeNs)> _callStats = new();
-    private readonly Dictionary<string, Stopwatch> _activeStopwatches = new();
-    private readonly object _statsLock = new object();
-    private readonly string _trackerName;
-
-    // Cache the conversion factor from ticks to nanoseconds for performance
-    private static readonly double s_ticksToNanoseconds = 1_000_000_000.0 / Stopwatch.Frequency;
-
-    /// <summary>
-    /// Initializes a new instance of PerformanceProfiler.
-    /// </summary>
-    /// <param name="trackerName">Name of the tracker for logging purposes</param>
-    public PerformanceProfiler(string trackerName)
-    {
-        _trackerName = trackerName ?? throw new ArgumentNullException(nameof(trackerName));
-    }
+    private readonly Dictionary<string, (int callCount, long totalTimeNs, double avgTimeNs)> _callStats = [];
+    private readonly Dictionary<string, Stopwatch> _activeStopwatches = [];
+    private readonly object _statsLock = new();
+    private readonly string _trackerName = trackerName ?? throw new ArgumentNullException(nameof(trackerName));
 
     /// <summary>
     /// Starts timing for a method. Must be paired with StopAndRecordCall.
@@ -76,7 +68,7 @@ public sealed class PerformanceProfiler
             stopwatch.Stop();
             _activeStopwatches.Remove(methodName);
 
-            var elapsedNs = (long)(stopwatch.ElapsedTicks * s_ticksToNanoseconds);
+            var elapsedNs = (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
             RecordCallInternal(methodName, elapsedNs);
 
             return elapsedNs;
@@ -99,7 +91,7 @@ public sealed class PerformanceProfiler
         {
             if (_activeStopwatches.TryGetValue(methodName, out var stopwatch))
             {
-                return (long)(stopwatch.ElapsedTicks * s_ticksToNanoseconds);
+                return (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
             }
             return -1;
         }
@@ -164,7 +156,7 @@ public sealed class PerformanceProfiler
         }
 
         // Convert ticks to nanoseconds for maximum precision
-        var elapsedNs = (long)(stopwatch.ElapsedTicks * s_ticksToNanoseconds);
+        var elapsedNs = (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
         RecordCall(methodName, elapsedNs);
     }
 
@@ -358,13 +350,13 @@ public sealed class PerformanceProfiler
     /// <returns>Time in nanoseconds</returns>
     public static long TicksToNanoseconds(long ticks)
     {
-        return (long)(ticks * s_ticksToNanoseconds);
+        return (long)(ticks * TicksToNanosecondsRatio);
     }
 
     /// <summary>
     /// Gets the nanosecond conversion factor for external timing calculations.
     /// </summary>
-    public static double TicksToNanosecondsRatio => s_ticksToNanoseconds;
+    public static double TicksToNanosecondsRatio { get; } = 1_000_000_000.0 / Stopwatch.Frequency;
 
     /// <summary>
     /// Clears all statistics.
@@ -437,7 +429,7 @@ public sealed class PerformanceProfiler
     public static string GetTimingInfo()
     {
         return $"Stopwatch Frequency: {Stopwatch.Frequency:N0} Hz, " +
-               $"Resolution: {s_ticksToNanoseconds:F3}ns per tick, " +
+               $"Resolution: {TicksToNanosecondsRatio:F3}ns per tick, " +
                $"High Resolution: {Stopwatch.IsHighResolution}";
     }
 }

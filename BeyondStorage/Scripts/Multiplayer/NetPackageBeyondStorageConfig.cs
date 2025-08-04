@@ -8,7 +8,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
 {
     private const ushort ConfigVersion = 2;
 
-    // IMPORTANT: Update number if more options being sent
+    // IMPORTANT: SetStacksForFilter number if more options being sent
     private const ushort BoolCount = 13;  // 13 as of v2.2.0, which introduces pullFromDrones and enableForBlockTexture
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;

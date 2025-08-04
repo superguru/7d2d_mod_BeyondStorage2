@@ -40,7 +40,7 @@ public class ItemCraft
     }
 
     // Used By:
-    //      XUiC_RecipeList.Update
+    //      XUiC_RecipeList.SetStacksForFilter
     //          Item Crafts - shown as available in the list
     public static void ItemCraft_AddPullableSourceStorageStacks(List<ItemStack> stacks)
     {
@@ -53,17 +53,17 @@ public class ItemCraft
             return;
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX at the start {stacks.Count} (not stripped)");
+        ModLogger.DebugLog($"{d_MethodName} | stacks at the start {stacks.Count} (before stripping)");
 
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
-        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after stripping {stacks.Count}");
+        ModLogger.DebugLog($"{d_MethodName} | stacks at the start {stacks.Count} (after stripping)");
 
         var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            ModLogger.DebugLog($"{d_MethodName} | stacks after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
@@ -127,7 +127,7 @@ public class ItemCraft
         var itemName = itemStack.itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
         ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}; itemStack {itemStack}");
 
-        // Get storage count and return result
+        // GetStacksForFilter storage count and return result
         var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;

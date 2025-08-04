@@ -86,7 +86,7 @@ public class ItemActionRepairUpgradePatches
     }
 
     // Used For:
-    //          Block Upgrade (Remove items)
+    //          Block Upgrade (ClearStacksForFilter items)
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(ItemActionRepair.RemoveRequiredResource))]
 #if DEBUG

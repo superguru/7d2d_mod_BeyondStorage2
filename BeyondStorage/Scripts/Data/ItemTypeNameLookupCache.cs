@@ -20,19 +20,16 @@ public static class ItemTypeNameLookupCache
 
         if (itemType == -1)
         {
-            //ModLogger.DebugLog($"{d_MethodName}({itemType}) | Wildcard item type, returning: *");
             return "*";
         }
 
         if (itemType == 0)
         {
-            //ModLogger.DebugLog($"{d_MethodName}({itemType}) | Empty item type, returning: Empty Item (0)");
             return "Empty Item (0)";
         }
 
         if (s_itemTypeNames.TryGetValue(itemType, out var name))
         {
-            ModLogger.DebugLog($"{d_MethodName}({itemType}) | Cache hit, returning: {name}");
             return name;
         }
 
@@ -51,7 +48,6 @@ public static class ItemTypeNameLookupCache
         }
 
         s_itemTypeNames[itemType] = name;
-        //ModLogger.DebugLog($"{d_MethodName}({itemType}) | Cache miss, resolved and cached: {name}");
 
         return name;
     }

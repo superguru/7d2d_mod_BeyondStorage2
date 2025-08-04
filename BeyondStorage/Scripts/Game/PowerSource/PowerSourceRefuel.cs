@@ -13,13 +13,13 @@ public static class PowerSourceRefuel
 
         if (totalNeeded <= 0)
         {
-            ModLogger.DebugLog($"{d_method_name} - item {itemName}; totalNeeded {totalNeeded} <= 0, returning early"); // TODO: Remove once done debugging
+            ModLogger.DebugLog($"{d_method_name} - item {itemName}; totalNeeded {totalNeeded} <= 0, returning early"); // TODO: ClearStacksForFilter once done debugging
             return 0;
         }
 
         if (lastRemoved >= totalNeeded)
         {
-            ModLogger.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: Remove once done debugging
+            ModLogger.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: ClearStacksForFilter once done debugging
             return lastRemoved;
         }
 

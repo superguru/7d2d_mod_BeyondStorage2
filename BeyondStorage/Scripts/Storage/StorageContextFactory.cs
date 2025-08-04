@@ -50,14 +50,12 @@ public static class StorageContextFactory
             }
 
             var cacheManager = new ItemStackCacheManager();
-
             var allowedSources = AllowedSourcesSnapshot.FromConfig(config);
-            var dataStore = new StorageSourceItemDataStore(allowedSources, cacheManager);
+
+            var dataStore = new StorageSourceItemDataStore(allowedSources);
             var sources = new StorageDataManager(dataStore);
 
             var context = new StorageContext(config, worldPlayerContext, sources, cacheManager);
-
-            ModLogger.DebugLog($"{methodName}: Created fresh StorageContext with {context.GetSourceSummary()}");
             return context;
         }
         catch (Exception ex)

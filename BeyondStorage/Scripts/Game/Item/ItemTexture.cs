@@ -130,7 +130,7 @@ public class ItemTexture
         var itemPropsStats = ItemPropertiesCache.GetCacheStats();
         var globalInvalidations = ItemStackCacheManager.GetGlobalInvalidationCounter();
 
-        // Add paint-specific tracking statistics
+        // AddStackRangeForFilter paint-specific tracking statistics
         var totalPaintRemovals = s_paintRemovals.Values.Sum();
         var uniquePaintItems = s_paintRemovals.Count;
         var paintStats = $"PaintRemovals: {totalPaintRemovals} items, {uniquePaintItems} types";

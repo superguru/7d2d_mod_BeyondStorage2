@@ -103,13 +103,11 @@ internal static class TileEntityItemDiscovery
         ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
     }
 
-    private static void ProcessDewCollectorItems(StorageDataManager sources, TileEntityDewCollector dewCollector)
+    private static int ProcessDewCollectorItems(StorageDataManager sources, TileEntityDewCollector dewCollector)
     {
-        const string d_MethodName = nameof(ProcessDewCollectorItems);
-
         if (dewCollector.bUserAccessing)
         {
-            return;
+            return 0;
         }
 
         var sourceAdapter = new StorageSourceAdapter<TileEntityDewCollector>(
@@ -120,20 +118,14 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-
-        if (validStacksRegistered > 0)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Found {validStacksRegistered} item stacks");
-        }
+        return validStacksRegistered;
     }
 
-    private static void ProcessWorkstationItems(StorageDataManager sources, TileEntityWorkstation workstation)
+    private static int ProcessWorkstationItems(StorageDataManager sources, TileEntityWorkstation workstation)
     {
-        const string d_MethodName = nameof(ProcessWorkstationItems);
-
         if (!workstation.IsPlayerPlaced)
         {
-            return;
+            return 0;
         }
 
         var sourceAdapter = new StorageSourceAdapter<TileEntityWorkstation>(
@@ -144,27 +136,21 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-
-        if (validStacksRegistered > 0)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Found {validStacksRegistered} item stacks");
-        }
+        return validStacksRegistered;
     }
 
-    private static void ProcessLootableItems(StorageDataManager sources, ITileEntityLootable lootable, ConfigSnapshot config, TileEntity tileEntity)
+    private static int ProcessLootableItems(StorageDataManager sources, ITileEntityLootable lootable, ConfigSnapshot config, TileEntity tileEntity)
     {
-        const string d_MethodName = nameof(ProcessLootableItems);
-
         if (!lootable.bPlayerStorage)
         {
-            return;
+            return 0;
         }
 
         if (config.OnlyStorageCrates)
         {
             if (!tileEntity.TryGetSelfOrFeature(out TEFeatureStorage _))
             {
-                return;
+                return 0;
             }
         }
 
@@ -176,10 +162,6 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-
-        if (validStacksRegistered > 0)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: EntityId {lootable.EntityId} found {validStacksRegistered} item stacks");
-        }
+        return validStacksRegistered;
     }
 }

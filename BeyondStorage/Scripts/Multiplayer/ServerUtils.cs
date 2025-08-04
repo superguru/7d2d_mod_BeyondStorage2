@@ -103,7 +103,7 @@ public static class ServerUtils
         var currentCount = currentCopy.Count;
         var foundChange = false;
 
-        // Remove anything not player storage
+        // ClearStacksForFilter anything not player storage
         foreach (var kvp in newLockedDict)
         {
             Vector3i tePos;
@@ -134,7 +134,7 @@ public static class ServerUtils
                 continue;
             }
 
-            // Add current entry to our new dict for clients
+            // AddStackRangeForFilter current entry to our new dict for clients
             tempDict.Add(tePos, kvp.Value);
 
             // Skip if we already know things have changes
@@ -168,10 +168,10 @@ public static class ServerUtils
 #if DEBUG
         ModLogger.DebugLog($"Original LRU_SUBFILTER_DISPLAY_MAX: {newLockedDict.Count}; Filter LRU_SUBFILTER_DISPLAY_MAX: {newCount}");
 #endif
-        // Update clients with filtered list
+        // SetStacksForFilter clients with filtered list
         SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));
 
-        // Update our own list as well
+        // SetStacksForFilter our own list as well
         TileEntityLockManager.UpdateLockedTEs(tempDict);
     }
 }

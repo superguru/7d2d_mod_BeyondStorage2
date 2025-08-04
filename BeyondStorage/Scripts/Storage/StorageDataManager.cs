@@ -61,9 +61,4 @@ public class StorageDataManager
     {
         return DataStore.CountCachedItems(filter);
     }
-
-    internal bool SameCacheManager(ItemStackCacheManager cacheManager)
-    {
-        return DataStore.SameCacheManager(cacheManager);
-    }
 }

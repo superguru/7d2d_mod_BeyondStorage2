@@ -65,7 +65,7 @@ public class XUiMPlayerInventoryCraftPatches
             // -  1. Need to move this branch fixup code to the patch method
             // ✔️ 2. Record the original index of the patch as well as the new index of the patch in the PatchResult
             // -  3. use request.NewInstructions.GetRange();
-            // -  4. Remove all this extra logging
+            // -  4. ClearStacksForFilter all this extra logging
 
             var newLabelIndex = request.NewInstructions.FindIndex(instr => instr.opcode == OpCodes.Ble_S && instr.labels.Count == 0);
             if (newLabelIndex >= 0)

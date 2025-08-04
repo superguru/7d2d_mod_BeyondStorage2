@@ -21,7 +21,7 @@ public class EntityVehiclePatches
         {
             return;
         }
-        // Update result of CanRefuel if nearby storage has required gas item
+        // SetStacksForFilter result of CanRefuel if nearby storage has required gas item
         __result = VehicleRefuel.CanRefuel(__instance, __result);
     }
 

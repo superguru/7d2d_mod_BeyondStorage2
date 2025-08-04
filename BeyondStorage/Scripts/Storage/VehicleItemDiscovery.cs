@@ -48,13 +48,11 @@ internal static class VehicleItemDiscovery
         }
     }
 
-    private static void ProcessVehicleItems(StorageContext context, EntityVehicle vehicle)
+    private static int ProcessVehicleItems(StorageContext context, EntityVehicle vehicle)
     {
-        const string d_MethodName = nameof(ProcessVehicleItems);
-
         if (vehicle.bag == null || vehicle.bag.IsEmpty() || !vehicle.hasStorage())
         {
-            return;
+            return 0;
         }
 
         var sources = context.Sources;
@@ -67,10 +65,6 @@ internal static class VehicleItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-
-        if (validStacksRegistered > 0)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Entity {vehicle.EntityName} has {validStacksRegistered} item stacks");
-        }
+        return validStacksRegistered;
     }
 }

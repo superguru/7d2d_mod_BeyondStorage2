@@ -110,7 +110,7 @@ public static class WorkstationRecipe
                 return;
             }
 
-            // Get only open workstation windows (avoids unnecessary filtering later)
+            // GetStacksForFilter only open workstation windows (avoids unnecessary filtering later)
             var openWorkstations = xui.GetChildrenByType<XUiC_WorkstationWindowGroup>()
                 .Where(w => w.WindowGroup?.isShowing ?? false)
                 .ToList();
@@ -120,7 +120,7 @@ public static class WorkstationRecipe
                 return; // Nothing to update - exit early
             }
 
-            // Get all available items once (shared across all workstations)
+            // GetStacksForFilter all available items once (shared across all workstations)
             var availableItems = ItemCommon.ItemCommon_GetAllAvailableItemStacksFromXui(xui);
             if (availableItems.Count == 0)
             {
@@ -192,7 +192,7 @@ public static class WorkstationRecipe
                     }
                 }
 
-                // Update UI only if changes were made
+                // SetStacksForFilter UI only if changes were made
                 if (refreshCount > 0)
                 {
                     ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");

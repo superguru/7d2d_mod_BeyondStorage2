@@ -23,18 +23,14 @@ internal static class DroneItemDiscovery
         var drones = DroneManager.Instance?.dronesActive;
         if (drones == null)
         {
-            ModLogger.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
+            ModLogger.Error($"{d_MethodName}: DroneManager returned null list, aborting.");
             return;
         }
 
-        foreach (var drone in drones)
+        for (var i = 0; i < drones.Count; i++)
         {
+            var drone = drones[i];
             if (drone == null)
-            {
-                continue;
-            }
-
-            if (!world.IsWithinRange(drone.position, config.Range))
             {
                 continue;
             }
@@ -45,6 +41,10 @@ internal static class DroneItemDiscovery
                 continue;
             }
 
+            if (!world.IsWithinRange(drone.position, config.Range))
+            {
+                continue;
+            }
 
             ProcessDroneItems(context, drone);
         }
@@ -72,7 +72,7 @@ internal static class DroneItemDiscovery
 
         if (validStacksRegistered > 0)
         {
-            ModLogger.DebugLog($"{d_MethodName}: Entity {drone.EntityName} has {validStacksRegistered} item stacks");
+            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
         }
     }
 }

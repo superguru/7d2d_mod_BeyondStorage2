@@ -28,7 +28,7 @@ public class BlockUpgrade
 
     // Used By:
     //      ItemActionRepair.RemoveRequiredResource
-    //          Block Upgrade - Remove items
+    //          Block Upgrade - ClearStacksForFilter items
     public static int BlockUpgradeRemoveRemaining(int currentCount, ItemValue itemValue, int requiredCount)
     {
         const string d_MethodName = nameof(BlockUpgradeRemoveRemaining);

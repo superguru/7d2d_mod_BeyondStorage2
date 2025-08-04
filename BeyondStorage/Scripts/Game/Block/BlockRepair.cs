@@ -54,7 +54,7 @@ public class BlockRepair
             return currentCount;
         }
 
-        // Add amount removed from storage to last amount removed to update result
+        // AddStackRangeForFilter amount removed from storage to last amount removed to update result
         var context = StorageContextFactory.Create(d_MethodName);
         var removedFromStorage = context?.RemoveRemaining(itemStack.itemValue, stillNeeded) ?? 0;
 

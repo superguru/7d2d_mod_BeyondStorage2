@@ -356,17 +356,14 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
         return ((IEnumerable<int>)_itemTypes).GetEnumerator();
     }
 
-    public override string ToString()
-    {
-        return GetDiagnosticInfo();
-    }
+    public override string ToString() => GetDiagnosticInfo();
 
     public string GetDiagnosticInfo()
     {
-        var info = $"Filters: {_itemTypes.Length}";
+        var info = $"Filter({_itemTypes.Length})";
         var details = string.Join(", ", _itemTypes.Select(itemType => ItemTypeNameLookupCache.GetItemTypeName(itemType)));
 
-        return info + " [" + details + "]";
+        return $"{info}:[{details}]";
     }
 
     /// <summary>

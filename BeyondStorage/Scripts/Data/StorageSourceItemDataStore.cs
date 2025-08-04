@@ -12,11 +12,11 @@ internal class StorageSourceItemDataStore
     private readonly Dictionary<IStorageSource, List<ItemStack>> _itemStacksBySource = [];
     private readonly Dictionary<ItemStack, IStorageSource> _sourcesByItemStack = new(ItemStackReferenceComparer.Instance);
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
+    private readonly FilterStacksStore _collectionStore = new();
 
     internal AllowedSourcesSnapshot AllowedSources { get; }
-    private readonly ItemStackCacheManager _cacheManager;
 
-    internal StorageSourceItemDataStore(AllowedSourcesSnapshot allowedSources, ItemStackCacheManager cacheManager)
+    internal StorageSourceItemDataStore(AllowedSourcesSnapshot allowedSources)
     {
         if (allowedSources == null)
         {
@@ -25,15 +25,7 @@ internal class StorageSourceItemDataStore
             throw new ArgumentNullException(nameof(allowedSources), error);
         }
 
-        if (cacheManager == null)
-        {
-            var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(cacheManager)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(cacheManager), error);
-        }
-
         AllowedSources = allowedSources;
-        _cacheManager = cacheManager;
     }
 
     /// <summary>
@@ -63,14 +55,12 @@ internal class StorageSourceItemDataStore
         _itemStacksBySource.Clear();
         _sourcesByItemStack.Clear();
         _sourcesByType.Clear();
-
-        // We've cleared the data store, so we need to invalidate the cache
-        _cacheManager.InvalidateCache();
+        _collectionStore.Clear();
     }
 
     /// <summary>
     /// Registers a storage source and its item stacks with the data store.
-    /// Always registers ALL valid stacks - filtering is handled at query time.
+    /// Always registers ALL valid stacks and prebuilds filter lists for both Unfiltered and specific item types.
     /// </summary>
     /// <param name="source">The storage source to register</param>
     /// <param name="validStacksRegistered">The number of valid item stacks that were successfully registered</param>
@@ -88,8 +78,6 @@ internal class StorageSourceItemDataStore
         var sourceType = source.GetSourceType();
         var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
 
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Processing source: {sourceType.Name}");
-
         var isAllowedSource = IsAllowedSource(sourceType);
         if (!isAllowedSource)
         {
@@ -104,11 +92,9 @@ internal class StorageSourceItemDataStore
             return;
         }
 
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Source has {stacks.Length} item stacks to process");
-
         int invalidStacks = 0;
 
-        // Always register ALL valid stacks - no filtering at registration time
+        // Always register ALL valid stacks and prebuild both filter lists
         for (int i = 0; i < stacks.Length; i++)
         {
             var stack = stacks[i];
@@ -120,14 +106,12 @@ internal class StorageSourceItemDataStore
                 continue;
             }
 
-            // No filtering here - always register valid stacks
+            // Register valid stacks and prebuild filter lists
             if (RegisterStack(source, stack))
             {
                 validStacksRegistered++;
             }
         }
-
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Valid: {validStacksRegistered}, Invalid: {invalidStacks}, Total: {stacks.Length}");
     }
 
     private bool RegisterStack(IStorageSource source, ItemStack stack)
@@ -176,6 +160,13 @@ internal class StorageSourceItemDataStore
         itemStacks.Add(stack);
         _sourcesByItemStack[stack] = source;
 
+        // Prebuild TWO filter lists for each stack:
+        // 1. Add to master unfiltered cache (contains ALL items)
+        _collectionStore.AddStackForFilter(UniqueItemTypes.Unfiltered, stack);
+
+        // 2. Add to specific item type filter (contains only items of this type)
+        _collectionStore.AddStackForItemType(stack);
+
         return true; // Stack was successfully added
     }
 
@@ -195,19 +186,17 @@ internal class StorageSourceItemDataStore
         }
 
         var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Finding sources for type: {sourceType.Name}");
 
         // Use the generic helper to find all matching source lists
         var matchingSourceLists = TypeMatchingHelper.FindAllAssignableMatches(sourceType, _sourcesByType);
 
         // Flatten all the source lists into a single result
-        var result = new List<IStorageSource>();
+        var result = CollectionFactory.CreateStorageSourceList();
         foreach (var sourceList in matchingSourceLists)
         {
             result.AddRange(sourceList);
         }
 
-        ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Found {result.Count} sources");
         return result.AsReadOnly();
     }
 
@@ -221,49 +210,55 @@ internal class StorageSourceItemDataStore
         return [];
     }
 
-    internal int ItemStackCount => _sourcesByItemStack.Count;
-
-    internal bool AnyItemsLeft()
+    internal bool AnyItemsLeft(UniqueItemTypes filter)
     {
-        foreach (var stack in _sourcesByItemStack.Keys)
-        {
-            if (stack?.count > 0)
-            {
-                return true;
-            }
-        }
-        return false;
+        filter ??= UniqueItemTypes.Unfiltered;
+        var itemList = GetItemStacksForFilter(filter);
+
+        return itemList.Any(stack => stack != null && stack.count > 0);
     }
 
     /// <summary>
-    /// Gets all item stacks, optionally filtered by the specified filter.
-    /// Uses the cache manager to apply filtering on-demand.
+    /// Gets all item stacks for the specified filter.
+    /// Since we prebuild all filter lists during registration, this returns the prebuilt lists.
     /// </summary>
     /// <param name="filter">The filter to apply (null means unfiltered)</param>
-    /// <returns>Filtered enumerable of item stacks</returns>
-    internal IEnumerable<ItemStack> GetAllItemStacks(UniqueItemTypes filter)
+    /// <returns>Prebuilt list of item stacks for the specified filter</returns>
+    internal IList<ItemStack> GetItemStacksForFilter(UniqueItemTypes filter)
     {
-        var allStacks = _sourcesByItemStack.Keys; // Master data (always unfiltered)
-        return _cacheManager.GetFilteredView(filter, allStacks);
+        const string d_MethodName = nameof(GetItemStacksForFilter);
+
+        filter ??= UniqueItemTypes.Unfiltered;
+
+        // Since we prebuild all filters during registration, the list should exist
+        if (_collectionStore.ContainsStacksForFilter(filter, out var itemList))
+        {
+            return itemList;
+        }
+
+        // If we reach here, it means the filter wasn't prebuilt (no items of this type exist)
+        ModLogger.Error($"{d_MethodName} | Filter '{filter}' not found - no items of this type were discovered");
+        return CollectionFactory.EmptyItemStackList;
     }
 
     internal int CountCachedItems(UniqueItemTypes filter)
     {
-        const string d_MethodName = nameof(CountCachedItems);
-
-        ModLogger.DebugLog($"{d_MethodName} | Called with filter: {filter}");
-
         int result = 0;
-        foreach (var stack in GetAllItemStacks(filter))
+        foreach (var stack in GetItemStacksForFilter(filter))
         {
-            result += stack?.count ?? 0;
+            if (stack != null)
+            {
+                var stackCount = stack.count;
+                if (stackCount > 0)
+                {
+                    result += stackCount;
+                }
+            }
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | Result count: {result}");
         return result;
     }
 
-    // Internal methods for better encapsulation
     internal bool GetSourceByItemStack(ItemStack stack, out IStorageSource source)
     {
         return _sourcesByItemStack.TryGetValue(stack, out source);
@@ -287,8 +282,9 @@ internal class StorageSourceItemDataStore
         var totalSources = _itemStacksBySource.Count;
         var totalStacks = _sourcesByItemStack.Count;
         var totalTypes = _sourcesByType.Count;
+        var storedFilters = _collectionStore.StoredFiltersCount;
 
-        var info = $"[DataStore] Sources: {totalSources}, Stacks: {totalStacks} (unfiltered), Types: {totalTypes}";
+        var info = $"[DataStore] Sources: {totalSources}, Stacks: {totalStacks} (master), Types: {totalTypes}, Filters: {storedFilters}";
 
         if (_sourcesByType.Count > 0)
         {
@@ -306,19 +302,45 @@ internal class StorageSourceItemDataStore
     }
 
     /// <summary>
-    /// Gets comprehensive diagnostic information including cache state.
+    /// Gets comprehensive diagnostic information including filter store state.
     /// </summary>
     public string GetComprehensiveDiagnosticInfo()
     {
         var dataStoreInfo = GetDiagnosticInfo();
-        var cacheInfo = _cacheManager.GetCacheInfo();
-        var viewsInfo = _cacheManager.GetFilteredViewsInfo();
+        var filterStoreInfo = _collectionStore.GetDiagnosticInfo();
 
-        return $"{dataStoreInfo} | Cache: {cacheInfo} | Views: {viewsInfo}";
+        return $"{dataStoreInfo} | FilterStore: {filterStoreInfo}";
     }
 
-    internal bool SameCacheManager(ItemStackCacheManager cacheManager)
+    /// <summary>
+    /// Invalidates all cached filter lists except the master unfiltered cache.
+    /// Used when filter logic changes but the master data is still valid.
+    /// </summary>
+    internal void InvalidateFilterCaches()
     {
-        return ReferenceEquals(_cacheManager, cacheManager);
+        // Clear all filter caches except the master unfiltered one
+        var allFilters = _collectionStore.GetAllFilters().ToList();
+        foreach (var filter in allFilters)
+        {
+            if (!filter.IsUnfiltered)
+            {
+                _collectionStore.ClearStacksForFilter(filter);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if the data store has any cached stacks for the specified filter.
+    /// </summary>
+    /// <param name="filter">The filter to check</param>
+    /// <returns>True if cached data exists for the filter</returns>
+    internal bool HasCachedStacksForFilter(UniqueItemTypes filter)
+    {
+        if (filter == null)
+        {
+            return false;
+        }
+
+        return _collectionStore.ContainsStacksForFilter(filter);
     }
 }

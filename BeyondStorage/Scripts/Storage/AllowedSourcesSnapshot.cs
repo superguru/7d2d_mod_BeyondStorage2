@@ -67,8 +67,6 @@ internal sealed class AllowedSourcesSnapshot
     public static AllowedSourcesSnapshot FromConfig(ConfigSnapshot config)
     {
         var snap = new AllowedSourcesSnapshot(config);
-        ModLogger.DebugLog($"Created {snap.GetDiagnosticInfo()}");
-
         return snap;
     }
 

@@ -258,7 +258,7 @@ public static class ModConfig
         return ClientConfig.serverSyncConfig;
     }
 
-    // TODO: Update NetPackageBeyondStorageConfig if new settings added and should be synced between server/client
+    // TODO: SetStacksForFilter NetPackageBeyondStorageConfig if new settings added and should be synced between server/client
     public class BsConfig
     {
         // ========== Source selection / eligibility =========
