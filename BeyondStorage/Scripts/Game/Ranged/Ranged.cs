@@ -26,8 +26,8 @@ public static class Ranged
 
     // TODO: Remove this to return early if we hit the max ammo for mag
     // Used By:
-    //      AnimatorRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
-    //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo LRU_SUBFILTER_DISPLAY_MAX (not displayed))
+    //      AnimatorRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo (not displayed))
+    //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - GetStacksForFilter Total Ammo (not displayed))
     public static int GetAmmoCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(GetAmmoCount);

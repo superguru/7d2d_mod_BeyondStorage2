@@ -115,7 +115,7 @@ public static class WorkstationRecipe
             var worldPlayerContext = WorldPlayerContext.TryCreate(d_MethodName);
             if (worldPlayerContext == null)
             {
-                ModLogger.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}");
+                ModLogger.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}.");
                 return;
             }
 
@@ -237,34 +237,6 @@ public static class WorkstationRecipe
                 ModLogger.DebugLog($"{d_MethodName} completed in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
             }
         }
-    }
-
-    /// <summary>
-    /// Gets comprehensive call statistics for debugging and monitoring.
-    /// </summary>
-    /// <returns>Formatted string with all call statistics</returns>
-    public static string GetCallStatistics()
-    {
-        return s_callStats.GetFormattedStatistics();
-    }
-
-    /// <summary>
-    /// Gets detailed statistics for a specific method.
-    /// </summary>
-    /// <param name="methodName">Name of the method to get stats for</param>
-    /// <returns>Method statistics or null if not found</returns>
-    public static (int callCount, long totalTimeNs, double avgTimeNs)? GetMethodStats(string methodName)
-    {
-        return s_callStats.GetMethodStats(methodName);
-    }
-
-    /// <summary>
-    /// Clears all call statistics. Useful for testing or resetting metrics.
-    /// </summary>
-    public static void ClearStatistics()
-    {
-        s_callStats.Clear();
-        ModLogger.DebugLog("WorkstationRecipe: Call statistics cleared");
     }
 
     // Helper class to store workstation state

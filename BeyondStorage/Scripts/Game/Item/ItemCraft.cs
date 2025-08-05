@@ -21,7 +21,7 @@ public class ItemCraft
             return stacks;  // We're not fixing the caller's mistakes
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX before {stacks.Count}");
+        ModLogger.DebugLog($"{d_MethodName} | stacks before {stacks.Count}");
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
 
         var context = StorageContextFactory.Create(d_MethodName);
@@ -29,7 +29,7 @@ public class ItemCraft
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks.LRU_SUBFILTER_DISPLAY_MAX after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+            ModLogger.DebugLog($"{d_MethodName} | stacks after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
         }
         else
         {
@@ -125,7 +125,7 @@ public class ItemCraft
         }
 
         var itemName = itemStack.itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
-        ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}; itemStack {itemStack}");
+        ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}");
 
         // GetStacksForFilter storage count and return result
         var context = StorageContextFactory.Create(d_MethodName);
