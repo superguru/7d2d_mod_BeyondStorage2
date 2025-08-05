@@ -31,6 +31,7 @@ public sealed class WorldPlayerContext
         InternalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
         PlayerEntityId = player.entityId;
         CreatedAt = System.DateTime.Now;
+        s_cache.LogCacheUsage = false;
     }
 
     /// <summary>
