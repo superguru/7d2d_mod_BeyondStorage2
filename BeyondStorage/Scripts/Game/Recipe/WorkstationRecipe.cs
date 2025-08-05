@@ -17,6 +17,11 @@ public static class WorkstationRecipe
     /// </summary>
     public static void BackgroundWorkstation_CraftCompleted()
     {
+        if (GameManager.IsDedicatedServer)
+        {
+            return;
+        }
+
         if (!ModConfig.PullFromWorkstationOutputs())
         {
             return;
@@ -54,9 +59,11 @@ public static class WorkstationRecipe
     /// </summary>
     public static void ForegroundWorkstation_CraftCompleted()
     {
-        // TODO: Need to invalidate the master cache when something is crafted in the background,
-        // or maybe intelligently update the cache based on what was crafted?
-        // This way, the recipe list will always show the correct items available.
+        if (GameManager.IsDedicatedServer)
+        {
+            return;
+        }
+
         if (!ModConfig.PullFromWorkstationOutputs())
         {
             // If we don't pull from outputs, we don't need to update the workstation windows, as nothing that
@@ -93,6 +100,11 @@ public static class WorkstationRecipe
 
     private static void Update_OpenWorkstations(string callType, int callCount)
     {
+        if (GameManager.IsDedicatedServer)
+        {
+            return;
+        }
+
         string d_MethodName = string.Concat(callType, ".", nameof(Update_OpenWorkstations));
 
         // Start timing this internal method
@@ -197,7 +209,7 @@ public static class WorkstationRecipe
                     }
                 }
 
-                // SetStacksForFilter UI only if changes were made
+                // Remove UI only if changes were made
                 if (refreshCount > 0)
                 {
                     ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");
@@ -281,11 +293,16 @@ public static class WorkstationRecipe
     // Helper method to restore workstation state
     private static void RestoreWorkstationState(XUiC_WorkstationWindowGroup workstation, XUiC_RecipeList recipeList, WorkstationState stateInfo)
     {
+        if (GameManager.IsDedicatedServer)
+        {
+            return;
+        }
+
         if (stateInfo.SelectedEntryBecameEnabled)
         {
             recipeList.SelectedEntry = stateInfo.SelectedEntry;
         }
-        //else
+        else
         {
             if (recipeList.Page != stateInfo.CurrentPage)
             {
