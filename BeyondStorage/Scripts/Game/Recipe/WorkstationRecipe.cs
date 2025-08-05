@@ -127,7 +127,7 @@ public static class WorkstationRecipe
                 return;
             }
 
-            // GetStacksForFilter only open workstation windows (avoids unnecessary filtering later)
+            // Get only open workstation windows (avoids unnecessary filtering later)
             var openWorkstations = xui.GetChildrenByType<XUiC_WorkstationWindowGroup>()
                 .Where(w => w.WindowGroup?.isShowing ?? false)
                 .ToList();
@@ -137,7 +137,7 @@ public static class WorkstationRecipe
                 return; // Nothing to update - exit early
             }
 
-            // GetStacksForFilter all available items once (shared across all workstations)
+            // Get all available items once (shared across all workstations)
             var availableItems = ItemCommon.ItemCommon_GetAllAvailableItemStacksFromXui(xui);
             if (availableItems.Count == 0)
             {
@@ -275,7 +275,6 @@ public static class WorkstationRecipe
         {
             // page will reset if the selected entry became enabled, so we need to reset it
             recipeList.SelectedEntry = stateInfo.SelectedEntry;
-
         }
 
         if (pageWillReset || recipeList.Page != stateInfo.CurrentPage)

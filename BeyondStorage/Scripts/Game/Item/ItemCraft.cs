@@ -127,7 +127,7 @@ public class ItemCraft
         var itemName = itemStack.itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
         ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}");
 
-        // GetStacksForFilter storage count and return result
+        // Get storage count and return result
         var context = StorageContextFactory.Create(d_MethodName);
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;

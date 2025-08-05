@@ -25,7 +25,7 @@ public static class ItemCommon
             return originalResult;
         }
 
-        // GetStacksForFilter what we can from storage up to required amount
+        // Get what we can from storage up to required amount
         var context = StorageContextFactory.Create(nameof(ItemRemoveRemaining));
         var totalRemoved = context?.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems) ?? 0;
 

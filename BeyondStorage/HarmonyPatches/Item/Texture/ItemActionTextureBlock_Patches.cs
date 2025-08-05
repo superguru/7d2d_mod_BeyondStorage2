@@ -56,7 +56,7 @@ public class ItemActionTextureBlockPatches
 
         if (response.IsPatched)
         {
-            // GetStacksForFilter rid of the original instructions by converting them to NOP
+            // Get rid of the original instructions by converting them to NOP
             ModLogger.DebugLog($"{targetMethodName}: Successfully patched, changing the searchPattern instructions to NOP");
 
             var patched = response.BestInstructions(request);

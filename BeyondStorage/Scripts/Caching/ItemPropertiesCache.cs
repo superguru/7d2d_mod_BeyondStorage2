@@ -96,7 +96,7 @@ public static class ItemPropertiesCache
         // Generate a cache key that represents this specific item instance
         var cacheKey = GenerateItemInstanceKey(itemValue);
 
-        // GetStacksForFilter cached result or compute new one
+        // Get cached result or compute new one
         return s_hasModsCache.GetOrCreate(cacheKey, _ => itemValue.HasMods());
     }
 
