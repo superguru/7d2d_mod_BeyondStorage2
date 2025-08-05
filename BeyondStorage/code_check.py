@@ -22,6 +22,7 @@ MSBUILD Integration Example:
 import os
 import sys
 import re
+import glob
 from typing import List, Tuple, Dict, Callable, Optional
 from pathlib import Path
 from dataclasses import dataclass
@@ -210,6 +211,36 @@ class CodeQualityChecker:
         match = re.search(r'\s+(\w+)\s*\(', line)
         return match.group(1) if match else "unknown"
     
+    def _is_guid_context(self, line: str, number_start: int, number_end: int) -> bool:
+        """Check if a number appears to be part of a GUID"""
+        # Look for GUID patterns: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        # or within quotes that look like GUIDs
+        
+        # Get context around the number
+        context_start = max(0, number_start - 20)
+        context_end = min(len(line), number_end + 20)
+        context = line[context_start:context_end]
+        
+        # Check for GUID patterns
+        guid_patterns = [
+            r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',  # Full GUID
+            r'"[0-9a-fA-F-]+"',  # Quoted hex string that might be a GUID
+            r'\{[0-9a-fA-F-]+\}',  # GUID in braces
+        ]
+        
+        for pattern in guid_patterns:
+            if re.search(pattern, context):
+                return True
+        
+        # Check for common GUID-related keywords
+        guid_keywords = ['guid', 'Guid', 'GUID', 'assembly:', '[assembly:', 'typelib']
+        line_lower = line.lower()
+        for keyword in guid_keywords:
+            if keyword.lower() in line_lower:
+                return True
+        
+        return False
+    
     def _check_magic_numbers(self, file_path: str, content: str) -> List[Issue]:
         """Check for magic numbers (hardcoded numbers except common ones) - WARNING"""
         issues = []
@@ -230,13 +261,15 @@ class CodeQualityChecker:
                 number = int(match.group(1))
                 if number not in acceptable_numbers:
                     if 'const' not in line.lower():
-                        issues.append(Issue(
-                            file_path=file_path,
-                            line_number=line_num,
-                            severity="warning",
-                            code="BCW012",
-                            description=f"Magic number '{number}' - consider using a named constant"
-                        ))
+                        # Check if this number is part of a GUID
+                        if not self._is_guid_context(line, match.start(), match.end()):
+                            issues.append(Issue(
+                                file_path=file_path,
+                                line_number=line_num,
+                                severity="warning",
+                                code="BCW012",
+                                description=f"Magic number '{number}' - consider using a named constant"
+                            ))
         
         return issues
     
@@ -543,10 +576,73 @@ class CodeQualityChecker:
         # Format: file(line): severity code: description
         return f"{issue.file_path}({issue.line_number}): {issue.severity} {issue.code}: {issue.description}"
     
+    def cleanup_old_result_files(self, keep_latest: int = 5) -> int:
+        """
+        Delete old code check result files, keeping only the latest N files.
+        Only deletes files that match the expected timestamp format.
+        Renamed files that don't match the format are preserved.
+        
+        Args:
+            keep_latest: Number of latest files to keep (default: 5)
+            
+        Returns:
+            Number of files deleted
+        """
+        # Find all files matching the pattern
+        pattern = "code_check_results_*.txt"
+        all_result_files = glob.glob(pattern)
+        
+        if not all_result_files:
+            return 0
+        
+        # Filter to only files that match our expected timestamp format
+        # Expected format: code_check_results_YYYYMMDD_HHMMSS.txt
+        timestamp_pattern = re.compile(r'^code_check_results_(\d{8}_\d{6})\.txt$')
+        valid_files = []
+        
+        for file in all_result_files:
+            filename = os.path.basename(file)
+            match = timestamp_pattern.match(filename)
+            if match:
+                try:
+                    # Parse the timestamp to ensure it's valid
+                    timestamp_str = match.group(1)
+                    timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+                    valid_files.append((file, timestamp))
+                except ValueError:
+                    # Invalid timestamp format, skip this file
+                    continue
+        
+        if len(valid_files) <= keep_latest:
+            return 0
+        
+        # Sort by timestamp (newest first)
+        valid_files.sort(key=lambda x: x[1], reverse=True)
+        
+        # Keep the latest N files, delete the rest
+        files_to_delete = valid_files[keep_latest:]
+        deleted_count = 0
+        
+        for file_path, timestamp in files_to_delete:
+            try:
+                os.remove(file_path)
+                deleted_count += 1
+                print(f"Deleted old result file: {file_path}")
+            except OSError as e:
+                print(f"Warning: Could not delete {file_path}: {e}")
+        
+        return deleted_count
+    
     def run_all_checks(self, root_dir: str = ".") -> bool:
         """Run all checks on all C# files and return True if no errors found"""
         print("BeyondStorage Code Quality Checker")
         print("=" * 50)
+        
+        # Clean up old result files first
+        deleted_files = self.cleanup_old_result_files(keep_latest=5)
+        if deleted_files > 0:
+            print(f"Cleaned up {deleted_files} old result file(s)")
+            print()
         
         cs_files = self.find_cs_files(root_dir)
         if not cs_files:
