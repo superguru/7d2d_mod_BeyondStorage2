@@ -298,25 +298,26 @@ public static class WorkstationRecipe
             return;
         }
 
-        if (stateInfo.SelectedEntryBecameEnabled)
+        var pageWillReset = stateInfo.SelectedEntryBecameEnabled;
+        if (pageWillReset)
         {
+            // page will reset if the selected entry became enabled, so we need to reset it
             recipeList.SelectedEntry = stateInfo.SelectedEntry;
-        }
-        else
-        {
-            if (recipeList.Page != stateInfo.CurrentPage)
-            {
-                recipeList.Page = stateInfo.CurrentPage;
 
-                var craftInfoWindow = workstation.craftInfoWindow;
-                if (stateInfo.SelectedEntry != null && craftInfoWindow != null)
+        }
+
+        if (pageWillReset || recipeList.Page != stateInfo.CurrentPage)
+        {
+            recipeList.Page = stateInfo.CurrentPage;
+
+            var craftInfoWindow = workstation.craftInfoWindow;
+            if (stateInfo.SelectedEntry != null && craftInfoWindow != null)
+            {
+                if (craftInfoWindow.TabType != stateInfo.CraftInfoTabType)
                 {
-                    if (craftInfoWindow.TabType != stateInfo.CraftInfoTabType)
-                    {
-                        craftInfoWindow.TabType = stateInfo.CraftInfoTabType;
-                        craftInfoWindow.SetSelectedButtonByType(stateInfo.CraftInfoTabType);
-                        craftInfoWindow.IsDirty = true;
-                    }
+                    craftInfoWindow.TabType = stateInfo.CraftInfoTabType;
+                    craftInfoWindow.SetSelectedButtonByType(stateInfo.CraftInfoTabType);
+                    craftInfoWindow.IsDirty = true;
                 }
             }
         }
