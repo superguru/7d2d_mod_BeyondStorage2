@@ -8,12 +8,15 @@ Returns 0 as an exit code if no errors found, 1 if any errors are present.
 Warnings do not affect the exit code, so if there are only warnings, the exit code will still be 0.
 
 MSBUILD Integration Example:
-<Target Name="RunPythonScript" BeforeTargets="Build">
-  <Exec Command="python code_check.py" 
-        ContinueOnError="false" 
-        WorkingDirectory="$(ProjectDir)" />
-</Target>
-
+  <Target Name="CodeQualityChecks" BeforeTargets="Build">
+    <Exec Command="python code_check.py"
+          ContinueOnError="false"
+          WorkingDirectory="$(ProjectDir)">
+      <Output TaskParameter="ExitCode" PropertyName="CodeQualityChecksExitCode" />
+    </Exec>
+    <Error Condition="'$(CodeQualityChecksExitCode)' != '0'"
+           Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
+  </Target>
 """
 
 import os
