@@ -212,7 +212,7 @@ public static class WorkstationRecipe
                 // Remove UI only if changes were made
                 if (refreshCount > 0)
                 {
-                    ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount} for workstation");
+                    ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
                     recipeList.IsDirty = true;
                     recipeList.CraftCount.IsDirty = true;
 
