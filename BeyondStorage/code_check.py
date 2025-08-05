@@ -134,7 +134,7 @@ class CodeQualityChecker:
             for line_num, line in enumerate(lines, 1):
                 if forbidden_string in line:
                     issues.append(Issue(
-                        file_path=file_path,
+                        file_path=file_path[2:],
                         line_number=line_num,
                         severity=severity,
                         code=code,
@@ -155,7 +155,7 @@ class CodeQualityChecker:
                 indent_level = (len(line) - len(line.lstrip())) // 4
                 if indent_level > max_nesting and '{' in line:
                     issues.append(Issue(
-                        file_path=file_path,
+                        file_path=file_path[2:],
                         line_number=line_num,
                         severity="warning",
                         code="BCW010",
@@ -196,7 +196,7 @@ class CodeQualityChecker:
                     method_length = line_num - method_start_line + 1
                     if method_length > max_method_length:
                         issues.append(Issue(
-                            file_path=file_path,
+                            file_path=file_path[2:],
                             line_number=method_start_line,
                             severity="warning",
                             code="BCW011",
@@ -264,7 +264,7 @@ class CodeQualityChecker:
                         # Check if this number is part of a GUID
                         if not self._is_guid_context(line, match.start(), match.end()):
                             issues.append(Issue(
-                                file_path=file_path,
+                                file_path=file_path[2:],
                                 line_number=line_num,
                                 severity="warning",
                                 code="BCW012",
@@ -282,7 +282,7 @@ class CodeQualityChecker:
             stripped = line.strip().lower()
             if 'todo' in stripped and ('//' in line or '/*' in line):
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning",
                     code="BCW013",
@@ -323,7 +323,7 @@ class CodeQualityChecker:
                 if brace_count <= 0:
                     if not has_content:
                         issues.append(Issue(
-                            file_path=file_path,
+                            file_path=file_path[2:],
                             line_number=catch_line,
                             severity="error",
                             code="BCS003",
@@ -346,7 +346,7 @@ class CodeQualityChecker:
             # Look for old-style null checks
             if re.search(r'\w+\s*!=\s*null\s*&&\s*\w+\.\w+', line):
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning",
                     code="BCW022", 
@@ -370,7 +370,7 @@ class CodeQualityChecker:
             for disposable_type in disposable_types:
                 if f'new {disposable_type}' in line and 'using' not in line:
                     issues.append(Issue(
-                        file_path=file_path,
+                        file_path=file_path[2:],
                         line_number=line_num,
                         severity="error",
                         code="BCS010",
@@ -392,7 +392,7 @@ class CodeQualityChecker:
             # Look for string concatenation patterns
             if re.search(r'"\s*\+\s*\w+\s*\+\s*"', line) or re.search(r'"\w*"\s*\+\s*\w+', line):
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning", 
                     code="BCW021",
@@ -429,7 +429,7 @@ class CodeQualityChecker:
                 
             if in_loop and ('+=' in line and 'string' in line.lower()) or ('result +' in line):
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning",
                     code="BCW025",
@@ -451,7 +451,7 @@ class CodeQualityChecker:
             # Check for Count() vs Any()
             if re.search(r'\.Count\(\)\s*>\s*0', line):
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning",
                     code="BCW026",
@@ -461,7 +461,7 @@ class CodeQualityChecker:
             # Check for multiple enumerations
             if line.count('.ToList()') > 1:
                 issues.append(Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning", 
                     code="BCW027",
@@ -491,7 +491,7 @@ class CodeQualityChecker:
             if re.search(r'(public|private|protected|internal).*\w+\s*\([^)]*\)', line) and '{' in line:
                 if in_method and complexity > 10:
                     issues.append(Issue(
-                        file_path=file_path,
+                        file_path=file_path[2:],
                         line_number=method_start,
                         severity="warning",
                         code="BCW040",
@@ -510,7 +510,7 @@ class CodeQualityChecker:
                 if '}' in line and line.count('}') >= line.count('{'):
                     if complexity > 10:
                         issues.append(Issue(
-                            file_path=file_path,
+                            file_path=file_path[2:],
                             line_number=method_start,
                             severity="warning",
                             code="BCW040",
@@ -529,7 +529,7 @@ class CodeQualityChecker:
             return [CheckResult(
                 check_name="file_read_error",
                 issues=[Issue(
-                    file_path=file_path,
+                    file_path=file_path[2:],
                     line_number=1,
                     severity="error",
                     code="BCS999",
