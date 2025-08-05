@@ -46,6 +46,7 @@ internal static class DroneItemDiscovery
                 continue;
             }
 
+
             ProcessDroneItems(context, drone);
         }
     }
@@ -56,6 +57,23 @@ internal static class DroneItemDiscovery
 
         if (drone.bag == null || drone.bag.IsEmpty())
         {
+            return;
+        }
+
+        // HAS to be done first, otherwise we might try to access a network synced drone
+        if (drone.isInteractionLocked || drone.isOwnerSyncPending)
+        {
+            return;
+        }
+
+        if (drone.isShutdownPending || drone.isShutdown)
+        {
+            return;
+        }
+
+        if (!drone.IsUserAllowed(context.WorldPlayerContext.InternalLocalUserIdentifier))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Drone {drone} is not accessible by the local user, skipping.");
             return;
         }
 

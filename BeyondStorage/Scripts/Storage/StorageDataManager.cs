@@ -17,8 +17,8 @@ public class StorageDataManager
     internal StorageSourceItemDataStore DataStore => _dataStore;
 
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneCollectorFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dc) => dc.lootContainer.items;
-    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dc) => dc.lootContainer.setModified();
+    public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dr) => dr.lootContainer.items;
+    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => dr.lootContainer.setModified();
 
     public readonly Func<TileEntityDewCollector, TileEntityDewCollector, bool> EqualsDewCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityDewCollector, ItemStack[]> GetItemsDewCollectorFunc = (dc) => dc.items;
