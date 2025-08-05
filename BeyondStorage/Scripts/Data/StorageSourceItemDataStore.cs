@@ -185,8 +185,6 @@ internal class StorageSourceItemDataStore
             return [];
         }
 
-        var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
-
         // Use the generic helper to find all matching source lists
         var matchingSourceLists = TypeMatchingHelper.FindAllAssignableMatches(sourceType, _sourcesByType);
 
@@ -284,7 +282,7 @@ internal class StorageSourceItemDataStore
     /// </summary>
     /// <param name="filter">The filter to apply for counting items</param>
     /// <returns>Total count of items matching the filter; 0 if filter is null or no items found</returns>
-    internal int CountCachedItems(UniqueItemTypes filter)
+    internal int GetFilteredItemCount(UniqueItemTypes filter)
     {
         if (filter == null)
         {

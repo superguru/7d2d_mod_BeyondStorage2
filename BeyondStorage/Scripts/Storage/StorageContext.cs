@@ -191,7 +191,7 @@ public sealed class StorageContext
     #endregion
 
     #region Removal Operations - Delegate to StorageItemRemovalService
-    public int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    public int RemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> gameTrackedRemovedItems = null)
     {
         const string d_MethodName = nameof(RemoveRemaining);
         var filter = UniqueItemTypes.FromItemValue(itemValue);
@@ -202,7 +202,7 @@ public sealed class StorageContext
             return 0;
         }
 
-        return StorageItemRemovalService.RemoveItems(this, itemValue, stillNeeded, ignoreModdedItems, removedItems);
+        return StorageItemRemovalService.RemoveItems(this, itemValue, stillNeeded, ignoreModdedItems, gameTrackedRemovedItems);
     }
     #endregion
 

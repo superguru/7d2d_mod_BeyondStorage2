@@ -21,9 +21,9 @@ public static class StorageItemRemovalService
     /// <param name="itemValue">The item type to remove</param>
     /// <param name="stillNeeded">The amount still needed to remove</param>
     /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
-    /// <param name="removedItems">Optional list to track removed items</param>
+    /// <param name="gameTrackedRemovedItems">Optional list to track removed items</param>
     /// <returns>The actual amount removed</returns>
-    public static int RemoveItems(StorageContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    public static int RemoveItems(StorageContext context, ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> gameTrackedRemovedItems = null)
     {
         const string d_MethodName = nameof(RemoveItems);
 
@@ -74,7 +74,7 @@ public static class StorageItemRemovalService
                     continue;
                 }
 
-                RemoveFromSource(d_MethodName, source, nameInfo, itemName, itemFilter, itemCanStack, ref stillNeeded, ignoreModdedItems, removedItems);
+                RemoveFromSource(d_MethodName, source, nameInfo, itemName, itemFilter, itemCanStack, ref stillNeeded, ignoreModdedItems, gameTrackedRemovedItems);
             }
         }
 
@@ -82,7 +82,7 @@ public static class StorageItemRemovalService
     }
 
     private static void RemoveFromSource(string methodName, IStorageSource source, NameLookups.TypeNameInfo nameInfo, string itemName,
-        UniqueItemTypes filter, bool itemCanStack, ref int stillNeeded, bool ignoreModdedItems, IList<ItemStack> removedItems)
+        UniqueItemTypes filter, bool itemCanStack, ref int stillNeeded, bool ignoreModdedItems, IList<ItemStack> gameTrackedRemovedItems)
     {
 
         int originalNeeded = stillNeeded;
@@ -128,16 +128,16 @@ public static class StorageItemRemovalService
                     stack.Clear();
                 }
 
-                // This Clone operation is expensive, but in 7d2d 2.x removedItems is always null, so leaving it in for those edge cases
-                removedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
+                // This Clone operation is expensive, but in 7d2d 2.x gameTrackedRemovedItems is always null, so leaving it in for those edge cases
+                gameTrackedRemovedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
             }
             else
             {
                 stack.Clear();
                 --stillNeeded;
 
-                // This Clone operation is expensive, but in 7d2d 2.x removedItems is always null, so leaving it in for those edge cases
-                removedItems?.Add(stack.Clone());
+                // This Clone operation is expensive, but in 7d2d 2.x gameTrackedRemovedItems is always null, so leaving it in for those edge cases
+                gameTrackedRemovedItems?.Add(stack.Clone());
             }
         }
 

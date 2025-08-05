@@ -59,6 +59,6 @@ public class StorageDataManager
 
     internal int CountCachedItems(UniqueItemTypes filter)
     {
-        return DataStore.CountCachedItems(filter);
+        return DataStore.GetFilteredItemCount(filter);
     }
 }
