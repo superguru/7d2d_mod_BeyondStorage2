@@ -166,12 +166,12 @@ public static class ServerUtils
             return;
         }
 #if DEBUG
-        ModLogger.DebugLog($"Original LRU_SUBFILTER_DISPLAY_MAX: {newLockedDict.Count}; Filter LRU_SUBFILTER_DISPLAY_MAX: {newCount}");
+        ModLogger.DebugLog($"Original: {newLockedDict.Count}; Filter: {newCount}");
 #endif
-        // SetStacksForFilter clients with filtered list
+        // Remove clients with filtered list
         SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));
 
-        // SetStacksForFilter our own list as well
+        // Remove our own list as well
         TileEntityLockManager.UpdateLockedTEs(tempDict);
     }
 }

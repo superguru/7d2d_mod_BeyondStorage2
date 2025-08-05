@@ -6,9 +6,8 @@ namespace BeyondStorage.HarmonyPatches.UI;
 [HarmonyPatch(typeof(XUiC_CraftingQueue))]
 public class XUiCCraftingQueuePatches
 {
-    // TODO: ClearStacksForFilter this if it's fixed or determine steps to reproduce and send bug report to TFP
-    // possible index out of bounds seems to get hit when opening workbenches?
-    // seems like vanilla bug but avoiding it here as I believe it fails more gracefully in vanilla
+    // Fixed an internal bug where crafting queue is not kept in sync with some other UI elements.
+    // Still a bug in 2.x - confirmed in 2.0 - 2.2
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiC_CraftingQueue.AddRecipeToCraftAtIndex))]
     private static bool XUiC_CraftingQueue_AddRecipeToCraftAtIndex_Prefix(XUiC_CraftingQueue __instance, ref bool __result, int _index)

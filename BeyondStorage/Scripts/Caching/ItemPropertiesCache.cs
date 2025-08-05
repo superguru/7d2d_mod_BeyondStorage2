@@ -144,15 +144,17 @@ public static class ItemPropertiesCache
         }
 
         // AddStackRangeForFilter a hash of the mods array to detect changes
-        if (itemValue.Modifications != null && itemValue.Modifications.Length > 0)
+        var iModificationLength = itemValue?.Modifications?.Length ?? 0;
+        var modifications = itemValue.Modifications;
+        if (iModificationLength > 0)
         {
             keyBuilder.Append('_');
 
             // Create a simple hash of the modifications array
             int modHash = 0;
-            for (int i = 0; i < itemValue.Modifications.Length; i++)
+            for (int i = 0; i < iModificationLength; i++)
             {
-                var mod = itemValue.Modifications[i];
+                var mod = modifications[i];
                 if (mod != null && !mod.IsEmpty())
                 {
                     modHash = modHash * 31 + mod.type;

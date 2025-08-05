@@ -233,7 +233,6 @@ internal class FilterStacksStore
     /// </summary>
     public void Clear()
     {
-        var filterCount = _itemLists.Count;
         _itemLists.Clear();
         _uniqueItemTypeCache.Clear();
 

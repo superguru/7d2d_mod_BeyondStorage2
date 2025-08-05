@@ -40,7 +40,7 @@ public class ItemCraft
     }
 
     // Used By:
-    //      XUiC_RecipeList.SetStacksForFilter
+    //      XUiC_RecipeList.Update
     //          Item Crafts - shown as available in the list
     public static void ItemCraft_AddPullableSourceStorageStacks(List<ItemStack> stacks)
     {

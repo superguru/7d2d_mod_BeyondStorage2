@@ -6,9 +6,13 @@ namespace BeyondStorage.Scripts.Multiplayer;
 
 public class NetPackageBeyondStorageConfig : NetPackage
 {
-    private const ushort ConfigVersion = 2;
+    // this is a ushort for unknown reasons, and it can't be changed
+    // before v2.2.0, ConfigVersion was either 1 (the 1.0 series) or 2 (the updated for 2.0 series)
+    // for v2.2.0, ConfigVersion == 3
+    private const ushort ConfigVersion = 3;
 
-    // IMPORTANT: SetStacksForFilter number if more options being sent
+
+    // IMPORTANT: Update number if more options being sent
     private const ushort BoolCount = 13;  // 13 as of v2.2.0, which introduces pullFromDrones and enableForBlockTexture
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;

@@ -7,6 +7,8 @@ namespace BeyondStorage.Scripts.Data;
 
 internal class StorageSourceAdapter<T> : IStorageSource where T : class
 {
+    private const int HASH_MULTIPLIER = 397;
+
     // Replace the private readonly field and explicit property with an auto-property
     public T StorageSource { get; }
 
@@ -97,7 +99,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         unchecked
         {
             int hash = RuntimeHelpers.GetHashCode(StorageSource);
-            hash = (hash * 397) ^ typeof(T).GetHashCode();
+            hash = (hash * HASH_MULTIPLIER) ^ typeof(T).GetHashCode();
             return hash;
         }
     }

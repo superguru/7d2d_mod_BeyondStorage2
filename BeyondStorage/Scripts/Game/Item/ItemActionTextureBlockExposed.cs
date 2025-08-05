@@ -21,6 +21,8 @@ public struct PaintFaceData
 
 internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
 {
+    private const int LAYER_MASK = -555528197;
+
     // Store faces to paint during counting phase
     private readonly Dictionary<Guid, List<PaintFaceData>> _facesToPaint = [];
 
@@ -45,7 +47,7 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
             Vector3 origin = _hitPosition + _hitFaceNormal * 0.2f + vector2i.x * _dir1 + vector2i.y * _dir2;
             Vector3 direction = -_hitFaceNormal * 0.3f;
             float magnitude = direction.magnitude;
-            if (!Voxel.Raycast(_world, new Ray(origin, direction), magnitude, -555528197, 69, 0f))
+            if (!Voxel.Raycast(_world, new Ray(origin, direction), magnitude, LAYER_MASK, 69, 0f))
             {
                 continue;
             }
@@ -228,7 +230,7 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
                 Vector3 direction = _pos + x * _dir1 + y * _dir2 - _origin;
                 int hitMask = 69;
 
-                if (Voxel.Raycast(_world, new Ray(_origin, direction), 50f /* Range */, -555528197, hitMask, 0f))
+                if (Voxel.Raycast(_world, new Ray(_origin, direction), 50f /* Range */, LAYER_MASK, hitMask, 0f))
                 {
                     WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo.Clone();
                     BlockValue blockValue = hitInfo.hit.blockValue;
