@@ -8,6 +8,9 @@ Uploads/
 NexusFiles/
 Troubleshooting/
 
+# Code quality check files left from the code quality check Python scripts
+code_check_results*.txt
+
 # User-specific files
 *.rsuser
 *.suo
