@@ -6,12 +6,15 @@ namespace BeyondStorage.Scripts.Data;
 
 public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 {
+    public const int EMPTY = 0;
+    public const int WILDCARD = -1;
+
     private readonly int[] _itemTypes;
 
-    private static int[] SUnfilteredItemTypes { get; } = [-1];
+    private static int[] SUnfilteredItemTypes { get; } = [WILDCARD];
     private static readonly Lazy<UniqueItemTypes> s_unfiltered = new(() =>
     {
-        var instance = new UniqueItemTypes([-1]);
+        var instance = new UniqueItemTypes([WILDCARD]);
         // Lazy so logging can happen here, after mod is fully initialized
         return instance;
     });
@@ -20,7 +23,18 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 
     public int Count => _itemTypes.Length;
 
-    public bool IsUnfiltered => _itemTypes.Length == 1 && _itemTypes[0] == -1;
+    public bool IsSingleItemMatch(UniqueItemTypes filter)
+    {
+        if (filter == null)
+        {
+            return false;
+        }
+
+        // Both this filter and the targer filter have exactly one item, and they're the same
+        return Count == 1 && filter.Count == 1 && _itemTypes[0] == filter._itemTypes[0]; ;
+    }
+
+    public bool IsUnfiltered => _itemTypes.Length == 1 && _itemTypes[0] == WILDCARD;
 
     public bool IsFiltered => !IsUnfiltered;
 
@@ -40,30 +54,30 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 
         foreach (int itemType in itemTypes)
         {
-            if (itemType == 0)
+            if (itemType == EMPTY)
             {
                 // Rule: Skip itemType == 0 (empty items)
                 continue;
             }
-            else if (itemType == -1)
+            else if (itemType == WILDCARD)
             {
                 hasWildcard = true;
-                validTypes.Add(-1);
+                validTypes.Add(WILDCARD);
             }
-            else if (itemType > 0)
+            else if (itemType > EMPTY)
             {
                 validTypes.Add(itemType);
             }
-            // Skip any other invalid values (< -1)
+            // Skip any other invalid values (< WILDCARD)
         }
 
-        // Apply rules for -1 (wildcard)
+        // Apply rules for WILDCARD (wildcard)
         if (hasWildcard)
         {
-            // Rule: If -1 is present, ALL input types must be -1
+            // Rule: If WILDCARD is present, ALL input types must be WILDCARD
             if (validTypes.Count > 1)
             {
-                throw new ArgumentException("When -1 (wildcard) is provided, all item types must be -1. Mixed wildcard and specific types are not allowed.");
+                throw new ArgumentException("When WILDCARD (wildcard) is provided, all item types must be WILDCARD. Mixed wildcard and specific types are not allowed.");
             }
             _itemTypes = SUnfilteredItemTypes;
         }
@@ -91,37 +105,37 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
             throw new InvalidOperationException("UniqueItemTypes must always contain at least one element");
         }
 
-        // Invariant: If -1 is present, it must be the only element
+        // Invariant: If WILDCARD is present, it must be the only element
         if (_itemTypes.Length == 1)
         {
-            if (_itemTypes[0] == -1 || _itemTypes[0] > 0)
+            if (_itemTypes[0] == WILDCARD || _itemTypes[0] > EMPTY)
             {
                 return; // Valid
             }
         }
 
         // Invariant: No element can be 0
-        // Invariant: If -1 is present, it must be the only element
+        // Invariant: If WILDCARD is present, it must be the only element
         for (int i = 0; i < _itemTypes.Length; i++)
         {
             int itemType = _itemTypes[i];
 
-            if (itemType == 0)
+            if (itemType == EMPTY)
             {
                 throw new InvalidOperationException("UniqueItemTypes cannot contain 0 (empty item type)");
             }
-            else if (itemType < -1)
+            else if (itemType < WILDCARD)
             {
-                throw new InvalidOperationException($"UniqueItemTypes cannot contain invalid item types (< -1). Found {itemType} at index {i}");
+                throw new InvalidOperationException($"UniqueItemTypes cannot contain invalid item types (< WILDCARD). Found {itemType} at index {i}");
             }
-            else if (itemType == -1 && i != 0)
+            else if (itemType == WILDCARD && i != EMPTY)
             {
-                throw new InvalidOperationException("When -1 (wildcard) is present, it must be the only element");
+                throw new InvalidOperationException("When WILDCARD (wildcard) is present, it must be the only element");
             }
 
             // No need to check for duplicates here, as we use a HashSet in the constructor
 
-            if (itemType > 0)
+            if (itemType > EMPTY)
             {
                 break; // Valid item type found, no need to check further
             }
@@ -164,102 +178,106 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
         return result;
     }
 
+    public int GetSingleType()
+    {
+        return Count == 1 ? _itemTypes[0] : EMPTY;
+    }
+
     public bool Contains(int itemType)
     {
-        if (itemType == 0)
+        if (itemType == EMPTY)
         {
             // Rule: itemType 0 is never contained
             return false;
         }
 
-        if (itemType == -1)
+        if (itemType == WILDCARD)
         {
-            // Rule: -1 is contained only if it's the sole element
-            return _itemTypes.Length == 1 && _itemTypes[0] == -1;
+            // Rule: WILDCARD is contained only if it's the sole element
+            return _itemTypes.Length == 1 && _itemTypes[0] == WILDCARD;
         }
 
-        if (itemType < 0)
+        if (itemType < EMPTY)
         {
-            // Invalid item types (< -1) are never contained
+            // Invalid item types (< WILDCARD) are never contained
             return false;
         }
 
         // Check for wildcard first (must be sole element and at index 0 after sorting)
-        if (_itemTypes.Length == 1 && _itemTypes[0] == -1)
+        if (_itemTypes.Length == 1 && _itemTypes[0] == WILDCARD)
         {
             return true; // Wildcard matches any valid item type > 0
         }
 
-        // Since _itemTypes is sorted and contains only positive integers (no -1 case here),
+        // Since _itemTypes is sorted and contains only positive integers (no WILDCARD case here),
         // we can use binary search for O(log n) performance
         return Array.BinarySearch(_itemTypes, itemType) >= 0;
     }
 
     /// <summary>
-    /// Determines if the cached filter can satisfy the requested filter.
-    /// Returns true if the cached data contains all item types needed by the requested filter.
+    /// Determines if the haystack filter can satisfy the needle filter.
+    /// Returns true if the haystack data contains all item types needed by the needle filter.
     /// </summary>
-    /// <param name="cached">The cached filter representing what data is available</param>
-    /// <param name="requested">The requested filter representing what data is needed</param>
-    /// <returns>True if cached can satisfy requested, false otherwise</returns>
-    public static bool CanSatisfy(UniqueItemTypes cached, UniqueItemTypes requested)
+    public static bool CanSatisfy(UniqueItemTypes haystack, UniqueItemTypes needle)
     {
         // Null filters cannot satisfy anything or be satisfied
-        if (cached == null || requested == null)
+        if (haystack == null || needle == null)
         {
             return false;
         }
 
-        var cachedIsUnfiltered = cached.IsUnfiltered;
-        var requestedIsUnfiltered = requested.IsUnfiltered;
-
-        // If cached is unfiltered, it can satisfy any request
-        if (cachedIsUnfiltered)
+        // If haystack is unfiltered [-1] or [*], it can satisfy any request
+        if (haystack.IsUnfiltered)
         {
             return true; // Unfiltered cache has everything
         }
 
-        // If requested is unfiltered, only unfiltered cache can satisfy it
-        if (requestedIsUnfiltered)
+        // haystack is filtered, for example [1, 2, 3]
+        // If needle is unfiltered [-1] or [*], it cannot be satisfied, because only unfiltered can provide "everything"
+        if (needle.IsUnfiltered)
         {
             return false; // Filtered cache cannot provide "everything"
         }
 
-        // Both are filtered - check if cached contains all requested types
-        // Since arrays are sorted, we can use a two-pointer approach
-        int cachedIndex = 0;
-        int requestedIndex = 0;
 
-        while (requestedIndex < requested._itemTypes.Length)
+        // Both are filtered - check if haystack contains all needle types
+        // Since arrays are sorted, we can use a two-pointer approach
+        int haystackIndex = 0;
+        var haystackLength = haystack._itemTypes.Length;
+
+        int needleIndex = 0;
+        var needleLength = needle._itemTypes.Length;
+
+        while (needleIndex < needleLength)
         {
-            // If we've exhausted cached types, we can't satisfy the rest
-            if (cachedIndex >= cached._itemTypes.Length)
+            // If we've exhausted haystack types, we can't satisfy the rest
+            if (haystackIndex >= haystackLength)
             {
                 return false;
             }
 
-            int cachedType = cached._itemTypes[cachedIndex];
-            int requestedType = requested._itemTypes[requestedIndex];
+            int haystackType = haystack._itemTypes[haystackIndex];
+            int needleType = needle._itemTypes[needleIndex];
 
-            if (cachedType == requestedType)
+            if (haystackType == needleType)
             {
                 // Found a match, advance both pointers
-                cachedIndex++;
-                requestedIndex++;
+                haystackIndex++;
+                needleIndex++;
             }
-            else if (cachedType < requestedType)
+            else if (haystackType < needleType)
             {
-                // Cached type is smaller, advance cached pointer
-                cachedIndex++;
+                // Haystack type is smaller, advance haystack pointer
+                haystackIndex++;
             }
             else
             {
-                // Requested type is smaller and not in cached, cannot satisfy
+                // Needle type is smaller and not in haystack, cannot satisfy
                 return false;
             }
         }
 
-        // All requested types were found in cached
+        // All needle types were found in haystack
         return true;
     }
 
@@ -289,7 +307,7 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 
             int itemType = itemValue.type;
 
-            if (itemType > 0)
+            if (itemType > EMPTY)
             {
                 uniqueTypes.Add(itemType);
                 hasValidItems = true;
@@ -342,7 +360,8 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
             return false;
         }
 
-        if (itemValue.type <= 0)
+        // This has to be an instantiated itemValue, so it cannot be WILDCARD, and if it does, it's not valid
+        if (itemValue.type <= EMPTY)
         {
             // Rule: itemType 0 is never valid
             return false;

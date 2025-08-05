@@ -119,6 +119,32 @@ internal class FilterStacksStore
         return itemList;
     }
 
+    /// <summary>
+    /// Determines whether all item types in the specified filter are known to this store's cache.
+    /// This method checks if the item types have been encountered before, not whether
+    /// the store currently contains items of those types.
+    /// </summary>
+    /// <param name="filter">The filter to check</param>
+    /// <returns>
+    /// True if all item types in the filter have been cached (encountered before);
+    /// false for null, wildcard, or unknown filters
+    /// </returns>
+    /// <remarks>
+    /// This method checks the internal cache, not the actual store contents.
+    /// A filter can be "known" even if its corresponding stacks were cleared.
+    /// Use ContainsStacksForFilter() to check actual store contents.
+    /// </remarks>
+    public bool IsFilterKnown(UniqueItemTypes filter)
+    {
+        if (filter == null)
+        {
+            return false;
+        }
+
+        var result = _uniqueItemTypeCache.IsFilterKnown(filter);
+        return result;
+    }
+
     public List<ItemStack> SetStacksForFilter(UniqueItemTypes filter, List<ItemStack> stacks)
     {
         const string d_MethodName = nameof(SetStacksForFilter);
@@ -158,6 +184,10 @@ internal class FilterStacksStore
 
         if (wasRemoved)
         {
+            // Note: We don't remove from _uniqueItemTypeCache because:
+            // 1. Other filters might reference the same item types
+            // 2. Cache indicates "seen before" not "currently exists"
+
             // If Unfiltered was removed, immediately recreate it
             if (filter.IsUnfiltered)
             {
@@ -183,12 +213,18 @@ internal class FilterStacksStore
 
     /// <summary>
     /// Checks if the specified filter type exists in the store.
+    /// This is a query operation that returns false for invalid input.
     /// </summary>
     /// <param name="filter">The filter type to check</param>
-    /// <returns>True if the filter exists, false otherwise</returns>
+    /// <returns>True if the filter exists in the store; false for null or non-existent filters</returns>
     public bool ContainsStacksForFilter(UniqueItemTypes filter)
     {
-        return ContainsStacksForFilter(filter, out _);
+        if (filter == null)
+        {
+            return false; // Query method returns false for null
+        }
+
+        return _itemLists.ContainsKey(filter);
     }
 
     /// <summary>

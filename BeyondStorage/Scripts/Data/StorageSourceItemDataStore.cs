@@ -210,12 +210,51 @@ internal class StorageSourceItemDataStore
         return [];
     }
 
+    internal bool IsItemsSeenBefore(UniqueItemTypes filter)
+    {
+        if (filter == null)
+        {
+            return false; // No filter means no items can be discovered
+        }
+
+        // We just test if this filter has been found before
+        var result = _collectionStore.IsFilterKnown(filter);
+        return result;  // If the actual itemcount is 0, that's fine.
+    }
+
+    /// <summary>
+    /// Determines if any items matching the specified filter are currently available (count > 0).
+    /// This method first checks the cache for efficiency, then examines actual stack counts.
+    /// </summary>
+    /// <param name="filter">The filter to check for available items</param>
+    /// <returns>True if any stacks matching the filter have count > 0; false otherwise</returns>
     internal bool AnyItemsLeft(UniqueItemTypes filter)
     {
-        filter ??= UniqueItemTypes.Unfiltered;
+        if (filter == null)
+        {
+            return false; // No filter means no items can be found
+        }
+
+        // Fast path: check cache first to avoid expensive list iteration
+        // If we've never seen items of this type, we can return false immediately
+        if (!IsItemsSeenBefore(filter))
+        {
+            return false; // No items of this type have been seen before, so none can be left
+        }
+
+        // Get the prebuilt list and check if any valid stacks exist
         var itemList = GetItemStacksForFilter(filter);
 
-        return itemList.Any(stack => stack != null && stack.count > 0);
+        // Fast iteration with early return - more efficient than LINQ Any()
+        foreach (var stack in itemList)
+        {
+            if (stack?.count > 0)
+            {
+                return true; // Found at least one valid stack
+            }
+        }
+
+        return false; // No valid stacks found
     }
 
     /// <summary>
@@ -239,18 +278,35 @@ internal class StorageSourceItemDataStore
         return CollectionFactory.EmptyItemStackList;
     }
 
+    /// <summary>
+    /// Counts the total number of items matching the specified filter across all cached stacks.
+    /// Only counts items with stack.count > 0.
+    /// </summary>
+    /// <param name="filter">The filter to apply for counting items</param>
+    /// <returns>Total count of items matching the filter; 0 if filter is null or no items found</returns>
     internal int CountCachedItems(UniqueItemTypes filter)
     {
-        int result = 0;
-        foreach (var stack in GetItemStacksForFilter(filter))
+        if (filter == null)
         {
-            if (stack != null)
+            return 0;
+        }
+
+        // Fast path: check cache first
+        if (!IsItemsSeenBefore(filter))
+        {
+            return 0;
+        }
+
+        var itemList = GetItemStacksForFilter(filter);
+
+        // Direct iteration without intermediate variables for maximum performance
+        int result = 0;
+        for (int i = 0; i < itemList.Count; i++)
+        {
+            var count = itemList[i]?.count ?? 0;
+            if (count > 0)
             {
-                var stackCount = stack.count;
-                if (stackCount > 0)
-                {
-                    result += stackCount;
-                }
+                result += count;
             }
         }
 
