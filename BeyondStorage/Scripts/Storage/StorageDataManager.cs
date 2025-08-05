@@ -18,7 +18,7 @@ public class StorageDataManager
 
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dr) => dr.lootContainer.items;
-    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => dr.lootContainer.setModified();
+    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => { dr.lootContainer.setModified(); dr.SendSyncData(EntityDrone.cSyncStorage); };
 
     public readonly Func<TileEntityDewCollector, TileEntityDewCollector, bool> EqualsDewCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityDewCollector, ItemStack[]> GetItemsDewCollectorFunc = (dc) => dc.items;
