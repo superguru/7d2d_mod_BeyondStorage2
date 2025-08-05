@@ -60,6 +60,13 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
     }
 
+    private bool ReadBool(PooledBinaryReader reader)
+    {
+        // The purpose of this is to handle some value we don't expect, like an older client
+        // Read a boolean value from the reader
+        var byteIn = reader.ReadByte();
+        return byteIn != 0; // Convert byte to boolean (0 = false, non-zero = true)
+    }
     public override void read(PooledBinaryReader reader)
     {
         var configVersion = reader.ReadUInt32();
@@ -81,19 +88,19 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // update server config (or set if it's first time)
         // do not change the order of these
         ModConfig.ServerConfig.range = reader.ReadSingle();
-        ModConfig.ServerConfig.enableForBlockRepair = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForBlockUpgrade = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForGeneratorRefuel = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForItemRepair = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForReload = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForVehicleRefuel = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForVehicleRepair = reader.ReadBoolean();
-        ModConfig.ServerConfig.onlyStorageCrates = reader.ReadBoolean();
-        ModConfig.ServerConfig.pullFromVehicleStorage = reader.ReadBoolean();
-        ModConfig.ServerConfig.pullFromWorkstationOutputs = reader.ReadBoolean();
-        ModConfig.ServerConfig.pullFromDewCollectors = reader.ReadBoolean();
-        ModConfig.ServerConfig.enableForBlockTexture = reader.ReadBoolean();
-        ModConfig.ServerConfig.pullFromDrones = reader.ReadBoolean();
+        ModConfig.ServerConfig.enableForBlockRepair = ReadBool(reader);
+        ModConfig.ServerConfig.enableForBlockUpgrade = ReadBool(reader);
+        ModConfig.ServerConfig.enableForGeneratorRefuel = ReadBool(reader);
+        ModConfig.ServerConfig.enableForItemRepair = ReadBool(reader);
+        ModConfig.ServerConfig.enableForReload = ReadBool(reader);
+        ModConfig.ServerConfig.enableForVehicleRefuel = ReadBool(reader);
+        ModConfig.ServerConfig.enableForVehicleRepair = ReadBool(reader);
+        ModConfig.ServerConfig.onlyStorageCrates = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromVehicleStorage = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromWorkstationOutputs = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromDewCollectors = ReadBool(reader);
+        ModConfig.ServerConfig.enableForBlockTexture = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromDrones = ReadBool(reader);
 
         // Set HasServerConfig = true
         ServerUtils.HasServerConfig = true;
@@ -104,7 +111,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
             {
                 // read/discard remaining booleans if more than expected
                 // this is for older clients
-                reader.ReadBoolean();
+                _ = reader.ReadBoolean();
             }
         }
 
