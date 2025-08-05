@@ -6,11 +6,26 @@ namespace BeyondStorage.Scripts.Multiplayer;
 
 public class NetPackageBeyondStorageConfig : NetPackage
 {
-    // this is a ushort for unknown reasons, and it can't be changed
-    // before v2.2.0, ConfigVersion was either 1 (the 1.0 series) or 2 (the updated for 2.0 series)
-    // for v2.2.0, ConfigVersion == 3
-    private const ushort ConfigVersion = 3;
+    // History:
+    // this was a ushort, for unknown reasons, in 1_0 series, which had 3.0.2 as it's release version
+    // before v2.2.0, ConfigVersion was either 1 (the 1_0 series) or 2.x (the updated for 2.0 series)
+    // for v2.2.0, ConfigVersion == 220, and is an int (size 2 to size 5). that takes 2 bytes out of the future reserved space
+    //   but we can now use a structured versioning system in 4 bytes:
+    //     major.minor.patch:
+    //        major mask = 0xFF00-0000
+    //        minor mask = 0x00FF-0000
+    //        patch mask = 0x0000-FFFF
 
+    // Masks for extracting version components
+    //      public const int MAJOR_MASK = 0xFF000000;
+    //      public const int MINOR_MASK = 0x00FF0000;
+    //      public const int PATCH_MASK = 0x0000FFFF;
+
+    // Bit shifts for positioning (encode is shifted left, decode is shifted right)
+    //      public const int MAJOR_SHIFT = 24;
+    //      public const int MINOR_SHIFT = 16;
+    //      public const int PATCH_SHIFT = 0;  // for patch, no shift needed, just AND the patch mask
+    private const uint ConfigVersion = 0x02020001;
 
     // IMPORTANT: Update number if more options being sent
     private const ushort BoolCount = 13;  // 13 as of v2.2.0, which introduces pullFromDrones and enableForBlockTexture
@@ -26,12 +41,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         var binaryWriter = ((BinaryWriter)_writer);
 
         binaryWriter.Write(ConfigVersion);
-        // #if DEBUG
-        //         // Testing backwards compatibility
-        //         binaryWriter.Write((ushort)(BoolCount + 5));
-        // #else
         binaryWriter.Write(BoolCount);
-        // #endif
 
         // do not change the order of these
         binaryWriter.Write(ModConfig.ClientConfig.range);
@@ -48,20 +58,11 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
         binaryWriter.Write(ModConfig.ClientConfig.enableForBlockTexture);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
-
-        // #if DEBUG
-        //         // testing backwards compatibility if we are sending more than expecting to receive (EX: newer config sent by server to client running older mod version)
-        //         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
-        //         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
-        //         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
-        //         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
-        //         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
-        // #endif
     }
 
     public override void read(PooledBinaryReader reader)
     {
-        var configVersion = reader.ReadUInt16();
+        var configVersion = reader.ReadUInt32();
         var sentBoolCount = reader.ReadUInt16();
         ModLogger.DebugLog($"Received config from server. Version {configVersion}; sentBoolCount {sentBoolCount}; localBoolCount {BoolCount}.");
         // check if we got the same, newer, or older version of the config.
@@ -139,9 +140,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // kept it 6 after introducing enableForBlockTexture
         // kept it 6 after introducing pullfromDrones
         const int futureReservedSpace = 6;
-        const int ushortSize = 2;
-        const int floatSize = 4;
-        // Future Space + ConfigVersion + BoolCount + Range + (Bool(1) * LRU_SUBFILTER_DISPLAY_MAX)
-        return futureReservedSpace + ushortSize + ushortSize + floatSize + BoolCount;
+
+        // Future Space + ConfigVersion + BoolCount + Range + (Bool(1) * Count)
+        return futureReservedSpace + sizeof(uint) + sizeof(ushort) + sizeof(float) + sizeof(bool) * BoolCount;
     }
 }
