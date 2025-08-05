@@ -17,6 +17,8 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
     private T _cachedItem;
     private DateTime _cacheTimestamp;
     private readonly object _cacheLock = new();
+    public bool LogCacheUsage { get; set; } = true;
+
 
     /// <summary>
     /// Gets the configured cache duration in seconds.
@@ -50,7 +52,11 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
                 var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
                 if (age < CacheDurationSeconds)
                 {
-                    ModLogger.DebugLog($"{methodName}: Using cached {CacheTypeName} (age: {age:F3}s)");
+                    if (LogCacheUsage)
+                    {
+                        ModLogger.DebugLog($"{methodName}: Using cached {CacheTypeName} (age: {age:F3}s)");
+                    }
+
                     return _cachedItem;
                 }
             }
@@ -61,13 +67,21 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
             {
                 _cachedItem = newItem;
                 _cacheTimestamp = DateTime.Now;
-                //ModLogger.DebugLog($"{methodName}: Created fresh {_cacheTypeName}");
+
+                if (LogCacheUsage)
+                {
+                    ModLogger.DebugLog($"{methodName}: Created fresh {CacheTypeName}");
+                }
             }
             else
             {
                 // Clear cache if factory returns null
                 _cachedItem = null;
-                //ModLogger.DebugLog($"{methodName}: Factory returned null for {_cacheTypeName}, cache cleared");
+
+                if (LogCacheUsage)
+                {
+                    ModLogger.DebugLog($"{methodName}: Factory returned null for {CacheTypeName}, cache cleared");
+                }
             }
 
             return newItem;
@@ -82,7 +96,11 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
         lock (_cacheLock)
         {
             _cachedItem = null;
-            ModLogger.DebugLog($"{CacheTypeName} cache invalidated");
+
+            if (LogCacheUsage)
+            {
+                ModLogger.DebugLog($"{CacheTypeName} cache invalidated");
+            }
         }
     }
 
