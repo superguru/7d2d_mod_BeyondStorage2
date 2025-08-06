@@ -17,7 +17,7 @@ public static class WorkstationRecipe
     /// </summary>
     public static void BackgroundWorkstation_CraftCompleted()
     {
-        if (GameManager.IsDedicatedServer)
+        if (WorldTools.IsServer())
         {
             return;
         }
@@ -59,7 +59,7 @@ public static class WorkstationRecipe
     /// </summary>
     public static void ForegroundWorkstation_CraftCompleted()
     {
-        if (GameManager.IsDedicatedServer)
+        if (WorldTools.IsServer())
         {
             return;
         }
@@ -100,7 +100,7 @@ public static class WorkstationRecipe
 
     private static void Update_OpenWorkstations(string callType, int callCount)
     {
-        if (GameManager.IsDedicatedServer)
+        if (WorldTools.IsServer())
         {
             return;
         }
