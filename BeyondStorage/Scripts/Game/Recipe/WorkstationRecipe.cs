@@ -187,25 +187,28 @@ public static class WorkstationRecipe
                     }
 
                     // Check if crafting requirements are valid
-                    bool craftingValid = hasCraftingWindow && craftingWindow.CraftingRequirementsValid(recipeInfo.recipe);
+                    bool craftingValidNow = hasCraftingWindow && craftingWindow.CraftingRequirementsValid(recipeInfo.recipe);
+                    bool hadIngredientsBefore = recipeEntry.HasIngredients;
                     bool hasIngredientsNow = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipe, player);
 
                     // Only check ingredients if crafting is valid
-                    if (craftingValid && hasIngredientsNow)
+                    if (craftingValidNow && hasIngredientsNow)
                     {
-                        if (recipeEntry.HasIngredients ^ hasIngredientsNow)
+                        if (hadIngredientsBefore != hasIngredientsNow)
                         {
                             recipeEntry.HasIngredients = hasIngredientsNow;  // This will cause the crafting info page to reset to Ingredients tab
 
                             if (hasIngredientsNow)
                             {
-                                stateInfo.SelectedEntryBecameEnabled = true;
                                 recipeList.resortRecipes = true; // This recipe has been enabled now, and we need to resort the recipes
                             }
 
                             recipeEntry.isDirty = true;
                             refreshCount++;
                         }
+
+                        //workstation.craftInfoWindow.ingredientList.PlayerInventory_OnBackpackItemsChanged();
+                        //ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for recipe {recipeInfo.name} in call {callCount}");
                     }
                 }
 
@@ -223,19 +226,23 @@ public static class WorkstationRecipe
                     RestoreWorkstationState(workstation, recipeList, stateInfo);
                     recipeList.PlayerInventory_OnBackpackItemsChanged();
                 }
+
+                workstation.craftInfoWindow.ingredientList.PlayerInventory_OnBackpackItemsChanged();
+                //ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for recipe {recipe.GetName()} in call {callCount}");
+                ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for workstation {workstation} in call {callCount}");
             }
         }
         finally
         {
-            // Stop timing and record the call
-            var elapsedNs = s_callStats.StopAndRecordCall(d_MethodName);
-            var stats = s_callStats.GetMethodStats(d_MethodName);
+            //// Stop timing and record the call
+            //var elapsedNs = s_callStats.StopAndRecordCall(d_MethodName);
+            //var stats = s_callStats.GetMethodStats(d_MethodName);
 
-            if (stats.HasValue)
-            {
-                var (totalCallCount, totalTimeNs, avgTimeNs) = stats.Value;
-                ModLogger.DebugLog($"{d_MethodName} completed in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
-            }
+            //if (stats.HasValue)
+            //{
+            //    var (totalCallCount, totalTimeNs, avgTimeNs) = stats.Value;
+            //    ModLogger.DebugLog($"{d_MethodName} completed in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+            //}
         }
     }
 
@@ -269,6 +276,7 @@ public static class WorkstationRecipe
         {
             return;
         }
+        var craftInfoWindow = workstation.craftInfoWindow;
 
         var pageWillReset = stateInfo.SelectedEntryBecameEnabled;
         if (pageWillReset)
@@ -281,7 +289,6 @@ public static class WorkstationRecipe
         {
             recipeList.Page = stateInfo.CurrentPage;
 
-            var craftInfoWindow = workstation.craftInfoWindow;
             if (stateInfo.SelectedEntry != null && craftInfoWindow != null)
             {
                 if (craftInfoWindow.TabType != stateInfo.CraftInfoTabType)
