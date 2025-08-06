@@ -132,12 +132,6 @@ public class ItemCraft
         var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
         var result = stillNeeded - storageCount;
 
-        if ((itemName == "gunBotRoboticsParts"))
-        {
-            var message = $"{d_MethodName} request for count of {itemName} came from this path:";
-            ModLogger.Error(message);
-        }
-
         ModLogger.DebugLog($"{d_MethodName} | End: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
         return result;
     }
