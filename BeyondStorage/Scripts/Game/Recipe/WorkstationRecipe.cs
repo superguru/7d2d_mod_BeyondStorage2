@@ -166,10 +166,16 @@ public static class WorkstationRecipe
                 var craftingWindow = recipeList.craftingWindow;
                 bool hasCraftingWindow = (craftingWindow != null);
 
+                if (!hasCraftingWindow)
+                {
+                    ModLogger.DebugLog($"{d_MethodName} No crafting window found for workstation {workstation} in call {callCount}");
+                    continue; // No crafting window means no recipes to check
+                }
+
                 // Only process recipe entries that could potentially change (even those with HasIngredients == true can change because more ingredients might be available)
                 var recipesToCheck = recipeList.recipeControls
-                    .Where(entry => entry?.Recipe != null)
-                    .ToList();
+                .Where(entry => entry?.Recipe != null)
+                .ToList();
 
                 if (recipesToCheck.Count == 0)
                 {
@@ -187,32 +193,25 @@ public static class WorkstationRecipe
                     }
 
                     // Check if crafting requirements are valid
-                    bool craftingValidNow = hasCraftingWindow && craftingWindow.CraftingRequirementsValid(recipeInfo.recipe);
+                    bool craftingValidNow = craftingWindow.CraftingRequirementsValid(recipeInfo.recipe);
                     bool hadIngredientsBefore = recipeEntry.HasIngredients;
                     bool hasIngredientsNow = XUiM_Recipes.HasIngredientsForRecipe(availableItems, recipe, player);
+                    bool shouldHasIngredientsBeEnabled = craftingValidNow && hasIngredientsNow;
 
-                    // Only check ingredients if crafting is valid
-                    if (craftingValidNow && hasIngredientsNow)
+                    if (hadIngredientsBefore != hasIngredientsNow)
                     {
-                        if (hadIngredientsBefore != hasIngredientsNow)
-                        {
-                            recipeEntry.HasIngredients = hasIngredientsNow;  // This will cause the crafting info page to reset to Ingredients tab
+                        // This will cause the crafting info page to reset to Ingredients tab
+                        recipeEntry.HasIngredients = shouldHasIngredientsBeEnabled;
 
-                            if (hasIngredientsNow)
-                            {
-                                recipeList.resortRecipes = true; // This recipe has been enabled now, and we need to resort the recipes
-                            }
+                        // This recipe has been enabled or disabled now, and we need to resort the recipes
+                        recipeList.resortRecipes = true;
 
-                            recipeEntry.isDirty = true;
-                            refreshCount++;
-                        }
-
-                        //workstation.craftInfoWindow.ingredientList.PlayerInventory_OnBackpackItemsChanged();
-                        //ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for recipe {recipeInfo.name} in call {callCount}");
+                        recipeEntry.isDirty = true;
+                        refreshCount++;
                     }
                 }
 
-                // Remove UI only if changes were made
+                // Update UI only if changes were made
                 if (refreshCount > 0)
                 {
                     ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
@@ -228,21 +227,12 @@ public static class WorkstationRecipe
                 }
 
                 workstation.craftInfoWindow.ingredientList.PlayerInventory_OnBackpackItemsChanged();
-                //ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for recipe {recipe.GetName()} in call {callCount}");
                 ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for workstation {workstation} in call {callCount}");
             }
         }
         finally
         {
-            //// Stop timing and record the call
-            //var elapsedNs = s_callStats.StopAndRecordCall(d_MethodName);
-            //var stats = s_callStats.GetMethodStats(d_MethodName);
-
-            //if (stats.HasValue)
-            //{
-            //    var (totalCallCount, totalTimeNs, avgTimeNs) = stats.Value;
-            //    ModLogger.DebugLog($"{d_MethodName} completed in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (call {totalCallCount}, avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
-            //}
+            // Finally we do nothing
         }
     }
 
@@ -251,7 +241,6 @@ public static class WorkstationRecipe
     {
         public int CurrentPage { get; set; }
         public XUiC_RecipeEntry SelectedEntry { get; set; }
-        public bool SelectedEntryBecameEnabled { get; set; }
         public TabTypes CraftInfoTabType { get; set; }
     }
 
@@ -264,7 +253,6 @@ public static class WorkstationRecipe
         {
             CurrentPage = recipeList.Page,
             SelectedEntry = recipeList.SelectedEntry,
-            SelectedEntryBecameEnabled = false,
             CraftInfoTabType = (craftInfoWindow != null) ? craftInfoWindow.TabType : TabTypes.Ingredients
         };
     }
@@ -278,14 +266,7 @@ public static class WorkstationRecipe
         }
         var craftInfoWindow = workstation.craftInfoWindow;
 
-        var pageWillReset = stateInfo.SelectedEntryBecameEnabled;
-        if (pageWillReset)
-        {
-            // page will reset if the selected entry became enabled, so we need to reset it
-            recipeList.SelectedEntry = stateInfo.SelectedEntry;
-        }
-
-        if (pageWillReset || recipeList.Page != stateInfo.CurrentPage)
+        if (recipeList.Page != stateInfo.CurrentPage)
         {
             recipeList.Page = stateInfo.CurrentPage;
 
