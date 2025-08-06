@@ -29,7 +29,7 @@ public class StorageDataManager
     public Action<TileEntityWorkstation> MarkModifiedWorkstationFunc = (workstation) => WorkstationStateManager.MarkWorkstationModified(workstation);
 
     public readonly Func<ITileEntityLootable, ITileEntityLootable, bool> EqualsLootableFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetItemsLootableFunc = (lootable) => lootable.items;
+    public readonly Func<ITileEntityLootable, ItemStack[]> GetItemsLootableFunc = TileEntityItemDiscovery.GetLootableItems;
     public Action<ITileEntityLootable> MarkModifiedLootableFunc = (lootable) => lootable.SetModified();
 
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);

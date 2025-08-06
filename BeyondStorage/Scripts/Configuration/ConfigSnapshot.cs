@@ -6,22 +6,57 @@
 /// </summary>
 public sealed class ConfigSnapshot
 {
+    // ========== Source selection / eligibility =========
+    public float Range { get; }
     public bool PullFromDrones { get; }
     public bool PullFromDewCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
     public bool OnlyStorageCrates { get; }
     public bool PullFromVehicleStorage { get; }
-    public float Range { get; }
+
+    // ========== Functionality =========
+    public bool EnableForBlockRepair { get; }
+    public bool EnableForBlockTexture { get; }
+    public bool EnableForBlockUpgrade { get; }
+    public bool EnableForGeneratorRefuel { get; }
+    public bool EnableForItemRepair { get; }
+    public bool EnableForReload { get; }
+    public bool EnableForVehicleRefuel { get; }
+    public bool EnableForVehicleRepair { get; }
+
+    // ========== Multiplayer =========
+    public bool ServerSyncConfig { get; }
+
+    // ========== Housekeeping =========
+    public bool IsDebug { get; }
+    public bool IsDebugLogSettingsAccess { get; }
 
     private ConfigSnapshot()
     {
+        // ========== Source selection / eligibility =========
+        Range = ModConfig.Range();
         PullFromDrones = ModConfig.PullFromDrones();
         PullFromDewCollectors = ModConfig.PullFromDewCollectors();
         PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
         OnlyStorageCrates = ModConfig.OnlyStorageCrates();
         PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
 
-        Range = ModConfig.Range();
+        // ========== Functionality =========
+        EnableForBlockRepair = ModConfig.EnableForBlockRepair();
+        EnableForBlockTexture = ModConfig.EnableForBlockTexture();
+        EnableForBlockUpgrade = ModConfig.EnableForBlockUpgrade();
+        EnableForGeneratorRefuel = ModConfig.EnableForGeneratorRefuel();
+        EnableForItemRepair = ModConfig.EnableForItemRepair();
+        EnableForReload = ModConfig.EnableForReload();
+        EnableForVehicleRefuel = ModConfig.EnableForVehicleRefuel();
+        EnableForVehicleRepair = ModConfig.EnableForVehicleRepair();
+
+        // ========== Multiplayer =========
+        ServerSyncConfig = ModConfig.ServerSyncConfig();
+
+        // ========== Housekeeping =========
+        IsDebug = ModConfig.IsDebug();
+        IsDebugLogSettingsAccess = ModConfig.IsDebugLogSettingsAccess();
     }
 
     public static ConfigSnapshot Current => new();
