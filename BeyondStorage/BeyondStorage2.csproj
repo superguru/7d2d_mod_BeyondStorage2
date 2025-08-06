@@ -32,13 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <Target Name="CodeQualityChecks" BeforeTargets="Build">
-    <Exec Command="python code_check.py"
-          ContinueOnError="false"
-          WorkingDirectory="$(ProjectDir)">
+    <Exec Command="python code_check.py" ContinueOnError="false" WorkingDirectory="$(ProjectDir)">
       <Output TaskParameter="ExitCode" PropertyName="CodeQualityChecksExitCode" />
     </Exec>
-    <Error Condition="'$(CodeQualityChecksExitCode)' != '0'"
-           Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
+    <Error Condition="'$(CodeQualityChecksExitCode)' != '0'" Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
   </Target>
   <Target Name="PackageMod" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <Message Text="Executing mod packaging task" Importance="High" />
@@ -68,6 +65,7 @@
     <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
   </Target>
   <ItemGroup>
+    <Compile Include="HarmonyCommands\ConsoleCmdBsPurgeBadDrones.cs" />
     <Compile Include="HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />
@@ -101,10 +99,12 @@
     <Compile Include="Scripts\Data\StorageSourceItemDataStore.cs" />
     <Compile Include="Scripts\Data\UniqueItemTypeCache.cs" />
     <Compile Include="Scripts\Diagnostics\NameLookups.cs" />
+    <Compile Include="Scripts\Diagnostics\PurgeBadDrones.cs" />
     <Compile Include="Scripts\Game\Item\ItemActionTextureBlockExposed.cs" />
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
     <Compile Include="Scripts\Infrastructure\TypeMatchingHelper.cs" />
+    <Compile Include="Scripts\Infrastructure\WorldTools.cs" />
     <Compile Include="Scripts\Storage\AllowedSourcesSnapshot.cs" />
     <Compile Include="Scripts\Storage\ItemStackCacheManager.cs" />
     <Compile Include="Scripts\Data\ItemTypeNameLookupCache.cs" />
@@ -185,5 +185,6 @@
   <ItemGroup>
     <None Include="config.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
