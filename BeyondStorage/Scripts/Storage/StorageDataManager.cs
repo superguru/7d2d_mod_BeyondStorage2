@@ -17,8 +17,8 @@ public class StorageDataManager
     internal StorageSourceItemDataStore DataStore => _dataStore;
 
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneCollectorFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dr) => dr.lootContainer.items;
-    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => { dr.lootContainer.setModified(); dr.SendSyncData(EntityDrone.cSyncStorage); };
+    public readonly Func<EntityDrone, ItemStack[]> GetItemsDroneCollectorFunc = (dr) => LootableItemHandler.GetLootableItems(dr.lootContainer);
+    public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => LootableItemHandler.MarkLootableModified(dr.lootContainer);
 
     public readonly Func<TileEntityDewCollector, TileEntityDewCollector, bool> EqualsDewCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityDewCollector, ItemStack[]> GetItemsDewCollectorFunc = (dc) => dc.items;
@@ -29,8 +29,8 @@ public class StorageDataManager
     public Action<TileEntityWorkstation> MarkModifiedWorkstationFunc = (workstation) => WorkstationStateManager.MarkWorkstationModified(workstation);
 
     public readonly Func<ITileEntityLootable, ITileEntityLootable, bool> EqualsLootableFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetItemsLootableFunc = TileEntityItemDiscovery.GetLootableItems;
-    public Action<ITileEntityLootable> MarkModifiedLootableFunc = (lootable) => lootable.SetModified();
+    public readonly Func<ITileEntityLootable, ItemStack[]> GetItemsLootableFunc = LootableItemHandler.GetLootableItems;
+    public Action<ITileEntityLootable> MarkModifiedLootableFunc = (lootable) => LootableItemHandler.MarkLootableModified(lootable);
 
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityVehicle, ItemStack[]> GetItemsVehicleFunc = (vehicle) => vehicle.bag.items;

@@ -108,6 +108,7 @@
     <Compile Include="Scripts\Storage\AllowedSourcesSnapshot.cs" />
     <Compile Include="Scripts\Storage\ItemStackCacheManager.cs" />
     <Compile Include="Scripts\Data\ItemTypeNameLookupCache.cs" />
+    <Compile Include="Scripts\Storage\LootableItemHandler.cs" />
     <Compile Include="Scripts\Storage\StorageContext.cs" />
     <Compile Include="Scripts\Game\Block\BlockRepair.cs" />
     <Compile Include="Scripts\Game\Block\BlockUpgrade.cs" />

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using BeyondStorage.Scripts.Data;
+﻿using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
 
@@ -12,8 +9,6 @@ namespace BeyondStorage.Scripts.Storage;
 /// </summary>
 internal static class TileEntityItemDiscovery
 {
-    internal static readonly PackedBoolArray s_emptyLockedSlots = new PackedBoolArray();
-
     public static void FindItems(StorageContext context)
     {
         const string d_MethodName = nameof(FindItems);
@@ -163,7 +158,7 @@ internal static class TileEntityItemDiscovery
             }
         }
 
-        LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
+        LootableItemHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
 
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
@@ -175,118 +170,5 @@ internal static class TileEntityItemDiscovery
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         return validStacksRegistered;
-    }
-
-    public static ItemStack[] GetLootableItems(ITileEntityLootable lootable)
-    {
-        if (lootable == null)
-        {
-            return [];
-        }
-
-        var items = lootable.items;
-        if (items == null || items.Length == 0)
-        {
-            return [];
-        }
-
-        if (!lootable.HasSlotLocksSupport)
-        {
-            return items;
-        }
-
-        PackedBoolArray lockedSlots = lootable.SlotLocks ?? s_emptyLockedSlots;
-        var containerSize = lootable.GetContainerSize();
-        int cx = containerSize.x;
-        int cy = containerSize.y;
-        int totalSlots = cx * cy;
-        int lockedSlotsLength = lockedSlots.Length;
-        int itemsLength = items.Length;
-        int maxSlots = Math.Min(totalSlots, itemsLength);
-
-        // Pre-calculate result capacity to minimize reallocations
-        int estimatedUnlockedSlots = Math.Min(maxSlots, Math.Max(0, lockedSlotsLength == 0 ? maxSlots : maxSlots - CountLockedSlots(lockedSlots, maxSlots)));
-        var result = new List<ItemStack>(estimatedUnlockedSlots);
-
-        // Single loop optimization - avoid nested loops
-        for (int slotIndex = 0; slotIndex < maxSlots; slotIndex++)
-        {
-            // Skip locked slots early
-            if (slotIndex < lockedSlotsLength && lockedSlots[slotIndex])
-            {
-                continue;
-            }
-
-            var stack = items[slotIndex];
-            if (stack != null)
-            {
-                result.Add(stack);
-            }
-        }
-
-        return result.ToArray();
-    }
-
-    private static int CountLockedSlots(PackedBoolArray lockedSlots, int maxSlots)
-    {
-        int count = 0;
-        int checkSlots = Math.Min(lockedSlots.Length, maxSlots);
-
-        for (int i = 0; i < checkSlots; i++)
-        {
-            if (lockedSlots[i])
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private static void LogLootableSlotLocks(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity, string d_MethodName)
-    {
-        if (!context?.Config?.IsDebugLogSettingsAccess ?? false)
-        {
-            return;
-        }
-
-        var hasLockSlotSupport = lootable.HasSlotLocksSupport;
-        if (hasLockSlotSupport)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Found lootable {lootable} with slot locks support {tileEntity.ToWorldPos()}");
-
-            var containerSize = lootable.GetContainerSize();
-            int cx = containerSize.x;
-            int cy = containerSize.y;
-
-            PackedBoolArray lockedSlots = lootable.SlotLocks;
-
-            // Create grid representation: 1 for locked, 0 for unlocked
-            var sb = new StringBuilder(cx * cy * 2);
-            for (int y = 0; y < cy; y++)
-            {
-                for (int x = 0; x < cx; x++)
-                {
-                    int slotIndex = y * cx + x;
-                    bool isLocked = lockedSlots != null && lockedSlots[slotIndex];
-                    sb.Append(isLocked ? '1' : '0');
-
-                    // Add space between columns (except for last column)
-                    if (x < containerSize.x - 1)
-                    {
-                        sb.Append(' ');
-                    }
-                }
-
-                // Add newline between rows (except for last row)
-                if (y < cy - 1)
-                {
-                    sb.AppendLine();
-                }
-            }
-
-            var lockSlotMap = sb.ToString();
-            ModLogger.DebugLog($"{d_MethodName}: Locked slots for {lootable} {containerSize.x}x{containerSize.y}:\n{lockSlotMap}");
-        }
     }
 }
