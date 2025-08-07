@@ -17,11 +17,13 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            ModLogger.Error($"{d_MethodName} called with null items");
+            ModLogger.Warning($"{d_MethodName}: called with null items");
             return stacks;  // We're not fixing the caller's mistakes
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks before {stacks.Count}");
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: stacks before {stacks.Count}");
+#endif
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
 
         var context = StorageContextFactory.Create(d_MethodName);
@@ -29,7 +31,9 @@ public class ItemCraft
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: stacks after {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+#endif
         }
         else
         {
@@ -49,21 +53,25 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            ModLogger.Error($"{d_MethodName} called with null items");
+            ModLogger.Warning($"{d_MethodName}: called with null items");
             return;
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | stacks at the start {stacks.Count} (before stripping)");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: stacks at the start {stacks.Count} (before stripping)");
+#endif
         ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
-        ModLogger.DebugLog($"{d_MethodName} | stacks at the start {stacks.Count} (after stripping)");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: stacks at the start {stacks.Count} (after stripping)");
+#endif
         var context = StorageContextFactory.Create(d_MethodName);
         if (context != null)
         {
             var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
             stacks.AddRange(storageStacks);
-            ModLogger.DebugLog($"{d_MethodName} | stacks after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: stacks after pulling {stacks.Count}, storageStacksAdded {storageStacks.Count}");
+#endif
         }
         else
         {
@@ -78,20 +86,30 @@ public class ItemCraft
     {
         const string d_MethodName = nameof(EntryBinding_AddPullableSourceStorageItemCount);
 
+        if (entry == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: ingredient entry is null, returning 0");
+            return 0;
+        }
+
         var itemValue = entry.Ingredient.itemValue;
         var itemName = itemValue.ItemClass.GetItemName();
 
         var context = StorageContextFactory.Create(d_MethodName);
-        var storageCount = context?.GetItemCount(itemValue) ?? 0;
+        var storageCount = context.GetItemCount(itemValue);
 
         if (storageCount > 0)
         {
-            ModLogger.DebugLog($"{d_MethodName} | item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
+#endif
             entry.windowGroup.Controller.IsDirty = true;
         }
         else
         {
-            ModLogger.DebugLog($"{d_MethodName} | item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount} but resetting it to 0");
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount} but resetting it to 0");
+#endif
             storageCount = 0;
         }
 
@@ -125,14 +143,17 @@ public class ItemCraft
         }
 
         var itemName = itemStack.itemValue?.ItemClass?.GetItemName() ?? "Unknown Item";
-        ModLogger.DebugLog($"{d_MethodName} | Start: item {itemName}; stillNeeded {stillNeeded}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: Start: item {itemName}; stillNeeded {stillNeeded}");
+#endif
         // Get storage count and return result
         var context = StorageContextFactory.Create(d_MethodName);
-        var storageCount = context?.GetItemCount(itemStack.itemValue) ?? 0;
+        var storageCount = context.GetItemCount(itemStack.itemValue);
         var result = stillNeeded - storageCount;
 
-        ModLogger.DebugLog($"{d_MethodName} | End: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: End: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
+#endif
         return result;
     }
 }
