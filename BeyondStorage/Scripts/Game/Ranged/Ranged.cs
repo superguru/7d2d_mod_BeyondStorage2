@@ -67,7 +67,7 @@ public static class Ranged
         var context = StorageContextFactory.Create(d_MethodName);
 
         // return 0 if not enabled for reloading
-        if (context.Config.EnableForReload)
+        if (!context.Config.EnableForReload)
         {
             return 0;
         }

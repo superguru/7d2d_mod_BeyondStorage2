@@ -103,6 +103,7 @@ public static class LootableItemHandler
             return;
         }
 
+#if DEBUG
         var hasLockSlotSupport = lootable.HasSlotLocksSupport;
         if (hasLockSlotSupport)
         {
@@ -143,6 +144,7 @@ public static class LootableItemHandler
             var lockSlotMap = sb.ToString();
             ModLogger.DebugLog($"{methodName}: Locked slots for {lootable} {containerSize.x}x{containerSize.y}:\n{lockSlotMap}");
         }
+#endif
     }
 
     public static void MarkLootableModified(ITileEntityLootable lootable)

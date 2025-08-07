@@ -18,7 +18,7 @@ public static class PowerSourceRefuel
 
         if (totalNeeded <= 0)
         {
-            return lastRemoved;
+            return 0;
         }
 
         if (lastRemoved >= totalNeeded)
