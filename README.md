@@ -8,8 +8,8 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 
 * As of v2.1.0, items can be pulled from nearby Workstations (configurable).
 * As of v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
-* As of v2.1.5, paint from nearby storage can be used by the Paintbrush tool (configurable).
-* As of v2.2.0, items can be pulled from nearby Drones (configurable).
+* As of v2.1.4, final version to support 7D2D 2.1
+* As of v2.2.0, only support 7D2D 2.x and later, pull from drones, paint from all storages, supports slot locking for containers
 
 #### Pull Order:
   - Player Backpack (as per vanilla game)
