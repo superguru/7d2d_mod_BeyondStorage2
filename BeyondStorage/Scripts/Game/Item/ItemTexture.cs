@@ -143,8 +143,9 @@ public class ItemTexture
     // Method to count paint usage (called during counting phase)
     public static bool CountPaintUsage(Guid operationId)
     {
+#if DEBUG
         const string d_MethodName = nameof(CountPaintUsage);
-
+#endif
         if (s_activeOperations.TryGetValue(operationId, out var context) && context.IsCountingPhase)
         {
             context.TotalPaintRequired++;
