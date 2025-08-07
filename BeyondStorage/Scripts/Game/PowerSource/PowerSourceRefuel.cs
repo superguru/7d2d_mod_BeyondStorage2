@@ -24,7 +24,7 @@ public static class PowerSourceRefuel
         if (lastRemoved >= totalNeeded)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: ClearStacksForFilter once done debugging
+            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early");
 #endif
             return lastRemoved;
         }

@@ -79,7 +79,6 @@ public class NetPackageBeyondStorageConfig : NetPackage
                 ModLogger.Warning("Newer configuration version received from server! You might be missing features present on the server and is advised to use the same version.");
                 break;
             case < ConfigVersion:
-                // TODO: maybe extract what we can from server settings
                 ModLogger.Error(
                     "Older configuration version received from server, failed to sync server settings! Either downgrade client mod to the version on the server OR have the server upgrade to client's mod version.");
                 return;

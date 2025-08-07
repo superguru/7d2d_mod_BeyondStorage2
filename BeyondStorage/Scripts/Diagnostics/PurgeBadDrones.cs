@@ -25,7 +25,7 @@ internal static class PurgeBadDrones
         worldContext.Player.GetOwnedEntities();
 
         var player = worldContext.Player;
-        var owned = player.ownedEntities.Where(o => o != null && o.ClassId != -1 && EntityClass.list[o.ClassId].entityClassName == "entityJunkDrone").ToList();
+        var owned = player.ownedEntities.Where(o => o?.ClassId > 0 && EntityClass.list[o.ClassId].entityClassName == "entityJunkDrone").ToList();
         ModLogger.DebugLog($"{d_MethodName}: found player owned drone entities {owned.Count()}");
         int dronesRemoved = 0;
         foreach (var drone in owned)

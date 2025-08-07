@@ -347,7 +347,7 @@ internal class StorageSourceItemDataStore
                 var count = kvp.Value.Count;
                 return $"{abbrev}:{count}";
             }));
-            info += " [" + details + "]";
+            info = $"{info} [{details}]";
         }
 
         return info;

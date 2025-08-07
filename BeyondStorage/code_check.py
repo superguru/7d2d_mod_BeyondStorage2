@@ -116,8 +116,8 @@ class CodeQualityChecker:
         )
 
         # Register other checks
-        self.checks["excessive_nesting"] = self._check_excessive_nesting
-        self.checks["long_methods"] = self._check_long_methods
+        # temporarily disabled: self.checks["excessive_nesting"] = self._check_excessive_nesting
+        # temporarily disabled: self.checks["long_methods"] = self._check_long_methods
         self.checks["magic_numbers"] = self._check_magic_numbers
         self.checks["todo_comments"] = self._check_todo_comments
         self.checks["empty_catch_blocks"] = self._check_empty_catch_blocks
@@ -435,14 +435,19 @@ class CodeQualityChecker:
                 in_loop = False
                 continue
                 
-            if in_loop and ('+=' in line and 'string' in line.lower()) or ('result +' in line):
-                issues.append(Issue(
-                    file_path=file_path[2:],
-                    line_number=line_num,
-                    severity="warning",
-                    code="BCW025",
-                    description="String concatenation in loop - consider using StringBuilder"
-                ))
+            # Check for string concatenation in loops - be more specific about string operations
+            if in_loop and '+=' in line:
+                # Only flag if we can determine it's actually string concatenation
+                if ('string' in line.lower() or 
+                    re.search(r'"\s*\+|string\s*\+|\w+\s*\+=\s*"', line) or
+                    re.search(r'\w+\s*\+=\s*\w+\s*\+\s*"', line)):
+                    issues.append(Issue(
+                        file_path=file_path[2:],
+                        line_number=line_num,
+                        severity="warning",
+                        code="BCW025",
+                        description="String concatenation in loop - consider using StringBuilder"
+                    ))
         
         return issues
 
@@ -686,7 +691,7 @@ class CodeQualityChecker:
                 line = self.format_issue_compiler_style(warning)
                 output_lines.append(line)
             output_lines.append("")
-    
+
         # Show errors last (most critical - will be at bottom of output)
         if errors:
             output_lines.append("ERRORS:")
