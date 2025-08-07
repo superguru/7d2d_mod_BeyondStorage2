@@ -1,5 +1,4 @@
-﻿using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Scripts.Game.Block;
@@ -13,18 +12,25 @@ public class BlockRepair
     {
         const string d_MethodName = nameof(BlockRepairGetItemCount);
 
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{itemValue}: itemStack is null, returning 0");
+            return 0;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // return early if not enabled for block repair
-        if (!ModConfig.EnableForBlockRepair())
+        if (!context.Config.EnableForBlockRepair)
         {
             return 0;
         }
 
         var itemName = itemValue.ItemClass.GetItemName();
 
-        var context = StorageContextFactory.Create(d_MethodName);
-        var result = context?.GetItemCount(itemValue) ?? 0;
+        var result = context.GetItemCount(itemValue);
 
-        ModLogger.DebugLog($"{d_MethodName} | item {itemName}; result {result}");
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; result {result}");
         return result;
     }
 
@@ -35,8 +41,16 @@ public class BlockRepair
     {
         const string d_MethodName = nameof(BlockRepairRemoveRemaining);
 
+        if (itemStack == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemStack is null, returning currentCount {currentCount}");
+            return currentCount;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // return early if not enabled for block repair
-        if (!ModConfig.EnableForBlockRepair())
+        if (!context.Config.EnableForBlockRepair)
         {
             return currentCount;
         }
@@ -46,8 +60,9 @@ public class BlockRepair
         // itemStack.count is total amount needed
         // currentCount is the amount removed previously in last DecItem
         var stillNeeded = itemStack.count - currentCount;
-        ModLogger.DebugLog($"{d_MethodName} | itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: itemStack {itemName}; currentCount {currentCount}; stillNeeded {stillNeeded} ");
+#endif
         // Skip if already 0
         if (stillNeeded == 0)
         {
@@ -55,12 +70,12 @@ public class BlockRepair
         }
 
         // AddStackRangeForFilter amount removed from storage to last amount removed to update result
-        var context = StorageContextFactory.Create(d_MethodName);
-        var removedFromStorage = context?.RemoveRemaining(itemStack.itemValue, stillNeeded) ?? 0;
+        var removedFromStorage = context.RemoveRemaining(itemStack.itemValue, stillNeeded);
 
         var totalRemoved = currentCount + removedFromStorage;
-        ModLogger.DebugLog($"{d_MethodName} | total removed {totalRemoved}; removedFromStorage {removedFromStorage}; stillNeeded {stillNeeded}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: total removed {totalRemoved}; removedFromStorage {removedFromStorage}; stillNeeded {stillNeeded}");
+#endif
         return totalRemoved;
     }
 }

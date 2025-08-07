@@ -33,7 +33,7 @@ public static class StorageItemRemovalService
         }
 
         var itemName = itemValue?.ItemClass?.GetItemName();
-        ModLogger.DebugLog($"{d_MethodName} | trying to remove {stillNeeded} {itemName}");
+        ModLogger.DebugLog($"{d_MethodName}: trying to remove {stillNeeded} {itemName}");
 
         int originalNeeded = stillNeeded;
         var itemFilter = UniqueItemTypes.FromItemValue(itemValue);
@@ -49,7 +49,7 @@ public static class StorageItemRemovalService
 
             if (sourceType == null)
             {
-                ModLogger.Error($"{d_MethodName} | Skipping null source type");
+                ModLogger.Error($"{d_MethodName}: Skipping null source type");
                 continue;
             }
 
@@ -58,7 +58,7 @@ public static class StorageItemRemovalService
 
             var sourcesByType = context.Sources.DataStore.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType.Count;
-            //ModLogger.DebugLog($"{d_MethodName} | Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
+            //ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
 
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {
@@ -70,7 +70,7 @@ public static class StorageItemRemovalService
                 var source = sourcesByType[iSource];
                 if (source == null)
                 {
-                    ModLogger.Error($"{d_MethodName} | Skipping null source at index {iSource} for type {fullSourceTypeName}");
+                    ModLogger.Error($"{d_MethodName}: Skipping null source at index {iSource} for type {fullSourceTypeName}");
                     continue;
                 }
 
@@ -142,7 +142,7 @@ public static class StorageItemRemovalService
         }
 
         int removed = originalNeeded - stillNeeded;
-        //ModLogger.DebugLog($"{methodName} | {nameInfo.Abbrev} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
+        //ModLogger.DebugLog($"{methodName}: {nameInfo.Abbrev} | Removed {removed} {itemName}, stillNeeded {stillNeeded}");
 
         if (removed != 0)
         {
@@ -152,7 +152,7 @@ public static class StorageItemRemovalService
 #if DEBUG
         if (stillNeeded < 0)
         {
-            ModLogger.Error($"{methodName} | stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
+            ModLogger.Error($"{methodName}: stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
             stillNeeded = 0;
         }
 #endif

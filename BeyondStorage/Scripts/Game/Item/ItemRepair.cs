@@ -1,5 +1,4 @@
-﻿using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Scripts.Game.Item;
@@ -16,25 +15,29 @@ public static class ItemRepair
     {
         const string d_MethodName = nameof(ItemRepairOnActivatedGetItemCount);
 
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // skip if not enabled
-        if (!ModConfig.EnableForItemRepair())
+        if (!context.Config.EnableForItemRepair)
         {
             return currentCount;
         }
 
         var currentValue = currentCount * itemValue.ItemClass.RepairAmount.Value;
-        ModLogger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
+#endif
         if (currentValue > 0)
         {
             return currentCount;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
-        var storageCount = context?.GetItemCount(itemValue) ?? 0;
+        var storageCount = context.GetItemCount(itemValue);
         var newCount = currentCount + storageCount;
 
-        ModLogger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
+#endif
         return newCount;
     }
 
@@ -45,8 +48,16 @@ public static class ItemRepair
     {
         const string d_MethodName = nameof(ItemRepairRefreshGetItemCount);
 
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
+            return 0;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // skip if not enabled
-        if (!ModConfig.EnableForItemRepair())
+        if (!context.Config.EnableForItemRepair)
         {
             return 0;
         }
@@ -56,10 +67,10 @@ public static class ItemRepair
             return 0;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
-        var storageCount = context?.GetItemCount(itemValue) ?? 0;
-        ModLogger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
-
+        var storageCount = context.GetItemCount(itemValue);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+#endif
         return storageCount;
     }
 }

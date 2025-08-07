@@ -13,12 +13,23 @@ public static class ItemCommon
     //          Item Repair (ClearStacksForFilter items on repair)
     public static int ItemRemoveRemaining(int originalResult, ItemValue itemValue, int totalRequiredAmount, bool ignoreModdedItems = false, List<ItemStack> removedItems = null)
     {
+        const string d_MethodName = nameof(ItemRemoveRemaining);
+
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning originalResult {originalResult}");
+            return originalResult;
+        }
+
+        var context = StorageContextFactory.Create(nameof(ItemRemoveRemaining));
+
         var itemName = itemValue.ItemClass.GetItemName();
 
         // stillNeeded = totalRequiredAmount (_count1) - originalResult (DecItem(...))
         var stillNeeded = totalRequiredAmount - originalResult;
-        ModLogger.DebugLog($"ItemRemoveRemaining | item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
+#endif
         // If we don't need anything else return the original result
         if (stillNeeded <= 0)
         {
@@ -26,12 +37,12 @@ public static class ItemCommon
         }
 
         // Get what we can from storage up to required amount
-        var context = StorageContextFactory.Create(nameof(ItemRemoveRemaining));
-        var totalRemoved = context?.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems) ?? 0;
+        var totalRemoved = context.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
 
         var newStillNeeded = stillNeeded - totalRemoved;
-        ModLogger.DebugLog($"ItemRemoveRemaining | item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
+#endif
         return newStillNeeded;
     }
 
@@ -42,18 +53,17 @@ public static class ItemCommon
         var result = CollectionFactory.CreateItemStackList();
         if (xui != null)
         {
-            ModLogger.DebugLog($"{d_MethodName} adding all player items");
             result.AddRange(xui.PlayerInventory.GetAllItemStacks());
-            ModLogger.DebugLog($"{d_MethodName} added {result.Count} player items (not stripped)");
         }
         else
         {
-            ModLogger.Error($"{d_MethodName} called with null xui");
+            ModLogger.Error($"{d_MethodName}: called with null xui");
         }
 
         ItemCraft.ItemCraft_AddPullableSourceStorageStacks(result);
-        ModLogger.DebugLog($"{d_MethodName} returning {result.Count} items");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: returning {result.Count} items");
+#endif
         return result;
     }
 }

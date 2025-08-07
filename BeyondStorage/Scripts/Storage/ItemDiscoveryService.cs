@@ -21,13 +21,8 @@ public static class ItemDiscoveryService
             return;
         }
 
-        //ModLogger.DebugLog($"{d_MethodName} | Finding tile entities");
         TileEntityItemDiscovery.FindItems(context);
-
-        //ModLogger.DebugLog($"{d_MethodName} | Finding vehicles");
         VehicleItemDiscovery.FindItems(context);
-
-        // ModLogger.DebugLog($"{d_MethodName} | Finding drones");
         DroneItemDiscovery.FindItems(context);
 
         LogDiscoveryDiagnostics(context, d_MethodName);
@@ -36,7 +31,7 @@ public static class ItemDiscoveryService
     private static void LogDiscoveryDiagnostics(StorageContext context, string methodName)
     {
         var info = context.Sources.DataStore.GetDiagnosticInfo();
-        ModLogger.DebugLog($"{methodName} : {info}");
+        ModLogger.DebugLog($"{methodName}: {info}");
     }
 
     private static bool ValidateParameters(string methodName, StorageContext context)

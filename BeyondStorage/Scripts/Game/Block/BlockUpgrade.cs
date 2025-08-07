@@ -1,5 +1,4 @@
-﻿using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Scripts.Game.Block;
@@ -13,16 +12,24 @@ public class BlockUpgrade
     {
         const string d_MethodName = nameof(BlockUpgradeGetItemCount);
 
-        // skip if not enabled
-        if (!ModConfig.EnableForBlockUpgrade())
+        if (itemValue == null)
         {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
             return 0;
         }
 
         var context = StorageContextFactory.Create(d_MethodName);
-        var result = context?.GetItemCount(itemValue) ?? 0;
 
-        ModLogger.DebugLog($"{d_MethodName} | item {itemValue.ItemClass.GetItemName()}; count {result}");
+        // skip if not enabled
+        if (!context.Config.EnableForBlockUpgrade)
+        {
+            return 0;
+        }
+
+        var result = context.GetItemCount(itemValue);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; count {result}");
+#endif
         return result;
     }
 
@@ -32,10 +39,17 @@ public class BlockUpgrade
     public static int BlockUpgradeRemoveRemaining(int currentCount, ItemValue itemValue, int requiredCount)
     {
         const string d_MethodName = nameof(BlockUpgradeRemoveRemaining);
-        var itemName = itemValue.ItemClass.GetItemName();
+
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
+            return 0;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
 
         // skip if not enabled
-        if (!ModConfig.EnableForBlockUpgrade())
+        if (!context.Config.EnableForBlockUpgrade)
         {
             return currentCount;
         }
@@ -47,15 +61,17 @@ public class BlockUpgrade
             return currentCount;
         }
 
-        ModLogger.DebugLog($"{d_MethodName} | item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
-
-        var context = StorageContextFactory.Create(d_MethodName);
-        var removedFromStorage = context?.RemoveRemaining(itemValue, requiredCount - currentCount) ?? 0;
+        var itemName = itemValue.ItemClass.GetItemName();
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; currentCount {currentCount}; requiredCount {requiredCount}");
+#endif
+        var removedFromStorage = context.RemoveRemaining(itemValue, requiredCount - currentCount);
 
         // add amount removed from storage to previous removed count to update result
         var result = currentCount + removedFromStorage;
-        ModLogger.DebugLog($"{d_MethodName} | item {itemName}; removed {removedFromStorage}; new result {result}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; removed {removedFromStorage}; new result {result}");
+#endif
         return result;
     }
 }

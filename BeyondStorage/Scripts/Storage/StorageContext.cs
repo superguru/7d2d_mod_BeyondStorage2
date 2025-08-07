@@ -85,7 +85,7 @@ public sealed class StorageContext
             }
             catch (System.Exception ex)
             {
-                ModLogger.Error($"{methodName} | Failed during item discovery: {ex.Message}", ex);
+                ModLogger.Error($"{methodName}: Failed during item discovery: {ex.Message}", ex);
 
                 // Ensure cache is invalidated on failure and data is cleared
                 Sources.Clear();
@@ -96,7 +96,7 @@ public sealed class StorageContext
         }
 
         //var cacheStatus = hit ? "HIT" : "MISS";
-        //ModLogger.DebugLog($"{methodName} | CACHE_CHECK_{cacheStatus}");
+        //ModLogger.DebugLog($"{methodName}: CACHE_CHECK_{cacheStatus}");
         return hit;
     }
 
@@ -128,7 +128,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning empty collection");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning empty collection");
             return CollectionFactory.EmptyItemStackList;
         }
 
@@ -142,7 +142,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning 0");
             return 0;
         }
 
@@ -155,7 +155,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning 0");
             return 0;
         }
 
@@ -169,7 +169,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning false");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning false");
             return false;
         }
 
@@ -182,7 +182,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning false");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning false");
             return false;
         }
 
@@ -198,7 +198,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName} | Cache validation failed, returning 0");
+            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning 0");
             return 0;
         }
 

@@ -1,5 +1,4 @@
-﻿using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Scripts.Game.PowerSource;
@@ -8,23 +7,25 @@ public static class PowerSourceRefuel
 {
     public static int RefuelRemoveRemaining(ItemValue itemValue, int lastRemoved, int totalNeeded)
     {
-        const string d_method_name = "RefuelRemoveRemaining";
+        const string d_MethodName = "RefuelRemoveRemaining";
         var itemName = itemValue.ItemClass.GetItemName();
+
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning lastRemoved {lastRemoved}");
+            return lastRemoved;
+        }
 
         if (totalNeeded <= 0)
         {
-            ModLogger.DebugLog($"{d_method_name} - item {itemName}; totalNeeded {totalNeeded} <= 0, returning early"); // TODO: ClearStacksForFilter once done debugging
-            return 0;
+            return lastRemoved;
         }
 
         if (lastRemoved >= totalNeeded)
         {
-            ModLogger.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: ClearStacksForFilter once done debugging
-            return lastRemoved;
-        }
-
-        if (!ModConfig.EnableForGeneratorRefuel())
-        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early"); // TODO: ClearStacksForFilter once done debugging
+#endif
             return lastRemoved;
         }
 
@@ -34,14 +35,22 @@ public static class PowerSourceRefuel
             return lastRemoved;
         }
 
-        var context = StorageContextFactory.Create(d_method_name);
-        int removed = context?.RemoveRemaining(itemValue, amountToRemove) ?? 0;
+        var context = StorageContextFactory.Create(d_MethodName);
+
+        if (!context.Config.EnableForGeneratorRefuel)
+        {
+            return lastRemoved;
+        }
+
+        int removed = context.RemoveRemaining(itemValue, amountToRemove);
 
         int result = lastRemoved + removed;
 
         if (removed > 0)
         {
-            ModLogger.DebugLog($"{d_method_name} - item {itemName}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; lastRemoved {lastRemoved}; totalNeeded {totalNeeded}; amountToRemove {amountToRemove}; removed {removed}; updated result {result}");
+#endif
         }
 
         return result;

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Infrastructure;
-
+using BeyondStorage.Scripts.Storage;
 using static XUiC_CraftingInfoWindow;
 
 namespace BeyondStorage.Scripts.Game.Recipe;
@@ -17,17 +16,19 @@ public static class WorkstationRecipe
     /// </summary>
     public static void BackgroundWorkstation_CraftCompleted()
     {
+        const string d_MethodName = nameof(BackgroundWorkstation_CraftCompleted);
+
         if (WorldTools.IsServer())
         {
             return;
         }
 
-        if (!ModConfig.PullFromWorkstationOutputs())
+        var context = StorageContextFactory.Create(d_MethodName);
+
+        if (!context.Config.PullFromWorkstationOutputs)
         {
             return;
         }
-
-        const string d_MethodName = nameof(BackgroundWorkstation_CraftCompleted);
 
         // Start timing the method call
         s_callStats.StartTiming(d_MethodName);
@@ -36,8 +37,9 @@ public static class WorkstationRecipe
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             var callCount = stats?.callCount ?? 0;
-            ModLogger.DebugLog($"{d_MethodName} starting call {callCount + 1}");
-
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
+#endif
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
         finally
@@ -49,7 +51,9 @@ public static class WorkstationRecipe
             if (stats.HasValue)
             {
                 var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
-                ModLogger.DebugLog($"{d_MethodName} completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+#endif
             }
         }
     }
@@ -59,19 +63,21 @@ public static class WorkstationRecipe
     /// </summary>
     public static void ForegroundWorkstation_CraftCompleted()
     {
+        const string d_MethodName = nameof(ForegroundWorkstation_CraftCompleted);
+
         if (WorldTools.IsServer())
         {
             return;
         }
 
-        if (!ModConfig.PullFromWorkstationOutputs())
+        var context = StorageContextFactory.Create(d_MethodName);
+
+        if (!context.Config.PullFromWorkstationOutputs)
         {
             // If we don't pull from outputs, we don't need to update the workstation windows, as nothing that
             // was crafted will be available or affect the UI.
             return;
         }
-
-        const string d_MethodName = nameof(ForegroundWorkstation_CraftCompleted);
 
         // Start timing the method call
         s_callStats.StartTiming(d_MethodName);
@@ -80,8 +86,9 @@ public static class WorkstationRecipe
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             var callCount = stats?.callCount ?? 0;
-            ModLogger.DebugLog($"{d_MethodName} starting call {callCount + 1}");
-
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
+#endif
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
         finally
@@ -93,7 +100,9 @@ public static class WorkstationRecipe
             if (stats.HasValue)
             {
                 var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
-                ModLogger.DebugLog($"{d_MethodName} completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+#endif
             }
         }
     }
@@ -105,7 +114,7 @@ public static class WorkstationRecipe
             return;
         }
 
-        string d_MethodName = string.Concat(callType, ".", nameof(Update_OpenWorkstations));
+        string d_MethodName = $"{callType}.{nameof(Update_OpenWorkstations)}";
 
         // Start timing this internal method
         s_callStats.StartTiming(d_MethodName);
@@ -168,7 +177,7 @@ public static class WorkstationRecipe
 
                 if (!hasCraftingWindow)
                 {
-                    ModLogger.DebugLog($"{d_MethodName} No crafting window found for workstation {workstation} in call {callCount}");
+                    ModLogger.Warning($"{d_MethodName}: No crafting window found for workstation {workstation} in call {callCount}");
                     continue; // No crafting window means no recipes to check
                 }
 
@@ -214,7 +223,9 @@ public static class WorkstationRecipe
                 // Update UI only if changes were made
                 if (refreshCount > 0)
                 {
-                    ModLogger.DebugLog($"{d_MethodName} refreshed {refreshCount} recipe controls in call {callCount}");
+#if DEBUG
+                    ModLogger.DebugLog($"{d_MethodName}: refreshed {refreshCount} recipe controls in call {callCount}");
+#endif
                     recipeList.IsDirty = true;
                     recipeList.CraftCount.IsDirty = true;
 
@@ -227,7 +238,7 @@ public static class WorkstationRecipe
                 }
 
                 workstation.craftInfoWindow.ingredientList.PlayerInventory_OnBackpackItemsChanged();
-                ModLogger.DebugLog($"{d_MethodName} Refreshed ingredients for workstation {workstation} in call {callCount}");
+                ModLogger.DebugLog($"{d_MethodName}: Refreshed ingredients for workstation {workstation} in call {callCount}");
             }
         }
         finally

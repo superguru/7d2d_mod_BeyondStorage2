@@ -1,5 +1,4 @@
 ﻿using Audio;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -11,8 +10,16 @@ public static class VehicleRepair
     {
         const string d_MethodName = nameof(VehicleRepairRemoveRemaining);
 
+        if (itemValue == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
+            return 0;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // skip if not enabled
-        if (!ModConfig.EnableForVehicleRepair())
+        if (!context.Config.EnableForVehicleRepair)
         {
             return 0;
         }
@@ -25,10 +32,10 @@ public static class VehicleRepair
         }
 
         // attempt to remove item from storage
-        var context = StorageContextFactory.Create(d_MethodName);
-        var countRemoved = context?.RemoveRemaining(itemValue, 1) ?? 0;
-        ModLogger.DebugLog($"{d_MethodName} - Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
-
+        var countRemoved = context.RemoveRemaining(itemValue, 1);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
+#endif
         // if we didn't remove anything return back failed (0)
         if (countRemoved <= 0)
         {
@@ -50,8 +57,9 @@ public static class VehicleRepair
 
         // Repair vehicle
         vehicle.RepairParts(1000, percent);
-        ModLogger.DebugLog($"{d_MethodName} - Repaired {vehicle}");
-
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: Repaired {vehicle}");
+#endif
         // show stack removed on UI
         playerUi.xui.CollectedItemList.RemoveItemStack(new ItemStack(itemValue, 1));
 

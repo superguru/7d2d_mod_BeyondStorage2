@@ -26,7 +26,7 @@ internal static class PurgeBadDrones
 
         var player = worldContext.Player;
         var owned = player.ownedEntities.Where(o => o != null && o.ClassId != -1 && EntityClass.list[o.ClassId].entityClassName == "entityJunkDrone").ToList();
-        ModLogger.DebugLog($"{d_MethodName} found player owned drone entities {owned.Count()}");
+        ModLogger.DebugLog($"{d_MethodName}: found player owned drone entities {owned.Count()}");
         int dronesRemoved = 0;
         foreach (var drone in owned)
         {
@@ -38,7 +38,7 @@ internal static class PurgeBadDrones
                 continue;
             }
 
-            ModLogger.DebugLog($"{d_MethodName} removing bad drone entityId={entityId}");
+            ModLogger.DebugLog($"{d_MethodName}: removing bad drone entityId={entityId}");
             DeleteEntityById(entityId);
 
             player.ownedEntities.Remove(drone);
@@ -48,7 +48,7 @@ internal static class PurgeBadDrones
                 data.belongsPlayerId = 0;
             }
 
-            ModLogger.DebugLog($"{d_MethodName} removed bad drone {++dronesRemoved}, entityId={entityId}");
+            ModLogger.DebugLog($"{d_MethodName}: removed bad drone {++dronesRemoved}, entityId={entityId}");
         }
 
         if (dronesRemoved > 0)

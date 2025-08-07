@@ -19,13 +19,13 @@ public static class StorageQueryService
     {
         if (context == null)
         {
-            ModLogger.Error($"{methodName} | Context is null");
+            ModLogger.Error($"{methodName}: Context is null");
             return false;
         }
 
         if (filter == null)
         {
-            ModLogger.Error($"{methodName} | Filter is null");
+            ModLogger.Error($"{methodName}: Filter is null");
             return false;
         }
 
@@ -38,7 +38,7 @@ public static class StorageQueryService
 
         if (filterItem == null)
         {
-            ModLogger.Error($"{d_MethodName} | filterItem is null");
+            ModLogger.Error($"{d_MethodName}: filterItem is null");
             return 0;
         }
 
@@ -62,7 +62,7 @@ public static class StorageQueryService
 
         if (filterItem == null)
         {
-            ModLogger.Error($"{d_MethodName} | filterItem is null");
+            ModLogger.Error($"{d_MethodName}: filterItem is null");
             return false;
         }
 
@@ -90,13 +90,13 @@ public static class StorageQueryService
 
         if (!ValidateParameters(d_MethodName, context, filter))
         {
-            ModLogger.DebugLog($"{d_MethodName} | Validation failed, returning empty collection");
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning empty collection");
             return CollectionFactory.EmptyItemStackList;
         }
 
         var result = context.Sources.DataStore.GetItemStacksForFilter(filter);
 
-        //ModLogger.DebugLog($"{d_MethodName} | Returning {result.Count} item stacks with filter: {filter}");
+        //ModLogger.DebugLog($"{d_MethodName}: Returning {result.Count} item stacks with filter: {filter}");
         return result;
     }
 }

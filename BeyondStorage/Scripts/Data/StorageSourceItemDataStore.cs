@@ -71,7 +71,7 @@ internal class StorageSourceItemDataStore
 
         if (source == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}(NULL) | Null storage source supplied");
+            ModLogger.DebugLog($"{d_MethodName}(NULL): Null storage source supplied");
             return;
         }
 
@@ -81,14 +81,14 @@ internal class StorageSourceItemDataStore
         var isAllowedSource = IsAllowedSource(sourceType);
         if (!isAllowedSource)
         {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Source type {sourceType.Name} not allowed, skipping");
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}): Source type {sourceType.Name} not allowed, skipping");
             return;
         }
 
         ItemStack[] stacks = source.GetItemStacks();
         if (stacks == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Null stacks supplied for source {source}");
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}): Null stacks supplied for source {source}");
             return;
         }
 
@@ -129,11 +129,11 @@ internal class StorageSourceItemDataStore
             // Log the duplicate registration attempt
             if (existingStorageSource.Equals(source))
             {
-                ModLogger.DebugLog($"{d_MethodName} | ItemStack '{itemName}' is already associated with this {sourceTypeName} source");
+                ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with this {sourceTypeName} source");
             }
             else
             {
-                ModLogger.DebugLog($"{d_MethodName} | ItemStack '{itemName}' is already associated with a different source");
+                ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with a different source");
             }
 
             return false; // Stack was not added (duplicate)

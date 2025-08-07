@@ -78,7 +78,7 @@ public sealed class ExpiringDictionaryCache<TKey, TValue>
     public void InvalidateCache()
     {
         _cache.Clear();
-        ModLogger.DebugLog($"{_cacheTypeName} cache invalidated");
+        ModLogger.DebugLog($"{_cacheTypeName}: cache invalidated");
     }
 
     /// <summary>

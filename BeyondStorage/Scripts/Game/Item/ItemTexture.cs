@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 using UnityEngine;
@@ -32,26 +31,29 @@ public class ItemTexture
     {
         const string d_MethodName = nameof(ItemTexture_checkAmmo);
 
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Starting");
-#endif
-        // Paint cost is 1 for everything in v2.x
-        if (entityAvailableCount > 0)
+        if (ammoType == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: Entity has available count {entityAvailableCount}, no need to check ammo");
-            return true;
+            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning false");
+            return false;
         }
 
-        if (!ModConfig.EnableForBlockTexture())
+        var context = StorageContextFactory.Create(d_MethodName);
+
+        if (!context.Config.EnableForBlockTexture)
         {
             return false;
         }
 
-        // Use StorageContext directly for efficient checking
-        var storageContext = StorageContextFactory.Create(d_MethodName);
-        var hasAmmo = storageContext?.HasItem(ammoType) ?? false;
+        // Paint cost is 1 for everything in v2.x
+        if (entityAvailableCount > 0)
+        {
+            return true;
+        }
 
-        ModLogger.DebugLog($"{d_MethodName}: StorageContext is {storageContext != null}, hasAmmo is {hasAmmo} for ammoType {ammoType?.ItemClass?.Name}");
+        var hasAmmo = context.HasItem(ammoType);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: hasAmmo is {hasAmmo} for ammoType {ammoType.ItemClass.Name}");
+#endif
         return hasAmmo;
     }
 
@@ -59,23 +61,32 @@ public class ItemTexture
     {
         const string d_MethodName = nameof(ItemTexture_GetAmmoCount);
 
+        if (ammoType == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning entityAvailableCount {entityAvailableCount}");
+            return entityAvailableCount;
+        }
+
         if (entityAvailableCount < 0)
         {
             entityAvailableCount = 0;
         }
 
+        var context = StorageContextFactory.Create(d_MethodName);
+
         // Check if feature is enabled
-        if (!ModConfig.EnableForBlockTexture())
+        if (!context.Config.EnableForBlockTexture)
         {
             return entityAvailableCount;
         }
 
         // Use StorageContext directly for efficient item counting
-        var storageContext = StorageContextFactory.Create(d_MethodName);
-        var storageCount = storageContext?.GetItemCount(ammoType) ?? 0;
+        var storageCount = context.GetItemCount(ammoType);
         var totalAvailableCount = storageCount + entityAvailableCount;
 
-        ModLogger.DebugLog($"{d_MethodName}: StorageContext is {storageContext != null}, storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: storageCount {storageCount}, entityAvailableCount {entityAvailableCount}, total {totalAvailableCount}");
+#endif
         return totalAvailableCount;
     }
 
@@ -89,14 +100,20 @@ public class ItemTexture
             return paintCost;
         }
 
-        if (!ModConfig.EnableForBlockTexture())
+        if (ammoType == null)
+        {
+            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning 0");
+            return 0;
+        }
+
+        var context = StorageContextFactory.Create(d_MethodName);
+
+        if (!context.Config.EnableForBlockTexture)
         {
             return paintCost;
         }
 
-        // Use StorageContext directly for efficient removal operations
-        var storageContext = StorageContextFactory.Create(d_MethodName);
-        var removedFromStorage = storageContext?.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems) ?? 0;
+        var removedFromStorage = context.RemoveRemaining(ammoType, paintCost, _ignoreModdedItems, _removedItems);
         var stillNeeded = paintCost - removedFromStorage;
 
         // Invalidate paint caches if needed
@@ -105,8 +122,9 @@ public class ItemTexture
             s_paintRemovals.TryGetValue(ammoType.type, out var current);
             s_paintRemovals[ammoType.type] = current + removedFromStorage;
         }
-
-        ModLogger.DebugLog($"{d_MethodName}: StorageContext is {storageContext != null}, ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: ammoType {ammoType?.ItemClass?.Name}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
+#endif
         return removedFromStorage;
     }
 
@@ -130,7 +148,9 @@ public class ItemTexture
         if (s_activeOperations.TryGetValue(operationId, out var context) && context.IsCountingPhase)
         {
             context.TotalPaintRequired++;
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {context.TotalPaintRequired} for operation {operationId}");
+#endif
             return true; // Always return true during counting
         }
 

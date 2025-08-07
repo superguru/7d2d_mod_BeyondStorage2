@@ -72,6 +72,13 @@ class CodeQualityChecker:
             "NotImplementedException found - should be properly implemented"
         )
         
+        self.add_forbidden_string_check(
+            "name} ",
+            "error",
+            "BCS004",
+            "Logging format violation 'name} ' found - check for malformed interpolation"
+        )
+        
         # Add some warning-level string checks
         self.add_forbidden_string_check(
             "Console.WriteLine",
@@ -129,7 +136,8 @@ class CodeQualityChecker:
         """Check for strings that should not exist in the code"""
         issues = []
         lines = content.split('\n')
-        
+
+        # Should always be a case-sensitive check
         for forbidden_string, (severity, code, description) in self.forbidden_strings.items():
             for line_num, line in enumerate(lines, 1):
                 if forbidden_string in line:
@@ -422,7 +430,7 @@ class CodeQualityChecker:
                 
             if in_loop and '{' in line:
                 continue
-                
+            
             if in_loop and '}' in line:
                 in_loop = False
                 continue

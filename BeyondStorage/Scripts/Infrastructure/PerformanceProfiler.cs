@@ -268,7 +268,7 @@ public sealed class PerformanceProfiler(string trackerName)
                 stats.Add($"{method}: {callCount} calls, avg {avgDisplay}, total {totalDisplay}");
             }
 
-            return $"{_trackerName} Stats: [{string.Join(", ", stats)}]";
+            return $"{_trackerName}_Stats: [{string.Join(", ", stats)}]";
         }
     }
 

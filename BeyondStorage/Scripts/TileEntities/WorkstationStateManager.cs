@@ -17,7 +17,7 @@ public static class WorkstationStateManager
         }
 
         const string d_method_name = "MarkModifiedWorkstationFunc";
-        ModLogger.DebugLog($"{d_method_name} | Marking Workstation '{workstation?.GetType().Name}' as modified");
+        ModLogger.DebugLog($"{d_method_name}: Marking Workstation '{workstation?.GetType().Name}' as modified");
 
         if (workstation == null)
         {
