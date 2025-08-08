@@ -6,10 +6,10 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-* As of v2.1.0, items can be pulled from nearby Workstations (configurable).
-* As of v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
-* As of v2.1.4, final version to support 7D2D 2.1
-* As of v2.2.0, only support 7D2D 2.x and later, pull from drones, paint from all storages, supports slot locking for containers
+* In v2.1.0, items can be pulled from nearby Workstations (configurable).
+* In v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
+* In v2.1.4, final version to support 7D2D 2.1
+* In v2.2.0, only support 7D2D 2.x and later, pull from drones, paint from all storages, supports slot locking for containers
 * In v2.2.3, add ability to keep track of available ammo from all pullable sources
 
 #### Pull Order:
