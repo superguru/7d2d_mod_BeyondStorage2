@@ -1,6 +1,7 @@
 ﻿using System.Linq;
-using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Storage;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Item;
@@ -8,7 +9,6 @@ namespace BeyondStorage.HarmonyPatches.Item;
 [HarmonyPatch(typeof(XUiC_ItemActionList))]
 public class XUiCItemActionListPatches
 {
-    // TODO: Possibly use this instead of IngredientList patch for item craft?
     // Used For:
     //      Item Repair (tracks item action list visibility)
     [HarmonyPostfix]
@@ -33,7 +33,6 @@ public class XUiCItemActionListPatches
         ActionList_UpdateVisibleActions(__instance);
     }
 
-    // TODO: This one may not be needed
     // Used For:
     //      Item Repair (captures if item actions list contains repairing)
     [HarmonyPostfix]
@@ -45,13 +44,22 @@ public class XUiCItemActionListPatches
 
     private static void ActionList_UpdateVisibleActions(XUiC_ItemActionList itemActionList)
     {
-        //TODO: Add var context = StorageContextFactory.Create(d_MethodName); for these types of methods
-        if (!ModConfig.EnableForItemRepair())
-        {
-            return;
-        }
+        const string d_MethodName = nameof(ActionList_UpdateVisibleActions);
 
-        ItemRepair.RepairActionShown = ActionList_HasRepair(itemActionList);
+        var context = StorageContextFactory.Create(d_MethodName);
+        if (context != null)
+        {
+            if (!context.Config.EnableForItemRepair)
+            {
+                return;
+            }
+
+            ItemRepair.RepairActionShown = ActionList_HasRepair(itemActionList);
+        }
+        else
+        {
+            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
+        }
     }
 
     // Check if the list of actions contains Repair
