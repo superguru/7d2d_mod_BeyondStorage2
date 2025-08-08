@@ -13,7 +13,7 @@ public static class Ranged
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning false");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning false");
             return false;
         }
 
@@ -41,7 +41,7 @@ public static class Ranged
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning 0");
             return 0;
         }
 
@@ -60,7 +60,7 @@ public static class Ranged
 
         if (ammoType == null)
         {
-            ModLogger.Warning($"{d_MethodName}: ammoType is null or empty, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: ammoType is null or empty, returning 0");
             return 0;
         }
 

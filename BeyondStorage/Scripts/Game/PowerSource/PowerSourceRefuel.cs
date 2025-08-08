@@ -12,7 +12,7 @@ public static class PowerSourceRefuel
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning lastRemoved {lastRemoved}");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning lastRemoved {lastRemoved}");
             return lastRemoved;
         }
 

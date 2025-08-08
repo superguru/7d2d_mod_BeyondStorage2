@@ -11,7 +11,7 @@ public static class VehicleRefuel
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning lastRemovedCount {lastRemovedCount}");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning lastRemovedCount {lastRemovedCount}");
             return lastRemovedCount;
         }
 
@@ -51,7 +51,7 @@ public static class VehicleRefuel
 
         if (vehicle == null)
         {
-            ModLogger.Warning($"{d_MethodName}: vehicle is null, returning alreadyHasItem {alreadyHasItem}");
+            ModLogger.DebugLog($"{d_MethodName}: vehicle is null, returning alreadyHasItem {alreadyHasItem}");
             return alreadyHasItem;
         }
 

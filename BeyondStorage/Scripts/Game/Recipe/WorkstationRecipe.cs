@@ -177,7 +177,7 @@ public static class WorkstationRecipe
 
                 if (!hasCraftingWindow)
                 {
-                    ModLogger.Warning($"{d_MethodName}: No crafting window found for workstation {workstation} in call {callCount}");
+                    ModLogger.DebugLog($"{d_MethodName}: No crafting window found for workstation {workstation} in call {callCount}");
                     continue; // No crafting window means no recipes to check
                 }
 

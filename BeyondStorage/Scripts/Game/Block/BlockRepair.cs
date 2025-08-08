@@ -14,7 +14,7 @@ public class BlockRepair
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{itemValue}: itemStack is null, returning 0");
+            ModLogger.DebugLog($"{itemValue}: itemStack is null, returning 0");
             return 0;
         }
 
@@ -43,7 +43,7 @@ public class BlockRepair
 
         if (itemStack == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemStack is null, returning currentCount {currentCount}");
+            ModLogger.DebugLog($"{d_MethodName}: itemStack is null, returning currentCount {currentCount}");
             return currentCount;
         }
 

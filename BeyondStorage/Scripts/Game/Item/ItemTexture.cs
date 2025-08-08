@@ -33,7 +33,7 @@ public class ItemTexture
 
         if (ammoType == null)
         {
-            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning false");
+            ModLogger.DebugLog($"{d_MethodName}: ammoType is null, returning false");
             return false;
         }
 
@@ -63,7 +63,7 @@ public class ItemTexture
 
         if (ammoType == null)
         {
-            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning entityAvailableCount {entityAvailableCount}");
+            ModLogger.DebugLog($"{d_MethodName}: ammoType is null, returning entityAvailableCount {entityAvailableCount}");
             return entityAvailableCount;
         }
 
@@ -102,7 +102,7 @@ public class ItemTexture
 
         if (ammoType == null)
         {
-            ModLogger.Warning($"{d_MethodName}: ammoType is null, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: ammoType is null, returning 0");
             return 0;
         }
 

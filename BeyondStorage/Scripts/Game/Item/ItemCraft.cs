@@ -17,7 +17,7 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            ModLogger.Warning($"{d_MethodName}: called with null items");
+            ModLogger.DebugLog($"{d_MethodName}: called with null items");
             return stacks;  // We're not fixing the caller's mistakes
         }
 
@@ -53,7 +53,7 @@ public class ItemCraft
         if (stacks == null)
         {
             // Looks like there can be ghost containers, just like there can be those trees that are visible but not interactable after chopping them down
-            ModLogger.Warning($"{d_MethodName}: called with null items");
+            ModLogger.DebugLog($"{d_MethodName}: called with null items");
             return;
         }
 
@@ -88,7 +88,7 @@ public class ItemCraft
 
         if (entry == null)
         {
-            ModLogger.Warning($"{d_MethodName}: ingredient entry is null, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: ingredient entry is null, returning 0");
             return 0;
         }
 

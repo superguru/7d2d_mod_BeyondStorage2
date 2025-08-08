@@ -17,7 +17,7 @@ public static class ItemCommon
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning originalResult {originalResult}");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning originalResult {originalResult}");
             return originalResult;
         }
 

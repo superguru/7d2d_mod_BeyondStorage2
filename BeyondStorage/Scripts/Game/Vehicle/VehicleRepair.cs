@@ -12,7 +12,7 @@ public static class VehicleRepair
 
         if (itemValue == null)
         {
-            ModLogger.Warning($"{d_MethodName}: itemValue is null, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning 0");
             return 0;
         }
 
