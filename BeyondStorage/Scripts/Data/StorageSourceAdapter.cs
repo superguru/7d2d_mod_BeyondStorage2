@@ -29,28 +29,28 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         if (storageSource == null)
         {
             var error = $"{d_MethodName}: {nameof(storageSource)} cannot be null";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(storageSource), error);
         }
 
         if (equalsFunc == null)
         {
             var error = $"{d_MethodName}: {nameof(equalsFunc)} cannot be null";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(equalsFunc), error);
         }
 
         if (getItemStacksFunc == null)
         {
             var error = $"{d_MethodName}: {nameof(getItemStacksFunc)} cannot be null";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(getItemStacksFunc), error);
         }
 
         if (markModifiedAction == null)
         {
             var error = $"{d_MethodName}: {nameof(markModifiedAction)} cannot be null";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(markModifiedAction), error);
         }
 

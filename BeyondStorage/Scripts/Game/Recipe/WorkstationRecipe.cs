@@ -124,7 +124,7 @@ public static class WorkstationRecipe
             var worldPlayerContext = WorldPlayerContext.TryCreate(d_MethodName);
             if (worldPlayerContext == null)
             {
-                ModLogger.Error($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}.");
+                ModLogger.DebugLog($"{d_MethodName}: Failed to create WorldPlayerContext in call {callCount}.");
                 return;
             }
 
@@ -132,7 +132,7 @@ public static class WorkstationRecipe
             var xui = player.PlayerUI.xui;
             if (xui == null)
             {
-                ModLogger.Error($"{d_MethodName}: xui is null in call {callCount}");
+                ModLogger.DebugLog($"{d_MethodName}: xui is null in call {callCount}");
                 return;
             }
 

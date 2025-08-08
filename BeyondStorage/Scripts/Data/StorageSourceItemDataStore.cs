@@ -21,7 +21,7 @@ internal class StorageSourceItemDataStore
         if (allowedSources == null)
         {
             var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(allowedSources)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(allowedSources), error);
         }
 

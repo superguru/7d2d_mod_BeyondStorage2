@@ -19,7 +19,7 @@ internal sealed class AllowedSourcesSnapshot
         if (config == null)
         {
             var error = $"{nameof(AllowedSourcesSnapshot)}: {nameof(config)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
 
             throw new ArgumentNullException(nameof(config), error);
         }

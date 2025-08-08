@@ -49,7 +49,6 @@ public static class StorageItemRemovalService
 
             if (sourceType == null)
             {
-                ModLogger.Error($"{d_MethodName}: Skipping null source type");
                 continue;
             }
 
@@ -70,7 +69,6 @@ public static class StorageItemRemovalService
                 var source = sourcesByType[iSource];
                 if (source == null)
                 {
-                    ModLogger.Error($"{d_MethodName}: Skipping null source at index {iSource} for type {fullSourceTypeName}");
                     continue;
                 }
 
@@ -152,7 +150,7 @@ public static class StorageItemRemovalService
 #if DEBUG
         if (stillNeeded < 0)
         {
-            ModLogger.Error($"{methodName}: stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
+            ModLogger.DebugLog($"{methodName}: stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
             stillNeeded = 0;
         }
 #endif

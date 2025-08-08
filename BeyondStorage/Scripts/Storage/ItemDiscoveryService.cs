@@ -38,7 +38,7 @@ public static class ItemDiscoveryService
     {
         if (context == null)
         {
-            ModLogger.Error($"{methodName}: context is null");
+            ModLogger.DebugLog($"{methodName}: context is null");
             return false;
         }
 

@@ -38,14 +38,14 @@ public static class StorageContextFactory
             var worldPlayerContext = WorldPlayerContext.TryCreate(methodName);
             if (worldPlayerContext == null)
             {
-                ModLogger.Error($"{methodName}: Failed to create WorldPlayerContext, aborting context creation.");
+                ModLogger.DebugLog($"{methodName}: Failed to create WorldPlayerContext, aborting context creation.");
                 return null;
             }
 
             var config = ConfigSnapshot.Current;
             if (config == null)
             {
-                ModLogger.Error($"{methodName}: ConfigSnapshot.Current is null, aborting context creation.");
+                ModLogger.DebugLog($"{methodName}: ConfigSnapshot.Current is null, aborting context creation.");
                 return null;
             }
 
@@ -60,7 +60,7 @@ public static class StorageContextFactory
         }
         catch (Exception ex)
         {
-            ModLogger.Error($"{methodName}: Exception creating StorageContext: {ex}", ex);
+            ModLogger.DebugLog($"{methodName}: Exception creating StorageContext: {ex}", ex);
             return null;
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BeyondStorage.Scripts.Infrastructure;
 
@@ -26,18 +25,18 @@ internal class FilterStacksStore
     {
         const string d_MethodName = nameof(AddStackRangeForFilter);
 
-        if (filter == null)
-        {
-            var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
-        }
-
         if (stacks == null)
         {
             var error = $"{d_MethodName}: {nameof(stacks)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(stacks), error);
+            ModLogger.DebugLog(error);
+            return [];
+        }
+
+        if (filter == null)
+        {
+            var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
+            ModLogger.DebugLog(error);
+            return stacks;
         }
 
         var current = GetStacksForFilter(filter);
@@ -57,15 +56,15 @@ internal class FilterStacksStore
         if (stack == null)
         {
             var error = $"{d_MethodName}: {nameof(stack)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(stack), error);
+            ModLogger.DebugLog(error);
+            return [];
         }
 
         if (filter == null)
         {
             var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
+            ModLogger.DebugLog(error);
+            return [];
         }
 
         var current = GetStacksForFilter(filter);
@@ -81,23 +80,15 @@ internal class FilterStacksStore
         if (stack == null)
         {
             var error = $"{d_MethodName}: {nameof(stack)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(stack), error);
+            ModLogger.DebugLog(error);
+            return [];
         }
 
-        try
-        {
-            // Create or get the specific item type filter for this stack
-            var filter = _uniqueItemTypeCache.GetOrCreateFilter(stack);
+        // Create or get the specific item type filter for this stack
+        var filter = _uniqueItemTypeCache.GetOrCreateFilter(stack);
 
-            var current = AddStackForFilter(filter, stack);
-            return current;
-        }
-        catch (Exception ex)
-        {
-            ModLogger.Error($"{d_MethodName}: Failed to create filter for stack: {ex.Message}", ex);
-            throw;
-        }
+        var current = AddStackForFilter(filter, stack);
+        return current;
     }
 
     public List<ItemStack> GetStacksForFilter(UniqueItemTypes filter)
@@ -107,8 +98,8 @@ internal class FilterStacksStore
         if (filter == null)
         {
             var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
+            ModLogger.DebugLog(error);
+            return [];
         }
 
         // Always ensure the requested filter has a value
@@ -149,18 +140,18 @@ internal class FilterStacksStore
     {
         const string d_MethodName = nameof(SetStacksForFilter);
 
-        if (filter == null)
-        {
-            var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
-        }
-
         if (stacks == null)
         {
             var error = $"{d_MethodName}: {nameof(stacks)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(stacks), error);
+            ModLogger.DebugLog(error);
+            return [];
+        }
+
+        if (filter == null)
+        {
+            var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
+            ModLogger.DebugLog(error);
+            return stacks;
         }
 
         var existed = _itemLists.ContainsKey(filter);
@@ -176,8 +167,8 @@ internal class FilterStacksStore
         if (filter == null)
         {
             var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
+            ModLogger.DebugLog(error);
+            return;
         }
 
         var wasRemoved = _itemLists.Remove(filter);
@@ -203,8 +194,9 @@ internal class FilterStacksStore
         if (filter == null)
         {
             var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
+            ModLogger.DebugLog(error);
+            stacks = [];
+            return false;
         }
 
         var exists = _itemLists.TryGetValue(filter, out stacks);
@@ -252,8 +244,8 @@ internal class FilterStacksStore
         if (filter == null)
         {
             var error = $"{d_MethodName}: {nameof(filter)} cannot be null.";
-            ModLogger.Error(error);
-            throw new ArgumentNullException(nameof(filter), error);
+            ModLogger.DebugLog(error);
+            return [];
         }
 
         if (!_itemLists.ContainsKey(filter))

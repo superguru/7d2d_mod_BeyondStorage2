@@ -57,7 +57,7 @@ public static class ItemCommon
         }
         else
         {
-            ModLogger.Error($"{d_MethodName}: called with null xui");
+            ModLogger.DebugLog($"{d_MethodName}: called with null xui");
         }
 
         ItemCraft.ItemCraft_AddPullableSourceStorageStacks(result);

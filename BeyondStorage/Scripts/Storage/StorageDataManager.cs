@@ -33,15 +33,16 @@ public class StorageDataManager
     public Action<ITileEntityLootable> MarkModifiedLootableFunc = (lootable) => LootableItemHandler.MarkLootableModified(lootable);
 
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityVehicle, ItemStack[]> GetItemsVehicleFunc = (vehicle) => vehicle.bag.items;
-    public Action<EntityVehicle> MarkModifiedVehicleFunc = (vehicle) => vehicle.SetBagModified();
+    public readonly Func<EntityVehicle, ItemStack[]> GetItemsVehicleFunc = vehicle => LootableItemHandler.GetLootableItems(vehicle);
+    public Action<EntityVehicle> MarkModifiedVehicleFunc = vehicle => LootableItemHandler.MarkLootableModified(vehicle);
 
     internal StorageDataManager(StorageSourceItemDataStore dataStore)
     {
         if (dataStore == null)
         {
             var error = $"{nameof(StorageDataManager)}: {nameof(dataStore)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
+            throw new ArgumentException(error, nameof(dataStore));
         }
 
         _dataStore = dataStore;

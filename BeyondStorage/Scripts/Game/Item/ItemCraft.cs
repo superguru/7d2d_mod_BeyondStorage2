@@ -37,7 +37,7 @@ public class ItemCraft
         }
         else
         {
-            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
+            ModLogger.DebugLog($"{d_MethodName}: Failed to create StorageContext");
         }
 
         return stacks;
@@ -75,7 +75,7 @@ public class ItemCraft
         }
         else
         {
-            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
+            ModLogger.DebugLog($"{d_MethodName}: Failed to create StorageContext");
         }
     }
 

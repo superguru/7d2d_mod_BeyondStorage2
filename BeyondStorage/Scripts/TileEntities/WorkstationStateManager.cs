@@ -21,7 +21,7 @@ public static class WorkstationStateManager
 
         if (workstation == null)
         {
-            ModLogger.Error($"{d_method_name}: workstation is null");
+            ModLogger.DebugLog($"{d_method_name}: workstation is null");
             return;
         }
 
@@ -32,7 +32,7 @@ public static class WorkstationStateManager
         var workstationData = CraftingManager.GetWorkstationData(blockName);
         if (workstationData == null)
         {
-            ModLogger.Error($"{d_method_name}: No WorkstationData found for block '{blockName}'");
+            ModLogger.DebugLog($"{d_method_name}: No WorkstationData found for block '{blockName}'");
             return;
         }
 
@@ -65,7 +65,7 @@ public static class WorkstationStateManager
 
         if (workstationWindowGroup.WorkstationData == null)
         {
-            ModLogger.Error($"{d_method_name}: WorkstationData is null for '{windowName}'");
+            ModLogger.DebugLog($"{d_method_name}: WorkstationData is null for '{windowName}'");
             return;
         }
 

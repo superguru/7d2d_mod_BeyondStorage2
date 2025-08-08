@@ -19,13 +19,13 @@ public static class StorageQueryService
     {
         if (context == null)
         {
-            ModLogger.Error($"{methodName}: Context is null");
+            ModLogger.DebugLog($"{methodName}: Context is null");
             return false;
         }
 
         if (filter == null)
         {
-            ModLogger.Error($"{methodName}: Filter is null");
+            ModLogger.DebugLog($"{methodName}: Filter is null");
             return false;
         }
 
@@ -38,7 +38,7 @@ public static class StorageQueryService
 
         if (filterItem == null)
         {
-            ModLogger.Error($"{d_MethodName}: filterItem is null");
+            ModLogger.DebugLog($"{d_MethodName}: filterItem is null");
             return 0;
         }
 
@@ -62,7 +62,7 @@ public static class StorageQueryService
 
         if (filterItem == null)
         {
-            ModLogger.Error($"{d_MethodName}: filterItem is null");
+            ModLogger.DebugLog($"{d_MethodName}: filterItem is null");
             return false;
         }
 

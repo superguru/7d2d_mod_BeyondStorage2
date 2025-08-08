@@ -12,166 +12,172 @@ public static class ServerUtils
 
     public static void PlayerSpawnedInWorld(ref SPlayerSpawnedInWorldData data)
     {
-        // Skip if we're not a server
-        if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
-        {
-            return;
-        }
-        // Skip if single player
-        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer)
+        if (!ShouldProcessPlayerSpawn(data))
         {
             return;
         }
 
         ModLogger.DebugLog($"client {data.ClientInfo}; isLocalPlayer {data.IsLocalPlayer}; entityId {data.EntityId}; respawn type {data.RespawnType}; pos {data.Position}");
 
-        if (data.ClientInfo == null)
-        {
-            return;
-        }
-        // Send the current locked dictionary to player logging in
         SendCurrentLockedDict(data.ClientInfo);
+
         if (ModConfig.ServerSyncConfig())
         {
             data.ClientInfo.SendPackage(NetPackageManager.GetPackage<NetPackageBeyondStorageConfig>());
         }
     }
 
+    private static bool ShouldProcessPlayerSpawn(SPlayerSpawnedInWorldData data)
+    {
+        var connectionManager = SingletonMonoBehaviour<ConnectionManager>.Instance;
+
+        // Add null check
+        if (connectionManager == null)
+        {
+            return false;
+        }
+
+        return connectionManager.IsServer &&
+               !connectionManager.IsSinglePlayer &&
+               data.ClientInfo != null;
+    }
+
     private static void SendCurrentLockedDict(ClientInfo client)
     {
-        // Skip if we have nothing to send
-        if (TileEntityLockManager.LockedTileEntities.IsEmpty)
+        if (TileEntityLockManager.LockedTileEntities.IsEmpty || !IsValidDestination(client.entityId))
         {
             return;
         }
 
-        var destinationId = client.entityId;
+        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
+        client.SendPackage(NetPackageManager.GetPackage<NetPackageLockedTEs>().Setup(currentCopy));
+
+#if DEBUG
+        ModLogger.DebugLog($"SendCurrentLockedDict to {client.entityId}");
+#endif
+    }
+
+    private static bool IsValidDestination(int destinationId)
+    {
 #if DEBUG
         ModLogger.DebugLog($"PlayerSpawnedInWorld called with {destinationId}");
-        // skip if invalid entity ID or if we are the server just logging in
         if (destinationId == -1)
         {
             ModLogger.Error("PlayerSpawnedInWorld called without a valid entity id");
-            return;
+            return false;
         }
 
         if (!GameManager.IsDedicatedServer && destinationId == GameManager.Instance.myEntityPlayerLocal.entityId)
         {
             ModLogger.DebugLog("Skipping local player starting server");
-            return;
+            return false;
         }
+        return true;
 #else
-        // skip if invalid entity ID
         if (destinationId == -1)
         {
-            return;
+            return false;
         }
-        // skip local entity test if we're a dedicated server
-        if (!GameManager.IsDedicatedServer)
-        {
-            // skip entity is the server-client first starting the server (logging in)
-            if (destinationId == GameManager.Instance.myEntityPlayerLocal.entityId)
-            {
-                return;
-            }
-        }
-#endif 
-        // send current locked entities to newly logging in player
-        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
-        client.SendPackage(NetPackageManager.GetPackage<NetPackageLockedTEs>().Setup(currentCopy));
-        // SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(currentCopy), true, destinationId);
-#if DEBUG
-        ModLogger.DebugLog($"SendCurrentLockedDict to {destinationId}");
+
+        return GameManager.IsDedicatedServer ||
+               destinationId != GameManager.Instance.myEntityPlayerLocal.entityId;
 #endif
     }
 
     public static void LockedTEsUpdate()
     {
         var newLockedDict = GameManager.Instance.lockedTileEntities;
-        var newDictCount = newLockedDict.Count;
+        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
 
-        // Skip if it was 0 and still is (before filtering)
-        if (TileEntityLockManager.LockedTileEntities.Count == 0 && newDictCount == 0)
+        if (ShouldSkipUpdate(newLockedDict.Count, currentCopy.Count))
         {
             return;
         }
 
-        // TODO: investigate possible performance hit, if large consider moving to update every X delta?
-        //          concurrent checking looks to take 1-8 ms for small dictionaries
-        Dictionary<Vector3i, int> tempDict = new();
-        var currentCopy = new Dictionary<Vector3i, int>(TileEntityLockManager.LockedTileEntities);
-        var currentCount = currentCopy.Count;
+        var (filteredDict, hasChanges) = ProcessLockedEntities(newLockedDict, currentCopy);
+
+        if (!hasChanges && filteredDict.Count == currentCopy.Count)
+        {
+            return;
+        }
+
+        BroadcastLockedEntitiesUpdate(filteredDict);
+    }
+
+    private static bool ShouldSkipUpdate(int newCount, int currentCount)
+    {
+        return currentCount == 0 && newCount == 0;
+    }
+
+    private static (Dictionary<Vector3i, int> filteredDict, bool hasChanges) ProcessLockedEntities(
+        IDictionary<ITileEntity, int> newLockedDict,
+        Dictionary<Vector3i, int> currentCopy)
+    {
+        var tempDict = new Dictionary<Vector3i, int>();
         var foundChange = false;
 
-        // ClearStacksForFilter anything not player storage
         foreach (var kvp in newLockedDict)
         {
-            Vector3i tePos;
-
-            if (kvp.Key.TryGetSelfOrFeature(out ITileEntityLootable tileEntityLootable))
+            if (!TryGetTileEntityPosition(kvp.Key, out var tePos))
             {
-                // Handle lootable TEs
-                if (!tileEntityLootable.bPlayerStorage)
-                {
-                    continue;
-                }
-
-                tePos = tileEntityLootable.ToWorldPos();
-            }
-            else if (kvp.Key is TileEntityDewCollector dewCollector)
-            {
-                // Handle dew collector TEs
-                tePos = dewCollector.ToWorldPos();
-            }
-            else if (kvp.Key is TileEntityWorkstation workstation)
-            {
-                // Handle workstation TEs
-                tePos = workstation.ToWorldPos();
-            }
-            else
-            {
-                // Some other TE, which we are not handling
                 continue;
             }
 
-            // AddStackRangeForFilter current entry to our new dict for clients
             tempDict.Add(tePos, kvp.Value);
 
-            // Skip if we already know things have changes
-            if (foundChange)
+            if (!foundChange)
             {
-                continue;
-            }
-
-            if (currentCopy.TryGetValue(tePos, out var currentValue))
-            {
-                if (currentValue != kvp.Value)
-                {
-                    foundChange = true; // previous value of key changed
-                }
-            }
-            else
-            {
-                // new key found mark as changed
-                foundChange = true;
+                foundChange = HasPositionChanged(currentCopy, tePos, kvp.Value);
             }
         }
 
-        // capture our new count
-        var newCount = tempDict.Count;
+        return (tempDict, foundChange);
+    }
 
-        // skip if we didn't find any change and the lengths are the same
-        if (!foundChange && newCount == currentCount)
+    private static bool TryGetTileEntityPosition(ITileEntity tileEntity, out Vector3i position)
+    {
+        position = default;
+
+        if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
         {
-            return;
+            if (!lootable.bPlayerStorage)
+            {
+                return false;
+            }
+            position = lootable.ToWorldPos();
+            return true;
         }
-#if DEBUG
-        ModLogger.DebugLog($"Original: {newLockedDict.Count}; Filter: {newCount}");
-#endif
-        // Remove clients with filtered list
-        SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(tempDict));
 
-        // Remove our own list as well
-        TileEntityLockManager.UpdateLockedTEs(tempDict);
+        switch (tileEntity)
+        {
+            case TileEntityDewCollector dewCollector:
+                position = dewCollector.ToWorldPos();
+                return true;
+            case TileEntityWorkstation workstation:
+                position = workstation.ToWorldPos();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool HasPositionChanged(Dictionary<Vector3i, int> currentCopy, Vector3i position, int newValue)
+    {
+        return !currentCopy.TryGetValue(position, out var currentValue) || currentValue != newValue;
+    }
+
+    private static void BroadcastLockedEntitiesUpdate(Dictionary<Vector3i, int> filteredDict)
+    {
+#if DEBUG
+        ModLogger.DebugLog($"Original: {GameManager.Instance.lockedTileEntities.Count}; Filter: {filteredDict.Count}");
+#endif
+
+        // Use the original direct call pattern with null check
+        if (SingletonMonoBehaviour<ConnectionManager>.Instance != null)
+        {
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(filteredDict));
+        }
+
+        TileEntityLockManager.UpdateLockedTEs(filteredDict);
     }
 }

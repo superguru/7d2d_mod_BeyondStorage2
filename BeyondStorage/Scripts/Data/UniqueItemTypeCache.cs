@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
@@ -21,8 +20,8 @@ internal class UniqueItemTypeCache
         if (itemType <= UniqueItemTypes.EMPTY)
         {
             var error = $"{d_MethodName}: {nameof(stack)} is null or has an invalid item type.";
-            ModLogger.Error(error);
-            throw new ArgumentException(error, nameof(stack));
+            ModLogger.DebugLog(error);
+            return UniqueItemTypes.Unfiltered; // Return wildcard for invalid cases
         }
 
         var filter = GetOrCreateFilter(itemType);
@@ -36,8 +35,8 @@ internal class UniqueItemTypeCache
         if (itemType <= 0)
         {
             var error = $"{d_MethodName}: {nameof(itemType)} must be greater than zero, but received {itemType}";
-            ModLogger.Error(error);
-            throw new ArgumentOutOfRangeException(nameof(itemType), error);
+            ModLogger.DebugLog(error);
+            return UniqueItemTypes.Unfiltered; // Return wildcard for invalid cases
         }
 
         if (_filterCache.TryGetValue(itemType, out var filter))

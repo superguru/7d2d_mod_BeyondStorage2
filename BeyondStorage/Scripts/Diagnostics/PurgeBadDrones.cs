@@ -18,7 +18,7 @@ internal static class PurgeBadDrones
         var worldContext = WorldPlayerContext.TryCreate(d_MethodName);
         if (worldContext == null)
         {
-            ModLogger.Error($"{d_MethodName}: Failed to create WorldPlayerContext, cannot delete bad drones");
+            ModLogger.Warning($"{d_MethodName}: Failed to create WorldPlayerContext, cannot delete bad drones");
             return;
         }
 
@@ -72,7 +72,7 @@ internal static class PurgeBadDrones
             World world = GameManager.Instance.World;
             if (world == null)
             {
-                ModLogger.Error($"{d_MethodName}: World is null, cannot delete entity {entityId}");
+                ModLogger.Warning($"{d_MethodName}: World is null, cannot delete entity {entityId}");
                 return false;
             }
 
@@ -94,7 +94,7 @@ internal static class PurgeBadDrones
         }
         catch (Exception ex)
         {
-            ModLogger.Error($"{d_MethodName}: Failed to delete entity {entityId}: {ex.Message}", ex);
+            ModLogger.DebugLog($"{d_MethodName}: Failed to delete entity {entityId}: {ex.Message}", ex);
             return false;
         }
     }

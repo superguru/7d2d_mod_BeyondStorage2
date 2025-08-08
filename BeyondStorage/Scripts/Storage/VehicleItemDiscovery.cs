@@ -23,7 +23,7 @@ internal static class VehicleItemDiscovery
         var vehicles = VehicleManager.Instance?.vehiclesActive;
         if (vehicles == null)
         {
-            ModLogger.Error($"{d_MethodName}: VehicleManager returned null list, aborting.");
+            ModLogger.DebugLog($"{d_MethodName}: VehicleManager returned null list, aborting. This is a problem in the game itself, because VehicleManager should ALWAYS have a list of vehicles.");
             return;
         }
 
@@ -54,6 +54,7 @@ internal static class VehicleItemDiscovery
         {
             return 0;
         }
+
 
         var sources = context.Sources;
 

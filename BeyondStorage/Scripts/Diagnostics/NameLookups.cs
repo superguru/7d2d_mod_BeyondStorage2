@@ -45,7 +45,7 @@ internal static class NameLookups
         if (type == null)
         {
             var nullError = StackTraceProvider.AppendStackTrace("Cannot get the name of a null type.");
-            ModLogger.Error(nullError);
+            ModLogger.DebugLog(nullError);
             return s_unknownTypeNameInfo;
         }
 
@@ -61,7 +61,7 @@ internal static class NameLookups
         }
 
         var error = StackTraceProvider.AppendStackTrace($"Cannot lookup name of unknown type: ({type.Name})");
-        ModLogger.Error(error);
+        ModLogger.DebugLog(error);
         return s_unknownTypeNameInfo;
     }
 

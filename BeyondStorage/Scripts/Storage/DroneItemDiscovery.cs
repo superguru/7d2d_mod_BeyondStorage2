@@ -23,7 +23,7 @@ internal static class DroneItemDiscovery
         var drones = DroneManager.Instance?.dronesActive;
         if (drones == null)
         {
-            ModLogger.Error($"{d_MethodName}: DroneManager returned null list, aborting.");
+            ModLogger.DebugLog($"{d_MethodName}: DroneManager returned null list, aborting. This is a problem in the game itself, because DroneManager should ALWAYS have a list of drones.");
             return;
         }
 

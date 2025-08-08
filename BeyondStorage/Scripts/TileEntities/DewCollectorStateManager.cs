@@ -16,7 +16,7 @@ public static class DewCollectorStateManager
 
         if (dewCollector == null)
         {
-            ModLogger.Error($"{d_method_name}: dew collector is null");
+            ModLogger.DebugLog($"{d_method_name}: dew collector is null");
             return;
         }
 
@@ -32,7 +32,7 @@ public static class DewCollectorStateManager
 
         if (dewCollector == null)
         {
-            ModLogger.Error($"{d_method_name}: dew collector is null");
+            ModLogger.DebugLog($"{d_method_name}: dew collector is null");
             return;
         }
 

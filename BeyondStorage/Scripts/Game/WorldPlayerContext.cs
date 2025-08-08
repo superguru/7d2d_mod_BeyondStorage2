@@ -82,24 +82,24 @@ public sealed class WorldPlayerContext
 
     private static WorldPlayerContext CreateFresh(string methodName)
     {
-        var world = GameManager.Instance.World;
+        var world = GameManager.Instance?.World;
         if (world == null)
         {
-            ModLogger.Error($"{methodName}: World is null, aborting.");
+            ModLogger.DebugLog($"{methodName}: World is null, aborting.");
             return null;
         }
 
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            ModLogger.Error($"{methodName}: Player is null, aborting.");
+            ModLogger.DebugLog($"{methodName}: Player is null, aborting.");
             return null;
         }
 
         var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
         if (chunkCacheCopy == null)
         {
-            ModLogger.Error($"{methodName}: chunkCacheCopy is null, aborting.");
+            ModLogger.DebugLog($"{methodName}: chunkCacheCopy is null, aborting.");
             return null;
         }
 

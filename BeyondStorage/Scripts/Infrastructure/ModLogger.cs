@@ -24,10 +24,14 @@ public static class ModLogger
     /// <summary>
     /// Call to put debug information into the log that you might want users to send you when they report issues.
     /// </summary>
-    public static void DebugLog(string text)
+    public static void DebugLog(string text, Exception e = null)
     {
         if (ModConfig.IsDebug())
         {
+            if (e != null)
+            {
+                text = StackTraceProvider.AppendStackTrace(text, e);
+            }
             Log.Out($"{Prefix}(Debug) {text}");
         }
     }

@@ -6,16 +6,48 @@ using BeyondStorage.Scripts.Infrastructure;
 namespace BeyondStorage.Scripts.Storage;
 
 /// <summary>
-/// Handles processing and filtering of items from lootable tile entities with slot lock support.
+/// Handles processing and filtering of items from entity tile entities with slot lock support.
 /// </summary>
 public static class LootableItemHandler
 {
     private static readonly PackedBoolArray s_emptyLockedSlots = new PackedBoolArray();
 
+    public static ItemStack[] GetLootableItems(EntityAlive entity)
+    {
+        if (entity == null || entity.bag == null)
+        {
+            return [];
+        }
+
+        var bag = entity.bag;
+        var items = bag.items;
+        if (items == null || items.Length == 0)
+        {
+            return [];
+        }
+
+        // Check if the bag has locked slots support
+        var lockedSlots = bag.LockedSlots;
+        if (lockedSlots == null || lockedSlots.Length == 0)
+        {
+            return items;
+        }
+
+        // Get container size from lootContainer if available
+        int? totalSlots = null;
+        if (entity.lootContainer != null)
+        {
+            var containerSize = entity.lootContainer.GetContainerSize();
+            totalSlots = containerSize.x * containerSize.y;
+        }
+
+        return GetItemsWithSlotFiltering(items, lockedSlots, totalSlots);
+    }
+
     /// <summary>
-    /// Gets items from a lootable entity, filtering out items from locked slots.
+    /// Gets items from a entity entity, filtering out items from locked slots.
     /// </summary>
-    /// <param name="lootable">The lootable entity to extract items from</param>
+    /// <param name="lootable">The entity entity to extract items from</param>
     /// <returns>Array of ItemStack objects from unlocked slots</returns>
     public static ItemStack[] GetLootableItems(ITileEntityLootable lootable)
     {
@@ -35,17 +67,29 @@ public static class LootableItemHandler
             return items;
         }
 
-        PackedBoolArray lockedSlots = lootable.SlotLocks ?? s_emptyLockedSlots;
         var containerSize = lootable.GetContainerSize();
-        int cx = containerSize.x;
-        int cy = containerSize.y;
-        int totalSlots = cx * cy;
+        int totalSlots = containerSize.x * containerSize.y;
+        return GetItemsWithSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
+    }
+
+    /// <summary>
+    /// Core logic for filtering items based on locked slots.
+    /// </summary>
+    /// <param name="items">The item array to filter</param>
+    /// <param name="lockedSlots">The locked slots array</param>
+    /// <param name="totalSlots">Total container slots (null if unknown)</param>
+    /// <returns>Array of ItemStack objects from unlocked slots</returns>
+    private static ItemStack[] GetItemsWithSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
+    {
+        // Calculate maximum slots to check
         int lockedSlotsLength = lockedSlots.Length;
         int itemsLength = items.Length;
-        int maxSlots = Math.Min(totalSlots, itemsLength);
+        int maxSlots = totalSlots.HasValue
+            ? Math.Min(totalSlots.Value, itemsLength)
+            : Math.Min(lockedSlotsLength, itemsLength);
 
         // Pre-calculate result capacity to minimize reallocations
-        int estimatedUnlockedSlots = Math.Min(maxSlots, Math.Max(0, lockedSlotsLength == 0 ? maxSlots : maxSlots - CountLockedSlots(lockedSlots, maxSlots)));
+        int estimatedUnlockedSlots = Math.Min(maxSlots, Math.Max(0, maxSlots - CountLockedSlots(lockedSlots, maxSlots)));
         var result = new List<ItemStack>(estimatedUnlockedSlots);
 
         // Single loop optimization - avoid nested loops
@@ -93,7 +137,7 @@ public static class LootableItemHandler
     /// Logs detailed information about slot locks for debugging purposes.
     /// </summary>
     /// <param name="context">The storage context containing configuration</param>
-    /// <param name="lootable">The lootable entity to log information for</param>
+    /// <param name="lootable">The entity entity to log information for</param>
     /// <param name="tileEntity">The tile entity for position information</param>
     /// <param name="methodName">The calling method name for logging</param>
     public static void LogLootableSlotLocks(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity, string methodName)
@@ -107,7 +151,7 @@ public static class LootableItemHandler
         var hasLockSlotSupport = lootable.HasSlotLocksSupport;
         if (hasLockSlotSupport)
         {
-            ModLogger.DebugLog($"{methodName}: Found lootable {lootable} with slot locks support {tileEntity.ToWorldPos()}");
+            ModLogger.DebugLog($"{methodName}: Found entity {lootable} with slot locks support {tileEntity.ToWorldPos()}");
 
             var containerSize = lootable.GetContainerSize();
             int cx = containerSize.x;
@@ -151,10 +195,20 @@ public static class LootableItemHandler
     {
         if (lootable == null)
         {
-            ModLogger.Error("MarkLootableModified: lootable is null");
+            ModLogger.DebugLog("MarkLootableModified: entity is null");
             return;
         }
 
         lootable.SetModified();
+    }
+    public static void MarkLootableModified(EntityVehicle entity)
+    {
+        if (entity == null || entity.bag == null)
+        {
+            ModLogger.DebugLog("MarkLootableModified: entity or bag is null");
+            return;
+        }
+
+        entity.SetBagModified();
     }
 }
