@@ -33,7 +33,7 @@ public class ItemActionTextureBlockPatches
             // the return value of holdingEntity.inventory.GetItemCount(itemValue, false, 0, 0, false) is on the stack already
             new CodeInstruction(OpCodes.Ldarg_1),  // _actionData (ItemActionData)
             new CodeInstruction(OpCodes.Ldarg_0),  // this (ItemActionTextureBlock)
-            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemActionTextureBlock), "currentMagazineItem")),
+            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemActionTextureBlock), nameof(ItemActionTextureBlock.currentMagazineItem))),
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemTexture), nameof(ItemTexture.ItemTexture_checkAmmo))),
             // ItemTexture_checkAmmo already returns a bool (0 or 1), so we can return it directly
             new CodeInstruction(OpCodes.Ret)
