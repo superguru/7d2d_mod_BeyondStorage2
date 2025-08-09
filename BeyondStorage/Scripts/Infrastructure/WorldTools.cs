@@ -3,9 +3,6 @@ public static class WorldTools
 {
     public static bool IsServer()
     {
-        //return GameManager.IsDedicatedServer || (ConnectionManager.Instance?.IsServer ?? false);
-        // if (GameManager.Instance == null || !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
-
         return SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer;
     }
 
