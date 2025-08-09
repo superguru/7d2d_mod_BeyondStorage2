@@ -95,7 +95,7 @@ internal static class DroneItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
 #endif
         }
 

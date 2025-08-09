@@ -105,7 +105,7 @@ internal static class TileEntityItemDiscovery
     private static int ProcessDewCollectorItems(StorageContext context, TileEntityDewCollector dewCollector)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessDewCollectorItems);
+        //const string d_MethodName = nameof(ProcessDewCollectorItems);
 #endif
         if (dewCollector.bUserAccessing)
         {
@@ -126,7 +126,7 @@ internal static class TileEntityItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {dewCollector}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {dewCollector}");
 #endif
         }
 
@@ -136,7 +136,7 @@ internal static class TileEntityItemDiscovery
     private static int ProcessWorkstationItems(StorageContext context, TileEntityWorkstation workstation)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessWorkstationItems);
+        //const string d_MethodName = nameof(ProcessWorkstationItems);
 #endif
         if (!workstation.IsPlayerPlaced)
         {
@@ -157,7 +157,7 @@ internal static class TileEntityItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {workstation}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {workstation}");
 #endif
         }
 
@@ -201,7 +201,7 @@ internal static class TileEntityItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
 #endif
         }
 

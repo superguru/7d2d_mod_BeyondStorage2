@@ -51,7 +51,7 @@ internal static class VehicleItemDiscovery
     private static int ProcessVehicleItems(StorageContext context, EntityVehicle vehicle)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessVehicleItems);
+        //const string d_MethodName = nameof(ProcessVehicleItems);
 #endif
         if (vehicle.bag == null || vehicle.bag.IsEmpty() || !vehicle.hasStorage())
         {
@@ -73,7 +73,7 @@ internal static class VehicleItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
 #endif
         }
 
