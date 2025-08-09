@@ -289,12 +289,29 @@ class CodeQualityChecker:
         for line_num, line in enumerate(lines, 1):
             stripped = line.strip().lower()
             if 'todo' in stripped and ('//' in line or '/*' in line):
+                # Extract the actual comment text
+                comment_text = line.strip()
+                
+                # Remove common comment prefixes
+                if '//' in comment_text:
+                    comment_text = comment_text.split('//', 1)[1].strip()
+                elif '/*' in comment_text:
+                    comment_text = comment_text.split('/*', 1)[1].strip()
+                    if '*/' in comment_text:
+                        comment_text = comment_text.split('*/', 1)[0].strip()
+                
+                # Truncate to 100 characters and add ellipses if needed
+                if len(comment_text) > 100:
+                    description = f"TODO: {comment_text[:100]}..."
+                else:
+                    description = f"TODO: {comment_text}"
+                
                 issues.append(Issue(
                     file_path=file_path[2:],
                     line_number=line_num,
                     severity="warning",
                     code="BCW013",
-                    description="TODO comment found - should be addressed before release"
+                    description=description
                 ))
         
         return issues
