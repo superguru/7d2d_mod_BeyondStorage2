@@ -15,6 +15,9 @@ public static class ModLogger
 
     public static void Error(string error, Exception e = null)
     {
+        // Do NOT call this if you don't absolutely have to.
+        // It will cause Red log message in the game console, which will also open because of that.
+        // This disrupts players, server admins, and everyone else. Don't do it.
 #if DEBUG
         error = StackTraceProvider.AppendStackTrace(error, e);
 #endif
