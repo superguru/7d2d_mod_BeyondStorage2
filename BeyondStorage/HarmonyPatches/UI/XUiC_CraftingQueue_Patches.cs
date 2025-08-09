@@ -10,16 +10,17 @@ public class XUiCCraftingQueuePatches
     // Still a bug in 2.x - confirmed in 2.0 - 2.2
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiC_CraftingQueue.AddRecipeToCraftAtIndex))]
-    private static bool XUiC_CraftingQueue_AddRecipeToCraftAtIndex_Prefix(XUiC_CraftingQueue __instance, ref bool __result, int _index)
+    private static bool XUiC_CraftingQueue_AddRecipeToCraftAtIndex_Prefix(XUiC_CraftingQueue __instance, ref bool __result, int _index, global::Recipe _recipe)
     {
         var inBounds = _index < __instance.queueItems.Length;
         if (inBounds)
         {
+            __result = true;
             return true;
         }
 
-        ModLogger.Error("XUiC_CraftingQueue.AddRecipeToCraftAtIndex OutOfBounds!");
-        ModLogger.DebugLog($"Queue Length: {__instance.queueItems.Length}; _index: {_index}; {_index >= __instance.queueItems.Length}");
+        string recipeName = _recipe?.GetName() ?? "null";
+        ModLogger.DebugLog($"Game bug patch: XUiC_CraftingQueue.AddRecipeToCraftAtIndex(index: {_index}; queueLen: {__instance.queueItems.Length}, recipe [{recipeName}]); disallowing operation");
 
         __result = false;
         return false;
