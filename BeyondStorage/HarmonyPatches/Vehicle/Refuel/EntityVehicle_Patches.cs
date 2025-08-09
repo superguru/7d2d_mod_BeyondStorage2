@@ -14,6 +14,9 @@ public class EntityVehiclePatches
 {
     [HarmonyPostfix]
     [HarmonyPatch(nameof(EntityVehicle.hasGasCan))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void EntityVehicle_hasGasCan_Patch(EntityVehicle __instance, ref bool __result)
     {
         // Skip if not refueling from storage

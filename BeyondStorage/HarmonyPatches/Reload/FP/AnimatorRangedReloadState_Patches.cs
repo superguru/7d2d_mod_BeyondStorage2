@@ -21,6 +21,9 @@ public class AnimatorRangedReloadStatePatches
 
     [HarmonyPostfix]
     [HarmonyPatch(nameof(AnimatorRangedReloadState.GetAmmoCount))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     public static void AnimatorRangedReloadState_GetAmmoCount_Postfix(ref int __result, ItemValue ammo, int modifiedMagazineSize)
     {
         const string d_MethodName = nameof(AnimatorRangedReloadState_GetAmmoCount_Postfix);

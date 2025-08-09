@@ -14,6 +14,9 @@ public class XUiMPlayerInventoryCommonPatches
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void XUiM_PlayerInventory_RemoveItems_Prefix(IList<ItemStack> _itemStacks, int _multiplier)
     {
         if (!ModConfig.IsDebug())

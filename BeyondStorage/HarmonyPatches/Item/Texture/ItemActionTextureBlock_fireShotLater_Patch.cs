@@ -13,6 +13,9 @@ public class ItemActionTextureBlockFireShotLaterPatch
 {
     [HarmonyPrefix]
     [HarmonyPatch("fireShotLater")]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     public static bool ItemActionTextureBlock_fireShotLater_Prefix(
         ItemActionTextureBlock __instance,
         int _shotIdx,

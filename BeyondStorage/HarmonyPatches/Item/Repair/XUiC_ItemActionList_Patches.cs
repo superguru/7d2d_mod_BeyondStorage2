@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 using HarmonyLib;
 
@@ -12,6 +13,9 @@ public class XUiCItemActionListPatches
     //      Item Repair (tracks item action list visibility)
     [HarmonyPostfix]
     [HarmonyPatch(nameof(XUiC_ItemActionList.Init))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void XUiC_ItemActionList_Init_Postfix(XUiC_ItemActionList __instance)
     {
         __instance.OnVisiblity += ActionList_VisibilityChanged;
@@ -27,6 +31,9 @@ public class XUiCItemActionListPatches
     //      Item Repair (captures if item actions list contains repairing)
     [HarmonyPostfix]
     [HarmonyPatch(nameof(XUiC_ItemActionList.SetCraftingActionList))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void XUiC_ItemActionList_SetCraftingActionList_Postfix(XUiC_ItemActionList __instance)
     {
         ActionList_UpdateVisibleActions(__instance);
@@ -36,6 +43,9 @@ public class XUiCItemActionListPatches
     //      Item Repair (captures if item actions list contains repairing)
     [HarmonyPostfix]
     [HarmonyPatch(nameof(XUiC_ItemActionList.SetServiceActionList))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void XUiC_ItemActionList_SetServiceActionList_Postfix(XUiC_ItemActionList __instance)
     {
         ActionList_UpdateVisibleActions(__instance);
@@ -45,8 +55,7 @@ public class XUiCItemActionListPatches
     {
         const string d_MethodName = nameof(ActionList_UpdateVisibleActions);
 
-        var context = StorageContextFactory.Create(d_MethodName);
-        if (!StorageContextFactory.EnsureValidContext(context, d_MethodName) || !context.Config.EnableForItemRepair)
+        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.EnableForItemRepair, out StorageContext context))
         {
             return;
         }

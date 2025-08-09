@@ -11,6 +11,9 @@ public class ItemActionTextureBlockFloodFillPatch
 {
     [HarmonyPrefix]
     [HarmonyPatch("floodFill")]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     public static bool ItemActionTextureBlock_floodFill_Prefix(
         ItemActionTextureBlock __instance,
         World _world,
