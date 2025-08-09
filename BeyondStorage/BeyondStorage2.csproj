@@ -186,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config.json" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
