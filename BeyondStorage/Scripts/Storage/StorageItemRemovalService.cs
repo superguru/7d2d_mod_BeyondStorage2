@@ -55,10 +55,11 @@ public static class StorageItemRemovalService
             var nameInfo = NameLookups.GetNameInfo(sourceType);
             var fullSourceTypeName = NameLookups.GetFullName(nameInfo);
 
-            var sourcesByType = context.Sources.DataStore.GetSourcesByType(sourceType);
-            var sourceCount = sourcesByType.Count;
-            //ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
-
+            var sourcesByType = context?.Sources?.DataStore?.GetSourcesByType(sourceType);
+            var sourceCount = sourcesByType?.Count;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
+#endif
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {
                 if (stillNeeded <= 0)

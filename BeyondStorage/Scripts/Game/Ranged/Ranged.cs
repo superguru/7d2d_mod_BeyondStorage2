@@ -10,24 +10,17 @@ public static class Ranged
     public static bool CanReloadFromStorage(ItemValue itemValue)
     {
         const string d_MethodName = nameof(CanReloadFromStorage);
+        const bool DEFAULT_RETURN_VALUE = false;
 
-        if (itemValue == null)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForReload,
+            out StorageContext context, out _, out string itemName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning false");
-            return false;
-        }
-
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        if (!context.Config.EnableForReload)
-        {
-            return false;
+            return DEFAULT_RETURN_VALUE;
         }
 
         var canReloadFromStorage = context.HasItem(itemValue);
-
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemValue.ItemClass.Name} {canReloadFromStorage}");
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} {canReloadFromStorage}");
 #endif
         return canReloadFromStorage;
     }
@@ -38,44 +31,36 @@ public static class Ranged
     public static int GetAmmoCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(GetAmmoCount);
+        const int DEFAULT_RETURN_VALUE = 0;
 
-        if (itemValue == null)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning 0");
-            return 0;
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
         return context.GetItemCount(itemValue);
     }
 
     // Used By:
     //      AnimatorRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
     //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
-    public static int RemoveAmmoForReload(ItemValue ammoType, bool isPerMag, int maxMagSize, int currentAmmo)
+    public static int RemoveAmmoForReload(ItemValue itemValue, bool isPerMag, int maxMagSize, int currentAmmo)
     {
         const string d_MethodName = nameof(RemoveAmmoForReload);
+        const int DEFAULT_RETURN_VALUE = 0;
 
         // This is also called when refuelling something like an augur when there is nothing in the player inventory
 
-        if (ammoType == null)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForReload,
+            out StorageContext context, out _, out string itemName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: ammoType is null or empty, returning 0");
-            return 0;
-        }
-
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // return 0 if not enabled for reloading
-        if (!context.Config.EnableForReload)
-        {
-            return 0;
+            return DEFAULT_RETURN_VALUE;
         }
 
         var ammoRequired = isPerMag ? 1 : maxMagSize - currentAmmo;
-        var ammoRemovedFromStorage = context.RemoveRemaining(ammoType, ammoRequired);
+        var ammoRemovedFromStorage = context.RemoveRemaining(itemValue, ammoRequired);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {ammoType.ItemClass.GetItemName()} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
 #endif
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;
     }

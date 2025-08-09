@@ -23,28 +23,28 @@ public sealed class StorageContext
         if (config == null)
         {
             var error = $"{d_MethodName}: {nameof(config)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(config), error);
         }
 
         if (worldPlayerContext == null)
         {
             var error = $"{d_MethodName}: {nameof(worldPlayerContext)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(worldPlayerContext), error);
         }
 
         if (sources == null)
         {
             var error = $"{d_MethodName}: {nameof(sources)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(sources), error);
         }
 
         if (cacheManager == null)
         {
             var error = $"{d_MethodName}: {nameof(cacheManager)} cannot be null.";
-            ModLogger.Error(error);
+            ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(cacheManager), error);
         }
 
@@ -85,7 +85,7 @@ public sealed class StorageContext
             }
             catch (Exception ex)
             {
-                ModLogger.Error($"{methodName}: Failed during item discovery: {ex.Message}", ex);
+                ModLogger.DebugLog($"{methodName}: Failed during item discovery: {ex.Message}", ex);
 
                 // Ensure cache is invalidated on failure and data is cleared
                 Sources.Clear();
@@ -155,7 +155,7 @@ public sealed class StorageContext
 
         if (!EnsureValidCache(d_MethodName))
         {
-            ModLogger.Error($"{d_MethodName}: Cache validation failed, returning 0");
+            ModLogger.DebugLog($"{d_MethodName}: Cache validation failed, returning 0");
             return 0;
         }
 

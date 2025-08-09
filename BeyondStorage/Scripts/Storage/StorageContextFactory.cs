@@ -65,6 +65,31 @@ public static class StorageContextFactory
         }
     }
 
+    public static bool EnsureValidContext(StorageContext context, string methodName)
+    {
+        const string d_MethodName = nameof(EnsureValidContext);
+
+        if (string.IsNullOrEmpty(methodName))
+        {
+            methodName = d_MethodName;
+        }
+
+        if (context == null)
+        {
+            ModLogger.DebugLog($"{methodName}: Context is null, cannot ensure validity.");
+            return false;
+        }
+
+        if (!IsValidContext(context))
+        {
+            ModLogger.DebugLog($"{methodName}: Context is invalid, refreshing cache.");
+            s_contextCache.InvalidateCache();
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// Validates that a context is usable and not expired.
     /// </summary>

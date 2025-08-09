@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 using HarmonyLib;
 
@@ -47,19 +46,12 @@ public class XUiCItemActionListPatches
         const string d_MethodName = nameof(ActionList_UpdateVisibleActions);
 
         var context = StorageContextFactory.Create(d_MethodName);
-        if (context != null)
+        if (!StorageContextFactory.EnsureValidContext(context, d_MethodName) || !context.Config.EnableForItemRepair)
         {
-            if (!context.Config.EnableForItemRepair)
-            {
-                return;
-            }
+            return;
+        }
 
-            ItemRepair.RepairActionShown = ActionList_HasRepair(itemActionList);
-        }
-        else
-        {
-            ModLogger.Error($"{d_MethodName}: Failed to create StorageContext");
-        }
+        ItemRepair.RepairActionShown = ActionList_HasRepair(itemActionList);
     }
 
     // Check if the list of actions contains Repair

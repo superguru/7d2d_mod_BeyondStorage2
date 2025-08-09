@@ -7,39 +7,25 @@ public static class PowerSourceRefuel
 {
     public static int RefuelRemoveRemaining(ItemValue itemValue, int lastRemoved, int totalNeeded)
     {
-        const string d_MethodName = "RefuelRemoveRemaining";
-        var itemName = itemValue.ItemClass.GetItemName();
+        const string d_MethodName = nameof(RefuelRemoveRemaining);
 
-        if (itemValue == null)
+        int DEFAULT_RETURN_VALUE = lastRemoved;
+
+        if (totalNeeded <= 0 || lastRemoved >= totalNeeded)
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning lastRemoved {lastRemoved}");
-            return lastRemoved;
+            return DEFAULT_RETURN_VALUE;
         }
 
-        if (totalNeeded <= 0)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForGeneratorRefuel,
+            out StorageContext context, out _, out string itemName))
         {
-            return 0;
-        }
-
-        if (lastRemoved >= totalNeeded)
-        {
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; lastRemoved {lastRemoved} >= totalNeeded {totalNeeded}, returning early");
-#endif
-            return lastRemoved;
+            return DEFAULT_RETURN_VALUE;
         }
 
         int amountToRemove = totalNeeded - lastRemoved;
         if (amountToRemove <= 0)
         {
-            return lastRemoved;
-        }
-
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        if (!context.Config.EnableForGeneratorRefuel)
-        {
-            return lastRemoved;
+            return DEFAULT_RETURN_VALUE;
         }
 
         int removed = context.RemoveRemaining(itemValue, amountToRemove);

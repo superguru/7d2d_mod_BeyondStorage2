@@ -9,19 +9,18 @@ public static class VehicleRepair
     public static int VehicleRepairRemoveRemaining(XUi xui, global::Vehicle vehicle, ItemValue itemValue)
     {
         const string d_MethodName = nameof(VehicleRepairRemoveRemaining);
+        const int DEFAULT_RETURN_VALUE = 0;
 
-        if (itemValue == null)
+        if (vehicle == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning 0");
-            return 0;
+            ModLogger.DebugLog($"{d_MethodName}: vehicle is null, returning {DEFAULT_RETURN_VALUE}");
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // skip if not enabled
-        if (!context.Config.EnableForVehicleRepair)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForVehicleRepair,
+            out StorageContext context, out _, out string itemName))
         {
-            return 0;
+            return DEFAULT_RETURN_VALUE;
         }
 
         // skip if no repairs needed
@@ -34,12 +33,12 @@ public static class VehicleRepair
         // attempt to remove item from storage
         var countRemoved = context.RemoveRemaining(itemValue, 1);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Removed {countRemoved} {itemValue.ItemClass.GetItemName()}");
+        ModLogger.DebugLog($"{d_MethodName}: Removed {countRemoved} {itemName}");
 #endif
         // if we didn't remove anything return back failed (0)
         if (countRemoved <= 0)
         {
-            return countRemoved;
+            return DEFAULT_RETURN_VALUE;
         }
 
         var entityPlayer = xui.playerUI.entityPlayer;

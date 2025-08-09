@@ -14,18 +14,17 @@ public static class ItemRepair
     public static int ItemRepairOnActivatedGetItemCount(ItemValue itemValue, int currentCount)
     {
         const string d_MethodName = nameof(ItemRepairOnActivatedGetItemCount);
+        int DEFAULT_RETURN_VALUE = currentCount;
 
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // skip if not enabled
-        if (!context.Config.EnableForItemRepair)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForItemRepair,
+            out StorageContext context, out ItemClass itemClass, out string itemName))
         {
-            return currentCount;
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var currentValue = currentCount * itemValue.ItemClass.RepairAmount.Value;
+        var currentValue = currentCount * itemClass.RepairAmount.Value;
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; currentCount {currentCount}; currentValue {currentValue}");
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; currentCount {currentCount}; currentValue {currentValue}");
 #endif
         if (currentValue > 0)
         {
@@ -36,7 +35,7 @@ public static class ItemRepair
         var newCount = currentCount + storageCount;
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}; newCount {newCount}");
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}; newCount {newCount}");
 #endif
         return newCount;
     }
@@ -47,29 +46,27 @@ public static class ItemRepair
     public static int ItemRepairRefreshGetItemCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(ItemRepairRefreshGetItemCount);
+        const int DEFAULT_RETURN_VALUE = 0;
 
-        if (itemValue == null)
+        if (!ValidationHelper.ValidateItemValue(itemValue, d_MethodName, out string itemName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning 0");
-            return 0;
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // skip if not enabled
-        if (!context.Config.EnableForItemRepair)
-        {
-            return 0;
-        }
-        // skip if not showing repair action or action list
+        // Early exit for UI state - check this before expensive context creation
         if (!ActionListVisible || !RepairActionShown)
         {
-            return 0;
+            return DEFAULT_RETURN_VALUE;
+        }
+
+        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.EnableForItemRepair, out StorageContext context))
+        {
+            return DEFAULT_RETURN_VALUE;
         }
 
         var storageCount = context.GetItemCount(itemValue);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemValue.ItemClass.GetItemName()}; storageCount {storageCount}");
+        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}");
 #endif
         return storageCount;
     }

@@ -14,16 +14,19 @@ public static class ItemCommon
     public static int ItemRemoveRemaining(int originalResult, ItemValue itemValue, int totalRequiredAmount, bool ignoreModdedItems = false, List<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(ItemRemoveRemaining);
+        int DEFAULT_RETURN_VALUE = originalResult;
 
-        if (itemValue == null)
+        if (!ValidationHelper.ValidateItemValue(itemValue, d_MethodName, out string itemName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: itemValue is null, returning originalResult {originalResult}");
-            return originalResult;
+            ModLogger.DebugLog($"{d_MethodName}: itemValue validation failed, returning originalResult {DEFAULT_RETURN_VALUE}");
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var context = StorageContextFactory.Create(nameof(ItemRemoveRemaining));
-
-        var itemName = itemValue.ItemClass.GetItemName();
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Failed to create StorageContext, returning originalResult {DEFAULT_RETURN_VALUE}");
+            return DEFAULT_RETURN_VALUE;
+        }
 
         // stillNeeded = totalRequiredAmount (_count1) - originalResult (DecItem(...))
         var stillNeeded = totalRequiredAmount - originalResult;
@@ -33,7 +36,7 @@ public static class ItemCommon
         // If we don't need anything else return the original result
         if (stillNeeded <= 0)
         {
-            return originalResult;
+            return DEFAULT_RETURN_VALUE;
         }
 
         // Get what we can from storage up to required amount
@@ -50,20 +53,39 @@ public static class ItemCommon
     {
         const string d_MethodName = nameof(ItemCommon_GetAllAvailableItemStacksFromXui);
 
-        var result = CollectionFactory.CreateItemStackList();
+        var result = CollectionFactory.EmptyItemStackList;
         if (xui != null)
         {
+            result = CollectionFactory.CreateItemStackList();
             result.AddRange(xui.PlayerInventory.GetAllItemStacks());
+            ItemCraft.ItemCraft_AddPullableSourceStorageStacks(result);
         }
         else
         {
             ModLogger.DebugLog($"{d_MethodName}: called with null xui");
         }
 
-        ItemCraft.ItemCraft_AddPullableSourceStorageStacks(result);
 #if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: returning {result.Count} items");
 #endif
         return result;
+    }
+
+    public static int ItemCommon_GetAvailableItemCount(ItemValue itemValue)
+    {
+        const string d_MethodName = nameof(ItemCommon_GetAvailableItemCount);
+        const int DEFAULT_RETURN_VALUE = 0;
+
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning {DEFAULT_RETURN_VALUE}");
+            return DEFAULT_RETURN_VALUE;
+        }
+
+        var itemCount = context.GetItemCount(itemValue);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} has {itemCount} available");
+#endif
+        return itemCount;
     }
 }

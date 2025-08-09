@@ -17,7 +17,7 @@ public static class StorageQueryService
     /// <returns>True if all parameters are valid</returns>
     private static bool ValidateParameters(string methodName, StorageContext context, UniqueItemTypes filter)
     {
-        if (context == null)
+        if (!StorageContextFactory.EnsureValidContext(context, methodName))
         {
             ModLogger.DebugLog($"{methodName}: Context is null");
             return false;
@@ -43,12 +43,20 @@ public static class StorageQueryService
         }
 
         var filter = UniqueItemTypes.FromItemValue(filterItem);
-        return GetItemCount(context, filter);
+
+        if (!ValidateParameters(d_MethodName, context, filter))
+        {
+            return 0;
+        }
+
+        return context.Sources.CountCachedItems(filter);
     }
 
     public static int GetItemCount(StorageContext context, UniqueItemTypes filter)
     {
-        if (!ValidateParameters(nameof(GetItemCount), context, filter))
+        const string d_MethodName = nameof(GetItemCount);
+
+        if (!ValidateParameters(d_MethodName, context, filter))
         {
             return 0;
         }
@@ -68,12 +76,19 @@ public static class StorageQueryService
 
         var filter = UniqueItemTypes.FromItemValue(filterItem);
 
-        return HasItem(context, filter);
+        if (!ValidateParameters(d_MethodName, context, filter))
+        {
+            return false;
+        }
+
+        return context.Sources.DataStore.AnyItemsLeft(filter);
     }
 
     public static bool HasItem(StorageContext context, UniqueItemTypes filter)
     {
-        if (!ValidateParameters(nameof(HasItem), context, filter))
+        const string d_MethodName = nameof(HasItem);
+
+        if (!ValidateParameters(d_MethodName, context, filter))
         {
             return false;
         }
@@ -96,7 +111,7 @@ public static class StorageQueryService
 
         var result = context.Sources.DataStore.GetItemStacksForFilter(filter);
 
-        //ModLogger.DebugLog($"{d_MethodName}: Returning {result.Count} item stacks with filter: {filter}");
+        ModLogger.DebugLog($"{d_MethodName}: Returning {result.Count} item stacks with filter: {filter}");
         return result;
     }
 }

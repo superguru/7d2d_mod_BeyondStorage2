@@ -11,22 +11,13 @@ public class BlockRepair
     public static int BlockRepairGetItemCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(BlockRepairGetItemCount);
+        const int DEFAULT_RETURN_VALUE = 0;
 
-        if (itemValue == null)
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForBlockRepair,
+            out StorageContext context, out _, out string itemName))
         {
-            ModLogger.DebugLog($"{itemValue}: itemStack is null, returning 0");
-            return 0;
+            return DEFAULT_RETURN_VALUE;
         }
-
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // return early if not enabled for block repair
-        if (!context.Config.EnableForBlockRepair)
-        {
-            return 0;
-        }
-
-        var itemName = itemValue.ItemClass.GetItemName();
 
         var result = context.GetItemCount(itemValue);
 
@@ -40,22 +31,19 @@ public class BlockRepair
     public static int BlockRepairRemoveRemaining(int currentCount, ItemStack itemStack)
     {
         const string d_MethodName = nameof(BlockRepairRemoveRemaining);
+        int DEFAULT_RETURN_VALUE = currentCount;
 
         if (itemStack == null)
         {
             ModLogger.DebugLog($"{d_MethodName}: itemStack is null, returning currentCount {currentCount}");
-            return currentCount;
+            return DEFAULT_RETURN_VALUE;
         }
 
-        var context = StorageContextFactory.Create(d_MethodName);
-
-        // return early if not enabled for block repair
-        if (!context.Config.EnableForBlockRepair)
+        if (!ValidationHelper.ValidateItemAndContext(itemStack.itemValue, d_MethodName, config => config.EnableForBlockRepair,
+            out StorageContext context, out _, out string itemName))
         {
-            return currentCount;
+            return DEFAULT_RETURN_VALUE;
         }
-
-        var itemName = itemStack.itemValue.ItemClass.GetItemName();
 
         // itemStack.count is total amount needed
         // currentCount is the amount removed previously in last DecItem
@@ -66,7 +54,7 @@ public class BlockRepair
         // Skip if already 0
         if (stillNeeded == 0)
         {
-            return currentCount;
+            return DEFAULT_RETURN_VALUE;
         }
 
         // AddStackRangeForFilter amount removed from storage to last amount removed to update result
