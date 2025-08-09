@@ -6,7 +6,29 @@ namespace BeyondStorage.Scripts.Infrastructure;
 
 public static class ModLogger
 {
-    private const string Prefix = "[BeyondStorage2]";
+    private const string ModName = "[BeyondStorage2]";
+    private static string s_prefix = "";
+
+    private static string Prefix
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(s_prefix))
+            {
+                try
+                {
+                    var assemblyVersion = ModPathManager.GetAssemblyVersion();
+                    s_prefix = $"{ModName}.(v{assemblyVersion})";
+                }
+                catch (Exception)
+                {
+                    // Fallback to just ModName if version retrieval fails
+                    s_prefix = ModName;
+                }
+            }
+            return s_prefix;
+        }
+    }
 
     public static void Info(string text)
     {
