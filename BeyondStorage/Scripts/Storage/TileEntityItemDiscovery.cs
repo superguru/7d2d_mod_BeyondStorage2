@@ -104,6 +104,9 @@ internal static class TileEntityItemDiscovery
 
     private static int ProcessDewCollectorItems(StorageContext context, TileEntityDewCollector dewCollector)
     {
+#if DEBUG
+        const string d_MethodName = nameof(ProcessDewCollectorItems);
+#endif
         if (dewCollector.bUserAccessing)
         {
             return 0;
@@ -117,12 +120,24 @@ internal static class TileEntityItemDiscovery
             sources.MarkModifiedDewCollectorFunc
         );
 
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        int validStacksRegistered = 0;
+        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+
+        if (validStacksRegistered > 0)
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {dewCollector}");
+#endif
+        }
+
         return validStacksRegistered;
     }
 
     private static int ProcessWorkstationItems(StorageContext context, TileEntityWorkstation workstation)
     {
+#if DEBUG
+        const string d_MethodName = nameof(ProcessWorkstationItems);
+#endif
         if (!workstation.IsPlayerPlaced)
         {
             return 0;
@@ -136,13 +151,24 @@ internal static class TileEntityItemDiscovery
             sources.MarkModifiedWorkstationFunc
         );
 
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        int validStacksRegistered = 0;
+        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+
+        if (validStacksRegistered > 0)
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {workstation}");
+#endif
+        }
+
         return validStacksRegistered;
     }
 
     private static int ProcessLootableItems(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity)
     {
+#if DEBUG
         const string d_MethodName = nameof(ProcessLootableItems);
+#endif
 
         if (!lootable.bPlayerStorage)
         {
@@ -168,7 +194,16 @@ internal static class TileEntityItemDiscovery
             sources.MarkModifiedLootableFunc
         );
 
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        int validStacksRegistered = 0;
+        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+
+        if (validStacksRegistered > 0)
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
+#endif
+        }
+
         return validStacksRegistered;
     }
 }

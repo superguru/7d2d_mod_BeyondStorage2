@@ -51,30 +51,33 @@ internal static class DroneItemDiscovery
         }
     }
 
-    private static void ProcessDroneItems(StorageContext context, EntityDrone drone)
+    private static int ProcessDroneItems(StorageContext context, EntityDrone drone)
     {
+#if DEBUG
         const string d_MethodName = nameof(ProcessDroneItems);
-
+#endif
         if (drone.bag == null || drone.bag.IsEmpty())
         {
-            return;
+            return 0;
         }
 
         // HAS to be done first, otherwise we might try to access a network synced drone
         if (drone.isInteractionLocked || drone.isOwnerSyncPending)
         {
-            return;
+            return 0;
         }
 
         if (drone.isShutdownPending || drone.isShutdown)
         {
-            return;
+            return 0;
         }
 
         if (!drone.IsUserAllowed(context.WorldPlayerContext.InternalLocalUserIdentifier))
         {
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Drone {drone} is not accessible by the local user, skipping.");
-            return;
+#endif
+            return 0;
         }
 
         var sources = context.Sources;
@@ -86,11 +89,16 @@ internal static class DroneItemDiscovery
             sources.MarkModifiedDroneCollectorFunc
         );
 
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        int validStacksRegistered = 0;
+        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
 
         if (validStacksRegistered > 0)
         {
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
+#endif
         }
+
+        return validStacksRegistered;
     }
 }

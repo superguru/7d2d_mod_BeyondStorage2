@@ -30,15 +30,17 @@ public static class ItemDiscoveryService
 
     private static void LogDiscoveryDiagnostics(StorageContext context, string methodName)
     {
-        var info = context.Sources.DataStore.GetDiagnosticInfo();
+        var info = context?.Sources?.DataStore?.GetDiagnosticInfo() ?? "null in context param chain";
         ModLogger.DebugLog($"{methodName}: {info}");
     }
 
     private static bool ValidateParameters(string methodName, StorageContext context)
     {
-        if (context == null)
+        const string d_MethodName = nameof(ValidateParameters);
+
+        if (!StorageContextFactory.EnsureValidContext(context, methodName))
         {
-            ModLogger.DebugLog($"{methodName}: context is null");
+            ModLogger.DebugLog($"{d_MethodName}.{methodName}: context is not valid");
             return false;
         }
 
