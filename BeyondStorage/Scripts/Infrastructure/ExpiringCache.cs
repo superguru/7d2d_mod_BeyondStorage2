@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BeyondStorage.Scripts.Infrastructure;
 
@@ -19,6 +20,12 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
     private readonly object _cacheLock = new();
     public bool LogCacheUsage { get; set; } = true;
 
+    /// <summary>
+    /// Static lookup set for method names that should suppress cache usage logging.
+    /// Using HashSet for O(1) lookup performance.
+    /// </summary>
+    private static readonly HashSet<string> s_suppressLoggingMethodNames = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly object s_suppressLoggingLock = new();
 
     /// <summary>
     /// Gets the configured cache duration in seconds.
@@ -29,6 +36,95 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
     /// Gets the cache type name used for logging.
     /// </summary>
     public string CacheTypeName { get; } = string.IsNullOrEmpty(cacheTypeName) ? typeof(T).Name : cacheTypeName;
+
+    /// <summary>
+    /// Adds a method name to the suppress logging lookup.
+    /// Method names are compared case-insensitively.
+    /// </summary>
+    /// <param name="methodName">The method name to suppress logging for</param>
+    public static void AddSuppressLoggingMethodName(string methodName)
+    {
+        if (string.IsNullOrEmpty(methodName))
+        {
+            return;
+        }
+
+        lock (s_suppressLoggingLock)
+        {
+            s_suppressLoggingMethodNames.Add(methodName);
+        }
+    }
+
+    /// <summary>
+    /// Adds multiple method names to the suppress logging lookup.
+    /// Method names are compared case-insensitively.
+    /// </summary>
+    /// <param name="methodNames">The method names to suppress logging for</param>
+    public static void AddSuppressLoggingMethodNames(params string[] methodNames)
+    {
+        if (methodNames == null || methodNames.Length == 0)
+        {
+            return;
+        }
+
+        lock (s_suppressLoggingLock)
+        {
+            foreach (var methodName in methodNames)
+            {
+                if (!string.IsNullOrEmpty(methodName))
+                {
+                    _ = s_suppressLoggingMethodNames.Add(methodName);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes a method name from the suppress logging lookup.
+    /// </summary>
+    /// <param name="methodName">The method name to remove</param>
+    /// <returns>True if the method name was removed, false if it wasn't found</returns>
+    public static bool RemoveSuppressLoggingMethodName(string methodName)
+    {
+        if (string.IsNullOrEmpty(methodName))
+        {
+            return false;
+        }
+
+        lock (s_suppressLoggingLock)
+        {
+            return s_suppressLoggingMethodNames.Remove(methodName);
+        }
+    }
+
+    /// <summary>
+    /// Clears all method names from the suppress logging lookup.
+    /// </summary>
+    public static void ClearSuppressLoggingMethodNames()
+    {
+        lock (s_suppressLoggingLock)
+        {
+            s_suppressLoggingMethodNames.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Checks if logging should be suppressed for the given method name.
+    /// </summary>
+    /// <param name="methodName">The method name to check</param>
+    /// <returns>True if logging should be suppressed</returns>
+    private static bool ShouldSuppressLogging(string methodName)
+    {
+        if (string.IsNullOrEmpty(methodName))
+        {
+            return false;
+        }
+
+        lock (s_suppressLoggingLock)
+        {
+            return s_suppressLoggingMethodNames.Contains(methodName);
+        }
+    }
 
     /// <summary>
     /// Gets an item from cache or creates a new one using the provided factory function.
@@ -46,13 +142,16 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
 
         lock (_cacheLock)
         {
+            // Determine if we should log based on LogCacheUsage setting and method name suppression
+            bool shouldLog = LogCacheUsage && !ShouldSuppressLogging(methodName);
+
             // Check if we have a valid cached item
             if (!forceRefresh && _cachedItem != null)
             {
                 var age = (DateTime.Now - _cacheTimestamp).TotalSeconds;
                 if (age < CacheDurationSeconds)
                 {
-                    if (LogCacheUsage)
+                    if (shouldLog)
                     {
                         ModLogger.DebugLog($"{methodName}: Using cached {CacheTypeName} (age: {age:F3}s)");
                     }
@@ -68,7 +167,7 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
                 _cachedItem = newItem;
                 _cacheTimestamp = DateTime.Now;
 
-                if (LogCacheUsage)
+                if (shouldLog)
                 {
                     ModLogger.DebugLog($"{methodName}: Created fresh {CacheTypeName}");
                 }
@@ -78,7 +177,7 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
                 // Clear cache if factory returns null
                 _cachedItem = null;
 
-                if (LogCacheUsage)
+                if (shouldLog)
                 {
                     ModLogger.DebugLog($"{methodName}: Factory returned null for {CacheTypeName}, cache cleared");
                 }
@@ -156,6 +255,18 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
             var age = GetCacheAge();
             var isValid = age < CacheDurationSeconds;
             return $"{CacheTypeName} Cache: Age={age:F3}s, Valid={isValid}, Duration={CacheDurationSeconds}s";
+        }
+    }
+
+    /// <summary>
+    /// Gets diagnostic information about the suppress logging configuration.
+    /// </summary>
+    /// <returns>String containing suppress logging statistics</returns>
+    public static string GetSuppressLoggingStats()
+    {
+        lock (s_suppressLoggingLock)
+        {
+            return $"Suppress logging for {s_suppressLoggingMethodNames.Count} method name(s): [{string.Join(", ", s_suppressLoggingMethodNames)}]";
         }
     }
 }
