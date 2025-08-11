@@ -71,6 +71,33 @@ public static class ItemCommon
         return result;
     }
 
+
+    public static int ItemCommon_GetTotalAvailableItemCount(ItemValue itemValue)
+    {
+        const string d_MethodName = nameof(ItemCommon_GetTotalAvailableItemCount);
+        const int DEFAULT_RETURN_VALUE = 0;
+
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning {DEFAULT_RETURN_VALUE}");
+            return DEFAULT_RETURN_VALUE;
+        }
+
+        int playerInventoryCount = 0;
+
+        if (UIRefreshHelper.ValidateUIComponents(context, d_MethodName))
+        {
+            var playerInventory = context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory;
+            playerInventoryCount = playerInventory.GetItemCount(itemValue);
+        }
+
+        var storageCount = context.GetItemCount(itemValue);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} has {playerInventoryCount} in player inventory and {storageCount} in storage");
+#endif
+        return playerInventoryCount + storageCount;
+    }
+
     public static int ItemCommon_GetAvailableItemCount(ItemValue itemValue)
     {
         const string d_MethodName = nameof(ItemCommon_GetAvailableItemCount);

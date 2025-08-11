@@ -32,7 +32,7 @@ public class XUiC_RecipeTracker_IngredientEntry_Patches
             new CodeInstruction(OpCodes.Ldarg_0),  // this
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(XUiC_RecipeTrackerIngredientEntry), nameof(XUiC_RecipeTrackerIngredientEntry.ingredient))),
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemStack), nameof(ItemStack.itemValue))),
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetAvailableItemCount))),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount))),
             new CodeInstruction(OpCodes.Stfld, AccessTools.Field(typeof(XUiC_RecipeTrackerIngredientEntry), nameof(XUiC_RecipeTrackerIngredientEntry.currentCount))),
         };
 
