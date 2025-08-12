@@ -99,14 +99,12 @@ public static class WorkstationRecipe
             return;
         }
 
-        if (context.WorldPlayerContext?.Player?.playerUI?.xui == null)
+        // Use the new UIRefreshHelper to validate and refresh UI
+        if (!UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName))
         {
-            ModLogger.DebugLog($"{d_MethodName}: Required UI components are null");
             return;
         }
 
-        // Now completely safe to access without null-conditional operators
-        context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(_includeViewComponents: true);
         RefreshOpenRecipeLists(context, d_MethodName, callCount);
 
 #if DEBUG
