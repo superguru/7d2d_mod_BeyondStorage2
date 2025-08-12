@@ -33,7 +33,7 @@ public static class ItemCraft
 #if DEBUG
         ModLogger.DebugLog($"{methodName}: stacks before {stacks.Count}");
 #endif
-        ItemStackAnalyzer.PurgeInvalidItemStacks(stacks);
+        ItemX.PurgeInvalidItemStacks(stacks);
 #if DEBUG
         ModLogger.DebugLog($"{methodName}: stacks before {stacks.Count} (after stripping)");
 #endif

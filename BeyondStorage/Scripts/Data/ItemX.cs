@@ -4,9 +4,9 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
-public static class ItemStackAnalyzer
+public static class ItemX
 {
-    public static string InfoItemStackToString(IEnumerable<ItemStack> stacks)
+    public static string Info(IEnumerable<ItemStack> stacks)
     {
         if (stacks == null)
         {
@@ -22,14 +22,14 @@ public static class ItemStackAnalyzer
         }
 
         var stackDescr = $"{numStacks} stacks of ";
-        var stackInfos = string.Join(", ", stackList.Select(stack => InfoItemStackToString(stack)));
+        var stackInfos = string.Join(", ", stackList.Select(stack => Info(stack)));
 
         return stackDescr + stackInfos;
     }
 
-    public static string InfoItemStackToString(ItemStack stack)
+    public static string Info(ItemStack stack)
     {
-        var result = "null=0";
+        var result = "null:0";
 
         if (stack != null)
         {
@@ -39,12 +39,68 @@ public static class ItemStackAnalyzer
                 var itemClass = itemValue.ItemClass;
                 if (itemClass != null)
                 {
-                    return $"{itemClass.Name}={stack.count}";
+                    return $"{itemClass.Name}:{stack.count}";
                 }
             }
         }
 
         return result;
+    }
+
+    public static bool EqualContents(ItemStack stack1, ItemStack stack2)
+    {
+        if (stack1 == null && stack2 == null)
+        {
+            return true;
+        }
+
+        if (stack1 == null || stack2 == null)
+        {
+            return false;
+        }
+
+        if (stack1.count != stack2.count)
+        {
+            return false;
+        }
+
+        if (stack1.itemValue == null && stack2.itemValue == null)
+        {
+            return true;
+        }
+
+        if (stack1.itemValue == null || stack2.itemValue == null)
+        {
+            return false;
+        }
+
+        var stack1Class = stack1.itemValue.ItemClass;
+        var stack2Class = stack2.itemValue.ItemClass;
+
+        if (stack1Class == null && stack2Class == null)
+        {
+            return true;
+        }
+
+        if (stack1Class == null || stack2Class == null)
+        {
+            return false;
+        }
+
+        var stack1Name = stack1Class.Name;
+        var stack2Name = stack2Class.Name;
+
+        if (string.IsNullOrEmpty(stack1Name) && string.IsNullOrEmpty(stack2Name))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrEmpty(stack1Name) || string.IsNullOrEmpty(stack2Name))
+        {
+            return false;
+        }
+
+        return stack1.itemValue.ItemClass.Name == stack2.itemValue.ItemClass.Name;
     }
 
     public static void PurgeInvalidItemStacks(List<ItemStack> stacks)
