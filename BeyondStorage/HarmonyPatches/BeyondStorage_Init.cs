@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
+using HarmonyLib;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Multiplayer;
-using HarmonyLib;
 
 #if DEBUG
 using HarmonyLib.Tools;
