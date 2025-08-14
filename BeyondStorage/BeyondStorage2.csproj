@@ -74,6 +74,7 @@
     <Compile Include="HarmonyPatches\Informatics\Stack_Drag_Drop_Patch.cs" />
     <Compile Include="HarmonyPatches\Informatics\Stack_Drop_Single_Item_Patch.cs" />
     <Compile Include="HarmonyPatches\Informatics\Stack_Shift_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\XUiC_VehicleContainer_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\XUiC_RecipeTracker_IngredientEntry_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\XUiC_HUDStatBar_Patches.cs" />
     <Compile Include="HarmonyPatches\Item\Texture\ItemActionTextureBlock_fireShotLater_Patch.cs" />

@@ -12,7 +12,7 @@ namespace BeyondStorage.HarmonyPatches.Item;
 public class ItemActionTextureBlockFireShotLaterPatch
 {
     [HarmonyPrefix]
-    [HarmonyPatch("fireShotLater")]
+    [HarmonyPatch(nameof(ItemActionTextureBlock.fireShotLater))]
 #if DEBUG
     [HarmonyDebug]
 #endif
