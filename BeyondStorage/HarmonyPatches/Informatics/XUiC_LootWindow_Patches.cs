@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -15,9 +15,6 @@ public class XUiC_LootWindow_Patches
     {
         const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Postfix);
 
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Refreshing all windows after updating locked slots.");
-#endif
-        UIRefreshHelper.RefreshAllWindows(d_MethodName, includeViewComponents: true);
+        UIRefreshHelper.LogAndRefreshUI(d_MethodName, 0);
     }
 }
