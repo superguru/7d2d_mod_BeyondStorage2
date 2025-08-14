@@ -300,11 +300,23 @@ class CodeQualityChecker:
                     if '*/' in comment_text:
                         comment_text = comment_text.split('*/', 1)[0].strip()
                 
-                # Truncate to 100 characters and add ellipses if needed
-                if len(comment_text) > 100:
-                    description = f"TODO: {comment_text[:100]}..."
+                # Check if the comment already starts with "todo" (case-insensitive)
+                if comment_text.lower().startswith('todo'):
+                    # Remove the existing "todo" prefix and any following colon/whitespace
+                    # This handles: "TODO:", "todo:", "Todo ", "TODO ", etc.
+                    comment_without_todo = re.sub(r'^todo\s*:?\s*', '', comment_text, flags=re.IGNORECASE)
+                    
+                    # Always start with "TODO: " in uppercase
+                    if len(comment_without_todo) > 97:  # 100 - len("TODO: ") = 97
+                        description = f"TODO: {comment_without_todo[:97]}..."
+                    else:
+                        description = f"TODO: {comment_without_todo}"
                 else:
-                    description = f"TODO: {comment_text}"
+                    # Prepend "TODO: " if it doesn't already start with it
+                    if len(comment_text) > 94:  # 100 - len("TODO: ") = 94
+                        description = f"TODO: {comment_text[:94]}..."
+                    else:
+                        description = f"TODO: {comment_text}"
                 
                 issues.append(Issue(
                     file_path=file_path[2:],
@@ -608,12 +620,13 @@ class CodeQualityChecker:
     
     def cleanup_old_result_files(self, keep_latest: int = 5) -> int:
         """
-        Delete old code check result files, keeping only the latest N files.
+        Delete old code check result files, keeping only the latest N files per 5-minute window,
+        with a global maximum of 10 files total.
         Only deletes files that match the expected timestamp format.
         Renamed files that don't match the format are preserved.
         
         Args:
-            keep_latest: Number of latest files to keep (default: 5)
+            keep_latest: Number of latest files to keep per 5-minute window (default: 5)
             
         Returns:
             Number of files deleted
@@ -643,16 +656,50 @@ class CodeQualityChecker:
                     # Invalid timestamp format, skip this file
                     continue
         
-        if len(valid_files) <= keep_latest:
+        if not valid_files:
             return 0
         
-        # Sort by timestamp (newest first)
-        valid_files.sort(key=lambda x: x[1], reverse=True)
+        # Group files by 5-minute windows
+        # Create a window key by truncating minutes to 5-minute intervals
+        windows = {}
+        for file_path, timestamp in valid_files:
+            # Create 5-minute window key: truncate minutes to nearest 5-minute boundary
+            window_minutes = (timestamp.minute // 5) * 5
+            window_key = timestamp.replace(minute=window_minutes, second=0, microsecond=0)
+            
+            if window_key not in windows:
+                windows[window_key] = []
+            windows[window_key].append((file_path, timestamp))
         
-        # Keep the latest N files, delete the rest
-        files_to_delete = valid_files[keep_latest:]
+        # Sort files within each window by timestamp (newest first) and keep only the latest N
+        files_to_delete = []
+        files_to_keep = []
+        
+        for window_key, files_in_window in windows.items():
+            # Sort by timestamp (newest first)
+            files_in_window.sort(key=lambda x: x[1], reverse=True)
+            
+            # Keep the latest N files in this window
+            files_to_keep.extend(files_in_window[:keep_latest])
+            
+            # Mark excess files for deletion
+            if len(files_in_window) > keep_latest:
+                files_to_delete.extend(files_in_window[keep_latest:])
+        
+        # Apply global maximum limit of 10 files
+        # Sort all files to keep by timestamp (newest first)
+        files_to_keep.sort(key=lambda x: x[1], reverse=True)
+        
+        if len(files_to_keep) > 10:
+            # Move excess files from keep list to delete list
+            excess_files = files_to_keep[10:]
+            files_to_keep = files_to_keep[:10]
+            files_to_delete.extend(excess_files)
+            
+            print(f"Global file limit: keeping {len(files_to_keep)} newest files, marking {len(excess_files)} additional files for deletion")
+        
+        # Delete the marked files
         deleted_count = 0
-        
         for file_path, timestamp in files_to_delete:
             try:
                 os.remove(file_path)
