@@ -1,4 +1,5 @@
 ﻿using System;
+using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game;
