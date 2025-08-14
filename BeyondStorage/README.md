@@ -18,6 +18,22 @@
 - [ ] **Item Repair**: Test tool/weapon repair pulls repair materials from storage
 - [ ] **Item Removal**: Verify correct items are removed from storage during operations
 
+### Inventory movement
+| Operation         | Source Type  | Source Inventory | Target Type  | Target Inventory | Expected  | Pass?                      |
+|-------------------|--------------|------------------|--------------|------------------|-----------|:--------------------------:|
+| Pickup Stack      | Simple Stack | Storage          | Simple Stack | N/A              | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Drop Stack        | Simple Stack | N/A              | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Shift-Move        | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Shift-Move        | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Take All          | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Take All          | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Force Take All    | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Force Take All    | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Drop One Item     | Simple Stack | N/A              | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
+| Pickup Half Stack | Simple Stack | Storage          | Simple Stack | N/A              | RefreshUI | <ul><li> - [ ] </li></ul>  |
+
+_(the above formatting renders correctly in GitHub with checkboxes inside the table)_
+
 ### Block Operations  
 - [ ] **Block Repair**: Test that block repairs pull required materials from storage
 - [ ] **Block Upgrade**: Verify block upgrades use materials from storage
