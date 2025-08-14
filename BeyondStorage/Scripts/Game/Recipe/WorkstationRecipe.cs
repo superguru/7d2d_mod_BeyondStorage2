@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Scripts.UI;
 
 namespace BeyondStorage.Scripts.Game.Recipe;
 
