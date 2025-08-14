@@ -65,6 +65,7 @@
     <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
   </Target>
   <ItemGroup>
+    <Compile Include="HarmonyCommands\ConsoleCmdBsShowConfig.cs" />
     <Compile Include="HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />

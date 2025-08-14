@@ -1,4 +1,6 @@
-﻿namespace BeyondStorage.Scripts.Configuration;
+﻿using Newtonsoft.Json;
+
+namespace BeyondStorage.Scripts.Configuration;
 
 /// <summary>
 /// Configuration snapshot that captures all relevant settings at a single point in time
@@ -60,4 +62,13 @@ public sealed class ConfigSnapshot
     }
 
     public static ConfigSnapshot Current => new();
+
+    /// <summary>
+    /// Returns a pretty-printed JSON representation of all configuration options as a flat list.
+    /// </summary>
+    /// <returns>Formatted JSON string containing all configuration attributes</returns>
+    public string ToJson()
+    {
+        return JsonConvert.SerializeObject(this, Formatting.Indented);
+    }
 }
