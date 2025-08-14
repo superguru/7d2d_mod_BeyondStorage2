@@ -68,6 +68,12 @@
     <Compile Include="HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Find_ItemStack_Setter_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Stack_Partial_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Stack_Drop_Merge_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Stack_Drag_Drop_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Stack_Drop_Single_Item_Patch.cs" />
+    <Compile Include="HarmonyPatches\Informatics\Stack_Shift_Patch.cs" />
     <Compile Include="HarmonyPatches\Informatics\XUiC_RecipeTracker_IngredientEntry_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\XUiC_HUDStatBar_Patches.cs" />
     <Compile Include="HarmonyPatches\Item\Texture\ItemActionTextureBlock_fireShotLater_Patch.cs" />
@@ -90,12 +96,16 @@
     <Compile Include="HarmonyPatches\Reload\FP\AnimatorRangedReloadState_Patches.cs" />
     <Compile Include="HarmonyPatches\Reload\ItemActionRanged_Patches.cs" />
     <Compile Include="HarmonyPatches\Server\GameManager_Patches.cs" />
+    <Compile Include="HarmonyPatches\Informatics\XUiC_LootWindow_Patches.cs" />
     <Compile Include="HarmonyPatches\Vehicle\Refuel\EntityVehicle_Patches.cs" />
     <Compile Include="HarmonyPatches\Vehicle\Repair\XUiM_Vehicle_Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Data\DragDropAnalyzer.cs" />
     <Compile Include="Scripts\Data\IStorageSource.cs" />
     <Compile Include="Scripts\Data\FilterStacksStore.cs" />
     <Compile Include="Scripts\Data\ItemStackReferenceComparer.cs" />
+    <Compile Include="Scripts\Data\SlotSnapshot.cs" />
+    <Compile Include="Scripts\Data\StackOps.cs" />
     <Compile Include="Scripts\Data\StorageSourceAdapter.cs" />
     <Compile Include="Scripts\Data\StorageSourceItemDataStore.cs" />
     <Compile Include="Scripts\Data\UniqueItemTypeCache.cs" />
@@ -104,6 +114,7 @@
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
     <Compile Include="Scripts\Infrastructure\TypeMatchingHelper.cs" />
+    <Compile Include="Scripts\UI\UIRefreshHelper.cs" />
     <Compile Include="Scripts\Infrastructure\ValidationHelper.cs" />
     <Compile Include="Scripts\Infrastructure\WorldTools.cs" />
     <Compile Include="Scripts\Storage\AllowedSourcesSnapshot.cs" />
@@ -145,10 +156,10 @@
     <Compile Include="Scripts\Data\CollectionFactory.cs" />
     <Compile Include="Scripts\Infrastructure\PerformanceProfiler.cs" />
     <Compile Include="Scripts\Harmony\ILPatchEngine.cs" />
-    <Compile Include="Scripts\Data\ItemStackAnalyzer.cs" />
+    <Compile Include="Scripts\Data\ItemX.cs" />
     <Compile Include="Scripts\Infrastructure\ModLogger.cs" />
-    <Compile Include="Scripts\Infrastructure\ExpiringCache.cs" />
-    <Compile Include="Scripts\Infrastructure\ExpiringDictionaryCache.cs" />
+    <Compile Include="Scripts\Caching\ExpiringCache.cs" />
+    <Compile Include="Scripts\Caching\ExpiringDictionaryCache.cs" />
     <Compile Include="Scripts\Data\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
