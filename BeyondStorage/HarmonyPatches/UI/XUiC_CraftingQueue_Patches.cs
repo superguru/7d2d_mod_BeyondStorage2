@@ -29,7 +29,6 @@ public class XUiCCraftingQueuePatches
             return true;
         }
 
-        //TODO: Remove after debugging tests
         string recipeName = _recipe?.GetName() ?? "null";
         var message = $"Game bug patch: {d_MethodName}(index: {_index}; queueLen: {__instance.queueItems.Length}, recipe [{recipeName}]); disallowing operation";
 #if DEBUG
