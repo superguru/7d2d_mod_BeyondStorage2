@@ -110,6 +110,7 @@
     <Compile Include="Scripts\Data\StackOps.cs" />
     <Compile Include="Scripts\Data\StorageSourceAdapter.cs" />
     <Compile Include="Scripts\Data\StorageSourceItemDataStore.cs" />
+    <Compile Include="Scripts\Data\TypeCastingHelper.cs" />
     <Compile Include="Scripts\Data\UniqueItemTypeCache.cs" />
     <Compile Include="Scripts\Diagnostics\NameLookups.cs" />
     <Compile Include="Scripts\Game\Item\ItemActionTextureBlockExposed.cs" />
