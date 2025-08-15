@@ -131,7 +131,7 @@ public static class ItemTexture
             s_paintRemovals[itemValue.type] = current + removedFromStorage;
         }
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: itemValue {itemName}, paintCost {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
+        ModLogger.DebugLog($"{d_MethodName}: itemValue {itemName}, stillNeeded {paintCost}, removedFromStorage {removedFromStorage}, stillNeeded {stillNeeded}");
 #endif
         return removedFromStorage;
     }
@@ -165,15 +165,13 @@ public static class ItemTexture
     public static bool CountPaintUsage(Guid operationId)
     {
 #if DEBUG
-        const string d_MethodName = nameof(CountPaintUsage);
-        //TODO: Count paint usage
-        ModLogger.DebugLog($"{d_MethodName}: Counting paint usage for operation {operationId}");
+        //const string d_MethodName = nameof(CountPaintUsage);
 #endif
         if (s_activeOperations.TryGetValue(operationId, out var paintContext) && paintContext.IsCountingPhase)
         {
             paintContext.TotalPaintRequired++;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {paintContext.TotalPaintRequired} for operation {operationId}");
+            //ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {paintContext.TotalPaintRequired} for operation {operationId}");
 #endif
             return true; // Always return true during counting
         }
@@ -213,20 +211,8 @@ public static class ItemTexture
                 return paintContext.TotalPaintRequired > 0; // Return true if there are faces to paint
             }
 
-            if (paintContext.PaintToRemove > 0)
-            {
-                // Remove the calculated amount of paint
-                var actuallyRemoved = ItemTexture_RemoveAmmo(paintContext.AmmoType, paintContext.PaintToRemove);
-                paintContext.PaintToRemove = actuallyRemoved; // Update with what was actually removed
-                paintContext.FacesToPaint = actuallyRemoved; // Update faces to paint accordingly
-
-                return actuallyRemoved > 0;
-            }
-            else
-            {
-                ModLogger.DebugLog($"{d_MethodName}: No paint available for operation {operationId}");
-                return false;
-            }
+            // Use the extracted method from PaintOperationContext
+            return paintContext.TryRemovePaintFromStorage(d_MethodName);
         }
 
         return false;

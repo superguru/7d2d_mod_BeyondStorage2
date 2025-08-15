@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Scripts.Infrastructure;
 using static ItemActionTextureBlock;
 
@@ -115,14 +116,109 @@ public class PaintOperationContext
 
         // Creative Mode (2) or Debug Mode (8) - skip paint consumption
         var gameMode = GameStats.GetInt(EnumGameStats.GameModeId);
-        ModLogger.DebugLog($"{nameof(ShouldSkipPaintConsumption)}: Game mode is {gameMode} for operation {OperationId}");
-        if (gameMode == 2 || gameMode == 8)  // TODO: Use constants instead of magic numbers
+        if (gameMode == 2 || gameMode == 8)
         {
             return true;
         }
 
         // Normal gameplay - consume paint
         return false;
+    }
+
+    /// <summary>
+    /// Removes ammo from player inventory for painting operations.
+    /// When nothing is left in the player inventory, it will attempt to remove from storage.
+    /// Attempts to remove the specified amount of paint from and returns actual amount removed.
+    /// </summary>
+    /// <param name="_ignoreModdedItems">Whether to ignore modded items during removal</param>
+    /// <param name="_removedItems">Optional list to store removed item stacks</param>
+    /// <returns>Actual amount of ammo removed from all sources</returns>
+    public int RemovePaintFromAllSources(bool _ignoreModdedItems = false, IList<ItemStack> _removedItems = null)
+    {
+        const string d_MethodName = nameof(RemovePaintFromAllSources);
+        const int DEFAULT_RETURN_VALUE = 0;
+
+        ItemValue itemValue = AmmoType;
+        int stillNeeded = PaintToRemove;
+
+        if (stillNeeded <= 0)
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: No paint needed, probably InfiniteAmmo mode, stillNeeded is {stillNeeded}");
+#endif
+            return DEFAULT_RETURN_VALUE; // No paint needed, nothing to remove
+        }
+
+        if (ShouldSkipPaintConsumption())
+        {
+            return stillNeeded; // Skip removal if consumption is skipped (e.g., creative mode, infinite ammo)
+        }
+
+        EntityAlive holdingEntity = ActionData.invData.holdingEntity;
+
+        // First, try to remove from the entity's bag
+        int removedFromBag = holdingEntity.bag.DecItem(itemValue, stillNeeded, _ignoreModdedItems, _removedItems);
+        ModLogger.DebugLog($"{d_MethodName}: Removed {removedFromBag}/{stillNeeded} from bag of {itemValue}");
+
+        // Check if we still need more paint after removing from the bag
+        stillNeeded -= removedFromBag;
+        if (stillNeeded <= 0)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Successfully removed all needed paint from bag, stillNeeded is now {stillNeeded}");
+            return removedFromBag; // All paint was removed from bag
+        }
+
+        // If stillNeeded > 0, try to remove from the entity's inventory
+        var removedFromInventory = holdingEntity.inventory.DecItem(itemValue, stillNeeded, _ignoreModdedItems, _removedItems);
+        ModLogger.DebugLog($"{d_MethodName}: Removed {removedFromInventory}/{stillNeeded} from inventory of {itemValue}");
+
+        // Check if we still need more paint after removing from the inventory
+        stillNeeded -= removedFromInventory;
+        if (stillNeeded <= 0)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Successfully removed all needed paint from inventory, stillNeeded is now {stillNeeded}");
+            return removedFromBag + removedFromInventory; // All paint was removed from bag, then inventory
+        }
+
+        // If stillNeeded > 0, try to remove from storage
+        int RemovedFromStorage = ItemTexture.ItemTexture_RemoveAmmo(itemValue, stillNeeded, _ignoreModdedItems, _removedItems);
+        ModLogger.DebugLog($"{d_MethodName}: Removed {RemovedFromStorage}/{stillNeeded} from storage of {itemValue}");
+
+        // Update stillNeeded after removing from storage
+        stillNeeded -= RemovedFromStorage;
+        if (stillNeeded <= 0)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Successfully removed all needed paint from storage, stillNeeded is now {stillNeeded}");
+            return removedFromBag + removedFromInventory + RemovedFromStorage; // All paint was removed from bag, then inventory, then storage
+        }
+
+        // If we still need more paint, return what was removed so far
+        ModLogger.DebugLog($"{d_MethodName}: Still needed paint after all removals is {stillNeeded}, returning total removed");
+        return removedFromBag + removedFromInventory + RemovedFromStorage; // Return total removed so far
+    }
+
+    /// <summary>
+    /// Attempts to remove paint from storage and updates the context accordingly.
+    /// This method handles the paint removal logic that was previously in ItemTexture.SwitchToExecutionPhase.
+    /// </summary>
+    /// <param name="methodName">The calling method name for logging purposes</param>
+    /// <returns>True if paint was successfully removed or operation can proceed, false otherwise</returns>
+    public bool TryRemovePaintFromStorage(string methodName)
+    {
+        if (PaintToRemove > 0)
+        {
+            // Remove the calculated amount of paint using the new comprehensive method
+            var actuallyRemoved = RemovePaintFromAllSources();
+            PaintToRemove = actuallyRemoved; // Update with what was actually removed
+            FacesToPaint = actuallyRemoved; // Update faces to paint accordingly
+
+            return actuallyRemoved > 0;
+        }
+        else
+        {
+            ModLogger.DebugLog($"{methodName}: No paint available for operation {OperationId}");
+            return false;
+        }
     }
 
     /// <summary>

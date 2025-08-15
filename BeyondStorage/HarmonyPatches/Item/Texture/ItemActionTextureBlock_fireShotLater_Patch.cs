@@ -26,9 +26,6 @@ public class ItemActionTextureBlockFireShotLaterPatch
 
         try
         {
-            //TODO: Remove this debug log after testing
-            ModLogger.DebugLog($"{d_MethodName}: Intercepting fireShotLater. InfiniteAmmo={__instance.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={__instance.HasInfiniteAmmo(_actionData)}");
-
             var itemActionTextureBlockData = (ItemActionTextureBlockData)_actionData;
 
             // Only intercept paint modes that benefit from batching
@@ -36,14 +33,10 @@ public class ItemActionTextureBlockFireShotLaterPatch
                 itemActionTextureBlockData.paintMode == EnumPaintMode.Multiple ||
                 itemActionTextureBlockData.paintMode == EnumPaintMode.Spray)
             {
+#if DEBUG
                 ModLogger.DebugLog($"{d_MethodName}: Intercepting {itemActionTextureBlockData.paintMode} mode for batched painting");
-
-                // No need to cast - create exposed wrapper directly around the original instance
-                // This preserves all game state from __instance while providing enhanced functionality
+#endif
                 var exposedWrapper = new ItemActionTextureBlockExposed(__instance);
-
-                //TODO: Remove this debug log after testing
-                ModLogger.DebugLog($"{d_MethodName}: Created exposed wrapper around original instance. Original InfiniteAmmo={exposedWrapper.InfiniteAmmo}");
 
                 __result = SmartFireShotLater(__instance, _shotIdx, _actionData);
                 return false; // Skip original method
