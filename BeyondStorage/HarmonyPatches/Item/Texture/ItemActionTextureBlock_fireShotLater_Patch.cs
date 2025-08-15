@@ -26,6 +26,8 @@ public class ItemActionTextureBlockFireShotLaterPatch
 
         try
         {
+            ModLogger.DebugLog($"{d_MethodName}: Intercepting fireShotLater. InfiniteAmmo={__instance.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={__instance.HasInfiniteAmmo(_actionData)}");
+
             var itemActionTextureBlockData = (ItemActionTextureBlockData)_actionData;
 
             // Only intercept paint modes that benefit from batching

@@ -15,18 +15,6 @@ public class ItemTexture
     // Paint counting system
     private static readonly Dictionary<Guid, PaintOperationContext> s_activeOperations = [];
 
-    public class PaintOperationContext(ItemActionTextureBlock.ItemActionTextureBlockData actionData, ItemValue ammoType)
-    {
-        public Guid OperationId { get; set; } = Guid.NewGuid();
-        public int TotalPaintRequired { get; set; } = 0;
-        public int PaintAvailable { get; set; } = 0;
-        public int PaintToRemove { get; set; } = 0;
-        public int FacesToPaint { get; set; } = 0;
-        public bool IsCountingPhase { get; set; } = true;
-        public ItemActionTextureBlockData ActionData { get; set; } = actionData;
-        public ItemValue AmmoType { get; set; } = ammoType;
-    }
-
     public static bool ItemTexture_checkAmmo(int entityAvailableCount, ItemActionData _actionData, ItemValue ammoType)
     {
         const string d_MethodName = nameof(ItemTexture_checkAmmo);
@@ -114,11 +102,11 @@ public class ItemTexture
     }
 
     // New method to start a paint operation
-    public static Guid StartPaintOperation(ItemActionTextureBlockData actionData, ItemValue ammoType)
+    public static Guid StartPaintOperation(ItemActionTextureBlock tb, ItemActionTextureBlockData actionData, ItemValue ammoType)
     {
         const string d_MethodName = nameof(StartPaintOperation);
 
-        var context = new PaintOperationContext(actionData, ammoType);
+        var context = new PaintOperationContext(tb, actionData, ammoType);
         s_activeOperations[context.OperationId] = context;
 
         ModLogger.DebugLog($"{d_MethodName}: Started paint operation {context.OperationId}");
@@ -133,10 +121,14 @@ public class ItemTexture
 #endif
         if (s_activeOperations.TryGetValue(operationId, out var context) && context.IsCountingPhase)
         {
-            context.TotalPaintRequired++;
+            if (!context.ShouldSkipPaintConsumption())
+            {
+                // Unless infinite ammo, count paint usage
+                context.TotalPaintRequired++;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {context.TotalPaintRequired} for operation {operationId}");
+                ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {context.TotalPaintRequired} for operation {operationId}");
 #endif
+            }
             return true; // Always return true during counting
         }
 
@@ -181,16 +173,17 @@ public class ItemTexture
         return false;
     }
 
-    // Method to check if we should paint this face during execution
+    /// <summary>
+    /// Method to check if we should paint this face during execution.
+    /// This is a convenience wrapper around the PaintOperationContext.ShouldPaintFace() method.
+    /// </summary>
+    /// <param name="operationId">The operation ID to check</param>
+    /// <returns>True if this face should be painted, false otherwise</returns>
     public static bool ShouldPaintFace(Guid operationId)
     {
-        if (s_activeOperations.TryGetValue(operationId, out var context) && !context.IsCountingPhase)
+        if (s_activeOperations.TryGetValue(operationId, out var context))
         {
-            if (context.FacesToPaint > 0)
-            {
-                context.FacesToPaint--;
-                return true;
-            }
+            return context.ShouldPaintFace();
         }
         return false;
     }
@@ -228,7 +221,7 @@ public class ItemTexture
         var ammoType = tb.currentMagazineItem;
 
         // Start paint operation
-        var operationId = StartPaintOperation(_actionData, ammoType);
+        var operationId = StartPaintOperation(exposed, _actionData, ammoType);
 
         try
         {
@@ -259,16 +252,18 @@ public class ItemTexture
         }
     }
 
-    public static void SmartAreaPaint(ItemActionTextureBlock tb, World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, string _mode)
+    public static void SmartAreaPaint(ItemActionTextureBlock instance, World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, string _mode)
     {
         const string d_MethodName = nameof(SmartAreaPaint);
         ModLogger.DebugLog($"{d_MethodName}: Starting smart {_mode} paint with radius {_radius}");
 
-        var exposed = tb as ItemActionTextureBlockExposed ?? new ItemActionTextureBlockExposed();
-        var ammoType = tb.currentMagazineItem;
+        var exposed = instance as ItemActionTextureBlockExposed ?? new ItemActionTextureBlockExposed();
+        var ammoType = instance.currentMagazineItem;
+        ModLogger.DebugLog($"{d_MethodName}: instance InfiniteAmmo={instance.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={instance.HasInfiniteAmmo(_actionData)}");
+        ModLogger.DebugLog($"{d_MethodName}: exposed  InfiniteAmmo={exposed.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={exposed.HasInfiniteAmmo(_actionData)}");
 
         // Start paint operation
-        var operationId = StartPaintOperation(_actionData, ammoType);
+        var operationId = StartPaintOperation(instance, _actionData, ammoType);
 
         try
         {
