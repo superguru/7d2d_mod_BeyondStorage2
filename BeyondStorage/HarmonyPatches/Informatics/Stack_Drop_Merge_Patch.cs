@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
+
+#if DEBUG
+using BeyondStorage.Scripts.Infrastructure;
+#endif
 
 namespace BeyondStorage.HarmonyPatches.UI;
 
@@ -96,8 +99,8 @@ public class Stack_Drop_Merge_Patch
 
         if (isMerge)
         {
-            var operation = SwapAction.SwapOrMergeOperation;
 #if DEBUG
+            var operation = SwapAction.SwapOrMergeOperation;
             ModLogger.DebugLog($"{methodName}: call #{callCount} - {operation} for {preSnapshot.ToCompactString()} ➡️ {postSnapshot.ToCompactString()}");
 #endif
             // Because stacks will be merged using this method, and any overspill will be moved to the next available slot,

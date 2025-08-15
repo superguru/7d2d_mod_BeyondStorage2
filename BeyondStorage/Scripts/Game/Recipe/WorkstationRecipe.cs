@@ -23,7 +23,7 @@ public static class WorkstationRecipe
         try
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
-            var callCount = stats?.callCount ?? 0;
+            long callCount = stats?.callCount ?? 0;
 #if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
 #endif
@@ -58,7 +58,7 @@ public static class WorkstationRecipe
         try
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
-            var callCount = stats?.callCount ?? 0;
+            long callCount = stats?.callCount ?? 0;
 #if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
 #endif
@@ -80,7 +80,7 @@ public static class WorkstationRecipe
         }
     }
 
-    private static void Update_OpenWorkstations(string callType, int callCount)
+    internal static void Update_OpenWorkstations(string callType, long callCount)
     {
         string d_MethodName = $"{callType}.{nameof(Update_OpenWorkstations)}";
 #if DEBUG
@@ -113,7 +113,7 @@ public static class WorkstationRecipe
 #endif
     }
 
-    private static void RefreshOpenRecipeLists(StorageContext context, string d_MethodName, int callCount)
+    private static void RefreshOpenRecipeLists(StorageContext context, string d_MethodName, long callCount)
     {
         var worldPlayerContext = context?.WorldPlayerContext;
         if (worldPlayerContext == null)
@@ -154,7 +154,7 @@ public static class WorkstationRecipe
             recipeList.PlayerInventory_OnBackpackItemsChanged();
             workstation.craftInfoWindow?.ingredientList?.PlayerInventory_OnBackpackItemsChanged();
 
-            ModLogger.DebugLog($"{d_MethodName}: Refreshed workstation {workstation} (#{++refreshCount} in call {callCount}");
+            ModLogger.DebugLog($"{d_MethodName}: Refreshed workstation {workstation} (#{++refreshCount}) in call {callCount}");
         }
     }
 }

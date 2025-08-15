@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiC_ItemActionList))]
-public class XUiCItemActionListPatches
+public static class XUiCItemActionListPatches
 {
     // Used For:
     //      Item Repair (tracks item action list visibility)
@@ -51,7 +51,7 @@ public class XUiCItemActionListPatches
         ActionList_UpdateVisibleActions(__instance);
     }
 
-    private static void ActionList_UpdateVisibleActions(XUiC_ItemActionList itemActionList)
+    internal static void ActionList_UpdateVisibleActions(XUiC_ItemActionList itemActionList)
     {
         const string d_MethodName = nameof(ActionList_UpdateVisibleActions);
 

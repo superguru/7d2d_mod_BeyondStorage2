@@ -39,8 +39,9 @@ public class ItemStackCacheManager
         _masterCacheValid = true;
         _masterCacheTime = DateTime.Now;
         _masterCacheInvalidationCounter = s_globalInvalidationCounter;
-
+#if DEBUG
         ModLogger.DebugLog("Master cache marked valid (unfiltered data cached)");
+#endif
     }
 
     /// <summary>
@@ -52,8 +53,9 @@ public class ItemStackCacheManager
         _masterCacheValid = false;
         _masterCacheTime = DateTime.MinValue;
         _masterCacheInvalidationCounter = s_globalInvalidationCounter;
-
+#if DEBUG
         ModLogger.DebugLog("Master cache timing invalidated");
+#endif
     }
 
     /// <summary>

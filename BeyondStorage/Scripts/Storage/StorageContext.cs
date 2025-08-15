@@ -53,8 +53,9 @@ public sealed class StorageContext
         Sources = sources;
         CacheManager = cacheManager;
         CreatedAt = DateTime.Now;
-
+#if DEBUG
         ModLogger.DebugLog($"StorageContext created: {Sources.GetSourceSummary()}");
+#endif
     }
 
     #region Cache Management

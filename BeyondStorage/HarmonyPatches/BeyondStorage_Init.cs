@@ -1,12 +1,22 @@
 ﻿using System.Reflection;
-using HarmonyLib;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
+using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
+using BeyondStorage.Scripts.Storage;
+using HarmonyLib;
 
 #if DEBUG
 using HarmonyLib.Tools;
 #endif
+
+#if !DEBUG
+using BeyondStorage.HarmonyPatches.Item;
+using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Game.Recipe;
+#endif
+
 
 namespace BeyondStorage;
 
@@ -27,6 +37,8 @@ public class BeyondStorage : IModApi
 #endif
         harmony.PatchAll(Assembly.GetExecutingAssembly());
 
+        ExcludeCacheLoggers();
+
         ModEvents.PlayerSpawnedInWorld.RegisterHandler(ServerUtils.PlayerSpawnedInWorld);
         // Game Start Done Called when:
         //      - Loading into singleplayer world
@@ -41,5 +53,19 @@ public class BeyondStorage : IModApi
         //      - Player disconnects from server YOU'RE hosting
         // NOT called when YOU disconnect
         // ModEvents.PlayerDisconnected.RegisterHandler(EventsUtil.PlayerDisconnected);
+    }
+
+    private void ExcludeCacheLoggers()
+    {
+        ExpiringCache<StorageContext>.AddSuppressLoggingMethodNames([
+            StackOps.ItemStack_DropSingleItem_Operation,
+#if !DEBUG
+            nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
+            nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
+            nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
+            $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
+            $"{nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
+#endif
+        ]);
     }
 }
