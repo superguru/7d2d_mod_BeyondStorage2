@@ -26,6 +26,7 @@ public class ItemActionTextureBlockFireShotLaterPatch
 
         try
         {
+            //TODO: Remove this debug log after testing
             ModLogger.DebugLog($"{d_MethodName}: Intercepting fireShotLater. InfiniteAmmo={__instance.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={__instance.HasInfiniteAmmo(_actionData)}");
 
             var itemActionTextureBlockData = (ItemActionTextureBlockData)_actionData;
@@ -36,6 +37,14 @@ public class ItemActionTextureBlockFireShotLaterPatch
                 itemActionTextureBlockData.paintMode == EnumPaintMode.Spray)
             {
                 ModLogger.DebugLog($"{d_MethodName}: Intercepting {itemActionTextureBlockData.paintMode} mode for batched painting");
+
+                // No need to cast - create exposed wrapper directly around the original instance
+                // This preserves all game state from __instance while providing enhanced functionality
+                var exposedWrapper = new ItemActionTextureBlockExposed(__instance);
+
+                //TODO: Remove this debug log after testing
+                ModLogger.DebugLog($"{d_MethodName}: Created exposed wrapper around original instance. Original InfiniteAmmo={exposedWrapper.InfiniteAmmo}");
+
                 __result = SmartFireShotLater(__instance, _shotIdx, _actionData);
                 return false; // Skip original method
             }
@@ -86,28 +95,32 @@ public class ItemActionTextureBlockFireShotLaterPatch
             yield break;
         }
 
+        // Create PaintOperationContext early and pass it down
+        // This will create an exposed wrapper that preserves all original instance data
+        var paintContext = new PaintOperationContext(instance, itemActionTextureBlockData, instance.currentMagazineItem);
+
         BlockToolSelection.Instance.BeginUndo(chunkCluster.ClusterIdx);
 
         // Handle different paint modes with smart batching
         switch (itemActionTextureBlockData.paintMode)
         {
             case EnumPaintMode.Fill:
-                yield return HandleSmartFloodFill(instance, world, chunkCluster, holdingEntity.entityId, itemActionTextureBlockData, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo);
+                yield return HandleSmartFloodFill(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo);
                 break;
 
             case EnumPaintMode.Multiple:
-                yield return HandleSmartMultiplePaint(instance, world, chunkCluster, holdingEntity.entityId, itemActionTextureBlockData, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 1.25f);
+                yield return HandleSmartMultiplePaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 1.25f);
                 break;
 
             case EnumPaintMode.Spray:
-                yield return HandleSmartSprayPaint(instance, world, chunkCluster, holdingEntity.entityId, itemActionTextureBlockData, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 7.5f);
+                yield return HandleSmartSprayPaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 7.5f);
                 break;
         }
 
         BlockToolSelection.Instance.EndUndo(chunkCluster.ClusterIdx);
     }
 
-    private static IEnumerator HandleSmartFloodFill(ItemActionTextureBlock instance, World world, ChunkCluster chunkCluster, int entityId, ItemActionTextureBlockData actionData, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo)
+    private static IEnumerator HandleSmartFloodFill(PaintOperationContext paintContext, World world, ChunkCluster chunkCluster, int entityId, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo)
     {
         // Calculate flood fill vectors
         Vector3 normalized = GameUtils.GetNormalFromHitInfo(blockPos, hitInfo.hitCollider, hitInfo.hitTriangleIdx, out var _).normalized;
@@ -134,22 +147,22 @@ public class ItemActionTextureBlockFireShotLaterPatch
 
         for (int channel = 0; channel < 1; channel++)
         {
-            if (!actionData.channelMask.IncludesChannel(channel))
+            if (!paintContext.ActionData.channelMask.IncludesChannel(channel))
             {
                 continue;
             }
 
             int sourcePaint = chunkCluster.GetBlockFaceTexture(blockPos, blockFace, channel);
-            if (actionData.idx != sourcePaint)
+            if (paintContext.ActionData.idx != sourcePaint)
             {
                 if (sourcePaint == 0)
                 {
                     sourcePaint = GameUtils.FindPaintIdForBlockFace(bv, blockFace, out var _, channel);
                 }
 
-                if (actionData.idx != sourcePaint)
+                if (paintContext.ActionData.idx != sourcePaint)
                 {
-                    ItemTexture.SmartFloodFill(instance, world, chunkCluster, entityId, actionData, playerData, sourcePaint, hitInfo.hit.pos, normalized, vector1, vector2, channel);
+                    ItemTexture.SmartFloodFill(paintContext, world, chunkCluster, entityId, playerData, sourcePaint, hitInfo.hit.pos, normalized, vector1, vector2, channel);
                 }
             }
         }
@@ -157,17 +170,17 @@ public class ItemActionTextureBlockFireShotLaterPatch
         yield break;
     }
 
-    private static IEnumerator HandleSmartMultiplePaint(ItemActionTextureBlock instance, World world, ChunkCluster chunkCluster, int entityId, ItemActionTextureBlockData actionData, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius)
+    private static IEnumerator HandleSmartMultiplePaint(PaintOperationContext paintContext, World world, ChunkCluster chunkCluster, int entityId, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius)
     {
-        yield return HandleSmartAreaPaint(instance, world, chunkCluster, entityId, actionData, playerData, blockPos, blockFace, bv, hitInfo, radius, "Multiple");
+        yield return HandleSmartAreaPaint(paintContext, world, chunkCluster, entityId, playerData, blockPos, blockFace, bv, hitInfo, radius, "Multiple");
     }
 
-    private static IEnumerator HandleSmartSprayPaint(ItemActionTextureBlock instance, World world, ChunkCluster chunkCluster, int entityId, ItemActionTextureBlockData actionData, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius)
+    private static IEnumerator HandleSmartSprayPaint(PaintOperationContext paintContext, World world, ChunkCluster chunkCluster, int entityId, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius)
     {
-        yield return HandleSmartAreaPaint(instance, world, chunkCluster, entityId, actionData, playerData, blockPos, blockFace, bv, hitInfo, radius, "Spray");
+        yield return HandleSmartAreaPaint(paintContext, world, chunkCluster, entityId, playerData, blockPos, blockFace, bv, hitInfo, radius, "Spray");
     }
 
-    private static IEnumerator HandleSmartAreaPaint(ItemActionTextureBlock instance, World world, ChunkCluster chunkCluster, int entityId, ItemActionTextureBlockData actionData, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius, string mode)
+    private static IEnumerator HandleSmartAreaPaint(PaintOperationContext paintContext, World world, ChunkCluster chunkCluster, int entityId, PersistentPlayerData playerData, Vector3i blockPos, BlockFace blockFace, BlockValue bv, WorldRayHitInfo hitInfo, float radius, string mode)
     {
         if (hitInfo.hitTriangleIdx == -1)
         {
@@ -202,7 +215,7 @@ public class ItemActionTextureBlockFireShotLaterPatch
         Vector3 origin = hitInfo.ray.origin;
 
         // Use our smart batching system
-        ItemTexture.SmartAreaPaint(instance, world, chunkCluster, entityId, actionData, playerData, pos, origin, vector1, vector2, radius, mode);
+        ItemTexture.SmartAreaPaint(paintContext, world, chunkCluster, entityId, playerData, pos, origin, vector1, vector2, radius, mode);
 
         yield break;
     }

@@ -32,10 +32,15 @@ public class ItemActionTextureBlockFloodFillPatch
 
         try
         {
-            // Call our static smart flood fill implementation
-            ItemTexture.SmartFloodFill(__instance, _world, _cc, _entityId, _actionData, _lpRelative, _sourcePaint, _hitPosition, _hitFaceNormal, _dir1, _dir2, _channel);
+            // Create PaintOperationContext with the necessary data
+            var paintContext = new PaintOperationContext(__instance, _actionData, __instance.currentMagazineItem);
 
-            ModLogger.DebugLog($"{d_MethodName}: Successfully executed SmartFloodFill");
+            ModLogger.DebugLog($"{d_MethodName}: Created PaintOperationContext {paintContext.OperationId} for flood fill operation");
+
+            // Call our static smart flood fill implementation with the context
+            ItemTexture.SmartFloodFill(paintContext, _world, _cc, _entityId, _lpRelative, _sourcePaint, _hitPosition, _hitFaceNormal, _dir1, _dir2, _channel);
+
+            ModLogger.DebugLog($"{d_MethodName}: Successfully executed SmartFloodFill with context {paintContext.OperationId}");
         }
         catch (System.Exception ex)
         {

@@ -23,7 +23,7 @@ public class PaintOperationContext
     /// <summary>
     /// Total amount of paint available from all sources
     /// </summary>
-    public int PaintAvailable { get; set; } = 0;
+    public int PaintCountAvailable { get; set; } = 0;
 
     /// <summary>
     /// Amount of paint that will actually be removed from storage
@@ -51,9 +51,15 @@ public class PaintOperationContext
     public ItemValue AmmoType { get; set; }
 
     /// <summary>
-    /// The texture block instance performing the paint operation
+    /// The original texture block instance performing the paint operation
     /// </summary>
     public ItemActionTextureBlock TextureBlock { get; }
+
+    /// <summary>
+    /// The exposed texture block wrapper that provides access to enhanced painting methods.
+    /// This wraps the original TextureBlock instance to preserve all game state.
+    /// </summary>
+    public ItemActionTextureBlockExposed ExposedTextureBlock { get; }
 
     /// <summary>
     /// Creates a new paint operation context with the specified parameters
@@ -66,6 +72,28 @@ public class PaintOperationContext
         TextureBlock = tb;
         ActionData = actionData;
         AmmoType = ammoType;
+
+        // Create exposed wrapper around the original texture block to preserve all game state
+        ExposedTextureBlock = new ItemActionTextureBlockExposed(tb);
+        ModLogger.DebugLog($"{nameof(PaintOperationContext)}: Intercepting fireShotLater. InfiniteAmmo={TextureBlock.InfiniteAmmo}, HasInfiniteAmmo(_actionData)={TextureBlock.HasInfiniteAmmo(ActionData)}");
+    }
+
+    /// <summary>
+    /// Calculates and sets the total paint count available from entity inventory and storage.
+    /// Gets entity available paint from bag and inventory, then combines with storage paint count.
+    /// </summary>
+    public void CalculateAndSetPaintCountAvailable()
+    {
+        // Get entity available paint
+        ItemActionTextureBlockData itemActionTextureBlockData = ActionData;
+        int paintCost = BlockTextureData.list[itemActionTextureBlockData.idx].PaintCost;
+        EntityAlive holdingEntity = ActionData.invData.holdingEntity;
+
+        int entityAvailableCount = holdingEntity.bag.GetItemCount(AmmoType);
+        entityAvailableCount += holdingEntity.inventory.GetItemCount(AmmoType);
+
+        // Get the total paint required and available, including the entity's held paint
+        PaintCountAvailable = ItemTexture.ItemTexture_GetAmmoCount(AmmoType, entityAvailableCount);
     }
 
     /// <summary>
@@ -74,13 +102,12 @@ public class PaintOperationContext
     /// <returns>True if paint consumption should be skipped, false if paint should be consumed normally</returns>
     public bool ShouldSkipPaintConsumption()
     {
-        // Invalid context - default to enforcing paint consumption
+        // Invalid context - default to skipping paint consumption
         if (TextureBlock == null)
         {
-            return false;
+            return true;
         }
 
-        // Infinite ammo mode - skip paint consumption
         if (TextureBlock.InfiniteAmmo || TextureBlock.HasInfiniteAmmo(ActionData))
         {
             return true;
@@ -121,7 +148,7 @@ public class PaintOperationContext
     {
         var phase = IsCountingPhase ? "COUNTING" : "EXECUTION";
         return $"PaintOperation[Id: {OperationId}, Phase: {phase}, " +
-               $"Required: {TotalPaintRequired}, Available: {PaintAvailable}, " +
+               $"Required: {TotalPaintRequired}, Available: {PaintCountAvailable}, " +
                $"ToRemove: {PaintToRemove}, ToPaint: {FacesToPaint}]";
     }
 }

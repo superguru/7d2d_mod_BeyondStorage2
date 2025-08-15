@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static ItemActionTextureBlock;
 
 namespace BeyondStorage.Scripts.Game.Item;
 
@@ -19,21 +20,41 @@ public struct PaintFaceData
     }
 }
 
-internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
+/// <summary>
+/// Wrapper class that provides enhanced painting functionality while preserving the original ItemActionTextureBlock data.
+/// Uses composition instead of inheritance to maintain access to all original game object state.
+/// </summary>
+public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextureBlock)
 {
     private const int LAYER_MASK = -555528197;
 
     // Store faces to paint during counting phase
     private readonly Dictionary<Guid, List<PaintFaceData>> _facesToPaint = [];
 
+    /// <summary>
+    /// The original ItemActionTextureBlock instance containing all game state and data.
+    /// </summary>
+    public ItemActionTextureBlock OriginalTextureBlock => originalTextureBlock;
+
+    // Delegate properties to the original object
+    public bool InfiniteAmmo => OriginalTextureBlock.InfiniteAmmo;
+    public bool HasInfiniteAmmo(ItemActionData actionData) => OriginalTextureBlock.HasInfiniteAmmo(actionData);
+    public ItemValue currentMagazineItem => OriginalTextureBlock.currentMagazineItem;
+    public float rayCastDelay => OriginalTextureBlock.rayCastDelay;
+    public bool bRemoveTexture => OriginalTextureBlock.bRemoveTexture;
+
     public void CountFloodFill(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel, Guid operationId)
     {
         // Initialize face list for this operation
         _facesToPaint[operationId] = [];
 
-        visitedPositions.Clear();
-        visitedRays.Clear();
-        positionsToCheck.Clear();
+        // Access protected/private members through the original object using reflection if needed
+        // For now, we'll use the accessible members and methods
+        var visitedPositions = new Dictionary<Vector3i, bool>();
+        var visitedRays = new Dictionary<Vector2i, bool>();
+        var positionsToCheck = new Stack<Vector2i>();
+        var worldRayHitInfo = new WorldRayHitInfo();
+
         positionsToCheck.Push(new Vector2i(0, 0));
 
         while (positionsToCheck.Count > 0)
@@ -73,12 +94,16 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
                 {
                     continue;
                 }
-                if (getCurrentPaintIdx(_cc, blockPos, blockFaceFromHitInfo, blockValue, _channel) != _sourcePaint)
+
+                // Use reflection or accessible methods to get current paint index
+                int currentPaintIdx = _cc.GetBlockFaceTexture(blockPos, blockFaceFromHitInfo, _channel);
+                if (currentPaintIdx != _sourcePaint)
                 {
                     visitedPositions.Add(blockPos, value: false);
                     continue;
                 }
-                EPaintResult ePaintResult = CountPaintBlock(_world, _cc, _entityId, _actionData, blockPos, blockFaceFromHitInfo, blockValue, _lpRelative, new ChannelMask(_channel), operationId);
+
+                var ePaintResult = CountPaintBlock(_world, _cc, _entityId, _actionData, blockPos, blockFaceFromHitInfo, blockValue, _lpRelative, new ChannelMask(_channel), operationId);
                 if (ePaintResult == EPaintResult.CanNotPaint || ePaintResult == EPaintResult.NoPaintAvailable)
                 {
                     visitedPositions.Add(blockPos, value: false);
@@ -91,9 +116,6 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
             positionsToCheck.Push(vector2i + Vector2i.left);
             positionsToCheck.Push(vector2i + Vector2i.right);
         }
-        visitedPositions.Clear();
-        visitedRays.Clear();
-        positionsToCheck.Clear();
     }
 
     public void ExecuteFloodFill(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel, Guid operationId)
@@ -133,11 +155,29 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
 
     public EPaintResult CountPaintBlock(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, PersistentPlayerData _lpRelative, ChannelMask _channelMask, Guid operationId)
     {
-        getParentBlock(ref _blockValue, ref _blockPos, _cc);
-        if (!checkBlockCanBePainted(_world, _blockPos, _blockValue, _lpRelative))
+        // Use reflection to access protected methods from the original object
+        var getParentBlockMethod = typeof(ItemActionTextureBlock).GetMethod("getParentBlock",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var checkBlockCanBePaintedMethod = typeof(ItemActionTextureBlock).GetMethod("checkBlockCanBePainted",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (getParentBlockMethod != null)
         {
-            return EPaintResult.CanNotPaint;
+            object[] parameters = { _blockValue, _blockPos, _cc };
+            getParentBlockMethod.Invoke(OriginalTextureBlock, parameters);
+            _blockValue = (BlockValue)parameters[0];
+            _blockPos = (Vector3i)parameters[1];
         }
+
+        if (checkBlockCanBePaintedMethod != null)
+        {
+            var canBePainted = (bool)checkBlockCanBePaintedMethod.Invoke(OriginalTextureBlock, new object[] { _world, _blockPos, _blockValue, _lpRelative });
+            if (!canBePainted)
+            {
+                return EPaintResult.CanNotPaint;
+            }
+        }
+
         if (BlockToolSelection.Instance.SelectionActive && !new BoundsInt(BlockToolSelection.Instance.SelectionMin, BlockToolSelection.Instance.SelectionSize).Contains(_blockPos))
         {
             return EPaintResult.CanNotPaint;
@@ -176,7 +216,22 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
             {
                 continue;
             }
-            int currentPaintIdx = getCurrentPaintIdx(_cc, _blockPos, _blockFace, _blockValue, i);
+
+            // Use reflection to access protected getCurrentPaintIdx method
+            var getCurrentPaintIdxMethod = typeof(ItemActionTextureBlock).GetMethod("getCurrentPaintIdx",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            int currentPaintIdx = 0;
+            if (getCurrentPaintIdxMethod != null)
+            {
+                currentPaintIdx = (int)getCurrentPaintIdxMethod.Invoke(OriginalTextureBlock, new object[] { _cc, _blockPos, _blockFace, _blockValue, i });
+            }
+            else
+            {
+                // Fallback to public method if available
+                currentPaintIdx = _cc.GetBlockFaceTexture(_blockPos, _blockFace, i);
+            }
+
             if (_actionData.idx != currentPaintIdx)
             {
                 // Store the face to be painted
@@ -196,26 +251,11 @@ internal class ItemActionTextureBlockExposed : ItemActionTextureBlock
         return result;
     }
 
-    // Legacy methods for backwards compatibility (these call the original base class methods)
-    public EPaintResult CountPaintBlock(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, PersistentPlayerData _lpRelative, ChannelMask _channelMask)
-    {
-        // For legacy calls without operationId, use the original base class method
-        return paintBlock(_world, _cc, _entityId, _actionData, _blockPos, _blockFace, _blockValue, _lpRelative, _channelMask);
-    }
-
-    public EPaintResult CountPaintFace(ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, ChannelMask _channelMask)
-    {
-        // For legacy calls without operationId, use the original base class method
-        return paintFace(_cc, _entityId, _actionData, _blockPos, _blockFace, _blockValue, _channelMask);
-    }
-
     // Cleanup method to prevent memory leaks
     public void CleanupOperation(Guid operationId)
     {
         _facesToPaint.Remove(operationId);
     }
-
-    // Add these methods to your existing ItemActionTextureBlockExposed class
 
     public void CountAreaPaint(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, Guid operationId)
     {
