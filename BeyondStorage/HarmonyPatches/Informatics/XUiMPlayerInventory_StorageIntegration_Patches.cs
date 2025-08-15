@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -20,14 +19,13 @@ public static class XUiMPlayerInventory_StorageIntegration_Patches
     public static void XUiM_PlayerInventory_GetItemCountWithMods_Postfix(XUiM_PlayerInventory __instance, ItemValue _itemValue, ref int __result)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCountWithMods_Postfix);
         var callCount = Interlocked.Increment(ref s_callCounter);
 #endif
         int entityPlayerCount = __result;
         int storageCount = ItemCommon.ItemCommon_GetAvailableItemCount(_itemValue);
         __result = entityPlayerCount + storageCount;
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName} [{callCount}]: item: {_itemValue.ItemClass.Name}; result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: {storageCount}");
+        //ModLogger.DebugLog($"{d_MethodName} [{callCount}]: item: {_itemValue.ItemClass.Name}; result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: {storageCount}");
 #endif
     }
 }
