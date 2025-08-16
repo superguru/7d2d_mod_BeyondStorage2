@@ -57,6 +57,7 @@ public class BeyondStorage : IModApi
         ExpiringCache<StorageContext>.AddSuppressLoggingMethodNames([
             StackOps.ItemStack_DropSingleItem_Operation,
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
+            nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
