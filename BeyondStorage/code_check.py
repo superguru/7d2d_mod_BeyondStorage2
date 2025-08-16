@@ -115,6 +115,13 @@ class CodeQualityChecker:
             "Synchronous access to async result can cause deadlocks - use await"
         )
 
+        self.add_forbidden_string_check(
+            "ExtraLogging = true",
+            "warning",
+            "BCW061",
+            "Too much logging of Harmony Patch. Ok for Debug, but not ok for Release"
+        )
+        
         # Register other checks
         # temporarily disabled: self.checks["excessive_nesting"] = self._check_excessive_nesting
         # temporarily disabled: self.checks["long_methods"] = self._check_long_methods
