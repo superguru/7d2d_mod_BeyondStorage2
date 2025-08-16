@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -26,13 +25,13 @@ public static class UIRefreshHelper
     {
         string callStr = " ";
 #if DEBUG
-        if (callCount <= 0)
+        if (callCount > 0)
         {
             callStr = $"call #{callCount} ";
         }
         ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI");
 #endif
-        RefreshAllWindows(StackOps.ItemStack_DropSingleItem_Operation, includeViewComponents: true);
+        RefreshAllWindows(methodName, includeViewComponents: true);
     }
 
     /// <summary>
@@ -120,7 +119,7 @@ public static class UIRefreshHelper
     private static void RefreshAllWindowsInternal(StorageContext context, bool includeViewComponents = true)
     {
         // Caller is responsible for validation - this method assumes components are valid
-        context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(_includeViewComponents: includeViewComponents);
+        context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
     }
 
     /// <summary>
