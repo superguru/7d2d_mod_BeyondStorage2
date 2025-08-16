@@ -17,7 +17,7 @@ public static class ModLifecycleManager
         TileEntityLockManager.Cleanup();
     }
 
-    // public static void PlayerDisconnected(ClientInfo client, bool arg2) {
-    //     ModLogger.DebugLog($"Player Disconnected: {client}; somebool {arg2}");
+    // public static void PlayerDisconnected(ClientInfo _clientInfo, bool _gameShuttingDown) {
+    //     ModLogger.DebugLog($"Player Disconnected: clientInfo {_clientInfo}; gameShuttingDown {_gameShuttingDown}");
     // }
 }
