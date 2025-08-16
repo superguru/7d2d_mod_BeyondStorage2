@@ -69,6 +69,9 @@
     <Compile Include="HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />
+    <Compile Include="HarmonyPatches\Functions\BlockSecureLootSigned_Lockpick_Patches.cs" />
+    <Compile Include="HarmonyPatches\Functions\BlockSecureLoot_Lockpick_Patches.cs" />
+    <Compile Include="HarmonyPatches\Functions\TEFeatureLockPickable_Lockpick_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\XUiMPlayerInventory_StorageIntegration_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\Find_ItemStack_Setter_Patch.cs" />
     <Compile Include="HarmonyPatches\Informatics\Stack_Partial_Patch.cs" />
