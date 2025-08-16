@@ -99,9 +99,9 @@ public static class ItemCommon
         return playerInventoryCount + storageCount;
     }
 
-    public static int ItemCommon_GetAvailableItemCount(ItemValue itemValue)
+    public static int ItemCommon_GetStorageItemCount(ItemValue itemValue)
     {
-        const string d_MethodName = nameof(ItemCommon_GetAvailableItemCount);
+        const string d_MethodName = nameof(ItemCommon_GetStorageItemCount);
         const int DEFAULT_RETURN_VALUE = 0;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))

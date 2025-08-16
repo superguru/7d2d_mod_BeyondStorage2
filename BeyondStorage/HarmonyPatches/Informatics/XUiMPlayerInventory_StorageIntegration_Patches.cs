@@ -22,7 +22,7 @@ public static class XUiMPlayerInventory_StorageIntegration_Patches
         var callCount = Interlocked.Increment(ref s_callCounter);
 #endif
         int entityPlayerCount = __result;
-        int storageCount = ItemCommon.ItemCommon_GetAvailableItemCount(_itemValue);
+        int storageCount = ItemCommon.ItemCommon_GetStorageItemCount(_itemValue);
         __result = entityPlayerCount + storageCount;
 #if DEBUG
         //ModLogger.DebugLog($"{d_MethodName} [{callCount}]: item: {_itemValue.ItemClass.Name}; result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: {storageCount}");
