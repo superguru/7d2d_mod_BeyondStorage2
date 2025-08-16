@@ -5,7 +5,6 @@ using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
 #if DEBUG
-using BeyondStorage.Scripts.Infrastructure;
 #endif
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -100,8 +99,8 @@ public class Stack_Drop_Merge_Patch
         if (isMerge)
         {
 #if DEBUG
-            var operation = SwapAction.SwapOrMergeOperation;
-            ModLogger.DebugLog($"{methodName}: call #{callCount} - {operation} for {preSnapshot.ToCompactString()} ➡️ {postSnapshot.ToCompactString()}");
+            //var operation = SwapAction.SwapOrMergeOperation;
+            //ModLogger.DebugLog($"{methodName}: call #{callCount} - {operation} for {preSnapshot.ToCompactString()} ➡️ {postSnapshot.ToCompactString()}");
 #endif
             // Because stacks will be merged using this method, and any overspill will be moved to the next available slot,
             // we can't reliably determine the exact slot where the stack ended up, so whether is's locked or not is not relevant.

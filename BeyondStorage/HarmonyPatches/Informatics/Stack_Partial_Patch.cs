@@ -52,7 +52,7 @@ public class Stack_Partial_Patch
         if (!validPartialPickup)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: call skipped for invalid partial pickup (current stack empty, item stack not empty)");
+            //ModLogger.DebugLog($"{d_MethodName}: call skipped for invalid partial pickup (current stack empty, item stack not empty)");
 #endif
             return;
         }
