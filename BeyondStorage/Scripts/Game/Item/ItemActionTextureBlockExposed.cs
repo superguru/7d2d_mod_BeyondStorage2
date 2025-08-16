@@ -42,6 +42,7 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
     public ItemValue currentMagazineItem => OriginalTextureBlock.currentMagazineItem;
     public float rayCastDelay => OriginalTextureBlock.rayCastDelay;
     public bool bRemoveTexture => OriginalTextureBlock.bRemoveTexture;
+    public float Range => OriginalTextureBlock.Range;
 
     public void CountFloodFill(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel, Guid operationId)
     {
@@ -96,7 +97,7 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
                 }
 
                 // Use reflection or accessible methods to get current paint index
-                int currentPaintIdx = _cc.GetBlockFaceTexture(blockPos, blockFaceFromHitInfo, _channel);
+                int currentPaintIdx = GetCurrentPaintIdx(_cc, blockPos, blockFaceFromHitInfo, blockValue, _channel);
                 if (currentPaintIdx != _sourcePaint)
                 {
                     visitedPositions.Add(blockPos, value: false);
@@ -217,20 +218,7 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
                 continue;
             }
 
-            // Use reflection to access protected getCurrentPaintIdx method
-            var getCurrentPaintIdxMethod = typeof(ItemActionTextureBlock).GetMethod("getCurrentPaintIdx",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            int currentPaintIdx = 0;
-            if (getCurrentPaintIdxMethod != null)
-            {
-                currentPaintIdx = (int)getCurrentPaintIdxMethod.Invoke(OriginalTextureBlock, new object[] { _cc, _blockPos, _blockFace, _blockValue, i });
-            }
-            else
-            {
-                // Fallback to public method if available
-                currentPaintIdx = _cc.GetBlockFaceTexture(_blockPos, _blockFace, i);
-            }
+            int currentPaintIdx = GetCurrentPaintIdx(_cc, _blockPos, _blockFace, _blockValue, i);
 
             if (_actionData.idx != currentPaintIdx)
             {
@@ -270,7 +258,7 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
                 Vector3 direction = _pos + x * _dir1 + y * _dir2 - _origin;
                 int hitMask = 69;
 
-                if (Voxel.Raycast(_world, new Ray(_origin, direction), 50f /* Range */, LAYER_MASK, hitMask, 0f))
+                if (Voxel.Raycast(_world, new Ray(_origin, direction), Range, LAYER_MASK, hitMask, 0f))
                 {
                     WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo.Clone();
                     BlockValue blockValue = hitInfo.hit.blockValue;
@@ -322,5 +310,21 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
             // Clean up the stored faces
             _facesToPaint.Remove(operationId);
         }
+    }
+
+    /// <summary>
+    /// Proper implementation of getCurrentPaintIdx that matches the original game logic.
+    /// This handles the case where GetBlockFaceTexture returns 0 by falling back to the default paint.
+    /// </summary>
+    private int GetCurrentPaintIdx(ChunkCluster _cc, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, int _channel)
+    {
+        int blockFaceTexture = _cc.GetBlockFaceTexture(_blockPos, _blockFace, _channel);
+        if (blockFaceTexture != 0)
+        {
+            return blockFaceTexture;
+        }
+
+        string _name;
+        return GameUtils.FindPaintIdForBlockFace(_blockValue, _blockFace, out _name, _channel);
     }
 }
