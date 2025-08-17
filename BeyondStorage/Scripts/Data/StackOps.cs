@@ -1,17 +1,63 @@
-﻿namespace BeyondStorage.Scripts.Data;
+﻿using System;
+using System.Linq;
+
+namespace BeyondStorage.Scripts.Data;
 
 /// <summary>
-/// Constants and simple enums for stack operations
+/// Enum for stack operation types used for UI refresh triggers
 /// </summary>
-public static class StackOps
+public enum StackOps
 {
-    // Operation constants for UI refresh triggers
-    public const string ItemStack_DropMerge_Operation = "ItemStack_DropMerge_Operation";
-    public const string ItemStack_Drop_Operation = "ItemStack_Drop_Operation";
-    public const string ItemStack_DropSingleItem_Operation = "ItemStack_DropSingleItem_Operation";
-    public const string ItemStack_Pickup_Operation = "ItemStack_Pickup_Operation";
-    public const string ItemStack_Pickup_Half_Stack_Operation = "ItemStack_Pickup_Half_Stack_Operation";
-    public const string ItemStack_Shift_Operation = "ItemStack_Shift_Operation";
+    ItemStack_DropMerge_Operation,
+    ItemStack_Drop_Operation,
+    ItemStack_DropSingleItem_Operation,
+    ItemStack_Pickup_Operation,
+    ItemStack_Pickup_Half_Stack_Operation,
+    ItemStack_Shift_Operation
+}
+
+/// <summary>
+/// Utilities for stack operations
+/// </summary>
+public static class StackOperation
+{
+    /// <summary>
+    /// Determines whether the specified operation is a known stack operation.
+    /// </summary>
+    /// <param name="operation">The operation to validate</param>
+    /// <returns>True if the operation is a defined enum value; otherwise, false</returns>
+    public static bool IsValidOperation(StackOps operation)
+    {
+        return Enum.IsDefined(typeof(StackOps), operation);
+    }
+
+    /// <summary>
+    /// Determines whether the specified operation name is a known stack operation constant.
+    /// </summary>
+    /// <param name="operationName">The operation name to validate</param>
+    /// <returns>True if the operation name matches one of the defined enum values; otherwise, false</returns>
+    public static bool IsValidOperation(string operationName)
+    {
+        return Enum.TryParse<StackOps>(operationName, out _);
+    }
+
+    /// <summary>
+    /// Gets all valid operation enum values.
+    /// </summary>
+    /// <returns>Array of all StackOperation enum values</returns>
+    public static StackOps[] GetAllOperations()
+    {
+        return (StackOps[])Enum.GetValues(typeof(StackOps));
+    }
+
+    /// <summary>
+    /// Gets all valid operation string representations.
+    /// </summary>
+    /// <returns>Array of all operation string representations</returns>
+    public static string[] GetAllOperationStrings()
+    {
+        return GetAllOperations().Select(op => op.ToString()).ToArray();
+    }
 }
 
 /// <summary>

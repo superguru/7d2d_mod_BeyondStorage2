@@ -19,7 +19,6 @@ public class Stack_Drag_Drop_Patch
 #endif
     public static void Handle_Pickup_DropStack_Event_Prefix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Prefix);
 
         // Increment call counter immediately at the start to ensure logging consistency
         long callCount;
@@ -68,7 +67,7 @@ public class Stack_Drag_Drop_Patch
         if (preSnapshot.IsValid && preSnapshot.IsStorageInventory && operation == SwapAction.PickupFromSource)
         {
             // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.                
-            UIRefreshHelper.LogAndRefreshUI($"{d_MethodName}({StackOps.ItemStack_Pickup_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_Pickup_Operation}", callCount);
         }
     }
 
@@ -79,8 +78,6 @@ public class Stack_Drag_Drop_Patch
 #endif
     public static void Handle_Pickup_DropStack_Event_Postfix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Postfix);
-
         long callCount = s_callCounter;
 #if DEBUG
         //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} STARTED - analyzing swap operation results");
@@ -109,7 +106,7 @@ public class Stack_Drag_Drop_Patch
             if (postSnapshot.IsStorageInventory && (operation == SwapAction.SwapSameItem || operation == SwapAction.SwapDifferentItems))
             {
                 // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.
-                UIRefreshHelper.LogAndRefreshUI($"{d_MethodName}({StackOps.ItemStack_Drop_Operation}", callCount);
+                UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_Drop_Operation}", callCount);
             }
         }
     }

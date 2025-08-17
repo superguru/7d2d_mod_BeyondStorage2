@@ -106,7 +106,7 @@ public class Stack_Drop_Merge_Patch
             // we can't reliably determine the exact slot where the stack ended up, so whether is's locked or not is not relevant.
             // All we know is that either the source or destination was maybe a locked storage slot, so we have assume that
             // a locked storage slot was involved in this operation.
-            UIRefreshHelper.LogAndRefreshUI($"{methodName}({StackOps.ItemStack_DropMerge_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_DropMerge_Operation}", callCount);
         }
         else
         {

@@ -22,7 +22,6 @@ public class Stack_Drop_Single_Item_Patch
 #endif
     public static void Handle_DropSingle_Event_Prefix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_DropSingle_Event_Prefix);
 
         // Increment call counter immediately at the start to ensure logging consistency
         long callCount;
@@ -63,7 +62,7 @@ public class Stack_Drop_Single_Item_Patch
 
         if (!preSnapshot.IsDragAndDrop)
         {
-            UIRefreshHelper.LogAndRefreshUI($"{d_MethodName}({StackOps.ItemStack_DropSingleItem_Operation})", callCount);
+            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_DropSingleItem_Operation}", callCount);
             return;
         }
 #if DEBUG

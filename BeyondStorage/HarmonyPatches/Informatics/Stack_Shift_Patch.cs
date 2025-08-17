@@ -48,7 +48,6 @@ public class Stack_Shift_Patch
 #endif
     public static void Handle_StackShift_Event_Postfix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_StackShift_Event_Postfix);
 
         // Capture post-execution snapshot
         var postSnapshot = new SlotSnapshot(__instance);
@@ -69,7 +68,7 @@ public class Stack_Shift_Patch
             // we can't reliably determine the exact slot where the stack ended up, so whether is's locked or not is not relevant.
             // All we know is that either the source or destination was maybe a locked storage slot, so we have assume that
             // a locked storage slot was involved in this operation.
-            UIRefreshHelper.LogAndRefreshUI($"{d_MethodName}({StackOps.ItemStack_Shift_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_Shift_Operation}", callCount);
         }
     }
 }
