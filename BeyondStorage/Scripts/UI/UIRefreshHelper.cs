@@ -120,8 +120,8 @@ public static class UIRefreshHelper
     private static void RefreshAllWindowsInternal(StorageContext context, bool includeViewComponents = true)
     {
         // Caller is responsible for validation - this method assumes components are valid
-        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
-        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
+        //context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
+        //context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
     }
 
