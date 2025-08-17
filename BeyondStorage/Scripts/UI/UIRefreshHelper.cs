@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -119,6 +120,8 @@ public static class UIRefreshHelper
     private static void RefreshAllWindowsInternal(StorageContext context, bool includeViewComponents = true)
     {
         // Caller is responsible for validation - this method assumes components are valid
+        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
+        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
     }
 
@@ -168,11 +171,14 @@ public static class UIRefreshHelper
     {
         lock (s_lockObject)
         {
+            var isStackOp = StackOperation.IsValidOperation(methodName);
+            ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOp ? "stack operation" : "general storage operation")}");
+
             if (s_lastRefreshTimes.TryGetValue(methodName, out DateTime lastRefreshTime))
             {
                 var timeSinceLastRefresh = DateTime.UtcNow - lastRefreshTime;
 
-                if (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS)
+                if (isStackOp || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
                 {
                     // Create a temporary StorageContext to properly invalidate caches
                     // This ensures WorldPlayerContext is always accessed through StorageContext
