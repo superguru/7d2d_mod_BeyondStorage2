@@ -31,29 +31,4 @@ public static class XUiC_CollectedItemList_StorageIntegration_Patches
         ModLogger.DebugLog($"{d_MethodName}: Proceeding with AddItemStack for stack ({itemInfo})");
         return true; // Proceed with original method execution
     }
-
-    [HarmonyPrefix]
-    [HarmonyPatch(nameof(XUiC_CollectedItemList.RemoveItemStack))]
-#if DEBUG
-    [HarmonyDebug]
-#endif
-    public static bool Intercept_RemoveItemStack_Prefix(XUiC_CollectedItemList __instance, ItemStack _is)
-    {
-#if DEBUG
-        const string d_MethodName = nameof(Intercept_RemoveItemStack_Prefix);
-#endif
-        var itemInfo = ItemX.Info(_is);
-
-        var isStackShiftIntercept = Stack_Shift_Patch.StackMatchesCurrentOp(_is);
-        if (isStackShiftIntercept)
-        {
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Skipping RemoveItemStack (notification) for matching stack ({itemInfo}) shift operation");
-#endif
-            return false; // Skip original method execution
-        }
-
-        ModLogger.DebugLog($"{d_MethodName}: Proceeding with RemoveItemStack for stack ({itemInfo})");
-        return true; // Proceed with original method execution
-    }
 }
