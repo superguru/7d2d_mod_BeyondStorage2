@@ -75,10 +75,10 @@ public class Stack_Partial_Patch
         if (preSnapshot.IsStorageInventory)
         {
             // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.                
-            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_Pickup_Half_Stack_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Pickup_Half_Stack_Operation, __instance, callCount);
         }
 
-        //ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot.ToCompactString()}, loc={preSnapshot.SlotLocation}");
+        //ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot}");
     }
 
     [HarmonyPostfix]

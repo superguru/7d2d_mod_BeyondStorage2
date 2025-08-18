@@ -16,13 +16,7 @@ public static class UIRefreshHelper
     private static readonly Dictionary<string, DateTime> s_lastRefreshTimes = new();
     private static readonly object s_lockObject = new();
 
-    /// <summary>
-    /// Logs a formatted debug message and triggers UI refresh for single item drop operations
-    /// </summary>
-    /// <param name="methodName">The calling method name</param>
-    /// <param name="callCount">The call counter value</param>
-    /// <param name="message">The message to log</param>
-    public static void LogAndRefreshUI(string methodName, long callCount)
+    public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack __instance, long callCount)
     {
         string callStr = " ";
 #if DEBUG
@@ -30,9 +24,27 @@ public static class UIRefreshHelper
         {
             callStr = $"call #{callCount} ";
         }
+
+        var methodName = StackOperation.GetStackOpName(operation);
         ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI");
 #endif
-        RefreshAllWindows(methodName, includeViewComponents: true);
+        if (__instance != null)
+        {
+            __instance.IsDirty = true;
+        }
+
+        RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
+    }
+
+    /// <summary>
+    /// Logs a formatted debug message and triggers UI refresh for single item drop operations
+    /// </summary>
+    /// <param name="methodName">The calling method name</param>
+    /// <param name="callCount">The call counter value</param>
+    /// <param name="message">The message to log</param>
+    public static void LogAndRefreshUI(string methodName)
+    {
+        RefreshAllWindows(methodName, isStackOperation: false, includeViewComponents: true);
     }
 
     /// <summary>
@@ -121,6 +133,7 @@ public static class UIRefreshHelper
     {
         // Caller is responsible for validation - this method assumes components are valid
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
+        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.RefreshCurrency();
     }
 
     /// <summary>
@@ -131,10 +144,10 @@ public static class UIRefreshHelper
     /// <param name="methodName">The calling method name for logging purposes</param>
     /// <param name="includeViewComponents">Whether to include view components in the refresh</param>
     /// <returns>True if refresh was performed successfully, false if validation failed</returns>
-    public static bool RefreshAllWindows(string methodName, bool includeViewComponents = true)
+    public static bool RefreshAllWindows(string methodName, bool isStackOperation = false, bool includeViewComponents = true)
     {
         // Check if we need to invalidate cache due to rapid successive calls
-        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName);
+        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName, isStackOperation: false);
 
         if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
         {
@@ -165,18 +178,17 @@ public static class UIRefreshHelper
     /// </summary>
     /// <param name="methodName">The method name to check timing for</param>
     /// <returns>True if cache was invalidated, false otherwise</returns>
-    private static bool CheckAndInvalidateCacheIfNeeded(string methodName)
+    private static bool CheckAndInvalidateCacheIfNeeded(string methodName, bool isStackOperation = false)
     {
         lock (s_lockObject)
         {
-            var isStackOp = StackOperation.IsValidOperation(methodName);
-            ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOp ? "stack operation" : "general storage operation")}");
+            ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOperation ? "stack operation" : "general storage operation")}");
 
             if (s_lastRefreshTimes.TryGetValue(methodName, out DateTime lastRefreshTime))
             {
                 var timeSinceLastRefresh = DateTime.UtcNow - lastRefreshTime;
 
-                if (isStackOp || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
+                if (isStackOperation || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
                 {
                     // Create a temporary StorageContext to properly invalidate caches
                     // This ensures WorldPlayerContext is always accessed through StorageContext

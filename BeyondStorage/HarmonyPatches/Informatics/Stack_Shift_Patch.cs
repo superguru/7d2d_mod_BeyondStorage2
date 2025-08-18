@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
 public class Stack_Shift_Patch
@@ -20,7 +21,9 @@ public class Stack_Shift_Patch
 #endif
     public static void Handle_StackShift_Event_Prefix(XUiC_ItemStack __instance)
     {
-
+#if DEBUG
+        const string d_MethodName = nameof(Handle_StackShift_Event_Prefix);
+#endif
         // Capture slot state snapshot
         var preSnapshot = new SlotSnapshot(__instance);
 
@@ -37,7 +40,7 @@ public class Stack_Shift_Patch
         }
 
 #if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot.ToCompactString()}, loc={preSnapshot.SlotLocation}");
+        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot.ToCompactString()}, loc={preSnapshot.SlotLocation}");
 #endif
     }
 
@@ -48,7 +51,9 @@ public class Stack_Shift_Patch
 #endif
     public static void Handle_StackShift_Event_Postfix(XUiC_ItemStack __instance)
     {
-
+#if DEBUG
+        const string d_MethodName = nameof(Handle_StackShift_Event_Postfix);
+#endif
         // Capture post-execution snapshot
         var postSnapshot = new SlotSnapshot(__instance);
 
@@ -62,13 +67,36 @@ public class Stack_Shift_Patch
         }
 
         // Handle Shift+Click logic (move stack between inventories)
-        if ((preSnapshot?.IsValid ?? false) && (postSnapshot?.IsStackPresent ?? false))
+        if ((preSnapshot?.IsValid ?? false))// && (postSnapshot?.IsStackPresent ?? false))
         {
             // Because stacks will be merged using this method, and any overspill will be moved to the next available slot,
             // we can't reliably determine the exact slot where the stack ended up, so whether is's locked or not is not relevant.
             // All we know is that either the source or destination was maybe a locked storage slot, so we have assume that
             // a locked storage slot was involved in this operation.
-            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_Shift_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Shift_Operation, __instance, callCount);
+        }
+
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot?.ToString() ?? "No_Pre_Snap"} ➡️ {postSnapshot}");
+#endif
+    }
+
+    public static bool StackMatchesCurrentOp(ItemStack stack)
+    {
+        lock (s_lockObject)
+        {
+            if (s_callHistory?.Count == 0)
+            {
+                return false; // No history available
+            }
+
+            var currentSnapshot = s_callHistory[s_callCounter];
+            if (currentSnapshot == null)
+            {
+                return false; // No valid snapshot to compare against
+            }
+
+            return currentSnapshot.EqualContents(stack);
         }
     }
 }

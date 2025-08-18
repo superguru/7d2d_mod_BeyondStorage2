@@ -141,6 +141,9 @@ public sealed class SlotSnapshot
             if (_originalCallCount <= 0) { _originalCallCount = value; }
         }
     }
+
+    public SwapAction PredictedOperation { get; set; } = SwapAction.NoOperation;
+
     #endregion
 
     #region Constructor
@@ -249,6 +252,14 @@ public sealed class SlotSnapshot
         }
 
         return $"{ItemDescription} in slot {SlotNumber}{LockIndicator}@{InventoryName} (drag={IsDragAndDrop}, drop={AllowDropping})";
+    }
+
+    internal bool EqualContents(ItemStack stack)
+    {
+        var thisValue = new ItemValue(ItemType);
+        var thisStack = new ItemStack(thisValue, ItemCount);
+
+        return ItemX.EqualContents(thisStack, stack);
     }
 
     #endregion

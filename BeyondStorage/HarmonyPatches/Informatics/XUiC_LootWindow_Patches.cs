@@ -15,6 +15,6 @@ public class XUiC_LootWindow_Patches
     {
         const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Postfix);
 
-        UIRefreshHelper.LogAndRefreshUI(d_MethodName, 0);
+        UIRefreshHelper.LogAndRefreshUI(d_MethodName);
     }
 }

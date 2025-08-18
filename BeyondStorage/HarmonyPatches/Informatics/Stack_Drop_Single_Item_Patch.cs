@@ -3,7 +3,7 @@ using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
 public class Stack_Drop_Single_Item_Patch
@@ -49,12 +49,12 @@ public class Stack_Drop_Single_Item_Patch
         var dragDropAnalyzer = new DragDropAnalyzer(preSnapshot, __instance);
 
         // Predict the expected operation type
-        var operation = SwapOperationStateMachine.GetPredictedSwapAction(preSnapshot, dragDropAnalyzer.IsDragEmpty, dragDropAnalyzer.DragStackInfo, dragDropAnalyzer.DragPickupLocation);
+        preSnapshot.PredictedOperation = SwapOperationStateMachine.GetPredictedSwapAction(preSnapshot, dragDropAnalyzer.IsDragEmpty, dragDropAnalyzer.DragStackInfo, dragDropAnalyzer.DragPickupLocation);
 
-        if (operation != SwapAction.SwapOrMergeOperation)
+        if (preSnapshot.PredictedOperation != SwapAction.SwapOrMergeOperation)
         {
 #if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName,MN_FMT}: call #{callCount,CN_FMT} skip different op, operation {operation}, pre {preSnapshot}");
+            //ModLogger.DebugLog($"{d_MethodName,MN_FMT}: call #{callCount,CN_FMT} skip different op, operation {preSnapshot.PredictedOperation}, pre {preSnapshot}");
 #endif
             return;
 
@@ -62,7 +62,7 @@ public class Stack_Drop_Single_Item_Patch
 
         if (!preSnapshot.IsDragAndDrop)
         {
-            UIRefreshHelper.LogAndRefreshUI($"{StackOps.ItemStack_DropSingleItem_Operation}", callCount);
+            UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_DropSingleItem_Operation, __instance, callCount);
             return;
         }
 #if DEBUG

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BeyondStorage.Scripts.Data;
@@ -21,6 +22,27 @@ public enum StackOps
 /// </summary>
 public static class StackOperation
 {
+    private static readonly Dictionary<StackOps, string> s_stackOpNames = [];
+
+    private static void EnsureStackOpsNameLookup()
+    {
+        if (s_stackOpNames.Count > 0)
+        {
+            return;
+        }
+
+        foreach (StackOps op in Enum.GetValues(typeof(StackOps)))
+        {
+            s_stackOpNames[op] = $"{op}";
+        }
+    }
+
+    public static string GetStackOpName(StackOps operation)
+    {
+        EnsureStackOpsNameLookup();
+        return s_stackOpNames[operation];
+    }
+
     /// <summary>
     /// Determines whether the specified operation is a known stack operation.
     /// </summary>
@@ -28,7 +50,8 @@ public static class StackOperation
     /// <returns>True if the operation is a defined enum value; otherwise, false</returns>
     public static bool IsValidOperation(StackOps operation)
     {
-        return Enum.IsDefined(typeof(StackOps), operation);
+        EnsureStackOpsNameLookup();
+        return s_stackOpNames.ContainsKey(operation);
     }
 
     /// <summary>
@@ -38,7 +61,8 @@ public static class StackOperation
     /// <returns>True if the operation name matches one of the defined enum values; otherwise, false</returns>
     public static bool IsValidOperation(string operationName)
     {
-        return Enum.TryParse<StackOps>(operationName, out _);
+        EnsureStackOpsNameLookup();
+        return s_stackOpNames.ContainsValue(operationName);
     }
 
     /// <summary>
@@ -47,7 +71,8 @@ public static class StackOperation
     /// <returns>Array of all StackOperation enum values</returns>
     public static StackOps[] GetAllOperations()
     {
-        return (StackOps[])Enum.GetValues(typeof(StackOps));
+        EnsureStackOpsNameLookup();
+        return s_stackOpNames.Keys.ToArray();
     }
 
     /// <summary>
@@ -56,7 +81,8 @@ public static class StackOperation
     /// <returns>Array of all operation string representations</returns>
     public static string[] GetAllOperationStrings()
     {
-        return GetAllOperations().Select(op => op.ToString()).ToArray();
+        EnsureStackOpsNameLookup();
+        return s_stackOpNames.Values.ToArray();
     }
 }
 
