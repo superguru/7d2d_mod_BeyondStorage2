@@ -114,7 +114,7 @@ public class Stack_Drag_Drop_Patch
             if (postSnapshot.IsStorageInventory && (operation == SwapAction.SwapSameItem || operation == SwapAction.SwapDifferentItems || preSnapshot.PredictedOperation == SwapAction.PickupFromSource))
             {
 #if DEBUG
-                ModLogger.DebugLog($"{nameof(d_MethodName)}: call #{callCount} - detected storage inventory swap operation, pre {preSnapshot} predicted_op {preSnapshot.PredictedOperation}, post {postSnapshot} operation {operation}");
+                ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory swap operation, pre {preSnapshot} predicted_op {preSnapshot.PredictedOperation}, post {postSnapshot} operation {operation}");
 #endif
                 // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.
                 UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Drop_Operation, __instance, callCount);
