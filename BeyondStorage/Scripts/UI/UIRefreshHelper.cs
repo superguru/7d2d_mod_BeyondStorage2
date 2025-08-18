@@ -28,10 +28,10 @@ public static class UIRefreshHelper
         var methodName = StackOperation.GetStackOpName(operation);
         ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI");
 #endif
-        if (__instance != null)
-        {
-            __instance.IsDirty = true;
-        }
+        //TODO:if (__instance != null)
+        //{
+        //    __instance.IsDirty = true;
+        //}
 
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
     }
@@ -133,7 +133,7 @@ public static class UIRefreshHelper
     {
         // Caller is responsible for validation - this method assumes components are valid
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
-        context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.RefreshCurrency();
+        //TODO: How to refresh the wallet? This just causes StackOps to fail: context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.RefreshCurrency();
     }
 
     /// <summary>
@@ -189,6 +189,7 @@ public static class UIRefreshHelper
                 var timeSinceLastRefresh = DateTime.UtcNow - lastRefreshTime;
 
                 if (isStackOperation || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
+                //TODO:if ((timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
                 {
                     // Create a temporary StorageContext to properly invalidate caches
                     // This ensures WorldPlayerContext is always accessed through StorageContext

@@ -40,8 +40,9 @@ public class Stack_Shift_Patch
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot.ToCompactString()}, loc={preSnapshot.SlotLocation}");
+        ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory pickup operation, pre {preSnapshot}");
 #endif
+        UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Shift_Operation, __instance, callCount);
     }
 
     [HarmonyPostfix]
