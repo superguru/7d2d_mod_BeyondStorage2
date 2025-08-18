@@ -153,8 +153,9 @@ public static class WorkstationRecipe
 
             recipeList.PlayerInventory_OnBackpackItemsChanged();
             workstation.craftInfoWindow?.ingredientList?.PlayerInventory_OnBackpackItemsChanged();
-
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Refreshed workstation {workstation} (#{++refreshCount}) in call {callCount}");
+#endif
         }
     }
 }
