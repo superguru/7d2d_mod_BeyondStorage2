@@ -53,11 +53,11 @@ public static class Item_Action_Entry_Purchase_Patches
         return response.BestInstructions(request);
     }
 
-    //    [HarmonyTranspiler]
-    //    [HarmonyPatch(nameof(ItemActionEntryPurchase.OnActivated))]
-    //#if DEBUG
-    //    [HarmonyDebug]
-    //#endif
+    [HarmonyTranspiler]
+    [HarmonyPatch(nameof(ItemActionEntryPurchase.OnActivated))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static IEnumerable<CodeInstruction> ItemActionEntryPurchase_OnActivated_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryPurchase)}.{nameof(ItemActionEntryPurchase.OnActivated)}";
