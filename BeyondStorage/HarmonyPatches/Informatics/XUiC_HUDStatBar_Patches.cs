@@ -4,7 +4,7 @@ using BeyondStorage.Scripts.Game.Ranged;
 using BeyondStorage.Scripts.Harmony;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.Item;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_HUDStatBar))]
 public class XUiCHUDStatBarPatches

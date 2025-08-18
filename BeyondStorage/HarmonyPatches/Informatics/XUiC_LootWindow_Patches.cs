@@ -1,7 +1,7 @@
 ﻿using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_LootWindow))]
 public class XUiC_LootWindow_Patches

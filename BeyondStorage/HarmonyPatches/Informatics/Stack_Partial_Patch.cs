@@ -5,7 +5,7 @@ using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
 public class Stack_Partial_Patch

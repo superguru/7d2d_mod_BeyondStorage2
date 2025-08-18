@@ -4,7 +4,7 @@ using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Harmony;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.Item;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_RecipeTrackerIngredientEntry))]
 public class XUiC_RecipeTracker_IngredientEntry_Patches

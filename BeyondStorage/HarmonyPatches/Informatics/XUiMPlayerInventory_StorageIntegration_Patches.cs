@@ -2,7 +2,7 @@
 using BeyondStorage.Scripts.Game.Item;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
 public static class XUiMPlayerInventory_StorageIntegration_Patches

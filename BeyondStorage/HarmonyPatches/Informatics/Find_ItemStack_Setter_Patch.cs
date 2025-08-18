@@ -4,7 +4,7 @@ using BeyondStorage.Scripts.Diagnostics;
 using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
 public class Find_ItemStack_Setter_Patch

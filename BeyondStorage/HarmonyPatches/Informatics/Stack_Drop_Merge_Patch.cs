@@ -7,7 +7,7 @@ using HarmonyLib;
 #if DEBUG
 #endif
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
 public class Stack_Drop_Merge_Patch
