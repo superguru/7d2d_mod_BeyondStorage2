@@ -44,7 +44,7 @@ public static class UIRefreshHelper
                         // Refresh the wallet UI after a short delay to ensure it reflects the latest currency state
                         instance.xui.PlayerInventory.RefreshCurrency();
                     },
-                TimeSpan.FromMilliseconds(100) // Short delay to allow UI to stabilize after stack operation
+                TimeSpan.FromMilliseconds(20) // Short delay to allow UI to stabilize after stack operation
             );
 
             ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(instance?.ItemStack)}");
@@ -148,7 +148,6 @@ public static class UIRefreshHelper
     {
         // Caller is responsible for validation - this method assumes components are valid
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
-        //TODO: How to refresh the wallet? This just causes StackOps to fail: context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory.RefreshCurrency();
     }
 
     /// <summary>
@@ -204,7 +203,6 @@ public static class UIRefreshHelper
                 var timeSinceLastRefresh = DateTime.UtcNow - lastRefreshTime;
 
                 if (isStackOperation || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
-                //TODO:if ((timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
                 {
                     // Create a temporary StorageContext to properly invalidate caches
                     // This ensures WorldPlayerContext is always accessed through StorageContext
