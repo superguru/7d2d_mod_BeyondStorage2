@@ -26,14 +26,29 @@ public static class UIRefreshHelper
         }
 
         var methodName = StackOperation.GetStackOpName(operation);
-        ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI");
+        ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(__instance?.ItemStack)}");
 #endif
-        //TODO:if (__instance != null)
-        //{
-        //    __instance.IsDirty = true;
-        //}
-
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
+
+        HandleCurrencyStackOp(operation, __instance);
+    }
+
+    private static void HandleCurrencyStackOp(StackOps operation, XUiC_ItemStack instance)
+    {
+        var isCurrencyStack = CurrencyCache.IsCurrencyItem(instance);
+        if (isCurrencyStack)
+        {
+            ActionHelper.SetTimeout(
+                () =>
+                    {
+                        // Refresh the wallet UI after a short delay to ensure it reflects the latest currency state
+                        instance.xui.PlayerInventory.RefreshCurrency();
+                    },
+                TimeSpan.FromMilliseconds(100) // Short delay to allow UI to stabilize after stack operation
+            );
+
+            ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(instance?.ItemStack)}");
+        }
     }
 
     /// <summary>
