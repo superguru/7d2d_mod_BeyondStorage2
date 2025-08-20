@@ -1,6 +1,9 @@
 ﻿using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
+
+#if DEBUG
+using BeyondStorage.Scripts.Infrastructure;
+#endif
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
@@ -28,7 +31,9 @@ public static class XUiC_CollectedItemList_StorageIntegration_Patches
             return false; // Skip original method execution
         }
 
+#if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: Proceeding with AddItemStack for stack ({itemInfo})");
+#endif
         return true; // Proceed with original method execution
     }
 }

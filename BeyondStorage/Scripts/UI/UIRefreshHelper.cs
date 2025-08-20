@@ -18,16 +18,18 @@ public static class UIRefreshHelper
 
     public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack __instance, long callCount)
     {
-        string callStr = " ";
+        var methodName = StackOperation.GetStackOpName(operation);
+
 #if DEBUG
+        string callStr = " ";
         if (callCount > 0)
         {
             callStr = $"call #{callCount} ";
         }
 
-        var methodName = StackOperation.GetStackOpName(operation);
         ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(__instance?.ItemStack)}");
 #endif
+
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
 
         HandleCurrencyStackOp(operation, __instance);

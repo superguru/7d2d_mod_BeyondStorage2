@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
+
+#if DEBUG
+using BeyondStorage.Scripts.Infrastructure;
+#endif
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
@@ -21,7 +24,9 @@ public class Stack_Partial_Patch
 #endif
     public static void Handle_PartialStackPickup_Event_Prefix(XUiC_ItemStack __instance)
     {
+#if DEBUG
         const string d_MethodName = nameof(Handle_PartialStackPickup_Event_Prefix);
+#endif
 
         if (__instance?.xui?.dragAndDrop == null)
         {

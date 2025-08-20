@@ -140,7 +140,9 @@ public static class WorkstationRecipe
             return; // Nothing to update - exit early
         }
 
+#if DEBUG
         int refreshCount = 0;
+#endif
         foreach (var workstation in openWorkstations)
         {
             var recipeList = workstation.recipeList;
