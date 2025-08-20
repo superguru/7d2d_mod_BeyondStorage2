@@ -44,7 +44,7 @@ public static class UIRefreshHelper
                         // Refresh the wallet UI after a short delay to ensure it reflects the latest currency state
                         instance.xui.PlayerInventory.RefreshCurrency();
                     },
-                TimeSpan.FromMilliseconds(20) // Short delay to allow UI to stabilize after stack operation
+                TimeSpan.FromMilliseconds(25) // 1.5 frames @ 60FPS : Short delay to allow UI to stabilize after stack operation
             );
 
             ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(instance?.ItemStack)}");
