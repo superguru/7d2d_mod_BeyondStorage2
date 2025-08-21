@@ -32,14 +32,14 @@ public static class WorkstationRecipe
         finally
         {
             // Stop timing and record the call
-            var elapsedNs = s_callStats.StopAndRecordCall(d_MethodName);
+            var elapsedUs = s_callStats.StopAndRecordCall(d_MethodName);
             var stats = s_callStats.GetMethodStats(d_MethodName);
 
             if (stats.HasValue)
             {
-                var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
+                var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
 #endif
             }
         }
@@ -67,14 +67,14 @@ public static class WorkstationRecipe
         finally
         {
             // Stop timing and record the call
-            var elapsedNs = s_callStats.StopAndRecordCall(d_MethodName);
+            var elapsedUs = s_callStats.StopAndRecordCall(d_MethodName);
             var stats = s_callStats.GetMethodStats(d_MethodName);
 
             if (stats.HasValue)
             {
-                var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
+                var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatNanoseconds(elapsedNs)} (avg: {PerformanceProfiler.FormatNanoseconds(avgTimeNs)})");
+                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
 #endif
             }
         }

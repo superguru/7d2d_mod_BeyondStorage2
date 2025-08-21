@@ -8,7 +8,8 @@ namespace BeyondStorage.Scripts.Infrastructure;
 /// <summary>
 /// Thread-safe class for tracking method call statistics including call count, total time, and average time.
 /// Can be used by any class that needs to track performance metrics for method calls.
-/// Uses explicit call recording for clarity and accuracy with nanosecond precision.
+/// Uses high-resolution timing with microsecond precision, providing accurate measurements
+/// within the actual capabilities of the underlying hardware timer.
 /// Includes internal stopwatch management for convenience.
 /// </summary>
 /// <remarks>
@@ -17,7 +18,7 @@ namespace BeyondStorage.Scripts.Infrastructure;
 /// <param name="trackerName">Name of the tracker for logging purposes</param>
 public sealed class PerformanceProfiler(string trackerName)
 {
-    private readonly Dictionary<string, (int callCount, long totalTimeNs, double avgTimeNs)> _callStats = [];
+    private readonly Dictionary<string, (int callCount, long totalTimeUs, double avgTimeUs)> _callStats = [];
     private readonly Dictionary<string, Stopwatch> _activeStopwatches = [];
     private readonly object _statsLock = new();
     private readonly string _trackerName = trackerName ?? throw new ArgumentNullException(nameof(trackerName));
@@ -50,7 +51,7 @@ public sealed class PerformanceProfiler(string trackerName)
     /// Stops timing and records the call for a method. Must be paired with StartTiming.
     /// </summary>
     /// <param name="methodName">Name of the method that was being timed</param>
-    /// <returns>The elapsed time in nanoseconds, or -1 if method wasn't being timed</returns>
+    /// <returns>The elapsed time in microseconds, or -1 if method wasn't being timed</returns>
     public long StopAndRecordCall(string methodName)
     {
         if (string.IsNullOrEmpty(methodName))
@@ -68,10 +69,10 @@ public sealed class PerformanceProfiler(string trackerName)
             stopwatch.Stop();
             _activeStopwatches.Remove(methodName);
 
-            var elapsedNs = (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
-            RecordCallInternal(methodName, elapsedNs);
+            var elapsedUs = (long)(stopwatch.ElapsedTicks * TicksToMicrosecondsRatio);
+            RecordCallInternal(methodName, elapsedUs);
 
-            return elapsedNs;
+            return elapsedUs;
         }
     }
 
@@ -79,7 +80,7 @@ public sealed class PerformanceProfiler(string trackerName)
     /// Gets the current elapsed time for a method being timed, without stopping the timer.
     /// </summary>
     /// <param name="methodName">Name of the method being timed</param>
-    /// <returns>Current elapsed time in nanoseconds, or -1 if method isn't being timed</returns>
+    /// <returns>Current elapsed time in microseconds, or -1 if method isn't being timed</returns>
     public long GetCurrentElapsed(string methodName)
     {
         if (string.IsNullOrEmpty(methodName))
@@ -91,7 +92,7 @@ public sealed class PerformanceProfiler(string trackerName)
         {
             if (_activeStopwatches.TryGetValue(methodName, out var stopwatch))
             {
-                return (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
+                return (long)(stopwatch.ElapsedTicks * TicksToMicrosecondsRatio);
             }
             return -1;
         }
@@ -116,11 +117,11 @@ public sealed class PerformanceProfiler(string trackerName)
     }
 
     /// <summary>
-    /// Records a method call with its execution time in nanoseconds.
+    /// Records a method call with its execution time in microseconds.
     /// </summary>
     /// <param name="methodName">Name of the method that was called</param>
-    /// <param name="elapsedNs">Execution time in nanoseconds</param>
-    public void RecordCall(string methodName, long elapsedNs)
+    /// <param name="elapsedUs">Execution time in microseconds</param>
+    public void RecordCall(string methodName, long elapsedUs)
     {
         if (string.IsNullOrEmpty(methodName))
         {
@@ -129,7 +130,7 @@ public sealed class PerformanceProfiler(string trackerName)
 
         lock (_statsLock)
         {
-            RecordCallInternal(methodName, elapsedNs);
+            RecordCallInternal(methodName, elapsedUs);
         }
     }
 
@@ -140,11 +141,11 @@ public sealed class PerformanceProfiler(string trackerName)
     /// <param name="elapsedMs">Execution time in milliseconds</param>
     public void RecordCallMs(string methodName, long elapsedMs)
     {
-        RecordCall(methodName, elapsedMs * 1_000_000); // Convert ms to ns
+        RecordCall(methodName, elapsedMs * 1_000); // Convert ms to μs
     }
 
     /// <summary>
-    /// Records a method call using a stopwatch with nanosecond precision.
+    /// Records a method call using a stopwatch with microsecond precision.
     /// </summary>
     /// <param name="methodName">Name of the method that was called</param>
     /// <param name="stopwatch">Stopwatch that was used to time the method</param>
@@ -155,33 +156,33 @@ public sealed class PerformanceProfiler(string trackerName)
             throw new ArgumentNullException(nameof(stopwatch));
         }
 
-        // Convert ticks to nanoseconds for maximum precision
-        var elapsedNs = (long)(stopwatch.ElapsedTicks * TicksToNanosecondsRatio);
-        RecordCall(methodName, elapsedNs);
+        // Convert ticks to microseconds for high-resolution precision
+        var elapsedUs = (long)(stopwatch.ElapsedTicks * TicksToMicrosecondsRatio);
+        RecordCall(methodName, elapsedUs);
     }
 
-    private void RecordCallInternal(string methodName, long elapsedNs)
+    private void RecordCallInternal(string methodName, long elapsedUs)
     {
         if (_callStats.TryGetValue(methodName, out var stats))
         {
             var newCallCount = stats.callCount + 1;
-            var newTotalTime = stats.totalTimeNs + elapsedNs;
+            var newTotalTime = stats.totalTimeUs + elapsedUs;
             var newAvgTime = (double)newTotalTime / newCallCount;
 
             _callStats[methodName] = (newCallCount, newTotalTime, newAvgTime);
         }
         else
         {
-            _callStats[methodName] = (1, elapsedNs, (double)elapsedNs);
+            _callStats[methodName] = (1, elapsedUs, (double)elapsedUs);
         }
     }
 
     /// <summary>
-    /// Gets statistics for a specific method with nanosecond precision.
+    /// Gets statistics for a specific method with microsecond precision.
     /// </summary>
     /// <param name="methodName">Name of the method</param>
     /// <returns>Statistics tuple or null if method not found</returns>
-    public (int callCount, long totalTimeNs, double avgTimeNs)? GetMethodStats(string methodName)
+    public (int callCount, long totalTimeUs, double avgTimeUs)? GetMethodStats(string methodName)
     {
         if (string.IsNullOrEmpty(methodName))
         {
@@ -208,17 +209,17 @@ public sealed class PerformanceProfiler(string trackerName)
         var stats = GetMethodStats(methodName);
         if (stats.HasValue)
         {
-            var (callCount, totalTimeNs, avgTimeNs) = stats.Value;
-            return (callCount, totalTimeNs / 1_000_000, avgTimeNs / 1_000_000.0);
+            var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
+            return (callCount, totalTimeUs / 1_000, avgTimeUs / 1_000.0);
         }
         return null;
     }
 
     /// <summary>
-    /// Gets all call statistics with nanosecond precision.
+    /// Gets all call statistics with microsecond precision.
     /// </summary>
     /// <returns>Dictionary of method names and their timing statistics</returns>
-    public Dictionary<string, (int callCount, long totalTimeNs, double avgTimeNs)> GetAllStatistics()
+    public Dictionary<string, (int callCount, long totalTimeUs, double avgTimeUs)> GetAllStatistics()
     {
         lock (_statsLock)
         {
@@ -237,8 +238,8 @@ public sealed class PerformanceProfiler(string trackerName)
             var result = new Dictionary<string, (int, long, double)>();
             foreach (var kvp in _callStats)
             {
-                var (callCount, totalTimeNs, avgTimeNs) = kvp.Value;
-                result[kvp.Key] = (callCount, totalTimeNs / 1_000_000, avgTimeNs / 1_000_000.0);
+                var (callCount, totalTimeUs, avgTimeUs) = kvp.Value;
+                result[kvp.Key] = (callCount, totalTimeUs / 1_000, avgTimeUs / 1_000.0);
             }
             return result;
         }
@@ -261,10 +262,10 @@ public sealed class PerformanceProfiler(string trackerName)
             foreach (var kvp in _callStats.OrderByDescending(x => x.Value.callCount))
             {
                 var method = kvp.Key;
-                var (callCount, totalTimeNs, avgTimeNs) = kvp.Value;
+                var (callCount, totalTimeUs, avgTimeUs) = kvp.Value;
 
                 // Intelligently choose units based on magnitude
-                var (avgDisplay, totalDisplay) = FormatTime(avgTimeNs, totalTimeNs);
+                var (avgDisplay, totalDisplay) = FormatTime(avgTimeUs, totalTimeUs);
                 stats.Add($"{method}: {callCount} calls, avg {avgDisplay}, total {totalDisplay}");
             }
 
@@ -273,90 +274,78 @@ public sealed class PerformanceProfiler(string trackerName)
     }
 
     /// <summary>
-    /// Formats time values with appropriate units (ns, μs, ms, s).
+    /// Formats time values with appropriate units (μs, ms, s).
     /// </summary>
-    private static (string avg, string total) FormatTime(double avgTimeNs, long totalTimeNs)
+    private static (string avg, string total) FormatTime(double avgTimeUs, long totalTimeUs)
     {
         string avgDisplay, totalDisplay;
 
         // Format average time
-        if (avgTimeNs < 1_000) // Less than 1 microsecond
+        if (avgTimeUs < 1_000) // Less than 1 millisecond
         {
-            avgDisplay = $"{avgTimeNs:F3}ns";
+            avgDisplay = $"{avgTimeUs:F3}μs";
         }
-        else if (avgTimeNs < 1_000_000) // Less than 1 millisecond
+        else if (avgTimeUs < 1_000_000) // Less than 1 second
         {
-            avgDisplay = $"{avgTimeNs / 1_000.0:F3}μs";
-        }
-        else if (avgTimeNs < 1_000_000_000) // Less than 1 second
-        {
-            avgDisplay = $"{avgTimeNs / 1_000_000.0:F3}ms";
+            avgDisplay = $"{avgTimeUs / 1_000.0:F3}ms";
         }
         else
         {
-            avgDisplay = $"{avgTimeNs / 1_000_000_000.0:F3}s";
+            avgDisplay = $"{avgTimeUs / 1_000_000.0:F3}s";
         }
 
         // Format total time
-        if (totalTimeNs < 1_000) // Less than 1 microsecond
+        if (totalTimeUs < 1_000) // Less than 1 millisecond
         {
-            totalDisplay = $"{totalTimeNs}ns";
+            totalDisplay = $"{totalTimeUs}μs";
         }
-        else if (totalTimeNs < 1_000_000) // Less than 1 millisecond
+        else if (totalTimeUs < 1_000_000) // Less than 1 second
         {
-            totalDisplay = $"{totalTimeNs / 1_000.0:F3}μs";
-        }
-        else if (totalTimeNs < 1_000_000_000) // Less than 1 second
-        {
-            totalDisplay = $"{totalTimeNs / 1_000_000.0:F3}ms";
+            totalDisplay = $"{totalTimeUs / 1_000.0:F3}ms";
         }
         else
         {
-            totalDisplay = $"{totalTimeNs / 1_000_000_000.0:F3}s";
+            totalDisplay = $"{totalTimeUs / 1_000_000.0:F3}s";
         }
 
         return (avgDisplay, totalDisplay);
     }
 
     /// <summary>
-    /// Formats a single nanosecond value with appropriate units for readability.
+    /// Formats a single microsecond value with appropriate units for readability.
     /// </summary>
-    /// <param name="nanoseconds">Time in nanoseconds</param>
+    /// <param name="microseconds">Time in microseconds</param>
     /// <returns>Formatted string with appropriate unit</returns>
-    public static string FormatNanoseconds(double nanoseconds)
+    public static string FormatMicroseconds(double microseconds)
     {
-        if (nanoseconds < 1_000) // Less than 1 microsecond
+        if (microseconds < 1_000) // Less than 1 millisecond
         {
-            return $"{nanoseconds:F3}ns";
+            return $"{microseconds:F3}μs";
         }
-        else if (nanoseconds < 1_000_000) // Less than 1 millisecond
+        else if (microseconds < 1_000_000) // Less than 1 second
         {
-            return $"{nanoseconds / 1_000.0:F3}μs";
-        }
-        else if (nanoseconds < 1_000_000_000) // Less than 1 second
-        {
-            return $"{nanoseconds / 1_000_000.0:F3}ms";
+            return $"{microseconds / 1_000.0:F3}ms";
         }
         else
         {
-            return $"{nanoseconds / 1_000_000_000.0:F3}s";
+            return $"{microseconds / 1_000_000.0:F3}s";
         }
     }
 
     /// <summary>
-    /// Converts stopwatch ticks to nanoseconds for precise timing calculations.
+    /// Converts stopwatch ticks to microseconds for precise timing calculations.
     /// </summary>
     /// <param name="ticks">Stopwatch ticks</param>
-    /// <returns>Time in nanoseconds</returns>
-    public static long TicksToNanoseconds(long ticks)
+    /// <returns>Time in microseconds</returns>
+    public static long TicksToMicroseconds(long ticks)
     {
-        return (long)(ticks * TicksToNanosecondsRatio);
+        return (long)(ticks * TicksToMicrosecondsRatio);
     }
 
     /// <summary>
-    /// Gets the nanosecond conversion factor for external timing calculations.
+    /// Gets the microsecond conversion factor for external timing calculations.
     /// </summary>
-    public static double TicksToNanosecondsRatio { get; } = 1_000_000_000.0 / Stopwatch.Frequency;
+    public static double TicksToMicrosecondsRatio { get; } = 1_000_000.0 / Stopwatch.Frequency;
 
     /// <summary>
     /// Clears all statistics.
@@ -399,15 +388,15 @@ public sealed class PerformanceProfiler(string trackerName)
     }
 
     /// <summary>
-    /// Gets the total execution time across all methods in nanoseconds.
+    /// Gets the total execution time across all methods in microseconds.
     /// </summary>
-    public long TotalTimeNs
+    public long TotalTimeUs
     {
         get
         {
             lock (_statsLock)
             {
-                return _callStats.Values.Sum(s => s.totalTimeNs);
+                return _callStats.Values.Sum(s => s.totalTimeUs);
             }
         }
     }
@@ -419,7 +408,7 @@ public sealed class PerformanceProfiler(string trackerName)
     {
         get
         {
-            return TotalTimeNs / 1_000_000;
+            return TotalTimeUs / 1_000;
         }
     }
 
@@ -429,7 +418,7 @@ public sealed class PerformanceProfiler(string trackerName)
     public static string GetTimingInfo()
     {
         return $"Stopwatch Frequency: {Stopwatch.Frequency:N0} Hz, " +
-               $"Resolution: {TicksToNanosecondsRatio:F3}ns per tick, " +
+               $"Resolution: {TicksToMicrosecondsRatio:F3}μs per tick, " +
                $"High Resolution: {Stopwatch.IsHighResolution}";
     }
 }
