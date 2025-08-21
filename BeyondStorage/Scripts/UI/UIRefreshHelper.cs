@@ -9,23 +9,229 @@ namespace BeyondStorage.Scripts.UI;
 /// <summary>
 /// Utility class for refreshing UI components when storage changes affect game state.
 /// Provides common functionality for validating UI contexts and refreshing all windows.
+/// 
+/// Key Features:
+/// - Thread-safe timing-based cache invalidation strategy
+/// - Intelligent UI refresh timing to prevent performance issues
+/// - Stack operation logging and UI refresh coordination
+/// - Currency operation handling with delayed wallet updates
+/// - Comprehensive UI component validation
+/// 
+/// Cache Invalidation Rules:
+/// - First calls: Always invalidate (no cached data available)
+/// - Stack operations: Always invalidate (immediate UI consistency required)
+/// - Storage operations: Only invalidate if called within 0.4 seconds of previous call (performance protection)
 /// </summary>
 public static class UIRefreshHelper
 {
+    #region Constants
+
+    /// <summary>
+    /// Time threshold in seconds for determining when to invalidate cache for rapid successive calls.
+    /// Operations called within this timeframe will trigger cache invalidation to prevent stale data.
+    /// </summary>
     private const double CACHE_INVALIDATION_THRESHOLD_SECONDS = 0.4;
+
+    #endregion
+
+    #region Private Fields
+
+    /// <summary>
+    /// Thread-safe dictionary tracking the last refresh time for each method to implement timing-based cache invalidation.
+    /// </summary>
     private static readonly Dictionary<string, DateTime> s_lastRefreshTimes = [];
+
+    /// <summary>
+    /// Lock object for thread-safe access to timing data and cache operations.
+    /// </summary>
     private static readonly object s_lockObject = new();
 
+    #endregion
+
+    #region Public API - Stack Operation Logging and Refresh
+
+    /// <summary>
+    /// Logs stack operation details and triggers UI refresh for operations involving ItemStack instances.
+    /// Handles currency-specific operations with special wallet refresh logic.
+    /// </summary>
+    /// <param name="operation">The type of stack operation being performed</param>
+    /// <param name="__instance">The ItemStack UI component instance (may be null)</param>
+    /// <param name="callCount">The sequential call number for logging purposes</param>
     public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack __instance, long callCount)
     {
         LogAndRefreshUIInternal(operation, __instance?.ItemStack, __instance?.xui?.PlayerInventory, callCount);
     }
 
+    /// <summary>
+    /// Logs stack operation details and triggers UI refresh for operations involving ItemStack data.
+    /// Uses fallback currency handling when player inventory is not directly available.
+    /// </summary>
+    /// <param name="operation">The type of stack operation being performed</param>
+    /// <param name="itemStack">The ItemStack data being operated on</param>
+    /// <param name="callCount">The sequential call number for logging purposes</param>
     public static void LogAndRefreshUI(StackOps operation, ItemStack itemStack, long callCount)
     {
         LogAndRefreshUIInternal(operation, itemStack, null, callCount);
     }
 
+    /// <summary>
+    /// Logs a debug message and triggers UI refresh for general operations without stack-specific context.
+    /// Treats the operation as a general storage operation rather than a stack operation.
+    /// </summary>
+    /// <param name="methodName">The calling method name for logging and timing purposes</param>
+    public static void LogAndRefreshUI(string methodName)
+    {
+        RefreshAllWindows(methodName, isStackOperation: false, includeViewComponents: true);
+    }
+
+    #endregion
+
+    #region Public API - UI Validation and Refresh
+
+    /// <summary>
+    /// Validates UI components are available and refreshes all windows if valid.
+    /// This is commonly needed when storage operations affect the game state and UI needs to be updated.
+    /// Includes timing-based cache invalidation for performance optimization.
+    /// </summary>
+    /// <param name="context">The storage context containing world and player information</param>
+    /// <param name="methodName">The calling method name for logging and timing purposes</param>
+    /// <returns>True if UI components were valid and refresh was performed, false otherwise</returns>
+    public static bool ValidateAndRefreshUI(StorageContext context, string methodName)
+    {
+        if (!ValidateUIComponents(context, methodName))
+        {
+            return false;
+        }
+
+        // Check if we need to invalidate cache due to rapid successive calls
+        CheckAndInvalidateCacheIfNeeded(methodName, false);
+
+        RefreshAllWindowsInternal(context, includeViewComponents: true);
+
+        // Update the last refresh time for this method to maintain consistency with RefreshAllWindows
+        UpdateLastRefreshTime(methodName);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Performs a UI refresh, creating a StorageContext internally and validating components.
+    /// This is a convenience method that handles context creation and validation automatically.
+    /// Includes timing-based cache invalidation for rapid successive calls.
+    /// </summary>
+    /// <param name="methodName">The calling method name for logging and timing purposes</param>
+    /// <param name="isStackOperation">Whether this is a stack operation (always invalidates cache) or general storage operation (time-based invalidation)</param>
+    /// <param name="includeViewComponents">Whether to include view components in the refresh</param>
+    /// <returns>True if refresh was performed successfully, false if validation failed</returns>
+    public static bool RefreshAllWindows(string methodName, bool isStackOperation, bool includeViewComponents = true)
+    {
+        // Check if we need to invalidate cache due to rapid successive calls
+        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName, isStackOperation);
+
+        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
+        {
+            return false;
+        }
+
+        if (!ValidateUIComponents(context, methodName))
+        {
+            return false;
+        }
+
+        RefreshAllWindowsInternal(context, includeViewComponents);
+
+        // Update the last refresh time for this method
+        UpdateLastRefreshTime(methodName);
+
+        if (cacheInvalidated)
+        {
+            ModLogger.DebugLog($"{methodName}: Cache invalidated due to rapid successive UI refresh calls (< {CACHE_INVALIDATION_THRESHOLD_SECONDS}s)");
+        }
+
+        return true;
+    }
+
+    #endregion
+
+    #region Public API - UI Component Validation
+
+    /// <summary>
+    /// Validates UI components without performing a refresh.
+    /// Useful for checking if UI operations are possible before proceeding with expensive operations.
+    /// </summary>
+    /// <param name="context">The storage context containing world and player information</param>
+    /// <param name="methodName">The calling method name for logging purposes</param>
+    /// <returns>True if UI components are valid, false otherwise</returns>
+    public static bool ValidateUIComponents(StorageContext context, string methodName)
+    {
+        if (context?.WorldPlayerContext?.Player?.playerUI?.xui == null)
+        {
+            ModLogger.DebugLog($"{methodName}: Required UI components are null");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates UI components without performing a refresh.
+    /// Creates a StorageContext internally to access world and player information.
+    /// </summary>
+    /// <param name="methodName">The calling method name for logging purposes</param>
+    /// <returns>True if UI components are valid, false otherwise</returns>
+    public static bool ValidateUIComponents(string methodName)
+    {
+        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
+        {
+            return false;
+        }
+
+        return ValidateUIComponents(context, methodName);
+    }
+
+    #endregion
+
+    #region Public API - Diagnostics
+
+    /// <summary>
+    /// Gets diagnostic information about recent refresh calls.
+    /// Useful for debugging rapid successive refresh issues and timing analysis.
+    /// </summary>
+    /// <returns>String containing refresh timing information for all tracked methods</returns>
+    public static string GetRefreshTimingInfo()
+    {
+        lock (s_lockObject)
+        {
+            if (s_lastRefreshTimes.Count == 0)
+            {
+                return "No recent refresh calls recorded";
+            }
+
+            var now = DateTime.UtcNow;
+            var timingInfo = new List<string>();
+
+            foreach (var kvp in s_lastRefreshTimes)
+            {
+                var age = now - kvp.Value;
+                timingInfo.Add($"{kvp.Key}: {age.TotalSeconds:F2}s ago");
+            }
+
+            return $"Recent refresh calls: {string.Join(", ", timingInfo)}";
+        }
+    }
+
+    #endregion
+
+    #region Private Implementation - Stack Operation Processing
+
+    /// <summary>
+    /// Internal implementation for stack operation logging and UI refresh.
+    /// Handles both direct player inventory access and fallback methods for currency operations.
+    /// </summary>
+    /// <param name="operation">The type of stack operation being performed</param>
+    /// <param name="itemStack">The ItemStack data being operated on</param>
+    /// <param name="playerInventory">Player inventory instance for direct currency refresh (may be null)</param>
+    /// <param name="callCount">The sequential call number for logging purposes</param>
     private static void LogAndRefreshUIInternal(StackOps operation, ItemStack itemStack, XUiM_PlayerInventory playerInventory, long callCount)
     {
         var methodName = StackOperation.GetStackOpName(operation);
@@ -45,6 +251,14 @@ public static class UIRefreshHelper
         HandleCurrencyStackOp(operation, itemStack, playerInventory);
     }
 
+    /// <summary>
+    /// Handles special processing for currency stack operations with delayed wallet UI updates.
+    /// Implements a 25ms delay to ensure UI stability after currency changes.
+    /// Uses fallback method when direct player inventory access is not available.
+    /// </summary>
+    /// <param name="operation">The stack operation that was performed</param>
+    /// <param name="itemStack">The ItemStack that was operated on</param>
+    /// <param name="playerInventory">Player inventory for direct access (may be null)</param>
     private static void HandleCurrencyStackOp(StackOps operation, ItemStack itemStack, XUiM_PlayerInventory playerInventory)
     {
         var isCurrencyStack = CurrencyCache.IsCurrencyItem(itemStack);
@@ -82,72 +296,9 @@ public static class UIRefreshHelper
         }
     }
 
-    /// <summary>
-    /// Logs a formatted debug message and triggers UI refresh for single item drop operations
-    /// </summary>
-    /// <param name="methodName">The calling method name</param>
-    /// <param name="callCount">The call counter value</param>
-    /// <param name="message">The message to log</param>
-    public static void LogAndRefreshUI(string methodName)
-    {
-        RefreshAllWindows(methodName, isStackOperation: false, includeViewComponents: true);
-    }
+    #endregion
 
-    /// <summary>
-    /// Validates UI components are available and refreshes all windows if valid.
-    /// This is commonly needed when storage operations affect the game state and UI needs to be updated.
-    /// </summary>
-    /// <param name="context">The storage context containing world and player information</param>
-    /// <param name="methodName">The calling method name for logging purposes</param>
-    /// <returns>True if UI components were valid and refresh was performed, false otherwise</returns>
-    public static bool ValidateAndRefreshUI(StorageContext context, string methodName)
-    {
-        if (!ValidateUIComponents(context, methodName))
-        {
-            return false;
-        }
-
-        // Check if we need to invalidate cache due to rapid successive calls
-        CheckAndInvalidateCacheIfNeeded(methodName, false);
-
-        // Now completely safe to access without null-conditional operators
-        RefreshAllWindowsInternal(context, includeViewComponents: true);
-        return true;
-    }
-
-    /// <summary>
-    /// Validates UI components without performing a refresh.
-    /// Useful for checking if UI operations are possible before proceeding with expensive operations.
-    /// </summary>
-    /// <param name="context">The storage context containing world and player information</param>
-    /// <param name="methodName">The calling method name for logging purposes</param>
-    /// <returns>True if UI components are valid, false otherwise</returns>
-    public static bool ValidateUIComponents(StorageContext context, string methodName)
-    {
-        if (context?.WorldPlayerContext?.Player?.playerUI?.xui == null)
-        {
-            ModLogger.DebugLog($"{methodName}: Required UI components are null");
-            return false;
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Validates UI components without performing a refresh.
-    /// Creates a StorageContext internally to access world and player information.
-    /// </summary>
-    /// <param name="methodName">The calling method name for logging purposes</param>
-    /// <returns>True if UI components are valid, false otherwise</returns>
-    public static bool ValidateUIComponents(string methodName)
-    {
-        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
-        {
-            return false;
-        }
-
-        return ValidateUIComponents(context, methodName);
-    }
+    #region Private Implementation - UI Refresh
 
     /// <summary>
     /// Performs a UI refresh assuming UI components have already been validated.
@@ -162,41 +313,9 @@ public static class UIRefreshHelper
         context.WorldPlayerContext.Player.playerUI.xui.RefreshAllWindows(includeViewComponents);
     }
 
-    /// <summary>
-    /// Performs a UI refresh, creating a StorageContext internally and validating components.
-    /// This is a convenience method that handles context creation and validation automatically.
-    /// Includes timing-based cache invalidation for rapid successive calls.
-    /// </summary>
-    /// <param name="methodName">The calling method name for logging purposes</param>
-    /// <param name="includeViewComponents">Whether to include view components in the refresh</param>
-    /// <returns>True if refresh was performed successfully, false if validation failed</returns>
-    public static bool RefreshAllWindows(string methodName, bool isStackOperation, bool includeViewComponents = true)
-    {
-        // Check if we need to invalidate cache due to rapid successive calls
-        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName, isStackOperation);
+    #endregion
 
-        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
-        {
-            return false;
-        }
-
-        if (!ValidateUIComponents(context, methodName))
-        {
-            return false;
-        }
-
-        RefreshAllWindowsInternal(context, includeViewComponents);
-
-        // Update the last refresh time for this method
-        UpdateLastRefreshTime(methodName);
-
-        if (cacheInvalidated)
-        {
-            ModLogger.DebugLog($"{methodName}: Cache invalidated due to rapid successive UI refresh calls (< {CACHE_INVALIDATION_THRESHOLD_SECONDS}s)");
-        }
-
-        return true;
-    }
+    #region Private Implementation - Cache Management
 
     /// <summary>
     /// Determines if cache invalidation is needed based on timing thresholds and operation type.
@@ -264,6 +383,7 @@ public static class UIRefreshHelper
     /// <summary>
     /// Performs the actual cache invalidation using the preferred architectural approach.
     /// Separated into its own method to avoid code duplication between first calls and subsequent calls.
+    /// Uses StorageContext when available for proper architectural layering, falls back to global invalidation.
     /// </summary>
     /// <param name="methodName">The method name for logging purposes</param>
     private static void PerformCacheInvalidation(string methodName)
@@ -288,8 +408,14 @@ public static class UIRefreshHelper
         }
     }
 
+    #endregion
+
+    #region Private Implementation - Timing Management
+
     /// <summary>
     /// Updates the last refresh time for the specified method name.
+    /// Used to maintain timing information for cache invalidation decisions.
+    /// Thread-safe implementation using the shared lock object.
     /// </summary>
     /// <param name="methodName">The method name to update timing for</param>
     private static void UpdateLastRefreshTime(string methodName)
@@ -300,42 +426,5 @@ public static class UIRefreshHelper
         }
     }
 
-    /// <summary>
-    /// Gets diagnostic information about recent refresh calls.
-    /// Useful for debugging rapid successive refresh issues.
-    /// </summary>
-    /// <returns>String containing refresh timing information</returns>
-    public static string GetRefreshTimingInfo()
-    {
-        lock (s_lockObject)
-        {
-            if (s_lastRefreshTimes.Count == 0)
-            {
-                return "No recent refresh calls recorded";
-            }
-
-            var now = DateTime.UtcNow;
-            var timingInfo = new List<string>();
-
-            foreach (var kvp in s_lastRefreshTimes)
-            {
-                var age = now - kvp.Value;
-                timingInfo.Add($"{kvp.Key}: {age.TotalSeconds:F2}s ago");
-            }
-
-            return $"Recent refresh calls: {string.Join(", ", timingInfo)}";
-        }
-    }
-
-    /// <summary>
-    /// Clears all recorded refresh timing information.
-    /// Useful for testing or when starting fresh.
-    /// </summary>
-    public static void ClearRefreshTimingHistory()
-    {
-        lock (s_lockObject)
-        {
-            s_lastRefreshTimes.Clear();
-        }
-    }
+    #endregion
 }
