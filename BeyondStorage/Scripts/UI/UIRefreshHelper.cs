@@ -13,10 +13,20 @@ namespace BeyondStorage.Scripts.UI;
 public static class UIRefreshHelper
 {
     private const double CACHE_INVALIDATION_THRESHOLD_SECONDS = 0.4;
-    private static readonly Dictionary<string, DateTime> s_lastRefreshTimes = new();
+    private static readonly Dictionary<string, DateTime> s_lastRefreshTimes = [];
     private static readonly object s_lockObject = new();
 
     public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack __instance, long callCount)
+    {
+        LogAndRefreshUIInternal(operation, __instance?.ItemStack, __instance?.xui?.PlayerInventory, callCount);
+    }
+
+    public static void LogAndRefreshUI(StackOps operation, ItemStack itemStack, long callCount)
+    {
+        LogAndRefreshUIInternal(operation, itemStack, null, callCount);
+    }
+
+    private static void LogAndRefreshUIInternal(StackOps operation, ItemStack itemStack, XUiM_PlayerInventory playerInventory, long callCount)
     {
         var methodName = StackOperation.GetStackOpName(operation);
 
@@ -27,29 +37,48 @@ public static class UIRefreshHelper
             callStr = $"call #{callCount} ";
         }
 
-        ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(__instance?.ItemStack)}");
+        ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(itemStack)}");
 #endif
 
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
 
-        HandleCurrencyStackOp(operation, __instance);
+        HandleCurrencyStackOp(operation, itemStack, playerInventory);
     }
 
-    private static void HandleCurrencyStackOp(StackOps operation, XUiC_ItemStack instance)
+    private static void HandleCurrencyStackOp(StackOps operation, ItemStack itemStack, XUiM_PlayerInventory playerInventory)
     {
-        var isCurrencyStack = CurrencyCache.IsCurrencyItem(instance);
+        var isCurrencyStack = CurrencyCache.IsCurrencyItem(itemStack);
         if (isCurrencyStack)
         {
-            ActionHelper.SetTimeout(
-                () =>
-                    {
-                        // Refresh the wallet UI after a short delay to ensure it reflects the latest currency state
-                        instance.xui.PlayerInventory.RefreshCurrency();
-                    },
-                TimeSpan.FromMilliseconds(25) // 1.5 frames @ 60FPS : Short delay to allow UI to stabilize after stack operation
-            );
+            if (playerInventory != null)
+            {
+                ActionHelper.SetTimeout(
+                    () =>
+                        {
+                            // Refresh the wallet UI after a short delay to ensure it reflects the latest currency state
+                            playerInventory.RefreshCurrency();
+                        },
+                    TimeSpan.FromMilliseconds(25) // 1.5 frames @ 60FPS : Short delay to allow UI to stabilize after stack operation
+                );
+            }
+            else
+            {
+                // Fallback: Try to find player inventory through validation helper
+                if (ValidationHelper.ValidateStorageContext(nameof(HandleCurrencyStackOp), out StorageContext context) &&
+                    ValidateUIComponents(context, nameof(HandleCurrencyStackOp)))
+                {
+                    var fallbackPlayerInventory = context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory;
+                    ActionHelper.SetTimeout(
+                        () =>
+                            {
+                                fallbackPlayerInventory.RefreshCurrency();
+                            },
+                        TimeSpan.FromMilliseconds(25)
+                    );
+                }
+            }
 
-            ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(instance?.ItemStack)}");
+            ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(itemStack)}");
         }
     }
 
@@ -79,30 +108,11 @@ public static class UIRefreshHelper
         }
 
         // Check if we need to invalidate cache due to rapid successive calls
-        CheckAndInvalidateCacheIfNeeded(methodName);
+        CheckAndInvalidateCacheIfNeeded(methodName, false);
 
         // Now completely safe to access without null-conditional operators
         RefreshAllWindowsInternal(context, includeViewComponents: true);
         return true;
-    }
-
-    /// <summary>
-    /// Validates UI components are available and refreshes all windows if valid.
-    /// Creates a StorageContext internally to access world and player information.
-    /// </summary>
-    /// <param name="methodName">The calling method name for logging purposes</param>
-    /// <returns>True if UI components were valid and refresh was performed, false otherwise</returns>
-    public static bool ValidateAndRefreshUI(string methodName)
-    {
-        // Check if we need to invalidate cache due to rapid successive calls
-        CheckAndInvalidateCacheIfNeeded(methodName);
-
-        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
-        {
-            return false;
-        }
-
-        return ValidateAndRefreshUI(context, methodName);
     }
 
     /// <summary>
@@ -160,10 +170,10 @@ public static class UIRefreshHelper
     /// <param name="methodName">The calling method name for logging purposes</param>
     /// <param name="includeViewComponents">Whether to include view components in the refresh</param>
     /// <returns>True if refresh was performed successfully, false if validation failed</returns>
-    public static bool RefreshAllWindows(string methodName, bool isStackOperation = false, bool includeViewComponents = true)
+    public static bool RefreshAllWindows(string methodName, bool isStackOperation, bool includeViewComponents = true)
     {
         // Check if we need to invalidate cache due to rapid successive calls
-        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName, isStackOperation: false);
+        bool cacheInvalidated = CheckAndInvalidateCacheIfNeeded(methodName, isStackOperation);
 
         if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
         {
@@ -189,43 +199,92 @@ public static class UIRefreshHelper
     }
 
     /// <summary>
-    /// Checks if the previous call to RefreshAllWindows for the same methodName was within the threshold,
-    /// and invalidates the context cache if so.
+    /// Determines if cache invalidation is needed based on timing thresholds and operation type.
+    /// This method implements a smart cache invalidation strategy to handle rapid successive UI refresh calls
+    /// that can cause performance issues and visual glitches in the game UI.
+    /// 
+    /// Cache Invalidation Rules:
+    /// - First calls: Always invalidate (no cached data available)
+    /// - Stack operations: Always invalidate (immediate UI consistency required)
+    /// - Storage operations: Only invalidate if called within 0.4 seconds of previous call (performance protection)
     /// </summary>
-    /// <param name="methodName">The method name to check timing for</param>
+    /// <param name="methodName">The method name to check timing for - used for per-method timing tracking</param>
+    /// <param name="isStackOperation">Whether this is a stack operation (always invalidates) or general storage operation (time-based)</param>
     /// <returns>True if cache was invalidated, false otherwise</returns>
-    private static bool CheckAndInvalidateCacheIfNeeded(string methodName, bool isStackOperation = false)
+    private static bool CheckAndInvalidateCacheIfNeeded(string methodName, bool isStackOperation)
     {
+        // Thread safety: All cache timing operations must be synchronized to prevent race conditions
+        // between multiple UI refresh calls that can happen simultaneously from different game events
         lock (s_lockObject)
         {
+#if DEBUG
+            // Log the refresh operation type for debugging UI performance issues
+            // This helps identify whether rapid refreshes are coming from stack operations or storage operations
             ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOperation ? "stack operation" : "general storage operation")}");
+#endif
+            // Check if we have a previous refresh time recorded for this specific method
+            // Each method is tracked separately because different operations have different refresh patterns
+            bool isFirstCall = !s_lastRefreshTimes.TryGetValue(methodName, out DateTime lastRefreshTime);
 
-            if (s_lastRefreshTimes.TryGetValue(methodName, out DateTime lastRefreshTime))
+            if (isFirstCall)
             {
-                var timeSinceLastRefresh = DateTime.UtcNow - lastRefreshTime;
-
-                if (isStackOperation || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
-                {
-                    // Create a temporary StorageContext to properly invalidate caches
-                    // This ensures WorldPlayerContext is always accessed through StorageContext
-                    if (ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
-                    {
-                        // Invalidate through the StorageContext to maintain proper architecture
-                        context.InvalidateCache();
-                    }
-                    else
-                    {
-                        // Fallback to direct cache invalidation if StorageContext creation fails
-                        // This ensures cache invalidation still works even if context creation fails
-                        ItemStackCacheManager.InvalidateGlobalCache();
-                        ModLogger.DebugLog($"{methodName}: StorageContext creation failed during cache invalidation, using fallback");
-                    }
-
-                    return true;
-                }
+#if DEBUG
+                // First call from this method - ALWAYS invalidate cache because no cached data exists
+                // This ensures proper initialization and prevents stale data from being displayed
+                ModLogger.DebugLog($"{methodName}: First call detected, forcing cache invalidation");
+#endif
+                // Perform cache invalidation for first call
+                PerformCacheInvalidation(methodName);
+                return true;
             }
 
+            // Calculate how much time has passed since the last refresh from this method
+            var timeNow = DateTime.UtcNow;
+            TimeSpan timeSinceLastRefresh = timeNow - lastRefreshTime;
+
+            // Cache invalidation decision logic for subsequent calls:
+            // 1. Stack operations ALWAYS invalidate cache because they directly modify inventory state
+            //    and the UI must immediately reflect these changes to prevent visual inconsistencies
+            // 2. General storage operations only invalidate if they occur within the threshold timeframe
+            //    (< 0.4 seconds) to prevent performance issues from rapid successive calls
+            if (isStackOperation || (timeSinceLastRefresh.TotalSeconds < CACHE_INVALIDATION_THRESHOLD_SECONDS))
+            {
+                // Cache invalidation is needed for rapid successive calls or stack operations
+                PerformCacheInvalidation(methodName);
+                return true;
+            }
+
+            // No cache invalidation needed:
+            // This is a general storage operation that occurred outside the timing threshold (> 0.4 seconds)
+            // The existing cache can be safely reused for performance
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Performs the actual cache invalidation using the preferred architectural approach.
+    /// Separated into its own method to avoid code duplication between first calls and subsequent calls.
+    /// </summary>
+    /// <param name="methodName">The method name for logging purposes</param>
+    private static void PerformCacheInvalidation(string methodName)
+    {
+        // Attempt to create a StorageContext to properly invalidate caches through the architectural layers
+        // This ensures that cache invalidation respects the proper data flow: StorageContext -> CacheManager -> DataStore
+        if (ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
+        {
+            // Primary cache invalidation path: Use StorageContext to maintain proper architecture
+            // This invalidates both the ItemStackCacheManager and any underlying data store caches
+            // The StorageContext ensures that WorldPlayerContext is properly accessed and cache timing is coordinated
+            context.InvalidateCache();
+        }
+        else
+        {
+            // Fallback cache invalidation path: Direct global cache invalidation
+            // This is used when StorageContext creation fails (e.g., player not in world, UI not initialized)
+            // While not ideal architecturally, it ensures cache invalidation still works in edge cases
+            // The global invalidation affects all cache instances system-wide
+            ItemStackCacheManager.InvalidateGlobalCache();
+            ModLogger.DebugLog($"{methodName}: StorageContext creation failed during cache invalidation, using fallback");
         }
     }
 
