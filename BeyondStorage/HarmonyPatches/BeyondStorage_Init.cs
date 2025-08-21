@@ -1,13 +1,13 @@
 ﻿using System.Reflection;
+using BeyondStorage.HarmonyPatches.Item;
 using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Game.Recipe;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
 using BeyondStorage.Scripts.Storage;
-using BeyondStorage.HarmonyPatches.Item;
-using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Game.Recipe;
 using HarmonyLib;
 
 #if DEBUG
@@ -55,9 +55,20 @@ public class BeyondStorage : IModApi
     {
         // Comment out the lines below to enable logging for these methods if you're debugging.
         ExpiringCache<StorageContext>.AddSuppressLoggingMethodNames([
+            // All StackOps operations
+            $"{StackOps.ItemStack_DropMerge_Operation}",
+            $"{StackOps.ItemStack_Drop_Operation}",
             $"{StackOps.ItemStack_DropSingleItem_Operation}",
+            $"{StackOps.ItemStack_Pickup_Operation}",
+            $"{StackOps.ItemStack_Pickup_Half_Stack_Operation}",
+            $"{StackOps.ItemStack_Shift_Operation}",
+            $"{StackOps.MoveAll_Operation}",
+            $"{StackOps.Stack_LockStateChange_Operation}",
+            
+            // Method-specific suppressions
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
+            nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
