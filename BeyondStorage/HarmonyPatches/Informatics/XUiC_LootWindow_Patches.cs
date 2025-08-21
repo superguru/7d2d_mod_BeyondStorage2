@@ -49,16 +49,11 @@ public class XUiC_LootWindow_Patches
 #endif
     private static void XUiC_LootWindow_UpdateLockedSlots_Postfix(XUiC_LootWindow __instance, XUiC_ContainerStandardControls _csc)
     {
-        const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Postfix);
-
         if (_csc != null)
         {
             var currentLockedSlots = _csc.LockedSlots;
             if (currentLockedSlots == null)
             {
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Current LockedSlots is null, cannot compare.");
-#endif
                 return;
             }
 
@@ -68,11 +63,7 @@ public class XUiC_LootWindow_Patches
             if (slots != null)
             {
                 // Check if any of the slots contain currency items
-                bool containsCurrency = slots.Any(slot =>
-                    slot != null &&
-                    !slot.IsEmpty() &&
-                    CurrencyCache.IsCurrencyItem(slot));
-
+                bool containsCurrency = slots.Any(slot => CurrencyCache.IsCurrencyItem(slot));
                 if (containsCurrency)
                 {
                     // Trigger a currency refresh after slot lock changes when currency is present
