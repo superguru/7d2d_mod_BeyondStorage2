@@ -278,8 +278,8 @@ public static class UIRefreshHelper
             else
             {
                 // Fallback: Try to find player inventory through validation helper
-                if (ValidationHelper.ValidateStorageContext(nameof(HandleCurrencyStackOp), out StorageContext context) &&
-                    ValidateUIComponents(context, nameof(HandleCurrencyStackOp)))
+                if (ValidationHelper.ValidateStorageContext(StackOperation.GetStackOpName(operation), out StorageContext context) &&
+                    ValidateUIComponents(context, StackOperation.GetStackOpName(operation)))
                 {
                     var fallbackPlayerInventory = context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory;
                     ActionHelper.SetTimeout(
