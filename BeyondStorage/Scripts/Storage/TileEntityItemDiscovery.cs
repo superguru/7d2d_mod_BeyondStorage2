@@ -187,6 +187,7 @@ internal static class TileEntityItemDiscovery
 #if DEBUG
         LootableItemHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
 #endif
+
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
             lootable,

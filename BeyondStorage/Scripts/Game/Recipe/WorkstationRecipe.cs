@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using BeyondStorage.HarmonyPatches.Informatics;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 using BeyondStorage.Scripts.UI;
@@ -106,58 +106,47 @@ public static class WorkstationRecipe
             return;
         }
 
-        RefreshOpenRecipeLists(context, d_MethodName, callCount);
+        RefreshOpenWorkstationRecipeLists(context, d_MethodName, callCount);
 
 #if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: Player inventory changed in call {callCount}");
 #endif
     }
 
-    private static void RefreshOpenRecipeLists(StorageContext context, string d_MethodName, long callCount)
+    private static void RefreshOpenWorkstationRecipeLists(StorageContext context, string methodName, long callCount)
     {
         var worldPlayerContext = context?.WorldPlayerContext;
         if (worldPlayerContext == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: WorldPlayerContext is null in call {callCount}.");
+            ModLogger.DebugLog($"{methodName}: WorldPlayerContext is null in call {callCount}.");
             return;
         }
 
-        var player = worldPlayerContext.Player;
-        var xui = player?.PlayerUI?.xui;
-        if (xui == null)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: xui is null in call {callCount}");
-            return;
-        }
+        // Get the currently active workstation instead of querying all open windows
+        var activeWorkstation = XUiC_WorkstationWindowGroup_Patches.GetCurrentlyActiveWorkstation();
 
-        // Get only open workstation windows (avoids unnecessary filtering later)
-        var openWorkstations = xui.GetChildrenByType<XUiC_WorkstationWindowGroup>()
-            .Where(w => w?.WindowGroup?.isShowing ?? false)
-            .ToList();
-
-        if (openWorkstations.Count == 0)
+        if (activeWorkstation == null)
         {
+#if DEBUG
+            ModLogger.DebugLog($"{methodName}: No active workstation window in call {callCount}");
+#endif
             return; // Nothing to update - exit early
         }
 
-#if DEBUG
-        int refreshCount = 0;
-#endif
-        foreach (var workstation in openWorkstations)
+        var recipeList = activeWorkstation.recipeList;
+        if (recipeList == null || recipeList.recipeControls == null)
         {
-            var recipeList = workstation.recipeList;
-            if (recipeList == null || recipeList.recipeControls == null)
-            {
-                continue;
-            }
-
-            workstation.syncUIfromTE();
-
-            recipeList.PlayerInventory_OnBackpackItemsChanged();
-            workstation.craftInfoWindow?.ingredientList?.PlayerInventory_OnBackpackItemsChanged();
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Refreshed workstation {workstation} (#{++refreshCount}) in call {callCount}");
-#endif
+            ModLogger.DebugLog($"{methodName}: Recipe list or controls are null for active workstation in call {callCount}. Skipping updates.");
+            return;
         }
+
+        activeWorkstation.syncUIfromTE();
+
+        recipeList.PlayerInventory_OnBackpackItemsChanged();
+        activeWorkstation.craftInfoWindow?.ingredientList?.PlayerInventory_OnBackpackItemsChanged();
+
+#if DEBUG
+        ModLogger.DebugLog($"{methodName}: Refreshed active workstation in call {callCount}");
+#endif
     }
 }

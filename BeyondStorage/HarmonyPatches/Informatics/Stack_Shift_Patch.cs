@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
@@ -11,7 +10,7 @@ namespace BeyondStorage.HarmonyPatches.Informatics;
 public class Stack_Shift_Patch
 {
     private static long s_callCounter = 0;
-    private static readonly Dictionary<long, SlotSnapshot> s_callHistory = [];
+    private static SlotSnapshot s_currentSnapshot = null;
     private static readonly object s_lockObject = new();
 
     [HarmonyPrefix]
@@ -23,7 +22,7 @@ public class Stack_Shift_Patch
     {
 #if DEBUG
         const string d_MethodName = nameof(Handle_StackShift_Event_Prefix);
-#endif
+#endif        
         // Capture slot state snapshot
         var preSnapshot = new SlotSnapshot(__instance);
 
@@ -33,16 +32,19 @@ public class Stack_Shift_Patch
         lock (s_lockObject)
         {
             callCount = Interlocked.Increment(ref s_callCounter);
-
-            // Clear existing entry and add new one (maintain only 1 entry)
-            s_callHistory.Clear();
-            s_callHistory[callCount] = preSnapshot;
+            preSnapshot.OriginalCallCount = callCount;
+            s_currentSnapshot = preSnapshot;
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory pickup operation, pre {preSnapshot}");
+        ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected shift operation, pre {preSnapshot}");
 #endif
-        UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Shift_Operation, __instance, callCount);
+
+        // Only refresh UI for storage inventory operations
+        if (preSnapshot.IsStorageInventory)
+        {
+            UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Shift_Operation, __instance, callCount);
+        }
     }
 
     [HarmonyPostfix]
@@ -59,16 +61,22 @@ public class Stack_Shift_Patch
         var postSnapshot = new SlotSnapshot(__instance);
 
         SlotSnapshot preSnapshot = null;
-        long callCount = s_callCounter;
+        long callCount;
 
         // Thread-safe retrieval of prefix snapshot
         lock (s_lockObject)
         {
-            s_callHistory.TryGetValue(callCount, out preSnapshot);
+            preSnapshot = s_currentSnapshot;
+            callCount = s_callCounter;
+            s_currentSnapshot = null; // Clear current snapshot after use
         }
 
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot?.ToString() ?? "No_Pre_Snap"} ➡️ {postSnapshot}");
+#endif
+
         // Handle Shift+Click logic (move stack between inventories)
-        if ((preSnapshot?.IsValid ?? false))// && (postSnapshot?.IsStackPresent ?? false))
+        if (preSnapshot?.IsValid ?? false)
         {
             // Because stacks will be merged using this method, and any overspill will be moved to the next available slot,
             // we can't reliably determine the exact slot where the stack ended up, so whether is's locked or not is not relevant.
@@ -76,22 +84,13 @@ public class Stack_Shift_Patch
             // a locked storage slot was involved in this operation.
             UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Shift_Operation, __instance, callCount);
         }
-
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot?.ToString() ?? "No_Pre_Snap"} ➡️ {postSnapshot}");
-#endif
     }
 
     public static bool StackMatchesCurrentOp(ItemStack stack)
     {
         lock (s_lockObject)
         {
-            if (s_callHistory?.Count == 0)
-            {
-                return false; // No history available
-            }
-
-            var currentSnapshot = s_callHistory[s_callCounter];
+            var currentSnapshot = s_currentSnapshot;
             if (currentSnapshot == null)
             {
                 return false; // No valid snapshot to compare against

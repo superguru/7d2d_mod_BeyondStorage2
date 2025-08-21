@@ -14,7 +14,8 @@ public enum StackOps
     ItemStack_DropSingleItem_Operation,
     ItemStack_Pickup_Operation,
     ItemStack_Pickup_Half_Stack_Operation,
-    ItemStack_Shift_Operation
+    ItemStack_Shift_Operation,
+    MoveAll_Operation,
 }
 
 /// <summary>
