@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
 using HarmonyLib;
@@ -12,16 +13,75 @@ public class XUiC_LootWindow_Patches
     private static bool s_isStorageLootWindowOpen = false;
     private static readonly object s_lockObject = new();
 
+    // Store the previous LockedSlots state for comparison
+    private static PackedBoolArray s_previousLockedSlots = null;
+
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(XUiC_LootWindow.UpdateLockedSlots))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static void XUiC_LootWindow_UpdateLockedSlots_Prefix(XUiC_LootWindow __instance, XUiC_ContainerStandardControls _csc)
+    {
+        const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Prefix);
+
+        if (_csc == null)
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: _csc parameter is null");
+#endif
+            s_previousLockedSlots = null;
+            return;
+        }
+
+        // Save the current LockedSlots state before the update
+        s_previousLockedSlots = _csc.LockedSlots;
+
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: Saved LockedSlots state: {(s_previousLockedSlots != null ? $"Count={s_previousLockedSlots.Length}" : "null")}");
+#endif
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(XUiC_LootWindow.UpdateLockedSlots))]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static void XUiC_LootWindow_UpdateLockedSlots_Postfix(XUiC_ContainerStandardControls _csc)
+    private static void XUiC_LootWindow_UpdateLockedSlots_Postfix(XUiC_LootWindow __instance, XUiC_ContainerStandardControls _csc)
     {
         const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Postfix);
 
-        UIRefreshHelper.LogAndRefreshUI(d_MethodName);
+        if (_csc != null)
+        {
+            var currentLockedSlots = _csc.LockedSlots;
+            if (currentLockedSlots == null)
+            {
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Current LockedSlots is null, cannot compare.");
+#endif
+                return;
+            }
+
+            ItemStack itemStack = null;
+
+            var slots = __instance?.lootContainer?.GetSlots();
+            if (slots != null)
+            {
+                // Check if any of the slots contain currency items
+                bool containsCurrency = slots.Any(slot =>
+                    slot != null &&
+                    !slot.IsEmpty() &&
+                    CurrencyCache.IsCurrencyItem(slot));
+
+                if (containsCurrency)
+                {
+                    // Trigger a currency refresh after slot lock changes when currency is present
+                    itemStack = CurrencyCache.GetEmptyCurrencyStack();
+                }
+            }
+
+            UIRefreshHelper.LogAndRefreshUI(StackOps.Stack_LockStateChange_Operation, itemStack: itemStack, callCount: 0);
+        }
     }
 
     [HarmonyPostfix]
@@ -124,6 +184,9 @@ public class XUiC_LootWindow_Patches
             s_windowInstance = null;
             s_isStorageLootWindowOpen = false;
         }
+
+        // Clear the saved locked slots state when the window closes
+        s_previousLockedSlots = null;
     }
 
     public static bool IsStorageContainerOpen()

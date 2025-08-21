@@ -35,7 +35,7 @@ public class Stack_MoveAll_Patch
             s_isMovingAll = false;
         }
 
-        UIRefreshHelper.LogAndRefreshUI(StackOps.MoveAll_Operation, CurrencyCache.GetEmptyCurrencyStack(), 0);
+        UIRefreshHelper.LogAndRefreshUI(StackOps.MoveAll_Operation, itemStack: CurrencyCache.GetEmptyCurrencyStack(), callCount: 0);
     }
 
     public static bool IsMovingAll()

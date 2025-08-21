@@ -55,11 +55,11 @@ public static class UIRefreshHelper
     /// Handles currency-specific operations with special wallet refresh logic.
     /// </summary>
     /// <param name="operation">The type of stack operation being performed</param>
-    /// <param name="__instance">The ItemStack UI component instance (may be null)</param>
+    /// <param name="instance">The ItemStack UI component instance (may be null)</param>
     /// <param name="callCount">The sequential call number for logging purposes</param>
-    public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack __instance, long callCount)
+    public static void LogAndRefreshUI(StackOps operation, XUiC_ItemStack instance, long callCount)
     {
-        LogAndRefreshUIInternal(operation, __instance?.ItemStack, __instance?.xui?.PlayerInventory, callCount);
+        LogAndRefreshUIInternal(operation, instance?.ItemStack, instance?.xui?.PlayerInventory, callCount);
     }
 
     /// <summary>

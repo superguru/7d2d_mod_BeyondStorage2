@@ -1,4 +1,5 @@
-﻿using BeyondStorage.Scripts.UI;
+﻿using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -13,8 +14,6 @@ public class XUiC_VehicleContainer_Patches
 #endif
     public static void XUiC_VehicleContainer_UpdateLockedSlots_Postfix(XUiC_ContainerStandardControls _csc)
     {
-        const string d_MethodName = nameof(XUiC_VehicleContainer_UpdateLockedSlots_Postfix);
-
-        UIRefreshHelper.LogAndRefreshUI(d_MethodName);
+        UIRefreshHelper.LogAndRefreshUI(StackOps.Stack_LockStateChange_Operation, itemStack: null, callCount: 0);
     }
 }

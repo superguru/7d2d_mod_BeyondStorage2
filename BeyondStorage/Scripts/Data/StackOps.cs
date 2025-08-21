@@ -16,6 +16,7 @@ public enum StackOps
     ItemStack_Pickup_Half_Stack_Operation,
     ItemStack_Shift_Operation,
     MoveAll_Operation,
+    Stack_LockStateChange_Operation,
 }
 
 /// <summary>
