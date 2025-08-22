@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Harmony;
 using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
@@ -71,78 +71,60 @@ internal static class ItemActionEntryRepairPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> ItemActionEntryRepair_RefreshEnabled_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> ItemActionEntryRepair_RefreshEnabled_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryRepair)}.{nameof(ItemActionEntryRepair.RefreshEnabled)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        var startIndex = -1;
-        var endIndex = -1;
-        var codes = new List<CodeInstruction>(instructions);
-        for (var i = 0; i < codes.Count; i++)
+
+        // Create search pattern to find the GetItemCount call
+        var searchPattern = new List<CodeInstruction>
         {
-            if (startIndex != -1 && codes[i].opcode == OpCodes.Ldc_I4_0 && codes[i + 1].opcode == OpCodes.Bgt)
-            {
-                endIndex = i;
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)])),
+            new CodeInstruction(OpCodes.Ldloc_S, 7),  // int b
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
+            new CodeInstruction(OpCodes.Ldloc_S, 6),      // itemClass2
+        };
 
-                List<CodeInstruction> newCode = [
-                    codes[startIndex - 4].Clone(),
-                    // getId
-                    codes[startIndex - 3].Clone(),
-                    // Ldc_I4_0
-                    codes[startIndex - 2].Clone(),
-                    // new ItemValue(itemClass.Id, 0)
-                    codes[startIndex - 1].Clone(),
-                    // ItemRepair.ItemRepairRefreshGetItemCount(new ItemValue(itemClass.Id, 0))
-                    new CodeInstruction(OpCodes.Call,
-                        AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairRefreshGetItemCount))),
-                    // ldloc.s  'int32'
-                    codes[startIndex + 1].Clone(),
-                    // call         int32 [UnityEngine.CoreModule]UnityEngine.Mathf::Min(int32, int32)
-                    codes[startIndex + 2].Clone(),
-                    // ldloc.3      // itemClass
-                    codes[startIndex + 3].Clone(),
-                    // ldfld        class DataItem`1<int32> ItemClass::RepairAmount
-                    codes[startIndex + 4].Clone(),
-                    // callvirt     instance !0/*int32*/ class DataItem`1<int32>::get_Value()
-                    codes[startIndex + 5].Clone(),
-                    // mul
-                    codes[startIndex + 6].Clone(),
-                    // ldc.i4.0
-                    codes[startIndex + 7].Clone(),
-                    // bgt.s        IL_013c
-                    codes[startIndex + 8].Clone()
-                ];
-                // Insert our code below the previous jump (Bgt)
-                codes.InsertRange(endIndex + 2, newCode);
-                // Small smoke test that we're copying the code we expect
-                if (startIndex + 8 != endIndex + 1)
-                {
-                    ModLogger.Error($"{targetMethodString} patch: Expected Equals False | Start+8 {startIndex + 8} == End+1 {endIndex + 1}");
-                }
+        // Create replacement instructions to add storage count
+        var replacementInstructions = new List<CodeInstruction>
+        {
+            // Load the ItemValue that was used for GetItemCount (reconstruct it)
+            new CodeInstruction(OpCodes.Ldloc_S, 6),      // itemClass2
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemClass), nameof(ItemClass.Id))), // getId
+            new CodeInstruction(OpCodes.Ldc_I4_0),
+            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
+            
+            // Call our storage method and add to existing count
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairRefreshGetItemCount))),
+            new CodeInstruction(OpCodes.Ldloc_S, 7),  // int b
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
+            new CodeInstruction(OpCodes.Ldloc_S, 6),  // itemClass2
+            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemClass), nameof(ItemClass.RepairAmount))),
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(DataItem<int>), nameof(DataItem<int>.Value))),
+            new CodeInstruction(OpCodes.Mul),
+            new CodeInstruction(OpCodes.Ldc_I4_0),
+        };
 
-                break;
-            }
+        var request = new ILPatchEngine.PatchRequest
+        {
+            OriginalInstructions = [.. originalInstructions],
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodString,
+            ReplacementOffset = 9,
+            IsInsertMode = true,
+            MaxPatches = 1,
+            MinimumSafetyOffset = 5,
+            ExtraLogging = true
+        };
 
-            if (startIndex != -1 || codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand !=
-                AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [
-                    typeof(ItemValue)
-                ]))
-            {
-                continue;
-            }
-
-            startIndex = i;
+        var endInstruction = request.OriginalInstructions.LastOrDefault(instr => instr.opcode == OpCodes.Ret);
+        var endLabel = endInstruction?.labels[0];
+        if (endLabel != null)
+        {
+            request.ReplacementInstructions.Add(new CodeInstruction(OpCodes.Bgt, endLabel));
         }
 
-        if (startIndex == -1 || endIndex == -1)
-        {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
-
-        return codes.AsEnumerable();
+        var response = ILPatchEngine.ApplyPatches(request);
+        return response.BestInstructions(request);
     }
 }
