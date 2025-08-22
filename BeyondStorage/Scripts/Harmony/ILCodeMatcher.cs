@@ -131,95 +131,101 @@ public static class ILCodeMatcher
         int mainCount = mainList.Count;
         int subCount = subList.Count;
 
-        if (extraLogging)
-        {
-            ModLogger.DebugLog($"IndexOf: Searching for pattern of {subCount} instructions in list of {mainCount} instructions, starting at index {startIndex}");
-            for (int i = 0; i < subList.Count; i++)
-            {
-                ModLogger.DebugLog($"IndexOf: Pattern[{i}] = {subList[i].opcode} {subList[i].operand}");
-            }
-        }
+        LogSearchStart(subList, mainCount, subCount, startIndex, extraLogging);
 
         // Early validation
-        if (subCount == 0 || mainCount < subCount || startIndex < 0 || startIndex >= mainCount)
+        if (!IsValidSearch(subCount, mainCount, startIndex, extraLogging))
         {
-            if (extraLogging)
-            {
-                ModLogger.DebugLog($"IndexOf: Early validation failed - subCount={subCount}, mainCount={mainCount}, startIndex={startIndex}");
-            }
             return -1;
         }
 
-        // Single element optimization
-        if (subCount == 1)
+        // Dispatch to optimized search methods based on pattern size
+        return DispatchSearchMethod(mainList, subList, startIndex, subCount, mainCount, extraLogging);
+    }
+
+    private static void LogSearchStart(List<CodeInstruction> subList, int mainCount, int subCount, int startIndex, bool extraLogging)
+    {
+        if (!extraLogging)
         {
-            if (extraLogging)
-            {
-                ModLogger.DebugLog("IndexOf: Using single element optimization");
-            }
-
-            var target = subList[0];
-            for (int i = startIndex; i < mainCount; i++)
-            {
-                if (extraLogging)
-                {
-                    ModLogger.DebugLog($"IndexOf: Checking index {i}: {mainList[i].opcode} {mainList[i].operand} vs target {target.opcode} {target.operand}");
-                }
-
-                if (CodesMatch(mainList[i], target))
-                {
-                    if (extraLogging)
-                    {
-                        ModLogger.DebugLog($"IndexOf: Single element match found at index {i}");
-                    }
-                    return i;
-                }
-            }
-
-            if (extraLogging)
-            {
-                ModLogger.DebugLog("IndexOf: Single element not found");
-            }
-            return -1;
+            return;
         }
 
-        // Two-element optimization (very common in IL patterns)
-        if (subCount == 2)
+        ModLogger.DebugLog($"IndexOf: Searching for pattern of {subCount} instructions in list of {mainCount} instructions, starting at index {startIndex}");
+        for (int i = 0; i < subList.Count; i++)
         {
-            if (extraLogging)
-            {
-                ModLogger.DebugLog("IndexOf: Using two element optimization");
-            }
+            ModLogger.DebugLog($"IndexOf: Pattern[{i}] = {subList[i].opcode} {subList[i].operand}");
+        }
+    }
 
-            var first = subList[0];
-            var second = subList[1];
-            for (int i = startIndex; i <= mainCount - 2; i++)
-            {
-                if (extraLogging)
-                {
-                    ModLogger.DebugLog($"IndexOf: Checking two-element match at index {i}: [{mainList[i].opcode} {mainList[i].operand}] [{mainList[i + 1].opcode} {mainList[i + 1].operand}]");
-                }
+    private static bool IsValidSearch(int subCount, int mainCount, int startIndex, bool extraLogging)
+    {
+        var isValid = !(subCount == 0 || mainCount < subCount || startIndex < 0 || startIndex >= mainCount);
 
-                var codesMatchFirst = CodesMatch(mainList[i], first);
-                var codesMatchSecond = CodesMatch(mainList[i + 1], second);
-                if (codesMatchFirst && codesMatchSecond)
-                {
-                    if (extraLogging)
-                    {
-                        ModLogger.DebugLog($"IndexOf: Two element match found at index {i}");
-                    }
-                    return i;
-                }
-            }
-
-            if (extraLogging)
-            {
-                ModLogger.DebugLog("IndexOf: Two element pattern not found");
-            }
-            return -1;
+        if (!isValid && extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Early validation failed - subCount={subCount}, mainCount={mainCount}, startIndex={startIndex}");
         }
 
-        // For longer patterns, use optimized search with skip table
+        return isValid;
+    }
+
+    private static int DispatchSearchMethod(List<CodeInstruction> mainList, List<CodeInstruction> subList,
+        int startIndex, int subCount, int mainCount, bool extraLogging)
+    {
+        return subCount switch
+        {
+            1 => SearchSingleElement(mainList, subList[0], startIndex, mainCount, extraLogging),
+            2 => SearchTwoElements(mainList, subList, startIndex, mainCount, extraLogging),
+            _ => SearchWithSkipTableDispatcher(mainList, subList, startIndex, extraLogging)
+        };
+    }
+
+    private static int SearchSingleElement(List<CodeInstruction> mainList, CodeInstruction target,
+        int startIndex, int mainCount, bool extraLogging)
+    {
+        LogSingleElementStart(extraLogging);
+
+        for (int i = startIndex; i < mainCount; i++)
+        {
+            LogSingleElementCheck(i, mainList[i], target, extraLogging);
+
+            if (CodesMatch(mainList[i], target))
+            {
+                LogSingleElementFound(i, extraLogging);
+                return i;
+            }
+        }
+
+        LogSingleElementNotFound(extraLogging);
+        return -1;
+    }
+
+    private static int SearchTwoElements(List<CodeInstruction> mainList, List<CodeInstruction> subList,
+        int startIndex, int mainCount, bool extraLogging)
+    {
+        LogTwoElementStart(extraLogging);
+
+        var first = subList[0];
+        var second = subList[1];
+
+        for (int i = startIndex; i <= mainCount - 2; i++)
+        {
+            LogTwoElementCheck(i, mainList[i], mainList[i + 1], extraLogging);
+
+            if (CodesMatch(mainList[i], first) && CodesMatch(mainList[i + 1], second))
+            {
+                LogTwoElementFound(i, extraLogging);
+                return i;
+            }
+        }
+
+        LogTwoElementNotFound(extraLogging);
+        return -1;
+    }
+
+    private static int SearchWithSkipTableDispatcher(List<CodeInstruction> mainList, List<CodeInstruction> subList,
+        int startIndex, bool extraLogging)
+    {
         if (extraLogging)
         {
             ModLogger.DebugLog("IndexOf: Using skip table optimization for longer pattern");
@@ -227,6 +233,71 @@ public static class ILCodeMatcher
         return IndexOfWithSkipTable(mainList, subList, startIndex, extraLogging);
     }
 
+    // Logging helper methods for single element search
+    private static void LogSingleElementStart(bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog("IndexOf: Using single element optimization");
+        }
+    }
+
+    private static void LogSingleElementCheck(int i, CodeInstruction current, CodeInstruction target, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Checking index {i}: {current.opcode} {current.operand} vs target {target.opcode} {target.operand}");
+        }
+    }
+
+    private static void LogSingleElementFound(int i, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Single element match found at index {i}");
+        }
+    }
+
+    private static void LogSingleElementNotFound(bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog("IndexOf: Single element not found");
+        }
+    }
+
+    // Logging helper methods for two element search
+    private static void LogTwoElementStart(bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog("IndexOf: Using two element optimization");
+        }
+    }
+
+    private static void LogTwoElementCheck(int i, CodeInstruction first, CodeInstruction second, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Checking two-element match at index {i}: [{first.opcode} {first.operand}] [{second.opcode} {second.operand}]");
+        }
+    }
+
+    private static void LogTwoElementFound(int i, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Two element match found at index {i}");
+        }
+    }
+
+    private static void LogTwoElementNotFound(bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog("IndexOf: Two element pattern not found");
+        }
+    }
 
     // Boyer-Moore inspired algorithm with bad character skip table
     private static int IndexOfWithSkipTable(List<CodeInstruction> mainList, List<CodeInstruction> subList, int startIndex, bool extraLogging = false)
