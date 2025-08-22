@@ -30,7 +30,7 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
             return false;
         }
 
-        // Both this filter and the targer filter have exactly one item, and they're the same
+        // Both this filter and the target filter have exactly one item, and they're the same
         return Count == 1 && filter.Count == 1 && _itemTypes[0] == filter._itemTypes[0]; ;
     }
 
@@ -99,45 +99,70 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
 
     private void ValidateInvariants()
     {
-        // Invariant: Always has at least one element
+        // Must have at least one element
         if (_itemTypes.Length == 0)
         {
             throw new InvalidOperationException("UniqueItemTypes must always contain at least one element");
         }
 
-        // Invariant: If WILDCARD is present, it must be the only element
+        // Single-element fast path: either wildcard or a valid positive type
         if (_itemTypes.Length == 1)
         {
-            if (_itemTypes[0] == WILDCARD || _itemTypes[0] > EMPTY)
+            int only = _itemTypes[0];
+            if (only == WILDCARD || only > EMPTY)
             {
                 return; // Valid
             }
+
+            ThrowInvalidSingleValue(only);
+            return;
         }
 
-        // Invariant: No element can be 0
-        // Invariant: If WILDCARD is present, it must be the only element
-        for (int i = 0; i < _itemTypes.Length; i++)
+        // Multi-element arrays must not contain wildcard, zero, or values < WILDCARD
+        ValidateMultiElementArray(_itemTypes);
+    }
+
+    private static void ThrowInvalidSingleValue(int value)
+    {
+        if (value == EMPTY)
         {
-            int itemType = _itemTypes[i];
+            throw new InvalidOperationException("UniqueItemTypes cannot contain 0 (empty item type)");
+        }
+
+        if (value < WILDCARD)
+        {
+            throw new InvalidOperationException($"UniqueItemTypes cannot contain invalid item types (< WILDCARD). Found {value}");
+        }
+
+        // value == WILDCARD is handled in the caller (single-element wildcard is valid)
+        // Any other value here is unexpected; keep silent to avoid extra branches.
+    }
+
+    private static void ValidateMultiElementArray(int[] itemTypes)
+    {
+        // Wildcard must not appear in multi-element arrays (sorted -> if present, would be at index 0)
+        if (itemTypes[0] == WILDCARD)
+        {
+            throw new InvalidOperationException("When WILDCARD (wildcard) is present, it must be the only element");
+        }
+
+        for (int i = 0; i < itemTypes.Length; i++)
+        {
+            int itemType = itemTypes[i];
 
             if (itemType == EMPTY)
             {
                 throw new InvalidOperationException("UniqueItemTypes cannot contain 0 (empty item type)");
             }
-            else if (itemType < WILDCARD)
+
+            if (itemType < WILDCARD)
             {
                 throw new InvalidOperationException($"UniqueItemTypes cannot contain invalid item types (< WILDCARD). Found {itemType} at index {i}");
             }
-            else if (itemType == WILDCARD && i != EMPTY)
+
+            if (itemType == WILDCARD)
             {
                 throw new InvalidOperationException("When WILDCARD (wildcard) is present, it must be the only element");
-            }
-
-            // No need to check for duplicates here, as we use a HashSet in the constructor
-
-            if (itemType > EMPTY)
-            {
-                break; // Valid item type found, no need to check further
             }
         }
     }
