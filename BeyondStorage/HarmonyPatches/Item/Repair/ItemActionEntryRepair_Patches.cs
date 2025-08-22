@@ -59,7 +59,7 @@ internal static class ItemActionEntryRepairPatches
             IsInsertMode = true,
             MaxPatches = 1,
             MinimumSafetyOffset = 2,
-            ExtraLogging = true
+            ExtraLogging = false
         };
 
         var response = ILPatchEngine.ApplyPatches(request);
