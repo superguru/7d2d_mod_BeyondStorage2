@@ -102,64 +102,107 @@ public static class ILPatchEngine
 
         while (searchIndex < request.NewInstructions.Count)
         {
-            if (request.MaxPatches > 0 && response.Count >= request.MaxPatches)
+            if (ShouldStopPatching(request, response))
             {
-                ModLogger.DebugLog($"Reached maximum patches ({request.MaxPatches}) for {request.TargetMethodName}. Stopping further patches.");
                 break;
             }
 
             int matchIndex = ILCodeMatcher.IndexOf(request.NewInstructions, request.SearchPattern, searchIndex, request.ExtraLogging);
             if (matchIndex < 0)
             {
-                // No more matches found
-                break;
+                break; // No more matches found
             }
 
             ModLogger.DebugLog($"Found patch point at index {matchIndex} in {request.TargetMethodName}");
 
-            // Calculate the actual replacement position
-            int replacementPosition = matchIndex + request.ReplacementOffset;
-            int replacementCount = request.ReplacementInstructions.Count;
-
-            // Safety checks
-            if (replacementPosition < request.MinimumSafetyOffset)
+            var patchResult = TryApplyPatch(request, response, matchIndex);
+            if (patchResult.success)
             {
-                if (request.ExtraLogging)
-                {
-                    ModLogger.DebugLog($"Replacement position {replacementPosition} is below minimum safety offset {request.MinimumSafetyOffset}. Skipping patch of {request.TargetMethodName}");
-                }
-                searchIndex = matchIndex + 1;
-                continue;
-            }
-
-            if (replacementPosition < 0 || replacementPosition > request.NewInstructions.Count)
-            {
-                if (request.ExtraLogging)
-                {
-                    ModLogger.DebugLog($"Replacement position {replacementPosition} is out of bounds. Skipping patch of {request.TargetMethodName}");
-                }
-
-                searchIndex = matchIndex + 1;
-                continue;
-            }
-
-            // Apply the patch
-            if (request.IsInsertMode)
-            {
-                InsertInstructions(request, replacementPosition, replacementCount, matchIndex);
-                response.RegisterPatch(replacementPosition, matchIndex);
-                searchIndex = replacementPosition + replacementCount + 1;
+                searchIndex = patchResult.nextSearchIndex;
+                ModLogger.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {patchResult.replacementPosition} (original match at {matchIndex})");
             }
             else
             {
-                OverwriteInstructions(request, replacementPosition, replacementCount);
-                response.RegisterPatch(replacementPosition, matchIndex);
-                searchIndex = replacementPosition + replacementCount;
+                searchIndex = matchIndex + 1; // Move past failed match
             }
-
-            ModLogger.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {replacementPosition} (original match at {matchIndex})");
         }
 
+        LogPatchingResults(request, response);
+        return response;
+    }
+
+    private static bool ShouldStopPatching(PatchRequest request, PatchResponse response)
+    {
+        if (request.MaxPatches > 0 && response.Count >= request.MaxPatches)
+        {
+            ModLogger.DebugLog($"Reached maximum patches ({request.MaxPatches}) for {request.TargetMethodName}. Stopping further patches.");
+            return true;
+        }
+        return false;
+    }
+
+    private static (bool success, int replacementPosition, int nextSearchIndex) TryApplyPatch(PatchRequest request, PatchResponse response, int matchIndex)
+    {
+        int replacementPosition = matchIndex + request.ReplacementOffset;
+        int replacementCount = request.ReplacementInstructions.Count;
+
+        // Validate patch position
+        var validation = ValidatePatchPosition(request, replacementPosition);
+        if (!validation.isValid)
+        {
+            LogValidationFailure(request, replacementPosition, validation.reason);
+            return (false, replacementPosition, 0);
+        }
+
+        // Apply the appropriate patch type
+        ApplyPatchByMode(request, response, replacementPosition, replacementCount, matchIndex);
+
+        int nextSearchIndex = request.IsInsertMode
+            ? replacementPosition + replacementCount + 1
+            : replacementPosition + replacementCount;
+
+        return (true, replacementPosition, nextSearchIndex);
+    }
+
+    private static (bool isValid, string reason) ValidatePatchPosition(PatchRequest request, int replacementPosition)
+    {
+        if (replacementPosition < request.MinimumSafetyOffset)
+        {
+            return (false, $"below minimum safety offset {request.MinimumSafetyOffset}");
+        }
+
+        if (replacementPosition < 0 || replacementPosition > request.NewInstructions.Count)
+        {
+            return (false, "out of bounds");
+        }
+
+        return (true, null);
+    }
+
+    private static void LogValidationFailure(PatchRequest request, int replacementPosition, string reason)
+    {
+        if (request.ExtraLogging)
+        {
+            ModLogger.DebugLog($"Replacement position {replacementPosition} is {reason}. Skipping patch of {request.TargetMethodName}");
+        }
+    }
+
+    private static void ApplyPatchByMode(PatchRequest request, PatchResponse response, int replacementPosition, int replacementCount, int matchIndex)
+    {
+        if (request.IsInsertMode)
+        {
+            InsertInstructions(request, replacementPosition, replacementCount, matchIndex);
+        }
+        else
+        {
+            OverwriteInstructions(request, replacementPosition, replacementCount);
+        }
+
+        response.RegisterPatch(replacementPosition, matchIndex);
+    }
+
+    private static void LogPatchingResults(PatchRequest request, PatchResponse response)
+    {
         if (response.Count > 0)
         {
             ModLogger.Info($"Successfully patched {request.TargetMethodName} in {response.Count} places");
@@ -168,8 +211,6 @@ public static class ILPatchEngine
         {
             ModLogger.Warning($"No patches applied to {request.TargetMethodName}");
         }
-
-        return response;
     }
 
     public class PatchRequest
