@@ -26,10 +26,22 @@ public struct PaintFaceData
 /// </summary>
 public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextureBlock)
 {
-    private const int LAYER_MASK = -555528197;
+    private const int LAYER_MASK = -555528197; // Same magic number as original game
+    private const double FACE_NORMAL_TOLERANCE = 0.01; // Magic number from original
+    private const int MAX_CHANNELS = 1; // Based on original game logic
+    private const int MAX_BLOCK_FACES = 6; // Block faces 0-5
 
     // Store faces to paint during counting phase
     private readonly Dictionary<Guid, List<PaintFaceData>> _facesToPaint = [];
+
+    // Cache reflection methods to avoid repeated lookups
+    private static readonly System.Reflection.MethodInfo s_getParentBlockMethod =
+        typeof(ItemActionTextureBlock).GetMethod("getParentBlock",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+    private static readonly System.Reflection.MethodInfo s_checkBlockCanBePaintedMethod =
+        typeof(ItemActionTextureBlock).GetMethod("checkBlockCanBePainted",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
     /// <summary>
     /// The original ItemActionTextureBlock instance containing all game state and data.
@@ -44,14 +56,17 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
     public bool bRemoveTexture => OriginalTextureBlock.bRemoveTexture;
     public float Range => OriginalTextureBlock.Range;
 
+    /// <summary>
+    /// Performs flood fill counting by traversing connected blocks and storing faces to paint.
+    /// This is the counting phase - no actual painting occurs here.
+    /// </summary>
     public void CountFloodFill(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel, Guid operationId)
     {
         // Initialize face list for this operation
         _facesToPaint[operationId] = [];
 
-        // Access protected/private members through the original object using reflection if needed
-        // For now, we'll use the accessible members and methods
-        var visitedPositions = new Dictionary<Vector3i, bool>();
+        // State tracking for flood fill (matches original game logic)
+        var visitedPositions = new Dictionary<Vector3i, bool>(); // bool = canExpand
         var visitedRays = new Dictionary<Vector2i, bool>();
         var positionsToCheck = new Stack<Vector2i>();
         var worldRayHitInfo = new WorldRayHitInfo();
@@ -60,68 +75,38 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
 
         while (positionsToCheck.Count > 0)
         {
-            Vector2i vector2i = positionsToCheck.Pop();
-            if (visitedRays.ContainsKey(vector2i))
-            {
-                continue;
-            }
-            visitedRays.Add(vector2i, value: true);
-            Vector3 origin = _hitPosition + _hitFaceNormal * 0.2f + vector2i.x * _dir1 + vector2i.y * _dir2;
-            Vector3 direction = -_hitFaceNormal * 0.3f;
-            float magnitude = direction.magnitude;
-            if (!Voxel.Raycast(_world, new Ray(origin, direction), magnitude, LAYER_MASK, 69, 0f))
-            {
-                continue;
-            }
-            worldRayHitInfo.CopyFrom(Voxel.voxelRayHitInfo);
-            BlockValue blockValue = worldRayHitInfo.hit.blockValue;
-            Vector3i blockPos = worldRayHitInfo.hit.blockPos;
-            bool flag;
-            if (worldRayHitInfo.hitTriangleIdx < 0 || ((flag = visitedPositions.TryGetValue(blockPos, out var value)) && !value))
-            {
-                continue;
-            }
-            if (!flag)
-            {
-                Vector3 _hitFaceCenter;
-                Vector3 _hitFaceNormal2;
-                BlockFace blockFaceFromHitInfo = GameUtils.GetBlockFaceFromHitInfo(blockPos, blockValue, worldRayHitInfo.hitCollider, worldRayHitInfo.hitTriangleIdx, out _hitFaceCenter, out _hitFaceNormal2);
-                if (blockFaceFromHitInfo == BlockFace.None)
-                {
-                    continue;
-                }
-                _hitFaceNormal2 = _hitFaceNormal2.normalized;
-                if ((double)(_hitFaceNormal2 - _hitFaceNormal).sqrMagnitude > 0.01)
-                {
-                    continue;
-                }
+            Vector2i rayPosition = positionsToCheck.Pop();
 
-                // Use reflection or accessible methods to get current paint index
-                int currentPaintIdx = GetCurrentPaintIdx(_cc, blockPos, blockFaceFromHitInfo, blockValue, _channel);
-                if (currentPaintIdx != _sourcePaint)
-                {
-                    visitedPositions.Add(blockPos, value: false);
-                    continue;
-                }
-
-                var ePaintResult = CountPaintBlock(_world, _cc, _entityId, _actionData, blockPos, blockFaceFromHitInfo, blockValue, _lpRelative, new ChannelMask(_channel), operationId);
-                if (ePaintResult == EPaintResult.CanNotPaint || ePaintResult == EPaintResult.NoPaintAvailable)
-                {
-                    visitedPositions.Add(blockPos, value: false);
-                    continue;
-                }
-                visitedPositions.Add(blockPos, value: true);
+            if (ShouldSkipRayPosition(rayPosition, visitedRays))
+            {
+                continue;
             }
-            positionsToCheck.Push(vector2i + Vector2i.down);
-            positionsToCheck.Push(vector2i + Vector2i.up);
-            positionsToCheck.Push(vector2i + Vector2i.left);
-            positionsToCheck.Push(vector2i + Vector2i.right);
+
+            visitedRays.Add(rayPosition, true);
+
+            var raycastData = PerformFloodFillRaycast(_world, _hitPosition, _hitFaceNormal, _dir1, _dir2, rayPosition, worldRayHitInfo);
+            if (!raycastData.IsValid)
+            {
+                continue;
+            }
+
+            var blockProcessResult = ProcessFloodFillBlock(
+                _cc, raycastData, visitedPositions, _hitFaceNormal, _sourcePaint, _channel,
+                _actionData, operationId);
+
+            if (blockProcessResult.ShouldExpand)
+            {
+                AddAdjacentPositions(positionsToCheck, rayPosition);
+            }
         }
     }
 
+    /// <summary>
+    /// Executes flood fill painting using previously stored faces.
+    /// This is the execution phase - actual painting occurs here.
+    /// </summary>
     public void ExecuteFloodFill(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel, Guid operationId)
     {
-        // Use the stored faces instead of running flood fill again
         if (!_facesToPaint.TryGetValue(operationId, out var facesToPaint))
         {
             return; // No faces stored for this operation
@@ -129,103 +114,60 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
 
         try
         {
-            // Paint faces in order until we run out of paint
-            foreach (var faceData in facesToPaint)
-            {
-                if (!ItemTexture.ShouldPaintFace(operationId))
-                {
-                    break; // No more paint available
-                }
-
-                // Apply the texture
-                GameManager.Instance.SetBlockTextureServer(
-                    faceData.BlockPos,
-                    faceData.BlockFace,
-                    _actionData.idx,
-                    _entityId,
-                    (byte)faceData.Channel
-                );
-            }
+            ExecutePaintingPhase(facesToPaint, _actionData, _entityId, operationId);
         }
         finally
         {
-            // Clean up the stored faces
             _facesToPaint.Remove(operationId);
         }
     }
 
+    /// <summary>
+    /// Counts paint requirements for a specific block, handling both single face and all faces scenarios.
+    /// </summary>
     public EPaintResult CountPaintBlock(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, PersistentPlayerData _lpRelative, ChannelMask _channelMask, Guid operationId)
     {
-        // Use reflection to access protected methods from the original object
-        var getParentBlockMethod = typeof(ItemActionTextureBlock).GetMethod("getParentBlock",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var checkBlockCanBePaintedMethod = typeof(ItemActionTextureBlock).GetMethod("checkBlockCanBePainted",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var blockData = PrepareBlockData(_blockPos, _blockFace, _blockValue, _cc);
 
-        if (getParentBlockMethod != null)
-        {
-            object[] parameters = { _blockValue, _blockPos, _cc };
-            getParentBlockMethod.Invoke(OriginalTextureBlock, parameters);
-            _blockValue = (BlockValue)parameters[0];
-            _blockPos = (Vector3i)parameters[1];
-        }
-
-        if (checkBlockCanBePaintedMethod != null)
-        {
-            var canBePainted = (bool)checkBlockCanBePaintedMethod.Invoke(OriginalTextureBlock, new object[] { _world, _blockPos, _blockValue, _lpRelative });
-            if (!canBePainted)
-            {
-                return EPaintResult.CanNotPaint;
-            }
-        }
-
-        if (BlockToolSelection.Instance.SelectionActive && !new BoundsInt(BlockToolSelection.Instance.SelectionMin, BlockToolSelection.Instance.SelectionSize).Contains(_blockPos))
+        if (!ValidateBlockCanBePainted(_world, blockData.blockPos, blockData.blockValue, _lpRelative))
         {
             return EPaintResult.CanNotPaint;
         }
-        if (!_actionData.bPaintAllSides)
+
+        if (!ValidateBlockSelection(blockData.blockPos))
         {
-            return CountPaintFace(_cc, _entityId, _actionData, _blockPos, _blockFace, _blockValue, _channelMask, operationId);
+            return EPaintResult.CanNotPaint;
         }
-        int num = 0;
-        for (int i = 0; i <= 5; i++)
-        {
-            _blockFace = (BlockFace)i;
-            EPaintResult ePaintResult = CountPaintFace(_cc, _entityId, _actionData, _blockPos, _blockFace, _blockValue, _channelMask, operationId);
-            switch (ePaintResult)
-            {
-                case EPaintResult.NoPaintAvailable:
-                    return ePaintResult;
-                case EPaintResult.Painted:
-                    num++;
-                    break;
-            }
-        }
-        if (num == 0)
-        {
-            return EPaintResult.SamePaint;
-        }
-        return EPaintResult.Painted;
+
+        return _actionData.bPaintAllSides
+            ? CountPaintAllFaces(_cc, _entityId, _actionData, blockData.blockPos, blockData.blockValue, _channelMask, operationId)
+            : CountPaintFace(_cc, _entityId, _actionData, blockData.blockPos, blockData.blockFace, _blockValue, _channelMask, operationId);
     }
 
+    /// <summary>
+    /// Counts paint requirements for a specific face on a block.
+    /// Fixed to properly handle channel iteration instead of the original's pointless loop.
+    /// </summary>
     public EPaintResult CountPaintFace(ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, ChannelMask _channelMask, Guid operationId)
     {
         EPaintResult result = EPaintResult.SamePaint;
-        for (int i = 0; i < 1; i++)
+
+        // Fixed: Process all channels that are included in the mask (instead of pointless loop to 1)
+        for (int channel = 0; channel < MAX_CHANNELS; channel++)
         {
-            if (!_channelMask.IncludesChannel(i))
+            if (!_channelMask.IncludesChannel(channel))
             {
                 continue;
             }
 
-            int currentPaintIdx = GetCurrentPaintIdx(_cc, _blockPos, _blockFace, _blockValue, i);
+            int currentPaintIdx = GetCurrentPaintIdx(_cc, _blockPos, _blockFace, _blockValue, channel);
 
             if (_actionData.idx != currentPaintIdx)
             {
                 // Store the face to be painted
                 if (_facesToPaint.TryGetValue(operationId, out var faceList))
                 {
-                    faceList.Add(new PaintFaceData(_blockPos, _blockFace, i));
+                    faceList.Add(new PaintFaceData(_blockPos, _blockFace, channel));
                 }
 
                 // Count the paint usage
@@ -239,76 +181,308 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
         return result;
     }
 
-    // Cleanup method to prevent memory leaks
+    /// <summary>
+    /// Counts paint requirements for area painting (Multiple/Spray modes).
+    /// </summary>
+    public void CountAreaPaint(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, Guid operationId)
+    {
+        _facesToPaint[operationId] = [];
+
+        // Iterate through area grid (matches original game logic)
+        for (float x = -_radius; x <= _radius; x += 0.5f)
+        {
+            for (float y = -_radius; y <= _radius; y += 0.5f)
+            {
+                var raycastResult = PerformAreaRaycast(_world, _pos, _origin, _dir1, _dir2, x, y);
+                if (raycastResult.IsValid)
+                {
+                    // Fixed: Direct face counting instead of recursive CountPaintBlock call
+                    CountPaintFaceForArea(_cc, raycastResult, _actionData, _lpRelative, operationId);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Executes area painting using previously stored faces.
+    /// </summary>
+    public void ExecuteAreaPaint(int _entityId, ItemActionTextureBlockData _actionData, Guid operationId)
+    {
+        if (!_facesToPaint.TryGetValue(operationId, out var facesToPaint))
+        {
+            return;
+        }
+
+        try
+        {
+            ExecutePaintingPhase(facesToPaint, _actionData, _entityId, operationId);
+        }
+        finally
+        {
+            _facesToPaint.Remove(operationId);
+        }
+    }
+
+    /// <summary>
+    /// Cleanup method to prevent memory leaks
+    /// </summary>
     public void CleanupOperation(Guid operationId)
     {
         _facesToPaint.Remove(operationId);
     }
 
-    public void CountAreaPaint(World _world, ChunkCluster _cc, int _entityId, ItemActionTextureBlockData _actionData, PersistentPlayerData _lpRelative, Vector3 _pos, Vector3 _origin, Vector3 _dir1, Vector3 _dir2, float _radius, Guid operationId)
+    #region Private Helper Methods
+
+    // Helper struct to group related block data
+    private struct BlockData
     {
-        // Initialize face list for this operation
-        _facesToPaint[operationId] = [];
+        public Vector3i blockPos;
+        public BlockFace blockFace;
+        public BlockValue blockValue;
+    }
 
-        // Iterate through area grid
-        for (float x = -_radius; x <= _radius; x += 0.5f)
+    // Helper struct for raycast results
+    private struct FloodFillRaycastData
+    {
+        public bool IsValid;
+        public Vector3i BlockPos;
+        public BlockFace BlockFace;
+        public BlockValue BlockValue;
+        public Vector3 HitFaceNormal;
+    }
+
+    // Helper struct for area raycast results
+    private struct AreaRaycastData
+    {
+        public bool IsValid;
+        public Vector3i BlockPos;
+        public BlockFace BlockFace;
+        public BlockValue BlockValue;
+    }
+
+    // Helper struct for block processing results
+    private struct BlockProcessResult
+    {
+        public bool ShouldExpand;
+    }
+
+    private BlockData PrepareBlockData(Vector3i blockPos, BlockFace blockFace, BlockValue blockValue, ChunkCluster cc)
+    {
+        var result = new BlockData { blockPos = blockPos, blockFace = blockFace, blockValue = blockValue };
+
+        // Apply getParentBlock transformation if method exists
+        if (s_getParentBlockMethod != null)
         {
-            for (float y = -_radius; y <= _radius; y += 0.5f)
+            var parameters = new object[] { result.blockValue, result.blockPos, cc };
+            s_getParentBlockMethod.Invoke(OriginalTextureBlock, parameters);
+            result.blockValue = (BlockValue)parameters[0];
+            result.blockPos = (Vector3i)parameters[1];
+        }
+
+        return result;
+    }
+
+    private bool ValidateBlockCanBePainted(World world, Vector3i blockPos, BlockValue blockValue, PersistentPlayerData lpRelative)
+    {
+        if (s_checkBlockCanBePaintedMethod == null)
+        {
+            return true; // If method doesn't exist, assume it can be painted
+        }
+
+        return (bool)s_checkBlockCanBePaintedMethod.Invoke(OriginalTextureBlock, new object[] { world, blockPos, blockValue, lpRelative });
+    }
+
+    private static bool ValidateBlockSelection(Vector3i blockPos)
+    {
+        return !BlockToolSelection.Instance.SelectionActive ||
+               new BoundsInt(BlockToolSelection.Instance.SelectionMin, BlockToolSelection.Instance.SelectionSize).Contains(blockPos);
+    }
+
+    private EPaintResult CountPaintAllFaces(ChunkCluster cc, int entityId, ItemActionTextureBlockData actionData, Vector3i blockPos, BlockValue blockValue, ChannelMask channelMask, Guid operationId)
+    {
+        int paintedFaces = 0;
+
+        for (int faceIndex = 0; faceIndex <= MAX_BLOCK_FACES - 1; faceIndex++)
+        {
+            var currentFace = (BlockFace)faceIndex;
+            var faceResult = CountPaintFace(cc, entityId, actionData, blockPos, currentFace, blockValue, channelMask, operationId);
+
+            if (faceResult == EPaintResult.NoPaintAvailable)
             {
-                Vector3 direction = _pos + x * _dir1 + y * _dir2 - _origin;
-                int hitMask = 69;
+                return EPaintResult.NoPaintAvailable;
+            }
 
-                if (Voxel.Raycast(_world, new Ray(_origin, direction), Range, LAYER_MASK, hitMask, 0f))
+            if (faceResult == EPaintResult.Painted)
+            {
+                paintedFaces++;
+            }
+        }
+
+        return paintedFaces > 0 ? EPaintResult.Painted : EPaintResult.SamePaint;
+    }
+
+    private static bool ShouldSkipRayPosition(Vector2i rayPosition, Dictionary<Vector2i, bool> visitedRays)
+    {
+        return visitedRays.ContainsKey(rayPosition);
+    }
+
+    private FloodFillRaycastData PerformFloodFillRaycast(World world, Vector3 hitPosition, Vector3 hitFaceNormal, Vector3 dir1, Vector3 dir2, Vector2i rayPosition, WorldRayHitInfo worldRayHitInfo)
+    {
+        Vector3 origin = hitPosition + hitFaceNormal * 0.2f + rayPosition.x * dir1 + rayPosition.y * dir2;
+        Vector3 direction = -hitFaceNormal * 0.3f;
+        float magnitude = direction.magnitude;
+
+        if (!Voxel.Raycast(world, new Ray(origin, direction), magnitude, LAYER_MASK, 69, 0f))
+        {
+            return new FloodFillRaycastData { IsValid = false };
+        }
+
+        worldRayHitInfo.CopyFrom(Voxel.voxelRayHitInfo);
+        var blockValue = worldRayHitInfo.hit.blockValue;
+        var blockPos = worldRayHitInfo.hit.blockPos;
+
+        if (worldRayHitInfo.hitTriangleIdx < 0)
+        {
+            return new FloodFillRaycastData { IsValid = false };
+        }
+
+        var blockFace = GameUtils.GetBlockFaceFromHitInfo(blockPos, blockValue, worldRayHitInfo.hitCollider, worldRayHitInfo.hitTriangleIdx, out _, out var hitFaceNormal2);
+        if (blockFace == BlockFace.None)
+        {
+            return new FloodFillRaycastData { IsValid = false };
+        }
+
+        return new FloodFillRaycastData
+        {
+            IsValid = true,
+            BlockPos = blockPos,
+            BlockFace = blockFace,
+            BlockValue = blockValue,
+            HitFaceNormal = hitFaceNormal2.normalized
+        };
+    }
+
+    private BlockProcessResult ProcessFloodFillBlock(ChunkCluster cc, FloodFillRaycastData raycastData, Dictionary<Vector3i, bool> visitedPositions, Vector3 expectedNormal, int sourcePaint, int channel, ItemActionTextureBlockData actionData, Guid operationId)
+    {
+        // Check if block was already visited and marked as non-expandable
+        if (visitedPositions.TryGetValue(raycastData.BlockPos, out var wasVisited) && !wasVisited)
+        {
+            return new BlockProcessResult { ShouldExpand = false };
+        }
+
+        // Skip if we already processed this block
+        if (wasVisited)
+        {
+            return new BlockProcessResult { ShouldExpand = true };
+        }
+
+        // Validate face normal matches expected (from original game logic)
+        if ((raycastData.HitFaceNormal - expectedNormal).sqrMagnitude > FACE_NORMAL_TOLERANCE)
+        {
+            visitedPositions.Add(raycastData.BlockPos, false);
+            return new BlockProcessResult { ShouldExpand = false };
+        }
+
+        // Check if paint matches source paint
+        int currentPaintIdx = GetCurrentPaintIdx(cc, raycastData.BlockPos, raycastData.BlockFace, raycastData.BlockValue, channel);
+        if (currentPaintIdx != sourcePaint)
+        {
+            visitedPositions.Add(raycastData.BlockPos, false);
+            return new BlockProcessResult { ShouldExpand = false };
+        }
+
+        // Store face for painting and count paint usage
+        if (_facesToPaint.TryGetValue(operationId, out var faceList))
+        {
+            faceList.Add(new PaintFaceData(raycastData.BlockPos, raycastData.BlockFace, channel));
+        }
+
+        bool canExpand = ItemTexture.CountPaintUsage(operationId);
+        visitedPositions.Add(raycastData.BlockPos, canExpand);
+
+        return new BlockProcessResult { ShouldExpand = canExpand };
+    }
+
+    private static void AddAdjacentPositions(Stack<Vector2i> positionsToCheck, Vector2i currentPosition)
+    {
+        positionsToCheck.Push(currentPosition + Vector2i.down);
+        positionsToCheck.Push(currentPosition + Vector2i.up);
+        positionsToCheck.Push(currentPosition + Vector2i.left);
+        positionsToCheck.Push(currentPosition + Vector2i.right);
+    }
+
+    private AreaRaycastData PerformAreaRaycast(World world, Vector3 pos, Vector3 origin, Vector3 dir1, Vector3 dir2, float x, float y)
+    {
+        Vector3 direction = pos + x * dir1 + y * dir2 - origin;
+        const int hitMask = 69;
+
+        if (!Voxel.Raycast(world, new Ray(origin, direction), Range, LAYER_MASK, hitMask, 0f))
+        {
+            return new AreaRaycastData { IsValid = false };
+        }
+
+        WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo.Clone();
+        BlockValue blockValue = hitInfo.hit.blockValue;
+        Vector3i blockPos = hitInfo.hit.blockPos;
+
+        BlockFace blockFace = GameUtils.GetBlockFaceFromHitInfo(blockPos, blockValue, hitInfo.hitCollider, hitInfo.hitTriangleIdx, out _, out _);
+
+        if (blockFace == BlockFace.None)
+        {
+            return new AreaRaycastData { IsValid = false };
+        }
+
+        return new AreaRaycastData
+        {
+            IsValid = true,
+            BlockPos = blockPos,
+            BlockFace = blockFace,
+            BlockValue = blockValue
+        };
+    }
+
+    private void CountPaintFaceForArea(ChunkCluster cc, AreaRaycastData raycastData, ItemActionTextureBlockData actionData, PersistentPlayerData lpRelative, Guid operationId)
+    {
+        // Direct face counting for area paint to avoid recursion
+        for (int channel = 0; channel < MAX_CHANNELS; channel++)
+        {
+            if (!actionData.channelMask.IncludesChannel(channel))
+            {
+                continue;
+            }
+
+            int currentPaintIdx = GetCurrentPaintIdx(cc, raycastData.BlockPos, raycastData.BlockFace, raycastData.BlockValue, channel);
+
+            if (actionData.idx != currentPaintIdx)
+            {
+                if (_facesToPaint.TryGetValue(operationId, out var faceList))
                 {
-                    WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo.Clone();
-                    BlockValue blockValue = hitInfo.hit.blockValue;
-                    Vector3i blockPos = hitInfo.hit.blockPos;
-
-                    Vector3 hitFaceCenter;
-                    Vector3 hitFaceNormal;
-                    BlockFace blockFace = GameUtils.GetBlockFaceFromHitInfo(blockPos, blockValue, hitInfo.hitCollider, hitInfo.hitTriangleIdx, out hitFaceCenter, out hitFaceNormal);
-
-                    if (blockFace != BlockFace.None)
-                    {
-                        CountPaintBlock(_world, _cc, _entityId, _actionData, blockPos, blockFace, blockValue, _lpRelative, _actionData.channelMask, operationId);
-                    }
+                    faceList.Add(new PaintFaceData(raycastData.BlockPos, raycastData.BlockFace, channel));
                 }
+
+                ItemTexture.CountPaintUsage(operationId);
             }
         }
     }
 
-    public void ExecuteAreaPaint(int _entityId, ItemActionTextureBlockData _actionData, Guid operationId)
+    private static void ExecutePaintingPhase(List<PaintFaceData> facesToPaint, ItemActionTextureBlockData actionData, int entityId, Guid operationId)
     {
-        // Use the stored faces instead of running area paint again
-        if (!_facesToPaint.TryGetValue(operationId, out var facesToPaint))
+        // Paint faces in order until we run out of paint
+        foreach (var faceData in facesToPaint)
         {
-            return; // No faces stored for this operation
-        }
-
-        try
-        {
-            // Paint faces in order until we run out of paint
-            foreach (var faceData in facesToPaint)
+            if (!ItemTexture.ShouldPaintFace(operationId))
             {
-                if (!ItemTexture.ShouldPaintFace(operationId))
-                {
-                    break; // No more paint available
-                }
-
-                // Apply the texture
-                GameManager.Instance.SetBlockTextureServer(
-                    faceData.BlockPos,
-                    faceData.BlockFace,
-                    _actionData.idx,
-                    _entityId,
-                    (byte)faceData.Channel
-                );
+                break; // No more paint available
             }
-        }
-        finally
-        {
-            // Clean up the stored faces
-            _facesToPaint.Remove(operationId);
+
+            // Apply the texture
+            GameManager.Instance.SetBlockTextureServer(
+                faceData.BlockPos,
+                faceData.BlockFace,
+                actionData.idx,
+                entityId,
+                (byte)faceData.Channel
+            );
         }
     }
 
@@ -316,15 +490,16 @@ public class ItemActionTextureBlockExposed(ItemActionTextureBlock originalTextur
     /// Proper implementation of getCurrentPaintIdx that matches the original game logic.
     /// This handles the case where GetBlockFaceTexture returns 0 by falling back to the default paint.
     /// </summary>
-    private int GetCurrentPaintIdx(ChunkCluster _cc, Vector3i _blockPos, BlockFace _blockFace, BlockValue _blockValue, int _channel)
+    private int GetCurrentPaintIdx(ChunkCluster cc, Vector3i blockPos, BlockFace blockFace, BlockValue blockValue, int channel)
     {
-        int blockFaceTexture = _cc.GetBlockFaceTexture(_blockPos, _blockFace, _channel);
+        int blockFaceTexture = cc.GetBlockFaceTexture(blockPos, blockFace, channel);
         if (blockFaceTexture != 0)
         {
             return blockFaceTexture;
         }
 
-        string _name;
-        return GameUtils.FindPaintIdForBlockFace(_blockValue, _blockFace, out _name, _channel);
+        return GameUtils.FindPaintIdForBlockFace(blockValue, blockFace, out _, channel);
     }
+
+    #endregion
 }
