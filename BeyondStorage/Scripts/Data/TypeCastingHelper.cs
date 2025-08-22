@@ -89,25 +89,49 @@ public static class TypeCastingHelper
 
     private static string DetermineErrorReason(Type actualType, Type targetType, object obj)
     {
-        // Check for common casting issues
-        if (actualType.IsValueType && targetType.IsClass)
+        // Check for value type issues first
+        if (IsValueTypeIssue(actualType, targetType))
         {
             return "VALUE_TYPE_TO_REFERENCE_TYPE";
         }
 
-        if (targetType.IsInterface && !actualType.GetInterfaces().Contains(targetType))
+        // Check for interface compatibility
+        if (IsInterfaceCompatibilityIssue(actualType, targetType))
         {
             return "INTERFACE_NOT_IMPLEMENTED";
         }
 
-        if (targetType.IsClass && !targetType.IsAssignableFrom(actualType))
+        // Check for class inheritance issues
+        if (IsClassInheritanceIssue(actualType, targetType))
         {
-            if (actualType.IsSubclassOf(typeof(object)) && targetType.IsSubclassOf(typeof(object)))
-            {
-                return "INCOMPATIBLE_REFERENCE_TYPES";
-            }
+            return "INCOMPATIBLE_REFERENCE_TYPES";
         }
 
+        // Check for other specific issues
+        var specificReason = CheckSpecificIssues(actualType, targetType, obj);
+        return specificReason ?? "GENERAL_CAST_FAILURE";
+    }
+
+    private static bool IsValueTypeIssue(Type actualType, Type targetType)
+    {
+        return actualType.IsValueType && targetType.IsClass;
+    }
+
+    private static bool IsInterfaceCompatibilityIssue(Type actualType, Type targetType)
+    {
+        return targetType.IsInterface && !actualType.GetInterfaces().Contains(targetType);
+    }
+
+    private static bool IsClassInheritanceIssue(Type actualType, Type targetType)
+    {
+        return targetType.IsClass &&
+               !targetType.IsAssignableFrom(actualType) &&
+               actualType.IsSubclassOf(typeof(object)) &&
+               targetType.IsSubclassOf(typeof(object));
+    }
+
+    private static string CheckSpecificIssues(Type actualType, Type targetType, object obj)
+    {
         if (actualType.Assembly != targetType.Assembly)
         {
             return "CROSS_ASSEMBLY_CAST";
@@ -128,7 +152,7 @@ public static class TypeCastingHelper
             return "ANONYMOUS_TYPE_CAST";
         }
 
-        return "GENERAL_CAST_FAILURE";
+        return null; // No specific issue found
     }
 
     private static string CheckAssemblyMismatch(Type actualType, Type targetType)
