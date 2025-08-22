@@ -9,7 +9,7 @@ using static ItemActionTextureBlock;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(ItemActionTextureBlock))]
-internal static static class ItemActionTextureBlockFireShotLaterPatch
+internal static class ItemActionTextureBlockFireShotLaterPatch
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(ItemActionTextureBlock.fireShotLater))]
