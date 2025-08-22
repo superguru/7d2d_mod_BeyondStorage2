@@ -239,6 +239,19 @@ public static class ItemX
         return !IsPlayerInventory(location);
     }
 
+    // Static array of lock property getters for efficient reuse
+    private static readonly System.Func<XUiC_ItemStack, bool>[] s_lockPropertyGetters =
+    [
+        slot => slot.IsLocked,
+        slot => slot.StackLock,
+        slot => slot.AssembleLock,
+        slot => slot.QuestLock,
+        slot => slot.ToolLock,
+        slot => slot.HiddenLock,
+        slot => slot.AttributeLock,
+        slot => slot.UserLockedSlot
+    ];
+
     /// <summary>
     /// Determines if the specified slot has any type of lock applied to it.
     /// Checks all possible lock types including user locks, quest locks, assembly locks, etc.
@@ -252,13 +265,7 @@ public static class ItemX
             return false;
         }
 
-        var lockProperties = new[]
-        {
-            slot.IsLocked, slot.StackLock, slot.AssembleLock, slot.QuestLock,
-            slot.ToolLock, slot.HiddenLock, slot.AttributeLock, slot.UserLockedSlot
-        };
-
-        return lockProperties.Any(locked => locked);
+        return s_lockPropertyGetters.Any(getter => getter(slot));
     }
 
     #endregion
