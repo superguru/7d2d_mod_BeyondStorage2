@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_HUDStatBar))]
-public class XUiCHUDStatBarPatches
+internal static class XUiCHUDStatBarPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_HUDStatBar.updateActiveItemAmmo))]

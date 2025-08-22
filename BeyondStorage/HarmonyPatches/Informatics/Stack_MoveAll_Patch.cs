@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ContainerStandardControls))]
-public class Stack_MoveAll_Patch
+internal static class Stack_MoveAll_Patch
 {
     private static bool s_isMovingAll = false;
     private static readonly object s_lockObject = new();
@@ -28,7 +28,7 @@ public class Stack_MoveAll_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_MoveAll_Event_Postfix(XUiC_ContainerStandardControls __instance)
+    private static void Handle_MoveAll_Event_Postfix(XUiC_ContainerStandardControls __instance)
     {
         lock (s_lockObject)
         {

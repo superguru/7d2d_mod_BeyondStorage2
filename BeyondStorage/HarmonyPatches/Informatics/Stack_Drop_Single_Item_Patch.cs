@@ -6,7 +6,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
-public class Stack_Drop_Single_Item_Patch
+internal static class Stack_Drop_Single_Item_Patch
 {
     private static long s_callCounter = 0;
     private static readonly object s_lockObject = new();
@@ -20,7 +20,7 @@ public class Stack_Drop_Single_Item_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_DropSingle_Event_Prefix(XUiC_ItemStack __instance)
+    private static void Handle_DropSingle_Event_Prefix(XUiC_ItemStack __instance)
     {
 
         // Increment call counter immediately at the start to ensure logging consistency

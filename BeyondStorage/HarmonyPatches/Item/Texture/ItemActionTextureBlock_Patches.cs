@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(ItemActionTextureBlock))]
-public class ItemActionTextureBlockPatches
+internal static class ItemActionTextureBlockPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(ItemActionTextureBlock.checkAmmo))]

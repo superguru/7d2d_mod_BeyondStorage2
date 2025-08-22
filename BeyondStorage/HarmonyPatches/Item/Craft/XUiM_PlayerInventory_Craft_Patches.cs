@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public class XUiMPlayerInventoryCraftPatches
+internal static class XUiMPlayerInventoryCraftPatches
 {
     // Used for:
     //          Item Crafting (has items only, does not handle remove)

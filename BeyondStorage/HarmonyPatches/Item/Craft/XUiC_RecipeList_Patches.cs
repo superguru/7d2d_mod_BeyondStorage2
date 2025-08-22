@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiC_RecipeList))]
-public class XUiCRecipeListPatches
+internal static class XUiCRecipeListPatches
 {
     // == BEFORE ==
     // IL_0081: callvirt     instance class ItemStack[] XUiC_ItemStackGrid::GetSlots()

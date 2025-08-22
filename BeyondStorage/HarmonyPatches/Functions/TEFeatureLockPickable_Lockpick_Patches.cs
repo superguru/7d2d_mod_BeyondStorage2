@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(TEFeatureLockPickable))]
-public static class TEFeatureLockPickable_Lockpick_Patches
+internal static class TEFeatureLockPickable_Lockpick_Patches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(TEFeatureLockPickable.OnBlockActivated))]

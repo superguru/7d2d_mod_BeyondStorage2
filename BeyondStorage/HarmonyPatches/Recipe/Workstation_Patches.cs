@@ -10,7 +10,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Recipe;
 
 [HarmonyPatch(typeof(XUiC_WorkstationOutputGrid))]
-public class WorkstationPatches
+internal static class WorkstationPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_WorkstationOutputGrid.UpdateData))]

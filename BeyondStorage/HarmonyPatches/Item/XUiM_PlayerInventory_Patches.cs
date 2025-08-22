@@ -10,7 +10,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public class XUiMPlayerInventoryCommonPatches
+internal static class XUiMPlayerInventoryCommonPatches
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]

@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Vehicle;
 
 [HarmonyPatch(typeof(XUiM_Vehicle))]
-public class XUiMVehiclePatches
+internal static class XUiMVehiclePatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiM_Vehicle.RepairVehicle))]

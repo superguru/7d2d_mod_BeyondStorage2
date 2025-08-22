@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
-public class Stack_Shift_Patch
+internal static class Stack_Shift_Patch
 {
     private static long s_callCounter = 0;
     private static SlotSnapshot s_currentSnapshot = null;
@@ -18,7 +18,7 @@ public class Stack_Shift_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_StackShift_Event_Prefix(XUiC_ItemStack __instance)
+    private static void Handle_StackShift_Event_Prefix(XUiC_ItemStack __instance)
     {
 #if DEBUG
         const string d_MethodName = nameof(Handle_StackShift_Event_Prefix);
@@ -52,7 +52,7 @@ public class Stack_Shift_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_StackShift_Event_Postfix(XUiC_ItemStack __instance)
+    private static void Handle_StackShift_Event_Postfix(XUiC_ItemStack __instance)
     {
 #if DEBUG
         const string d_MethodName = nameof(Handle_StackShift_Event_Postfix);

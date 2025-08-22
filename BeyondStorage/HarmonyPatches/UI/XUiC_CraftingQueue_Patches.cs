@@ -9,7 +9,7 @@ namespace BeyondStorage.HarmonyPatches.UI;
 #if DEBUG
 [HarmonyDebug]
 #endif
-public class XUiCCraftingQueuePatches
+internal static class XUiCCraftingQueuePatches
 {
     // Fixed an internal bug where crafting queue is not kept in sync with some other UI elements.
     // Still a bug in 2.x - confirmed in 2.0 - 2.2

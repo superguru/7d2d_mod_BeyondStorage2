@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiC_ItemActionList))]
-public static class XUiCItemActionListPatches
+internal static class XUiCItemActionListPatches
 {
     // Used For:
     //      Item Repair (tracks item action list visibility)

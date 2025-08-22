@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(ItemActionEntrySell))]
-public static class Item_Action_Entry_Sell_Patches
+internal static class Item_Action_Entry_Sell_Patches
 {
     private static bool s_isMidSale = false;
     private static object s_lockObject = new();

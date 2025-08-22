@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public static class XUiMPlayerInventory_Buy_and_Sell_Patches
+internal static class XUiMPlayerInventory_Buy_and_Sell_Patches
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.CanSwapItems), [typeof(ItemStack), typeof(ItemStack), typeof(int)])]

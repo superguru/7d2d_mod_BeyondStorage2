@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public static class XUiM_PlayerInventory_Currency_Patches
+internal static class XUiM_PlayerInventory_Currency_Patches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RefreshCurrency))]

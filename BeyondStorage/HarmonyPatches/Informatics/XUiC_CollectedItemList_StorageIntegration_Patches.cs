@@ -10,7 +10,7 @@ using BeyondStorage.Scripts.Infrastructure;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_CollectedItemList))]
-public static class XUiC_CollectedItemList_StorageIntegration_Patches
+internal static class XUiC_CollectedItemList_StorageIntegration_Patches
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiC_CollectedItemList.AddItemStack))]

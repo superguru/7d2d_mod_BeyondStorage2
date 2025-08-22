@@ -14,7 +14,7 @@ internal static class ItemActionTextureBlockFloodFillPatch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static bool ItemActionTextureBlock_floodFill_Prefix(
+    private static bool ItemActionTextureBlock_floodFill_Prefix(
         ItemActionTextureBlock __instance,
         World _world,
         ChunkCluster _cc,

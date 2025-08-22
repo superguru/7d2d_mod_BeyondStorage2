@@ -16,7 +16,7 @@ internal static class Find_ItemStack_Setter_Patch
     //#if DEBUG
     //    [HarmonyDebug]
     //#endif
-    public static void XUiC_ItemStack_ItemStack_Setter_Prefix(XUiC_ItemStack __instance, ItemStack value)
+    private static void XUiC_ItemStack_ItemStack_Setter_Prefix(XUiC_ItemStack __instance, ItemStack value)
     {
         const string d_MethodName = nameof(XUiC_ItemStack_ItemStack_Setter_Prefix);
         var callCount = Interlocked.Increment(ref s_callCounter);

@@ -9,7 +9,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiC_RecipeCraftCount))]
-public class XUiCRecipeCraftCountPatches
+internal static class XUiCRecipeCraftCountPatches
 {
     // Used for:
     //          Item Crafting (gets max craftable amount)

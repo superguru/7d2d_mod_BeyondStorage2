@@ -23,7 +23,7 @@ internal static class Animator3PRangedReloadStatePatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Animator3PRangedReloadState_GetAmmoCount_Postfix(ref int __result, ItemValue ammo, int modifiedMagazineSize)
+    private static void Animator3PRangedReloadState_GetAmmoCount_Postfix(ref int __result, ItemValue ammo, int modifiedMagazineSize)
     {
         const string d_MethodName = nameof(Animator3PRangedReloadState_GetAmmoCount_Postfix);
 

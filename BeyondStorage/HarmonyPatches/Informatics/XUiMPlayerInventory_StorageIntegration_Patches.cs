@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
-public static class XUiMPlayerInventory_StorageIntegration_Patches
+internal static class XUiMPlayerInventory_StorageIntegration_Patches
 {
 #if DEBUG
     private static long s_callCounter = 0;
@@ -16,7 +16,7 @@ public static class XUiMPlayerInventory_StorageIntegration_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiM_PlayerInventory_GetItemCountWithMods_Postfix(XUiM_PlayerInventory __instance, ItemValue _itemValue, ref int __result)
+    private static void XUiM_PlayerInventory_GetItemCountWithMods_Postfix(XUiM_PlayerInventory __instance, ItemValue _itemValue, ref int __result)
     {
 #if DEBUG
         //const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCountWithMods_Postfix);

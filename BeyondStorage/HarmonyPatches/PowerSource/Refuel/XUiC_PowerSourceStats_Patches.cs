@@ -9,7 +9,7 @@ using UniLinq;
 namespace BeyondStorage.HarmonyPatches.PowerSource;
 
 [HarmonyPatch(typeof(XUiC_PowerSourceStats))]
-public class XUiCPowerSourceStatsPatches
+internal static class XUiCPowerSourceStatsPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_PowerSourceStats.BtnRefuel_OnPress))]

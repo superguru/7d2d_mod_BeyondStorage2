@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_VehicleStorageWindowGroup))]
-public class XUiC_VehicleStorageWindowGroup_Patches
+internal static class XUiC_VehicleStorageWindowGroup_Patches
 {
     private static XUiC_VehicleStorageWindowGroup s_windowInstance = null;
     private static bool s_isVehicleStorageWindowOpen = false;
@@ -15,7 +15,7 @@ public class XUiC_VehicleStorageWindowGroup_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiC_VehicleStorageWindowGroup_OnOpen_Postfix(XUiC_VehicleStorageWindowGroup __instance)
+    private static void XUiC_VehicleStorageWindowGroup_OnOpen_Postfix(XUiC_VehicleStorageWindowGroup __instance)
     {
         const string d_MethodName = nameof(XUiC_VehicleStorageWindowGroup_OnOpen_Postfix);
 
@@ -43,7 +43,7 @@ public class XUiC_VehicleStorageWindowGroup_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiC_VehicleStorageWindowGroup_OnClose_Postfix(XUiC_VehicleStorageWindowGroup __instance)
+    private static void XUiC_VehicleStorageWindowGroup_OnClose_Postfix(XUiC_VehicleStorageWindowGroup __instance)
     {
 #if DEBUG
         const string d_MethodName = nameof(XUiC_VehicleStorageWindowGroup_OnClose_Postfix);

@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_LootWindow))]
-public class XUiC_LootWindow_Patches
+internal static class XUiC_LootWindow_Patches
 {
     private static XUiC_LootWindow s_windowInstance = null;
     private static bool s_isStorageLootWindowOpen = false;

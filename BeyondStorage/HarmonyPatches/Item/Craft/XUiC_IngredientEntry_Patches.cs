@@ -9,7 +9,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(XUiC_IngredientEntry))]
-public class XUiCIngredientEntryPatches
+internal static class XUiCIngredientEntryPatches
 {
     // Used for:
     //      Item Crafting (shows item count available in crafting window(s))

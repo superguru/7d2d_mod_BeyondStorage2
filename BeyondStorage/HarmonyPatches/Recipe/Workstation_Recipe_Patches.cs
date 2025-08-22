@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Recipe;
 
 [HarmonyPatch(typeof(TileEntityWorkstation))]
-public class WorkstationRecipePatches
+internal static class WorkstationRecipePatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(TileEntityWorkstation.AddCraftComplete))]

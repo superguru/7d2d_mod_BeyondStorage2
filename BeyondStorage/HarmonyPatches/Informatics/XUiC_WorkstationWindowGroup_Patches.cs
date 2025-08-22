@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_WorkstationWindowGroup))]
-public class XUiC_WorkstationWindowGroup_Patches
+internal static class XUiC_WorkstationWindowGroup_Patches
 {
     private static XUiC_WorkstationWindowGroup s_windowInstance = null;
     private static bool s_isWorkstationWindowOpen = false;
@@ -15,7 +15,7 @@ public class XUiC_WorkstationWindowGroup_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiC_WorkstationWindowGroup_OnOpen_Postfix(XUiC_WorkstationWindowGroup __instance)
+    private static void XUiC_WorkstationWindowGroup_OnOpen_Postfix(XUiC_WorkstationWindowGroup __instance)
     {
         const string d_MethodName = nameof(XUiC_WorkstationWindowGroup_OnOpen_Postfix);
 
@@ -43,7 +43,7 @@ public class XUiC_WorkstationWindowGroup_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiC_WorkstationWindowGroup_OnClose_Postfix(XUiC_WorkstationWindowGroup __instance)
+    private static void XUiC_WorkstationWindowGroup_OnClose_Postfix(XUiC_WorkstationWindowGroup __instance)
     {
 #if DEBUG
         const string d_MethodName = nameof(XUiC_WorkstationWindowGroup_OnClose_Postfix);

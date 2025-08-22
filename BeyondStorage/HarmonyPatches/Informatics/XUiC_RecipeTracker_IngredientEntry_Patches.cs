@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_RecipeTrackerIngredientEntry))]
-public class XUiC_RecipeTracker_IngredientEntry_Patches
+internal static class XUiC_RecipeTracker_IngredientEntry_Patches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(XUiC_RecipeTrackerIngredientEntry.Ingredient), MethodType.Setter)]

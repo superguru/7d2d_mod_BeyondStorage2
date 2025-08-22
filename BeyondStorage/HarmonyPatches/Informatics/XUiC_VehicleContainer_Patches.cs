@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_VehicleContainer))]
-public class XUiC_VehicleContainer_Patches
+internal static class XUiC_VehicleContainer_Patches
 {
     // Store the previous LockedSlots state for comparison
     private static PackedBoolArray s_previousLockedSlots = null;
@@ -44,7 +44,7 @@ public class XUiC_VehicleContainer_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void XUiC_VehicleContainer_UpdateLockedSlots_Postfix(XUiC_VehicleContainer __instance, XUiC_ContainerStandardControls _csc)
+    private static void XUiC_VehicleContainer_UpdateLockedSlots_Postfix(XUiC_VehicleContainer __instance, XUiC_ContainerStandardControls _csc)
     {
         if (_csc != null)
         {

@@ -11,7 +11,7 @@ using BeyondStorage.Scripts.Infrastructure;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
-public class Stack_Partial_Patch
+internal static class Stack_Partial_Patch
 {
     private static long s_callCounter = 0;
     private static readonly Dictionary<long, SlotSnapshot> s_callHistory = [];
@@ -22,7 +22,7 @@ public class Stack_Partial_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_PartialStackPickup_Event_Prefix(XUiC_ItemStack __instance)
+    private static void Handle_PartialStackPickup_Event_Prefix(XUiC_ItemStack __instance)
     {
 #if DEBUG
         const string d_MethodName = nameof(Handle_PartialStackPickup_Event_Prefix);
@@ -91,7 +91,7 @@ public class Stack_Partial_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_PartialStackPickup_Event_Postfix(XUiC_ItemStack __instance)
+    private static void Handle_PartialStackPickup_Event_Postfix(XUiC_ItemStack __instance)
     {
 
         // Capture post-execution snapshot
