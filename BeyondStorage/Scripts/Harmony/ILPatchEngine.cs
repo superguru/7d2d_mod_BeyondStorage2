@@ -146,12 +146,11 @@ public static class ILPatchEngine
         int replacementPosition = matchIndex + request.ReplacementOffset;
         int replacementCount = request.ReplacementInstructions.Count;
 
-        // Validate patch position
         var validation = ValidatePatchPosition(request, replacementPosition);
         if (!validation.isValid)
         {
             LogValidationFailure(request, replacementPosition, validation.reason);
-            return (false, replacementPosition, 0);
+            return (false, replacementPosition, matchIndex + 1); // ✅ Advance past failed match
         }
 
         // Apply the appropriate patch type
@@ -171,9 +170,25 @@ public static class ILPatchEngine
             return (false, $"below minimum safety offset {request.MinimumSafetyOffset}");
         }
 
-        if (replacementPosition < 0 || replacementPosition > request.NewInstructions.Count)
+        if (replacementPosition < 0)
         {
-            return (false, "out of bounds");
+            return (false, "negative position");
+        }
+
+        // Mode-specific validation
+        if (request.IsInsertMode)
+        {
+            if (replacementPosition > request.NewInstructions.Count)
+            {
+                return (false, "insert position out of bounds");
+            }
+        }
+        else // Overwrite mode
+        {
+            if (replacementPosition >= request.NewInstructions.Count)
+            {
+                return (false, "overwrite position out of bounds");
+            }
         }
 
         return (true, null);
@@ -238,7 +253,14 @@ public static class ILPatchEngine
         /// </summary>
         public List<CodeInstruction> NewInstructions
         {
-            get => _newInstructions ?? _originalInstructions?.ToList() ?? [];
+            get
+            {
+                if (_newInstructions == null)
+                {
+                    _newInstructions = _originalInstructions?.ToList() ?? [];
+                }
+                return _newInstructions;
+            }
             set => _newInstructions = value;
         }
 
