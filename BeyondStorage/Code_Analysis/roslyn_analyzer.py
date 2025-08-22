@@ -502,11 +502,11 @@ class RoslynAnalyzer:
             return 1  # Fallback to base complexity
 
     # Excessive nesting (Roslyn)
-    def check_excessive_nesting(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax, max_nesting: int = 4) -> List[Issue]:
+    def check_excessive_nesting(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax, max_nesting: int = 5) -> List[Issue]:
         """
         Check for excessive nesting depth per method using Roslyn AST.
         Counts nesting introduced by: if/else, for/foreach/while/do, switch, try/catch/finally, using, lock, fixed.
-        Threshold is max_nesting (default 4).
+        Threshold is max_nesting (default 5).
         """
         issues: List[Issue] = []
         try:
