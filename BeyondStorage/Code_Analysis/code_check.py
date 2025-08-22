@@ -187,6 +187,16 @@ class CodeQualityChecker:
                         check_name="cyclomatic_complexity_roslyn",
                         issues=issues
                     ))
+
+                # Excessive nesting (Roslyn-preferred)
+                issues = self.roslyn_analyzer.check_excessive_nesting(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="excessive_nesting_roslyn",
+                        issues=issues
+                    ))
             else:
                 # Fallback to string-based checks if Roslyn parsing fails
                 self._run_string_based_checks(file_path, content, results)
@@ -238,6 +248,14 @@ class CodeQualityChecker:
         if issues:
             results.append(CheckResult(
                 check_name="cyclomatic_complexity_string",
+                issues=issues
+            ))
+
+        # Excessive nesting (string fallback)
+        issues = self.string_checker.check_excessive_nesting(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="excessive_nesting_string",
                 issues=issues
             ))
     
@@ -299,7 +317,7 @@ class CodeQualityChecker:
         # Show Roslyn status
         if is_roslyn_available():
             print("✓ Roslyn AST parsing: ENABLED")
-            print("  Enhanced accuracy for: HarmonyPatch classes, HarmonyPatch methods, empty catch blocks, magic numbers, cyclomatic complexity")
+            print("  Enhanced accuracy for: HarmonyPatch classes, HarmonyPatch methods, empty catch blocks, magic numbers, cyclomatic complexity, excessive nesting")
         else:
             print("⚠ Roslyn AST parsing: DISABLED - using string-based parsing")
             print("  To enable: pip install pythonnet and ensure Roslyn assemblies are available")
