@@ -1,6 +1,6 @@
 @echo off
 
-python code_check.py %*
+python Code_Analysis\code_check.py %*
 
 if not "%errorlevel%"=="0" goto :error
 

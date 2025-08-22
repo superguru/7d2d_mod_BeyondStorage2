@@ -32,7 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <Target Name="CodeQualityChecks" BeforeTargets="Build">
-    <Exec Command="python code_check.py" ContinueOnError="false" WorkingDirectory="$(ProjectDir)">
+    <Exec Command="python Code_Analysis\code_check.py" ContinueOnError="false" WorkingDirectory="$(ProjectDir)">
       <Output TaskParameter="ExitCode" PropertyName="CodeQualityChecksExitCode" />
     </Exec>
     <Error Condition="'$(CodeQualityChecksExitCode)' != '0'" Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
