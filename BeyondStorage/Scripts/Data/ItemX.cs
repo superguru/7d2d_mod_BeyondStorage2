@@ -46,22 +46,13 @@ public static class ItemX
     /// <returns>A string in format "ItemName:Count" or "null:0" if invalid</returns>
     public static string Info(ItemStack stack)
     {
-        var result = "null:0";
-
-        if (stack != null)
+        if (stack == null)
         {
-            var itemValue = stack.itemValue;
-            if (itemValue != null)
-            {
-                var itemClass = itemValue.ItemClass;
-                if (itemClass != null)
-                {
-                    return $"{itemClass.Name}:{stack.count}";
-                }
-            }
+            return "null:0";
         }
 
-        return result;
+        var itemName = NameOf(stack);
+        return itemName != null ? $"{itemName}:{stack.count}" : "null:0";
     }
 
     #endregion
@@ -77,7 +68,8 @@ public static class ItemX
     /// <returns>True if both stacks have the same item type, name, and count; otherwise false</returns>
     public static bool EqualContents(ItemStack stack1, ItemStack stack2)
     {
-        if (stack1 == null && stack2 == null)
+        // Handle null cases
+        if (ReferenceEquals(stack1, stack2))
         {
             return true;
         }
@@ -87,48 +79,28 @@ public static class ItemX
             return false;
         }
 
+        // Compare counts first (fast comparison)
         if (stack1.count != stack2.count)
         {
             return false;
         }
 
-        if (stack1.itemValue == null && stack2.itemValue == null)
-        {
-            return true;
-        }
+        // Extract item names using helper method
+        var name1 = NameOf(stack1);
+        var name2 = NameOf(stack2);
 
-        if (stack1.itemValue == null || stack2.itemValue == null)
-        {
-            return false;
-        }
+        // Compare names (handles all null/empty cases)
+        return string.Equals(name1, name2, System.StringComparison.Ordinal);
+    }
 
-        var stack1Class = stack1.itemValue.ItemClass;
-        var stack2Class = stack2.itemValue.ItemClass;
-
-        if (stack1Class == null && stack2Class == null)
-        {
-            return true;
-        }
-
-        if (stack1Class == null || stack2Class == null)
-        {
-            return false;
-        }
-
-        var stack1Name = stack1Class.Name;
-        var stack2Name = stack2Class.Name;
-
-        if (string.IsNullOrEmpty(stack1Name) && string.IsNullOrEmpty(stack2Name))
-        {
-            return true;
-        }
-
-        if (string.IsNullOrEmpty(stack1Name) || string.IsNullOrEmpty(stack2Name))
-        {
-            return false;
-        }
-
-        return stack1.itemValue.ItemClass.Name == stack2.itemValue.ItemClass.Name;
+    /// <summary>
+    /// Safely extracts the item name from an ItemStack, handling all null cases.
+    /// </summary>
+    /// <param name="stack">The ItemStack to extract name from</param>
+    /// <returns>Item name or null if any part of the hierarchy is null</returns>
+    private static string NameOf(ItemStack stack)
+    {
+        return stack?.itemValue?.ItemClass?.Name;
     }
 
     /// <summary>
@@ -139,6 +111,18 @@ public static class ItemX
     internal static bool IsStackPresent(ItemStack stack)
     {
         return stack != null && !stack.IsEmpty();
+    }
+
+    /// <summary>
+    /// Determines if an ItemStack is completely valid with all required data.
+    /// </summary>
+    /// <param name="stack">The ItemStack to validate</param>
+    /// <returns>True if stack has valid data and positive count; otherwise false</returns>
+    internal static bool IsCompletelyValid(ItemStack stack)
+    {
+        return stack != null &&
+               stack.count > 0 &&
+               !string.IsNullOrEmpty(NameOf(stack));
     }
 
     #endregion
@@ -157,22 +141,20 @@ public static class ItemX
             return;
         }
 
-        // Create temporary list with exact capacity needed
-        var validItems = new List<ItemStack>(stacks.Count);
+        stacks.RemoveAll(stack => !IsValidItemStack(stack));
+    }
 
-        foreach (var stack in stacks)
-        {
-            if (stack?.count > 0 &&
-                stack.itemValue?.ItemClass != null &&
-                !stack.itemValue.IsEmpty() &&
-                !string.IsNullOrEmpty(stack.itemValue.ItemClass?.Name))
-            {
-                validItems.Add(stack);
-            }
-        }
-
-        stacks.Clear();
-        stacks.AddRange(validItems);
+    /// <summary>
+    /// Determines if an ItemStack is valid for operations.
+    /// </summary>
+    /// <param name="stack">The ItemStack to validate</param>
+    /// <returns>True if the stack is valid; otherwise false</returns>
+    private static bool IsValidItemStack(ItemStack stack)
+    {
+        return stack?.count > 0 &&
+               stack.itemValue?.ItemClass != null &&
+               !stack.itemValue.IsEmpty() &&
+               !string.IsNullOrEmpty(NameOf(stack));
     }
 
     /// <summary>
@@ -185,53 +167,50 @@ public static class ItemX
     public static IReadOnlyList<int> GetUniqueItemTypes(List<ItemStack> stacks)
     {
         const string d_MethodName = nameof(GetUniqueItemTypes);
+        const int UnfilteredType = UniqueItemTypes.WILDCARD;
 
         if (stacks == null || stacks.Count == 0)
         {
-            return new int[] { -1 }; // Return unfiltered for null/empty lists
+            return new int[] { UnfilteredType };
         }
 
-        var uniqueTypes = new HashSet<int>();
-        bool hasValidItems = false;
+        var validTypes = ExtractValidItemTypes(stacks);
 
-        foreach (var stack in stacks)
+        if (validTypes.Count == 0)
         {
-            if (stack?.count <= 0)
-            {
-                continue; // Skip empty stacks
-            }
-
-            var itemValue = stack.itemValue;
-            if (itemValue?.ItemClass == null)
-            {
-                continue; // Skip invalid items
-            }
-
-            int itemType = itemValue.type;
-
-            // Convert type=0 (empty type) to -1 (unfiltered convention)
-            if (itemType <= 0)
-            {
-                itemType = -1;
-            }
-
-            uniqueTypes.Add(itemType);
-            hasValidItems = true;
+            return new int[] { UnfilteredType };
         }
 
-        // If no valid items found, return unfiltered
-        if (!hasValidItems || uniqueTypes.Count == 0)
-        {
-            return new int[] { -1 };
-        }
-
-        // Convert to sorted array for optimal performance
-        var result = uniqueTypes.ToArray();
+        var result = validTypes.ToArray();
         System.Array.Sort(result);
 
         ModLogger.DebugLog($"{d_MethodName}: Found {result.Length} unique types from {stacks.Count} stacks: [{string.Join(", ", result)}]");
 
         return result;
+    }
+
+    /// <summary>
+    /// Extracts valid item types from ItemStacks, normalizing empty types to -1.
+    /// </summary>
+    /// <param name="stacks">List of ItemStacks to process</param>
+    /// <returns>HashSet of valid item types</returns>
+    private static HashSet<int> ExtractValidItemTypes(List<ItemStack> stacks)
+    {
+        const int UnfilteredType = -1;
+        var uniqueTypes = new HashSet<int>();
+
+        foreach (var stack in stacks)
+        {
+            if (stack?.count <= 0 || stack.itemValue?.ItemClass == null)
+            {
+                continue;
+            }
+
+            int itemType = stack.itemValue.type <= 0 ? UnfilteredType : stack.itemValue.type;
+            uniqueTypes.Add(itemType);
+        }
+
+        return uniqueTypes;
     }
 
     #endregion
@@ -273,14 +252,13 @@ public static class ItemX
             return false;
         }
 
-        return slot.IsLocked ||
-               slot.StackLock ||
-               slot.AssembleLock ||
-               slot.QuestLock ||
-               slot.ToolLock ||
-               slot.HiddenLock ||
-               slot.AttributeLock ||
-               slot.UserLockedSlot;
+        var lockProperties = new[]
+        {
+            slot.IsLocked, slot.StackLock, slot.AssembleLock, slot.QuestLock,
+            slot.ToolLock, slot.HiddenLock, slot.AttributeLock, slot.UserLockedSlot
+        };
+
+        return lockProperties.Any(locked => locked);
     }
 
     #endregion
