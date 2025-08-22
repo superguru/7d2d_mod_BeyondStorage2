@@ -159,43 +159,19 @@ public class PurchasingCommon
     /// <returns>Total removable count from player inventory only</returns>
     public static int GetRemovableCount(XUiM_PlayerInventory inventory, ItemStack removedStack, int slotNumber)
     {
-        int removableCount = 0;
-        ItemValue itemValue = removedStack.itemValue;
+        int itemType = removedStack.itemValue.type;
 
-        // Check backpack slots
         ItemStack[] backpackSlots = inventory.Backpack.GetSlots();
-        for (int i = 0; i < backpackSlots.Length; i++)
-        {
-            if (slotNumber != -1 && slotNumber != i)
-            {
-                continue; // Skip if specific slot requested and this isn't it
-            }
-
-            if (backpackSlots[i]?.itemValue?.type == itemValue.type && backpackSlots[i].count > 0)
-            {
-                removableCount += backpackSlots[i].count;
-            }
-        }
-
-        // Check toolbelt slots (only public slots)
         ItemStack[] toolbeltSlots = inventory.Toolbelt.GetSlots();
         int publicSlots = inventory.Toolbelt.PUBLIC_SLOTS;
-        for (int i = 0; i < publicSlots && i < toolbeltSlots.Length; i++)
-        {
-            // Adjust slot number for toolbelt (assuming backpack slots come first)
-            int adjustedSlotNumber = slotNumber - backpackSlots.Length;
-            if (slotNumber != -1 && adjustedSlotNumber != i)
-            {
-                continue;
-            }
 
-            if (toolbeltSlots[i]?.itemValue?.type == itemValue.type && toolbeltSlots[i].count > 0)
-            {
-                removableCount += toolbeltSlots[i].count;
-            }
-        }
+        int count = 0;
+        count += CountRemovableInSlots(backpackSlots, backpackSlots.Length, slotNumber, 0, itemType);
 
-        return removableCount;
+        int toolbeltEligible = Math.Min(publicSlots, toolbeltSlots.Length);
+        count += CountRemovableInSlots(toolbeltSlots, toolbeltEligible, slotNumber, backpackSlots.Length, itemType);
+
+        return count;
     }
 
     /// <summary>
@@ -252,76 +228,128 @@ public class PurchasingCommon
     /// <returns>Space that will be freed in player inventory</returns>
     public static int GetSpaceFreedByRemoval(XUiM_PlayerInventory inventory, ItemStack removedStack, int slotNumber)
     {
-        if (removedStack.itemValue.type == 0)
+        int itemType = removedStack.itemValue.type;
+        if (itemType == 0 || removedStack.count <= 0)
         {
-            return 0; // Invalid item type
+            return 0; // Invalid item or nothing to remove
         }
 
         int maxStackSize = removedStack.itemValue.ItemClass.Stacknumber.Value;
-        int spaceFreed = 0;
         int remainingToRemove = removedStack.count;
+        int spaceFreed = 0;
 
-        // Check backpack slots
+        // Backpack
         ItemStack[] backpackSlots = inventory.Backpack.GetSlots();
-        for (int i = 0; i < backpackSlots.Length && remainingToRemove > 0; i++)
-        {
-            if (slotNumber != -1 && slotNumber != i)
-            {
-                continue;
-            }
+        spaceFreed += CalcSpaceFreedInSlots(
+            backpackSlots,
+            backpackSlots?.Length ?? 0,
+            slotNumber,
+            globalOffset: 0,
+            itemType: itemType,
+            maxStackSize: maxStackSize,
+            ref remainingToRemove
+        );
 
-            if (backpackSlots[i]?.itemValue?.type == removedStack.itemValue.type && backpackSlots[i].count > 0)
-            {
-                int currentCount = backpackSlots[i].count;
-                int toRemoveFromSlot = Math.Min(currentCount, remainingToRemove);
-
-                if (toRemoveFromSlot == currentCount)
-                {
-                    // Slot will become empty
-                    spaceFreed += maxStackSize;
-                }
-                else
-                {
-                    // Slot will have partial items removed
-                    spaceFreed += toRemoveFromSlot;
-                }
-
-                remainingToRemove -= toRemoveFromSlot;
-            }
-        }
-
-        // Check toolbelt slots
+        // Toolbelt (public slots only)
         ItemStack[] toolbeltSlots = inventory.Toolbelt.GetSlots();
         int publicSlots = inventory.Toolbelt.PUBLIC_SLOTS;
-        for (int i = 0; i < publicSlots && i < toolbeltSlots.Length && remainingToRemove > 0; i++)
+        int toolbeltEligible = Math.Min(publicSlots, toolbeltSlots?.Length ?? 0);
+
+        if (remainingToRemove > 0 && toolbeltEligible > 0)
         {
-            int adjustedSlotNumber = slotNumber - backpackSlots.Length;
-            if (slotNumber != -1 && adjustedSlotNumber != i)
-            {
-                continue;
-            }
-
-            if (toolbeltSlots[i]?.itemValue?.type == removedStack.itemValue.type && toolbeltSlots[i].count > 0)
-            {
-                int currentCount = toolbeltSlots[i].count;
-                int toRemoveFromSlot = Math.Min(currentCount, remainingToRemove);
-
-                if (toRemoveFromSlot == currentCount)
-                {
-                    // Slot will become empty
-                    spaceFreed += maxStackSize;
-                }
-                else
-                {
-                    // Slot will have partial items removed
-                    spaceFreed += toRemoveFromSlot;
-                }
-
-                remainingToRemove -= toRemoveFromSlot;
-            }
+            spaceFreed += CalcSpaceFreedInSlots(
+                toolbeltSlots,
+                toolbeltEligible,
+                slotNumber,
+                globalOffset: backpackSlots?.Length ?? 0,
+                itemType: itemType,
+                maxStackSize: maxStackSize,
+                ref remainingToRemove
+            );
         }
 
         return spaceFreed;
+    }
+
+    /// <summary>
+    /// Calculates space freed within a range of slots for a specific item type,
+    /// optionally restricted to a specific absolute slotNumber. Updates remainingToRemove.
+    /// - If a slot is fully cleared, frees maxStackSize.
+    /// - If partially reduced, frees the number of items removed from that stack.
+    /// </summary>
+    private static int CalcSpaceFreedInSlots(
+        ItemStack[] slots,
+        int eligibleLength,
+        int slotNumber,
+        int globalOffset,
+        int itemType,
+        int maxStackSize,
+        ref int remainingToRemove)
+    {
+        if (!HasEligibleSlots(slots, eligibleLength, remainingToRemove))
+        {
+            return 0;
+        }
+
+        return (slotNumber != -1)
+            ? CalcSpaceFreed_SpecificSlot(slots, eligibleLength, slotNumber, globalOffset, itemType, maxStackSize, ref remainingToRemove)
+            : CalcSpaceFreed_AllSlots(slots, eligibleLength, itemType, maxStackSize, ref remainingToRemove);
+    }
+
+    private static bool HasEligibleSlots(ItemStack[] slots, int eligibleLength, int remainingToRemove)
+    {
+        return slots != null && eligibleLength > 0 && remainingToRemove > 0;
+    }
+
+    private static int CalcSpaceFreed_SpecificSlot(
+        ItemStack[] slots,
+        int eligibleLength,
+        int slotNumber,
+        int globalOffset,
+        int itemType,
+        int maxStackSize,
+        ref int remainingToRemove)
+    {
+        int localIndex = slotNumber - globalOffset;
+        if (localIndex < 0 || localIndex >= eligibleLength || remainingToRemove <= 0)
+        {
+            return 0;
+        }
+
+        var slot = slots[localIndex];
+        if (slot?.itemValue?.type != itemType || slot.count <= 0)
+        {
+            return 0;
+        }
+
+        int toRemove = Math.Min(slot.count, remainingToRemove);
+        remainingToRemove -= toRemove;
+        return (toRemove == slot.count) ? maxStackSize : toRemove;
+    }
+
+    private static int CalcSpaceFreed_AllSlots(
+        ItemStack[] slots,
+        int eligibleLength,
+        int itemType,
+        int maxStackSize,
+        ref int remainingToRemove)
+    {
+        int freed = 0;
+
+        for (int i = 0; i < eligibleLength && remainingToRemove > 0; i++)
+        {
+            var slot = slots[i];
+            if (slot?.itemValue?.type != itemType || slot.count <= 0)
+            {
+                continue;
+            }
+
+            int toRemove = Math.Min(slot.count, remainingToRemove);
+            remainingToRemove -= toRemove;
+            freed += (toRemove == slot.count) ? maxStackSize : toRemove;
+        }
+
+        return freed;
     }
 
     /// <summary>
@@ -362,5 +390,63 @@ public class PurchasingCommon
         }
 
         return availableSpace;
+    }
+
+    /// <summary>
+    /// Sums removable items for a range of slots, optionally restricted to a specific absolute slotNumber.
+    /// globalOffset is the absolute index of slots[0] within the combined (backpack + toolbelt) view.
+    /// Only counts stacks matching itemType and with count > 0.
+    /// </summary>
+    private static int CountRemovableInSlots(ItemStack[] slots, int eligibleLength, int slotNumber, int globalOffset, int itemType)
+    {
+        if (!HasEligibleRange(slots, eligibleLength))
+        {
+            return 0;
+        }
+
+        return (slotNumber != -1)
+            ? CountRemovable_SpecificSlot(slots, eligibleLength, slotNumber, globalOffset, itemType)
+            : CountRemovable_AllSlots(slots, eligibleLength, itemType);
+    }
+
+    private static bool HasEligibleRange(ItemStack[] slots, int eligibleLength)
+    {
+        return slots != null && eligibleLength > 0;
+    }
+
+    private static int CountRemovable_SpecificSlot(
+        ItemStack[] slots,
+        int eligibleLength,
+        int slotNumber,
+        int globalOffset,
+        int itemType)
+    {
+        int localIndex = slotNumber - globalOffset;
+        if (localIndex < 0 || localIndex >= eligibleLength)
+        {
+            return 0;
+        }
+
+        var slot = slots[localIndex];
+        return IsMatchingPopulated(slot, itemType) ? slot.count : 0;
+    }
+
+    private static int CountRemovable_AllSlots(ItemStack[] slots, int eligibleLength, int itemType)
+    {
+        int total = 0;
+        for (int i = 0; i < eligibleLength; i++)
+        {
+            var slot = slots[i];
+            if (IsMatchingPopulated(slot, itemType))
+            {
+                total += slot.count;
+            }
+        }
+        return total;
+    }
+
+    private static bool IsMatchingPopulated(ItemStack slot, int itemType)
+    {
+        return slot?.itemValue?.type == itemType && slot.count > 0;
     }
 }
