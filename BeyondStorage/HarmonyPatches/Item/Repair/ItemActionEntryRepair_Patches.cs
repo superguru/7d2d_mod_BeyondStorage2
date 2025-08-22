@@ -3,8 +3,8 @@ using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Harmony;
-using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
+using XMLData.Item;
 
 namespace BeyondStorage.HarmonyPatches.Item;
 
@@ -18,50 +18,52 @@ internal static class ItemActionEntryRepairPatches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> ItemActionEntryRepair_OnActivated_Patch(IEnumerable<CodeInstruction> instructions)
+    private static IEnumerable<CodeInstruction> ItemActionEntryRepair_OnActivated_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
         var targetMethodString = $"{typeof(ItemActionEntryRepair)}.{nameof(ItemActionEntryRepair.OnActivated)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
 
-        var codes = instructions.ToList();
-        var startIndex = codes.FindIndex(instruction => instruction.opcode == OpCodes.Ldloc_1);
-
-        if (startIndex != -1)
+        // Find the pattern that starts with Ldloc_1 and the subsequent instructions we need to clone
+        var searchPattern = new List<CodeInstruction>
         {
-            ModLogger.Info($"Patching {targetMethodString}");
+            new CodeInstruction(OpCodes.Ldloc_1),        // playerInventory
+            new CodeInstruction(OpCodes.Ldloc_S, 6),     // itemClass
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))), // getId
+            new CodeInstruction(OpCodes.Ldc_I4_0),
+            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
+        };
 
-            List<CodeInstruction> newCode = [
-                // ldloc.s      itemClass                                                                     
-                codes[startIndex + 1].Clone(),
-                // callvirt     instance int32 XMLData.Item.ItemData::get_Id()
-                codes[startIndex + 2].Clone(),
-                // ldc.i4.0
-                codes[startIndex + 3].Clone(),
-                // newobj       instance void ItemValue::.ctor(int32, bool)
-                codes[startIndex + 4].Clone(),
-                // ldloc.s      7  // int b
-                codes[startIndex + 6].Clone(),
-                // ItemRepair.ItemRepairOnActivatedGetItemCount(new ItemValue(itemClass.Id))
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairOnActivatedGetItemCount))),
-                // ldloc.s      7  // int b
-                codes[startIndex + 6].Clone(),
-                // call         int32 [UnityEngine.CoreModule]UnityEngine.Mathf::Min(int32, int32)
-                codes[startIndex + 7].Clone(),
-                // stloc.s      10 // int num
-                codes[startIndex + 8].Clone()
-            ];
-
-            // Insert below start
-            codes.InsertRange(startIndex + 9, newCode);
-
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
-        else
+        // Create replacement instructions to add storage count
+        var replacementInstructions = new List<CodeInstruction>
         {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
-        }
+            // Load the ItemValue that was used for GetItemCount (reconstruct it)
+            new CodeInstruction(OpCodes.Ldloc_S, 6),     // itemClass
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))), // getId
+            new CodeInstruction(OpCodes.Ldc_I4_0),       // false
+            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
+            
+            // Call our storage method and add to existing count
+            new CodeInstruction(OpCodes.Ldloc_S, 7),    // int b
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairOnActivatedGetItemCount))),
+            new CodeInstruction(OpCodes.Ldloc_S, 7),    // int b
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
+            new CodeInstruction(OpCodes.Stloc_S, 10),   // int _count
+        };
 
-        return codes.AsEnumerable();
+        var request = new ILPatchEngine.PatchRequest
+        {
+            OriginalInstructions = [.. originalInstructions],
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodString,
+            ReplacementOffset = 9,
+            IsInsertMode = true,
+            MaxPatches = 1,
+            MinimumSafetyOffset = 2,
+            ExtraLogging = true
+        };
+
+        var response = ILPatchEngine.ApplyPatches(request);
+        return response.BestInstructions(request);
     }
 
     // Used For:
@@ -89,7 +91,7 @@ internal static class ItemActionEntryRepairPatches
         {
             // Load the ItemValue that was used for GetItemCount (reconstruct it)
             new CodeInstruction(OpCodes.Ldloc_S, 6),      // itemClass2
-            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemClass), nameof(ItemClass.Id))), // getId
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemClass), nameof(ItemClass.Id))),
             new CodeInstruction(OpCodes.Ldc_I4_0),
             new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
             
@@ -114,7 +116,7 @@ internal static class ItemActionEntryRepairPatches
             IsInsertMode = true,
             MaxPatches = 1,
             MinimumSafetyOffset = 5,
-            ExtraLogging = true
+            ExtraLogging = false
         };
 
         var endInstruction = request.OriginalInstructions.LastOrDefault(instr => instr.opcode == OpCodes.Ret);
