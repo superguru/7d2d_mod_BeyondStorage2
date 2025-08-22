@@ -19,8 +19,9 @@ public class XUiC_VehicleContainer_Patches
 #endif
     private static void XUiC_VehicleContainer_UpdateLockedSlots_Prefix(XUiC_VehicleContainer __instance, XUiC_ContainerStandardControls _csc)
     {
+#if DEBUG
         const string d_MethodName = nameof(XUiC_VehicleContainer_UpdateLockedSlots_Prefix);
-
+#endif
         if (_csc == null)
         {
 #if DEBUG

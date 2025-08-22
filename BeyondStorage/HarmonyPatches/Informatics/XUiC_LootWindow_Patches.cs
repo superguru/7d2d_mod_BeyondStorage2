@@ -23,8 +23,9 @@ public class XUiC_LootWindow_Patches
 #endif
     private static void XUiC_LootWindow_UpdateLockedSlots_Prefix(XUiC_LootWindow __instance, XUiC_ContainerStandardControls _csc)
     {
+#if DEBUG
         const string d_MethodName = nameof(XUiC_LootWindow_UpdateLockedSlots_Prefix);
-
+#endif
         if (_csc == null)
         {
 #if DEBUG
