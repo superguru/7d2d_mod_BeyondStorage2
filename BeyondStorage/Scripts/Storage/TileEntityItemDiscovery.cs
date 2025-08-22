@@ -1,4 +1,6 @@
-﻿using BeyondStorage.Scripts.Data;
+﻿using BeyondStorage.Scripts.Configuration;
+using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
 
@@ -13,93 +15,109 @@ internal static class TileEntityItemDiscovery
     {
         const string d_MethodName = nameof(FindItems);
 
-        var config = context.Config;
-        var world = context.WorldPlayerContext;
-        var sources = context.Sources;
-        var playerId = world.PlayerEntityId;
+        var processingState = new TileEntityProcessingState(context);
 
-        bool pullFromDewCollectors = config.PullFromDewCollectors;
-        bool pullFromWorkstationOutputs = config.PullFromWorkstationOutputs;
-        bool hasLockedEntities = TileEntityLockManager.LockedTileEntities.Count > 0;
-
-        int chunksProcessed = 0;
-        int nullChunks = 0;
-        int tileEntitiesProcessed = 0;
-
-        foreach (var chunk in world.ChunkCacheCopy)
+        foreach (var chunk in context.WorldPlayerContext.ChunkCacheCopy)
         {
-            if (chunk == null)
+            ProcessChunk(chunk, processingState);
+        }
+
+        LogProcessingResults(d_MethodName, processingState);
+    }
+
+    private static void ProcessChunk(Chunk chunk, TileEntityProcessingState state)
+    {
+        if (chunk == null)
+        {
+            state.NullChunks++;
+            return;
+        }
+
+        state.ChunksProcessed++;
+
+        var tileEntityList = chunk.tileEntities?.list;
+        if (tileEntityList == null)
+        {
+            return;
+        }
+
+        foreach (var tileEntity in tileEntityList)
+        {
+            ProcessTileEntity(tileEntity, state);
+        }
+    }
+
+    private static void ProcessTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
+    {
+        state.TileEntitiesProcessed++;
+
+        if (!ShouldProcessTileEntity(tileEntity, state))
+        {
+            return;
+        }
+
+        ProcessValidTileEntity(tileEntity, state);
+    }
+
+    private static bool ShouldProcessTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
+    {
+        if (tileEntity.IsRemoving)
+        {
+            return false;
+        }
+
+        var tileEntityWorldPos = tileEntity.ToWorldPos();
+
+        // Early range check to avoid unnecessary processing
+        if (!state.World.IsWithinRange(tileEntityWorldPos, state.Config.Range))
+        {
+            return false;
+        }
+
+        // Check locks early
+        if (state.HasLockedEntities)
+        {
+            if (TileEntityLockManager.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) &&
+                entityId != state.PlayerId)
             {
-                nullChunks++;
-                continue;
-            }
-
-            chunksProcessed++;
-
-            var tileEntityList = chunk.tileEntities?.list;
-            if (tileEntityList == null)
-            {
-                continue;
-            }
-
-            foreach (var tileEntity in tileEntityList)
-            {
-                tileEntitiesProcessed++;
-
-                if (tileEntity.IsRemoving)
-                {
-                    continue;
-                }
-
-                var tileEntityWorldPos = tileEntity.ToWorldPos();
-
-                // Early range check to avoid unnecessary processing
-                if (!world.IsWithinRange(tileEntityWorldPos, config.Range))
-                {
-                    continue;
-                }
-
-                // Check locks early
-                if (hasLockedEntities)
-                {
-                    if (TileEntityLockManager.LockedTileEntities.TryGetValue(tileEntityWorldPos, out int entityId) && entityId != playerId)
-                    {
-                        continue;
-                    }
-                }
-
-                // Check accessibility
-                if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
-                {
-                    if (!world.CanAccessLockable(tileLockable))
-                    {
-                        continue;
-                    }
-                }
-
-                // Process each type separately with clear logic
-                if (pullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
-                {
-                    ProcessDewCollectorItems(context, dewCollector);
-                    continue;
-                }
-
-                if (pullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
-                {
-                    ProcessWorkstationItems(context, workstation);
-                    continue;
-                }
-
-                // Process lootables (containers) - always enabled since they're primary storage
-                if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
-                {
-                    ProcessLootableItems(context, lootable, tileEntity);
-                    continue;
-                }
+                return false;
             }
         }
 
-        ModLogger.DebugLog($"{d_MethodName}: Processed {chunksProcessed} chunks, {nullChunks} null chunks, {tileEntitiesProcessed} tile entities");
+        // Check accessibility
+        if (tileEntity.TryGetSelfOrFeature(out ILockable tileLockable))
+        {
+            return state.World.CanAccessLockable(tileLockable);
+        }
+
+        return true;
+    }
+
+    private static void ProcessValidTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
+    {
+        // Process each type separately with clear logic
+        if (state.Config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
+        {
+            ProcessDewCollectorItems(state.Context, dewCollector);
+            return;
+        }
+
+        if (state.Config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
+        {
+            ProcessWorkstationItems(state.Context, workstation);
+            return;
+        }
+
+        // Process lootables (containers) - always enabled since they're primary storage
+        if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
+        {
+            ProcessLootableItems(state.Context, lootable, tileEntity);
+        }
+    }
+
+    private static void LogProcessingResults(string methodName, TileEntityProcessingState state)
+    {
+        ModLogger.DebugLog($"{methodName}: Processed {state.ChunksProcessed} chunks, {state.NullChunks} null chunks, {state.TileEntitiesProcessed} tile entities");
     }
 
     private static int ProcessDewCollectorItems(StorageContext context, TileEntityDewCollector dewCollector)
@@ -207,5 +225,30 @@ internal static class TileEntityItemDiscovery
         }
 
         return validStacksRegistered;
+    }
+
+    /// <summary>
+    /// Helper class to encapsulate processing state and reduce parameter passing
+    /// </summary>
+    private class TileEntityProcessingState
+    {
+        public readonly StorageContext Context;
+        public readonly ConfigSnapshot Config;
+        public readonly WorldPlayerContext World;
+        public readonly int PlayerId;
+        public readonly bool HasLockedEntities;
+
+        public int ChunksProcessed = 0;
+        public int NullChunks = 0;
+        public int TileEntitiesProcessed = 0;
+
+        public TileEntityProcessingState(StorageContext context)
+        {
+            Context = context;
+            Config = context.Config;
+            World = context.WorldPlayerContext;
+            PlayerId = World.PlayerEntityId;
+            HasLockedEntities = TileEntityLockManager.LockedTileEntities.Count > 0;
+        }
     }
 }
