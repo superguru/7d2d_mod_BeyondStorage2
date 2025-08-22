@@ -134,6 +134,7 @@ class CodeQualityChecker:
         self.checks["string_in_loops"] = self._check_string_in_loops
         self.checks["linq_performance"] = self._check_linq_performance
         self.checks["cyclomatic_complexity"] = self._check_cyclomatic_complexity
+        self.checks["harmony_patch_class_declaration"] = self._check_harmony_patch_class_declaration
     
     def add_forbidden_string_check(self, forbidden_string: str, severity: str, code: str, description: str):
         """Add a check for a string that should not exist in the code"""
@@ -566,6 +567,106 @@ class CodeQualityChecker:
                             description=f"Method '{method_name}' has high cyclomatic complexity ({complexity}) - consider refactoring"
                         ))
                     in_method = False
+        
+        return issues
+
+    def _check_harmony_patch_class_declaration(self, file_path: str, content: str) -> List[Issue]:
+        """Check that classes with [HarmonyPatch] attribute are declared as internal static - ERROR"""
+        issues = []
+        lines = content.split('\n')
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Skip empty lines and comments
+            if not line or line.startswith('//') or line.startswith('*'):
+                i += 1
+                continue
+            
+            # Look for [HarmonyPatch] attribute (with or without parameters)
+            if re.match(r'\s*\[HarmonyPatch(\(.*\))?\]', line):
+                # Found HarmonyPatch attribute, now look for what follows
+                declaration_line_num = i + 1
+                declaration_found = False
+                
+                # Look ahead for the declaration (skip other attributes and empty lines)
+                j = i + 1
+                while j < len(lines):
+                    next_line = lines[j].strip()
+                    
+                    # Skip empty lines, comments, and other attributes
+                    if (not next_line or 
+                        next_line.startswith('//') or 
+                        next_line.startswith('*') or
+                        next_line.startswith('[') or
+                        next_line.startswith('#')):
+                        j += 1
+                        continue
+                    
+                    # Check if this line contains a class declaration
+                    if 'class ' in next_line:
+                        declaration_found = True
+                        declaration_line_num = j + 1  # Convert to 1-based line number
+                        
+                        # Parse the class declaration to check modifiers
+                        # Remove generic type parameters for analysis
+                        class_decl = re.sub(r'<[^>]*>', '', next_line)
+                        
+                        # Check if it's properly declared as public static
+                        if not (re.search(r'\binternal\b', class_decl) and re.search(r'\bstatic\b', class_decl)):
+                            # Extract class name for better error message
+                            class_name_match = re.search(r'class\s+(\w+)', class_decl)
+                            class_name = class_name_match.group(1) if class_name_match else "unknown"
+                            
+                            # Determine what's missing
+                            has_public = re.search(r'\binternal\b', class_decl)
+                            has_static = re.search(r'\bstatic\b', class_decl)
+                            
+                            if not has_public and not has_static:
+                                missing = "internal static"
+                            elif not has_public:
+                                missing = "internal"
+                            else:  # not has_static
+                                missing = "static"
+                            
+                            issues.append(Issue(
+                                file_path=file_path[2:],
+                                line_number=declaration_line_num,
+                                severity="error",
+                                code="BCS050",
+                                description=f"Class '{class_name}' with [HarmonyPatch] attribute must be declared as '{missing}' (currently missing: {missing})"
+                            ))
+                        break
+                    
+                    # Check if this line contains a method declaration - if so, skip this HarmonyPatch
+                    elif (re.search(r'\b(public|private|protected|internal|static).*\s+\w+\s*\([^)]*\)', next_line) or
+                          re.search(r'\w+\s+\w+\s*\([^)]*\)', next_line)):
+                        # This HarmonyPatch is on a method, not a class - ignore it
+                        declaration_found = True
+                        break
+                    
+                    # If we hit something else that looks like a declaration, break
+                    elif any(keyword in next_line for keyword in ['struct ', 'interface ', 'enum ', 'delegate ']):
+                        # This could be a struct, interface, enum, or delegate - not what we're looking for
+                        declaration_found = True
+                        break
+                    
+                    j += 1
+                
+                # If no declaration found after HarmonyPatch attribute, that's unusual
+                if not declaration_found:
+                    issues.append(Issue(
+                        file_path=file_path[2:],
+                        line_number=i + 1,
+                        severity="error", 
+                        code="BCS051",
+                        description="[HarmonyPatch] attribute found but no recognizable declaration follows"
+                    ))
+                
+                i = j  # Continue from where we left off
+            else:
+                i += 1
         
         return issues
 
