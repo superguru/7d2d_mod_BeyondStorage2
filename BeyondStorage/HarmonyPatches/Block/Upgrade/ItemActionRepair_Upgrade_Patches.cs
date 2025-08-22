@@ -9,7 +9,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Block;
 
 [HarmonyPatch(typeof(ItemActionRepair))]
-public class ItemActionRepairUpgradePatches
+internal static class ItemActionRepairUpgradePatches
 {
     // Used For:
     //          Block Upgrade (Check for enough items)

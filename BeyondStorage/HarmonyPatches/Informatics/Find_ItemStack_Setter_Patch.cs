@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
-public class Find_ItemStack_Setter_Patch
+internal static class Find_ItemStack_Setter_Patch
 {
     private static long s_callCounter = 0;
 

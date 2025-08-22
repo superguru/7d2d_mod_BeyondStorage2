@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
 [HarmonyPatch(typeof(XUiC_ItemStack))]
-public class Stack_Drag_Drop_Patch
+public static class Stack_Drag_Drop_Patch
 {
     private static long s_callCounter = 0;
     private static SlotSnapshot s_callHistory = null;
@@ -18,7 +18,7 @@ public class Stack_Drag_Drop_Patch
 #if DEBUG
     [HarmonyDebug]
 #endif
-    public static void Handle_Pickup_DropStack_Event_Prefix(XUiC_ItemStack __instance)
+    private static void Handle_Pickup_DropStack_Event_Prefix(XUiC_ItemStack __instance)
     {
         // Increment call counter immediately at the start to ensure logging consistency
         long callCount;

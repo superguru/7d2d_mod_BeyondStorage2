@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(BlockSecureLoot))]
-public static class BlockSecureLoot_Lockpick_Patches
+internal static class BlockSecureLoot_Lockpick_Patches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(BlockSecureLoot.OnBlockActivated), [typeof(string), typeof(WorldBase), typeof(int), typeof(Vector3i), typeof(BlockValue), typeof(EntityPlayerLocal)])]
