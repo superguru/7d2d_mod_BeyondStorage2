@@ -11,6 +11,11 @@ Troubleshooting/
 # Code quality check files left from the code quality check Python scripts
 code_check_results*.txt
 
+# Microsoft.CodeAnalysis related files
+Humanizer.*
+Microsoft.*
+System.*
+
 # User-specific files
 *.rsuser
 *.suo
