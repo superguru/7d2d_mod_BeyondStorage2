@@ -224,7 +224,7 @@ public static class ILCodeMatcher
         {
             ModLogger.DebugLog("IndexOf: Using skip table optimization for longer pattern");
         }
-        return IndexOfWithSkipTable(mainList, subList, startIndex, extraLogging);// false);  // extraLogging is false here to avoid excessive logging in the optimized path
+        return IndexOfWithSkipTable(mainList, subList, startIndex, extraLogging);
     }
 
 
@@ -234,70 +234,120 @@ public static class ILCodeMatcher
         int mainCount = mainList.Count;
         int subCount = subList.Count;
 
-        // Build skip table using custom comparer
+        // Build skip table and search for pattern
+        var skipTable = BuildSkipTable(subList, extraLogging);
+        return SearchWithSkipTable(mainList, subList, skipTable, startIndex, mainCount, subCount, extraLogging);
+    }
+
+    private static Dictionary<CodeInstruction, int> BuildSkipTable(List<CodeInstruction> subList, bool extraLogging)
+    {
         var comparer = new CodeInstructionEqualityComparer();
         var skipTable = new Dictionary<CodeInstruction, int>(comparer);
+        int subCount = subList.Count;
 
         for (int i = 0; i < subCount - 1; i++)
         {
             skipTable[subList[i]] = subCount - 1 - i;
         }
 
+        LogSkipTableInfo(skipTable, extraLogging);
+        return skipTable;
+    }
+
+    private static int SearchWithSkipTable(List<CodeInstruction> mainList, List<CodeInstruction> subList,
+        Dictionary<CodeInstruction, int> skipTable, int startIndex, int mainCount, int subCount, bool extraLogging)
+    {
+        int pos = startIndex;
+        int attempts = 0;
+
+        while (pos <= mainCount - subCount)
+        {
+            attempts++;
+            LogSearchAttempt(pos, attempts, extraLogging);
+
+            int matchResult = TryMatchAtPosition(mainList, subList, pos, subCount, extraLogging);
+
+            if (matchResult == -1) // Complete match found
+            {
+                LogMatchFound(pos, attempts, extraLogging);
+                return pos;
+            }
+
+            // Calculate and apply skip
+            pos += CalculateSkip(mainList[pos + matchResult], skipTable, subCount, matchResult, extraLogging);
+        }
+
+        LogSearchComplete(attempts, extraLogging);
+        return -1;
+    }
+
+    private static int TryMatchAtPosition(List<CodeInstruction> mainList, List<CodeInstruction> subList, int pos, int subCount, bool extraLogging)
+    {
+        int i = subCount - 1;
+        while (i >= 0 && CodesMatch(mainList[pos + i], subList[i]))
+        {
+            LogMatchProgress(i, mainList[pos + i], extraLogging);
+            i--;
+        }
+        return i; // Returns -1 if complete match, otherwise index of first mismatch
+    }
+
+    private static int CalculateSkip(CodeInstruction badChar, Dictionary<CodeInstruction, int> skipTable, int subCount, int mismatchIndex, bool extraLogging)
+    {
+        int skip = skipTable.TryGetValue(badChar, out int skipValue) ? skipValue : subCount;
+        int actualSkip = Math.Max(1, skip - (subCount - 1 - mismatchIndex));
+
+        LogSkipCalculation(badChar, actualSkip, extraLogging);
+        return actualSkip;
+    }
+
+    // Logging helper methods to reduce complexity
+    private static void LogSkipTableInfo(Dictionary<CodeInstruction, int> skipTable, bool extraLogging)
+    {
         if (extraLogging)
         {
             ModLogger.DebugLog($"IndexOf: Built skip table with {skipTable.Count} entries using custom comparer");
         }
+    }
 
-        int pos = startIndex;
-        int attempts = 0;
-        while (pos <= mainCount - subCount)
+    private static void LogSearchAttempt(int pos, int attempts, bool extraLogging)
+    {
+        if (extraLogging)
         {
-            attempts++;
-            if (extraLogging)
-            {
-                ModLogger.DebugLog($"IndexOf: Attempt #{attempts} at position {pos}");
-            }
-
-            // Start matching from the end of the pattern
-            int i = subCount - 1;
-            while (i >= 0 && CodesMatch(mainList[pos + i], subList[i]))
-            {
-                if (extraLogging)
-                {
-                    ModLogger.DebugLog($"IndexOf: Match at pattern index {i}, instruction: {mainList[pos + i].opcode} {mainList[pos + i].operand}");
-                }
-                i--;
-            }
-
-            if (i < 0)
-            {
-                if (extraLogging)
-                {
-                    ModLogger.DebugLog($"IndexOf: Complete pattern match found at position {pos} after {attempts} attempts");
-                }
-                return pos; // Found match
-            }
-
-            // Calculate skip distance using custom comparer
-            var badChar = mainList[pos + i];
-            int skip = skipTable.TryGetValue(badChar, out int skipValue) ? skipValue : subCount;
-
-            // Ensure we advance at least one position to avoid infinite loops
-            int actualSkip = Math.Max(1, skip - (subCount - 1 - i));
-
-            if (extraLogging)
-            {
-                ModLogger.DebugLog($"IndexOf: Mismatch at pattern index {i}, bad char: {badChar.opcode} {badChar.operand}, skip: {actualSkip}");
-            }
-
-            pos += actualSkip;
+            ModLogger.DebugLog($"IndexOf: Attempt #{attempts} at position {pos}");
         }
+    }
 
+    private static void LogMatchProgress(int i, CodeInstruction instruction, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Match at pattern index {i}, instruction: {instruction.opcode} {instruction.operand}");
+        }
+    }
+
+    private static void LogMatchFound(int pos, int attempts, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Complete pattern match found at position {pos} after {attempts} attempts");
+        }
+    }
+
+    private static void LogSkipCalculation(CodeInstruction badChar, int actualSkip, bool extraLogging)
+    {
+        if (extraLogging)
+        {
+            ModLogger.DebugLog($"IndexOf: Mismatch, bad char: {badChar.opcode} {badChar.operand}, skip: {actualSkip}");
+        }
+    }
+
+    private static void LogSearchComplete(int attempts, bool extraLogging)
+    {
         if (extraLogging)
         {
             ModLogger.DebugLog($"IndexOf: Pattern not found after {attempts} attempts");
         }
-        return -1;
     }
 
     private class CodeInstructionEqualityComparer : IEqualityComparer<CodeInstruction>
