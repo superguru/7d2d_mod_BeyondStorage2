@@ -9,6 +9,16 @@ namespace BeyondStorage.Scripts.Harmony;
 public static class ILPatchEngine
 {
     /// <summary>
+    /// Formats an IL position as hex string in the format "IL_ffff"
+    /// </summary>
+    /// <param name="position">The position to format</param>
+    /// <returns>Formatted hex string</returns>
+    private static string FormatILPosition(int position)
+    {
+        return $"IL_{position:x4}";
+    }
+
+    /// <summary>
     /// Inserts replacement instructions at the specified position in the target list.
     /// </summary>
     /// <param name="request">PatchRequest containing the instructions and replacement details</param>
@@ -22,7 +32,7 @@ public static class ILPatchEngine
 
         if (request.ExtraLogging)
         {
-            ModLogger.DebugLog($"Inserted {replacementCount} instructions at index {replacementPosition} (original match at {originalMatchPosition}) in {request.TargetMethodName}");
+            ModLogger.DebugLog($"Inserted {replacementCount} instructions at {FormatILPosition(replacementPosition)} (original match at {FormatILPosition(originalMatchPosition)}) in {request.TargetMethodName}");
         }
     }
 
@@ -33,7 +43,6 @@ public static class ILPatchEngine
     /// <param name="request">PatchRequest containing the instructions and replacement details</param>
     /// <param name="replacementPosition">The starting position for overwriting</param>
     /// <param name="replacementCount">The number of instructions to replace</param>
-    /// <param name="instructionsToAppend">Number of instructions that were appended beyond the available space</param>
     private static void OverwriteInstructions(PatchRequest request, int replacementPosition, int replacementCount)
     {
         int availableInstructions = request.NewInstructions.Count - replacementPosition;
@@ -81,7 +90,7 @@ public static class ILPatchEngine
 
         if (request.ExtraLogging)
         {
-            ModLogger.DebugLog($"Overwrote {instructionsToOverwrite} instructions starting at index {replacementPosition}" +
+            ModLogger.DebugLog($"Overwrote {instructionsToOverwrite} instructions starting at {FormatILPosition(replacementPosition)}" +
                             (instructionsToAppend > 0 ? $" and appended {instructionsToAppend} additional instructions" : "") +
                             $" in {request.TargetMethodName}");
         }
@@ -113,13 +122,13 @@ public static class ILPatchEngine
                 break; // No more matches found
             }
 
-            ModLogger.DebugLog($"Found patch point at index {matchIndex} in {request.TargetMethodName}");
+            ModLogger.DebugLog($"Found patch point at {FormatILPosition(matchIndex)} in {request.TargetMethodName}");
 
             var patchResult = TryApplyPatch(request, response, matchIndex);
             if (patchResult.success)
             {
                 searchIndex = patchResult.nextSearchIndex;
-                ModLogger.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at index {patchResult.replacementPosition} (original match at {matchIndex})");
+                ModLogger.DebugLog($"Applied {request.TargetMethodName} patch #{response.Count} at {FormatILPosition(patchResult.replacementPosition)} (original match at {FormatILPosition(matchIndex)})");
             }
             else
             {
@@ -198,7 +207,7 @@ public static class ILPatchEngine
     {
         if (request.ExtraLogging)
         {
-            ModLogger.DebugLog($"Replacement position {replacementPosition} is {reason}. Skipping patch of {request.TargetMethodName}");
+            ModLogger.DebugLog($"Replacement position {FormatILPosition(replacementPosition)} is {reason}. Skipping patch of {request.TargetMethodName}");
         }
     }
 
@@ -221,6 +230,15 @@ public static class ILPatchEngine
         if (response.Count > 0)
         {
             ModLogger.Info($"Successfully patched {request.TargetMethodName} in {response.Count} places");
+
+            // Log detailed position information for successful patches
+            if (request.ExtraLogging && response.Positions.Count > 0)
+            {
+                var positionDetails = response.Positions
+                    .Select((pos, index) => $"{FormatILPosition(pos)} (match: {FormatILPosition(response.OriginalPositions[index])})")
+                    .ToArray();
+                ModLogger.DebugLog($"Patch positions for {request.TargetMethodName}: {string.Join(", ", positionDetails)}");
+            }
         }
         else
         {
@@ -351,6 +369,24 @@ public static class ILPatchEngine
         public List<CodeInstruction> BestInstructions(PatchRequest request)
         {
             return IsPatched ? request.NewInstructions : request.OriginalInstructions;
+        }
+
+        /// <summary>
+        /// Gets a formatted string of all patch positions in hex format
+        /// </summary>
+        /// <returns>Comma-separated list of hex-formatted positions</returns>
+        public string GetFormattedPositions()
+        {
+            return string.Join(", ", Positions.Select(pos => FormatILPosition(pos)));
+        }
+
+        /// <summary>
+        /// Gets a formatted string of all original match positions in hex format
+        /// </summary>
+        /// <returns>Comma-separated list of hex-formatted original positions</returns>
+        public string GetFormattedOriginalPositions()
+        {
+            return string.Join(", ", OriginalPositions.Select(pos => FormatILPosition(pos)));
         }
     }
 }
