@@ -18,6 +18,10 @@ namespace BeyondStorage.Scripts.Infrastructure;
 /// <param name="trackerName">Name of the tracker for logging purposes</param>
 public sealed class PerformanceProfiler(string trackerName)
 {
+    // Time conversion constants
+    private const double MicrosecsPerMillisec = 1_000.0;
+    private const double MicrosecsPerSec = 1_000_000.0;
+
     private readonly Dictionary<string, (int callCount, long totalTimeUs, double avgTimeUs)> _callStats = [];
     private readonly Dictionary<string, Stopwatch> _activeStopwatches = [];
     private readonly object _statsLock = new();
@@ -141,7 +145,7 @@ public sealed class PerformanceProfiler(string trackerName)
     /// <param name="elapsedMs">Execution time in milliseconds</param>
     public void RecordCallMs(string methodName, long elapsedMs)
     {
-        RecordCall(methodName, elapsedMs * 1_000); // Convert ms to μs
+        RecordCall(methodName, (long)(elapsedMs * MicrosecsPerMillisec)); // Convert ms to μs
     }
 
     /// <summary>
@@ -210,7 +214,7 @@ public sealed class PerformanceProfiler(string trackerName)
         if (stats.HasValue)
         {
             var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
-            return (callCount, totalTimeUs / 1_000, avgTimeUs / 1_000.0);
+            return (callCount, (long)(totalTimeUs / MicrosecsPerMillisec), avgTimeUs / MicrosecsPerMillisec);
         }
         return null;
     }
@@ -239,7 +243,7 @@ public sealed class PerformanceProfiler(string trackerName)
             foreach (var kvp in _callStats)
             {
                 var (callCount, totalTimeUs, avgTimeUs) = kvp.Value;
-                result[kvp.Key] = (callCount, totalTimeUs / 1_000, avgTimeUs / 1_000.0);
+                result[kvp.Key] = (callCount, (long)(totalTimeUs / MicrosecsPerMillisec), avgTimeUs / MicrosecsPerMillisec);
             }
             return result;
         }
@@ -281,31 +285,31 @@ public sealed class PerformanceProfiler(string trackerName)
         string avgDisplay, totalDisplay;
 
         // Format average time
-        if (avgTimeUs < 1_000) // Less than 1 millisecond
+        if (avgTimeUs < MicrosecsPerMillisec) // Less than 1 millisecond
         {
             avgDisplay = $"{avgTimeUs:F3}μs";
         }
-        else if (avgTimeUs < 1_000_000) // Less than 1 second
+        else if (avgTimeUs < MicrosecsPerSec) // Less than 1 second
         {
-            avgDisplay = $"{avgTimeUs / 1_000.0:F3}ms";
+            avgDisplay = $"{avgTimeUs / MicrosecsPerMillisec:F3}ms";
         }
         else
         {
-            avgDisplay = $"{avgTimeUs / 1_000_000.0:F3}s";
+            avgDisplay = $"{avgTimeUs / MicrosecsPerSec:F3}s";
         }
 
         // Format total time
-        if (totalTimeUs < 1_000) // Less than 1 millisecond
+        if (totalTimeUs < MicrosecsPerMillisec) // Less than 1 millisecond
         {
             totalDisplay = $"{totalTimeUs}μs";
         }
-        else if (totalTimeUs < 1_000_000) // Less than 1 second
+        else if (totalTimeUs < MicrosecsPerSec) // Less than 1 second
         {
-            totalDisplay = $"{totalTimeUs / 1_000.0:F3}ms";
+            totalDisplay = $"{totalTimeUs / MicrosecsPerMillisec:F3}ms";
         }
         else
         {
-            totalDisplay = $"{totalTimeUs / 1_000_000.0:F3}s";
+            totalDisplay = $"{totalTimeUs / MicrosecsPerSec:F3}s";
         }
 
         return (avgDisplay, totalDisplay);
@@ -318,17 +322,17 @@ public sealed class PerformanceProfiler(string trackerName)
     /// <returns>Formatted string with appropriate unit</returns>
     public static string FormatMicroseconds(double microseconds)
     {
-        if (microseconds < 1_000) // Less than 1 millisecond
+        if (microseconds < MicrosecsPerMillisec) // Less than 1 millisecond
         {
             return $"{microseconds:F3}μs";
         }
-        else if (microseconds < 1_000_000) // Less than 1 second
+        else if (microseconds < MicrosecsPerSec) // Less than 1 second
         {
-            return $"{microseconds / 1_000.0:F3}ms";
+            return $"{microseconds / MicrosecsPerMillisec:F3}ms";
         }
         else
         {
-            return $"{microseconds / 1_000_000.0:F3}s";
+            return $"{microseconds / MicrosecsPerSec:F3}s";
         }
     }
 
@@ -345,7 +349,7 @@ public sealed class PerformanceProfiler(string trackerName)
     /// <summary>
     /// Gets the microsecond conversion factor for external timing calculations.
     /// </summary>
-    public static double TicksToMicrosecondsRatio { get; } = 1_000_000.0 / Stopwatch.Frequency;
+    public static double TicksToMicrosecondsRatio { get; } = MicrosecsPerSec / Stopwatch.Frequency;
 
     /// <summary>
     /// Clears all statistics.
@@ -408,7 +412,7 @@ public sealed class PerformanceProfiler(string trackerName)
     {
         get
         {
-            return TotalTimeUs / 1_000;
+            return (long)(TotalTimeUs / MicrosecsPerMillisec);
         }
     }
 
