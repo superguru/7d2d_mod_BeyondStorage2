@@ -11,6 +11,11 @@ namespace BeyondStorage.HarmonyPatches.Item;
 [HarmonyPatch(typeof(ItemActionTextureBlock))]
 internal static class ItemActionTextureBlockFireShotLaterPatch
 {
+    // Named constants for previous magic float values
+    private const float FloodFillVectorScale = 0.3f;
+    private const float MultiplePaintDefaultRadius = 1.25f;
+    private const float SprayPaintDefaultRadius = 7.5f;
+
     [HarmonyPrefix]
     [HarmonyPatch(nameof(ItemActionTextureBlock.fireShotLater))]
 #if DEBUG
@@ -102,11 +107,11 @@ internal static class ItemActionTextureBlockFireShotLaterPatch
                 break;
 
             case EnumPaintMode.Multiple:
-                yield return HandleSmartMultiplePaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 1.25f);
+                yield return HandleSmartMultiplePaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, MultiplePaintDefaultRadius);
                 break;
 
             case EnumPaintMode.Spray:
-                yield return HandleSmartSprayPaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, 7.5f);
+                yield return HandleSmartSprayPaint(paintContext, world, chunkCluster, holdingEntity.entityId, playerDataFromEntityID, blockPos, blockFace, bv, hitInfo, SprayPaintDefaultRadius);
                 break;
         }
 
@@ -135,8 +140,8 @@ internal static class ItemActionTextureBlockFireShotLaterPatch
             vector2 = Vector3.up;
         }
 
-        vector1 = ItemActionTextureBlock.ProjectVectorOnPlane(normalized, vector1).normalized * 0.3f;
-        vector2 = ItemActionTextureBlock.ProjectVectorOnPlane(normalized, vector2).normalized * 0.3f;
+        vector1 = ItemActionTextureBlock.ProjectVectorOnPlane(normalized, vector1).normalized * FloodFillVectorScale;
+        vector2 = ItemActionTextureBlock.ProjectVectorOnPlane(normalized, vector2).normalized * FloodFillVectorScale;
 
         for (int channel = 0; channel < 1; channel++)
         {
