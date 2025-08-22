@@ -1,11 +1,7 @@
 ﻿#!/usr/bin/env python3
 """
-Code Quality Checker for C# files
-Checks various code quality issues and design principles in .cs files
-Separates errors (build-breaking) from warnings (informational)
-
-Returns 0 as an exit code if no errors found, 1 if any errors are present.
-Warnings do not affect the exit code, so if there are only warnings, the exit code will still be 0.
+Code Quality Checker for C# files - Main Entry Point
+Modular code quality checking system for BeyondStorage project
 
 MSBUILD Integration Example:
   <Target Name="CodeQualityChecks" BeforeTargets="Build">
@@ -21,455 +17,33 @@ MSBUILD Integration Example:
 
 import os
 import sys
-import re
-import glob
-from typing import List, Tuple, Dict, Callable, Optional, Set
-from pathlib import Path
-from dataclasses import dataclass
-from datetime import datetime
+from typing import List, Dict, Tuple
 
-
+# Configure UTF-8 output
 sys.stdout.reconfigure(encoding='utf-8')
 
-# Try to import Roslyn for enhanced C# parsing
-ROSLYN_AVAILABLE = False
-try:
-    import clr
-    # Add references to .NET Framework assemblies (compatible with .NET Framework 4.8)
-    clr.AddReference("System.Core")
-    
-    # Try to add Roslyn references
-    try:
-        clr.AddReference("Microsoft.CodeAnalysis")
-        clr.AddReference("Microsoft.CodeAnalysis.CSharp")
-        
-        # Import the main namespaces first
-        import System
-        from Microsoft.CodeAnalysis import SyntaxTree, SyntaxNode
-        from Microsoft.CodeAnalysis.CSharp import SyntaxFactory, CSharpSyntaxTree, SyntaxKind
-        import Microsoft.CodeAnalysis.CSharp as CSharp
-        
-        # Import specific syntax classes - using the correct Python.NET syntax
-        from Microsoft.CodeAnalysis.CSharp.Syntax import (
-            ClassDeclarationSyntax, 
-            MethodDeclarationSyntax,
-            CatchClauseSyntax,
-            LiteralExpressionSyntax,
-            AttributeListSyntax,
-            AttributeSyntax,
-            CompilationUnitSyntax,
-            InvocationExpressionSyntax,
-            MemberAccessExpressionSyntax
-        )
-        
-        ROSLYN_AVAILABLE = True
-        print("Roslyn C# parsing enabled - enhanced accuracy for selected checks")
-    except Exception as e:
-        print(f"Roslyn not available, using string-based parsing: {e}")
-        ROSLYN_AVAILABLE = False
-        
-except ImportError:
-    print("Python.NET not available - using string-based parsing only")
-    ROSLYN_AVAILABLE = False
-
-
-@dataclass
-class Issue:
-    """Represents a single code quality issue"""
-    file_path: str
-    line_number: int
-    severity: str  # "error" or "warning"
-    code: str      # Error/warning code (e.g., "CS001", "CW001")
-    description: str
-
-
-@dataclass
-class CheckResult:
-    """Represents the result of a single check"""
-    check_name: str
-    issues: List[Issue]
-    
-    @property
-    def errors(self) -> List[Issue]:
-        return [issue for issue in self.issues if issue.severity == "error"]
-    
-    @property
-    def warnings(self) -> List[Issue]:
-        return [issue for issue in self.issues if issue.severity == "warning"]
-
-
-def clean_file_path(file_path: str) -> str:
-    """Clean file path by removing './' or '.\\' prefixes and converting to relative path"""
-    if file_path.startswith('./') or file_path.startswith('.\\'):
-        return file_path[2:]
-    elif not file_path.startswith('.'):
-        # Convert absolute path to relative
-        return os.path.relpath(file_path, '.')
-    return file_path
-
-
-class RoslynAnalyzer:
-    """Roslyn-based C# code analyzer for enhanced accuracy"""
-    
-    def __init__(self):
-        self.acceptable_numbers = {0, 1, 2, -1, 100, 1000, 25, 60, 1024}  # Common acceptable numbers
-    
-    def parse_file(self, file_path: str) -> Tuple[Optional[SyntaxTree], Optional[CompilationUnitSyntax]]:
-        """Parse C# file using Roslyn"""
-        if not ROSLYN_AVAILABLE:
-            return None, None
-            
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                source_code = f.read()
-            
-            # Parse the source code into a syntax tree
-            syntax_tree = CSharpSyntaxTree.ParseText(source_code)
-            root = syntax_tree.GetCompilationUnitRoot()
-            
-            return syntax_tree, root
-        except Exception as e:
-            print(f"Failed to parse {file_path} with Roslyn: {e}")
-            return None, None
-    
-    def check_harmony_patch_classes(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check HarmonyPatch class declarations using Roslyn AST"""
-        issues = []
-        
-        try:
-            # Use DescendantNodes with proper type filtering for Python.NET
-            all_nodes = list(root.DescendantNodes())
-            classes = [node for node in all_nodes if isinstance(node, ClassDeclarationSyntax)]
-            
-            for class_decl in classes:
-                # Check if class has HarmonyPatch attribute
-                harmony_attr = None
-                for attr_list in class_decl.AttributeLists:
-                    for attr in attr_list.Attributes:
-                        attr_name = str(attr.Name)
-                        if "HarmonyPatch" in attr_name:
-                            harmony_attr = attr
-                            break
-                    if harmony_attr:
-                        break
-                
-                if harmony_attr:
-                    # Check modifiers using Roslyn's proper parsing
-                    modifiers = [str(mod) for mod in class_decl.Modifiers]
-                    has_internal = "internal" in modifiers
-                    has_static = "static" in modifiers
-                    
-                    if not (has_internal and has_static):
-                        line_number = syntax_tree.GetLineSpan(class_decl.Span).StartLinePosition.Line + 1
-                        
-                        missing = []
-                        if not has_internal:
-                            missing.append("internal")
-                        if not has_static:
-                            missing.append("static")
-                        
-                        class_name = str(class_decl.Identifier)
-                        issues.append(Issue(
-                            file_path=file_path,
-                            line_number=line_number,
-                            severity="error",
-                            code="BCS050",
-                            description=f"Class '{class_name}' with [HarmonyPatch] must be 'internal static' (missing: {' '.join(missing)})"
-                        ))
-        except Exception as e:
-            print(f"Error in Roslyn HarmonyPatch check for {file_path}: {e}")
-        
-        return issues
-    
-    def check_harmony_patch_methods(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check HarmonyPatch method declarations using Roslyn AST"""
-        issues = []
-        
-        try:
-            all_nodes = list(root.DescendantNodes())
-            methods = [node for node in all_nodes if isinstance(node, MethodDeclarationSyntax)]
-            
-            for method_decl in methods:
-                # Check if method has HarmonyPatch or Harmony-related attributes
-                harmony_attrs = []
-                is_transpiler = False
-                
-                for attr_list in method_decl.AttributeLists:
-                    for attr in attr_list.Attributes:
-                        attr_name = str(attr.Name)
-                        if any(harmony_name in attr_name for harmony_name in ["HarmonyPatch", "HarmonyPrefix", "HarmonyPostfix", "HarmonyTranspiler", "HarmonyFinalizer"]):
-                            harmony_attrs.append(attr_name)
-                            if "Transpiler" in attr_name:
-                                is_transpiler = True
-                
-                if harmony_attrs:
-                    # Check if method is private
-                    modifiers = [str(mod) for mod in method_decl.Modifiers]
-                    is_private = "private" in modifiers
-                    is_static = "static" in modifiers
-                    
-                    if not is_private:
-                        line_number = syntax_tree.GetLineSpan(method_decl.Span).StartLinePosition.Line + 1
-                        method_name = str(method_decl.Identifier)
-                        
-                        issues.append(Issue(
-                            file_path=file_path,
-                            line_number=line_number,
-                            severity="error",
-                            code="BCS052",
-                            description=f"Method '{method_name}' with Harmony attributes {harmony_attrs} must be private"
-                        ))
-                    
-                    # If it's a transpiler method, check for method calls to other methods that should be private
-                    if is_transpiler and is_private:
-                        callee_issues = self._check_transpiler_method_calls(method_decl, syntax_tree, file_path, root)
-                        issues.extend(callee_issues)
-        
-        except Exception as e:
-            print(f"Error in Roslyn HarmonyPatch method check for {file_path}: {e}")
-        
-        return issues
-    
-    def _check_transpiler_method_calls(self, transpiler_method: MethodDeclarationSyntax, syntax_tree: SyntaxTree, file_path: str, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check if transpiler methods call private utility methods"""
-        issues = []
-        
-        try:
-            # Get all method calls in the transpiler method
-            invocations = [node for node in transpiler_method.DescendantNodes() if isinstance(node, InvocationExpressionSyntax)]
-            
-            # Get all methods in the same file to check their visibility
-            all_methods = [node for node in root.DescendantNodes() if isinstance(node, MethodDeclarationSyntax)]
-            method_visibility_map = {}
-            
-            for method in all_methods:
-                method_name = str(method.Identifier)
-                modifiers = [str(mod) for mod in method.Modifiers]
-                is_private = "private" in modifiers
-                is_public = "public" in modifiers
-                is_static = "static" in modifiers
-                
-                method_visibility_map[method_name] = {
-                    'is_private': is_private,
-                    'is_public': is_public,
-                    'is_static': is_static,
-                    'method_node': method
-                }
-            
-            # Check each invocation
-            for invocation in invocations:
-                try:
-                    # Try to get the method name being called
-                    method_name = None
-                    
-                    # Handle direct method calls: MethodName()
-                    if hasattr(invocation.Expression, 'Identifier'):
-                        method_name = str(invocation.Expression.Identifier)
-                    
-                    # Handle member access calls: Class.MethodName() or instance.MethodName()
-                    elif isinstance(invocation.Expression, MemberAccessExpressionSyntax):
-                        method_name = str(invocation.Expression.Name)
-                    
-                    if method_name and method_name in method_visibility_map:
-                        method_info = method_visibility_map[method_name]
-                        
-                        # Skip utility methods that are explicitly public static (those are OK)
-                        if method_info['is_public'] and method_info['is_static']:
-                            continue
-                        
-                        # If it's not private and not a public static utility, flag it
-                        if not method_info['is_private']:
-                            line_number = syntax_tree.GetLineSpan(invocation.Span).StartLinePosition.Line + 1
-                            transpiler_name = str(transpiler_method.Identifier)
-                            
-                            issues.append(Issue(
-                                file_path=file_path,
-                                line_number=line_number,
-                                severity="error",
-                                code="BCS053",
-                                description=f"Transpiler method '{transpiler_name}' calls method '{method_name}' which should be private (utility methods can be public static)"
-                            ))
-                
-                except Exception:
-                    # Skip invocations we can't analyze
-                    continue
-        
-        except Exception as e:
-            print(f"Error analyzing transpiler method calls: {e}")
-        
-        return issues
-    
-    def check_empty_catch_blocks(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check for empty catch blocks using Roslyn AST"""
-        issues = []
-        
-        try:
-            all_nodes = list(root.DescendantNodes())
-            catch_clauses = [node for node in all_nodes if isinstance(node, CatchClauseSyntax)]
-            
-            for catch_clause in catch_clauses:
-                # Check if catch block is truly empty (no statements)
-                if catch_clause.Block and catch_clause.Block.Statements.Count == 0:
-                    line_number = syntax_tree.GetLineSpan(catch_clause.Span).StartLinePosition.Line + 1
-                    
-                    issues.append(Issue(
-                        file_path=file_path,
-                        line_number=line_number,
-                        severity="error",
-                        code="BCS003",
-                        description="Empty catch block - should handle exceptions properly"
-                    ))
-        except Exception as e:
-            print(f"Error in Roslyn empty catch check for {file_path}: {e}")
-        
-        return issues
-    
-    def check_magic_numbers(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check for magic numbers using Roslyn AST with context awareness"""
-        issues = []
-        
-        try:
-            # Find all numeric literals
-            all_nodes = list(root.DescendantNodes())
-            literals = [node for node in all_nodes if isinstance(node, LiteralExpressionSyntax)]
-            
-            for literal in literals:
-                if literal.Token.IsKind(SyntaxKind.NumericLiteralToken):
-                    try:
-                        # Try to parse as integer
-                        value_text = str(literal.Token.ValueText)
-                        value = int(value_text)
-                        
-                        if abs(value) >= 100 and value not in self.acceptable_numbers:
-                            # Check if it's in a const declaration using AST traversal
-                            is_const = self._is_in_const_declaration(literal)
-                            
-                            # Check if it's part of a GUID or similar pattern
-                            is_guid_related = self._is_guid_related_context(literal, syntax_tree)
-                            
-                            if not is_const and not is_guid_related:
-                                line_number = syntax_tree.GetLineSpan(literal.Span).StartLinePosition.Line + 1
-                                
-                                issues.append(Issue(
-                                    file_path=file_path,
-                                    line_number=line_number,
-                                    severity="warning",
-                                    code="BCW012",
-                                    description=f"Magic number '{value}' - consider using a named constant"
-                                ))
-                    except (ValueError, OverflowError):
-                        pass  # Skip non-integer literals
-        except Exception as e:
-            print(f"Error in Roslyn magic numbers check for {file_path}: {e}")
-        
-        return issues
-    
-    def _is_in_const_declaration(self, literal: SyntaxNode) -> bool:
-        """Check if literal is part of a const declaration"""
-        try:
-            parent = literal.Parent
-            while parent:
-                if hasattr(parent, 'Modifiers'):
-                    modifiers = [str(mod) for mod in parent.Modifiers]
-                    if "const" in modifiers:
-                        return True
-                parent = getattr(parent, 'Parent', None)
-            return False
-        except:
-            return False
-    
-    def _is_guid_related_context(self, literal: SyntaxNode, syntax_tree: SyntaxTree) -> bool:
-        """Check if literal appears in GUID-related context"""
-        try:
-            # Get the text around the literal
-            span = literal.Span
-            line_span = syntax_tree.GetLineSpan(span)
-            
-            # Get the full line text
-            source_text = syntax_tree.GetText()
-            line_text = str(source_text.Lines[line_span.StartLinePosition.Line])
-            
-            # Check for GUID patterns
-            line_lower = line_text.lower()
-            guid_keywords = ['guid', 'assembly:', '[assembly:', 'typelib', 'version=']
-            
-            return any(keyword in line_lower for keyword in guid_keywords)
-        except:
-            return False
-    
-    def check_cyclomatic_complexity(self, file_path: str, syntax_tree: SyntaxTree, root: CompilationUnitSyntax) -> List[Issue]:
-        """Check cyclomatic complexity using Roslyn AST"""
-        issues = []
-        
-        try:
-            all_nodes = list(root.DescendantNodes())
-            methods = [node for node in all_nodes if isinstance(node, MethodDeclarationSyntax)]
-            
-            for method in methods:
-                complexity = self._calculate_complexity_roslyn(method)
-                
-                if complexity > 10:
-                    line_number = syntax_tree.GetLineSpan(method.Span).StartLinePosition.Line + 1
-                    method_name = str(method.Identifier)
-                    
-                    issues.append(Issue(
-                        file_path=file_path,
-                        line_number=line_number,
-                        severity="warning",
-                        code="BCW040",
-                        description=f"Method '{method_name}' has high complexity ({complexity}) - consider refactoring"
-                    ))
-        except Exception as e:
-            print(f"Error in Roslyn complexity check for {file_path}: {e}")
-        
-        return issues
-    
-    def _calculate_complexity_roslyn(self, method: MethodDeclarationSyntax) -> int:
-        """Calculate cyclomatic complexity from Roslyn AST"""
-        try:
-            complexity = 1  # Base complexity
-            
-            # Count decision points using specific syntax kinds
-            complexity_kinds = [
-                SyntaxKind.IfStatement,
-                SyntaxKind.WhileStatement,
-                SyntaxKind.ForStatement,
-                SyntaxKind.ForEachStatement,
-                SyntaxKind.DoStatement,
-                SyntaxKind.SwitchStatement,
-                SyntaxKind.CaseSwitchLabel,
-                SyntaxKind.DefaultSwitchLabel,
-                SyntaxKind.CatchClause,
-                SyntaxKind.ConditionalExpression,  # ? :
-            ]
-            
-            for node in method.DescendantNodes():
-                node_kind = node.Kind()
-                if any(node_kind == kind for kind in complexity_kinds):
-                    complexity += 1
-                
-                # Count logical operators
-                if node_kind == SyntaxKind.LogicalAndExpression or node_kind == SyntaxKind.LogicalOrExpression:
-                    complexity += 1
-            
-            return complexity
-        except:
-            return 1  # Fallback to base complexity
+# Import our modular components
+from models import Issue, CheckResult
+from utils import clean_file_path, find_cs_files
+from roslyn_analyzer import RoslynAnalyzer, is_roslyn_available
+from string_checks import StringBasedChecker
+from harmony_checks import HarmonyChecker
+from reporter import Reporter
 
 
 class CodeQualityChecker:
-    """Main class for performing code quality checks on C# files"""
+    """Main orchestrator class for code quality checking"""
     
     def __init__(self):
-        self.checks: Dict[str, Callable[[str, str], List[Issue]]] = {}
-        self.roslyn_checks: Dict[str, Callable[[str, str], List[Issue]]] = {}  # Roslyn-enhanced checks
         self.forbidden_strings: Dict[str, Tuple[str, str, str]] = {}  # pattern -> (severity, code, description)
-        self.roslyn_analyzer = RoslynAnalyzer() if ROSLYN_AVAILABLE else None
-        self._register_checks()
+        self.roslyn_analyzer = RoslynAnalyzer() if is_roslyn_available() else None
+        self.string_checker = StringBasedChecker()
+        self.harmony_checker = HarmonyChecker()
+        self._register_forbidden_strings()
     
-    def _register_checks(self):
-        """Register all available checks"""
-        # Register string-based checks (errors)
+    def _register_forbidden_strings(self):
+        """Register forbidden string patterns"""
+        # Error-level string checks
         self.add_forbidden_string_check(
             "throw new NotImplementedException(",
             "error", 
@@ -484,7 +58,14 @@ class CodeQualityChecker:
             "Logging format violation 'name} ' found - check for malformed interpolation"
         )
         
-        # Add some warning-level string checks
+        self.add_forbidden_string_check(
+            "System.Threading.Thread.Sleep",
+            "error", 
+            "BCS030",
+            "Thread.Sleep can cause performance issues - use async/await patterns"
+        )
+        
+        # Warning-level string checks
         self.add_forbidden_string_check(
             "Console.WriteLine",
             "warning",
@@ -507,13 +88,6 @@ class CodeQualityChecker:
         )
         
         self.add_forbidden_string_check(
-            "System.Threading.Thread.Sleep",
-            "error", 
-            "BCS030",
-            "Thread.Sleep can cause performance issues - use async/await patterns"
-        )
-        
-        self.add_forbidden_string_check(
             ".Result",
             "warning",
             "BCW060", 
@@ -526,825 +100,11 @@ class CodeQualityChecker:
             "BCW061",
             "Too much logging of Harmony Patch. Ok for Debug, but not ok for Release"
         )
-        
-        # Register Roslyn-enhanced checks (if available) or fallback to string-based
-        if ROSLYN_AVAILABLE:
-            print("Using Roslyn-enhanced parsing for: HarmonyPatch classes, HarmonyPatch methods, empty catch blocks, magic numbers, cyclomatic complexity")
-            self.roslyn_checks["harmony_patch_class_declaration"] = self._check_harmony_patch_class_declaration_roslyn
-            self.roslyn_checks["harmony_patch_method_declaration"] = self._check_harmony_patch_method_declaration_roslyn
-            self.roslyn_checks["empty_catch_blocks"] = self._check_empty_catch_blocks_roslyn
-            self.roslyn_checks["magic_numbers"] = self._check_magic_numbers_roslyn
-            self.roslyn_checks["cyclomatic_complexity"] = self._check_cyclomatic_complexity_roslyn
-        else:
-            print("Using string-based parsing for all checks")
-            self.checks["harmony_patch_class_declaration"] = self._check_harmony_patch_class_declaration
-            self.checks["harmony_patch_method_declaration"] = self._check_harmony_patch_method_declaration
-            self.checks["empty_catch_blocks"] = self._check_empty_catch_blocks
-            self.checks["magic_numbers"] = self._check_magic_numbers
-            self.checks["cyclomatic_complexity"] = self._check_cyclomatic_complexity
-        
-        # Register remaining string-based checks
-        # temporarily disabled: self.checks["excessive_nesting"] = self._check_excessive_nesting
-        # temporarily disabled: self.checks["long_methods"] = self._check_long_methods
-        self.checks["todo_comments"] = self._check_todo_comments
-        self.checks["null_checks"] = self._check_null_checks
-        self.checks["disposable_usage"] = self._check_disposable_usage  
-        self.checks["string_interpolation"] = self._check_string_interpolation
-        self.checks["string_in_loops"] = self._check_string_in_loops
-        self.checks["linq_performance"] = self._check_linq_performance
-    
-    # Roslyn-enhanced check wrappers
-    def _check_harmony_patch_class_declaration_roslyn(self, file_path: str, content: str) -> List[Issue]:
-        """Roslyn-enhanced HarmonyPatch class declaration check"""
-        if not self.roslyn_analyzer:
-            return []
-        
-        syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
-        if not syntax_tree or not root:
-            # Fallback to string-based check
-            return self._check_harmony_patch_class_declaration(file_path, content)
-        
-        issues = self.roslyn_analyzer.check_harmony_patch_classes(file_path, syntax_tree, root)
-        # Clean file paths using the centralized function
-        for issue in issues:
-            issue.file_path = clean_file_path(issue.file_path)
-        
-        return issues
-    
-    def _check_harmony_patch_method_declaration_roslyn(self, file_path: str, content: str) -> List[Issue]:
-        """Roslyn-enhanced HarmonyPatch method declaration check"""
-        if not self.roslyn_analyzer:
-            return []
-        
-        syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
-        if not syntax_tree or not root:
-            # Fallback to string-based check
-            return self._check_harmony_patch_method_declaration(file_path, content)
-        
-        issues = self.roslyn_analyzer.check_harmony_patch_methods(file_path, syntax_tree, root)
-        # Clean file paths using the centralized function
-        for issue in issues:
-            issue.file_path = clean_file_path(issue.file_path)
-        
-        return issues
-    
-    def _check_empty_catch_blocks_roslyn(self, file_path: str, content: str) -> List[Issue]:
-        """Roslyn-enhanced empty catch blocks check"""
-        if not self.roslyn_analyzer:
-            return []
-        
-        syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
-        if not syntax_tree or not root:
-            # Fallback to string-based check
-            return self._check_empty_catch_blocks(file_path, content)
-        
-        issues = self.roslyn_analyzer.check_empty_catch_blocks(file_path, syntax_tree, root)
-        # Clean file paths using the centralized function
-        for issue in issues:
-            issue.file_path = clean_file_path(issue.file_path)
-        
-        return issues
-    
-    def _check_magic_numbers_roslyn(self, file_path: str, content: str) -> List[Issue]:
-        """Roslyn-enhanced magic numbers check"""
-        if not self.roslyn_analyzer:
-            return []
-        
-        syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
-        if not syntax_tree or not root:
-            # Fallback to string-based check
-            return self._check_magic_numbers(file_path, content)
-        
-        issues = self.roslyn_analyzer.check_magic_numbers(file_path, syntax_tree, root)
-        # Clean file paths using the centralized function
-        for issue in issues:
-            issue.file_path = clean_file_path(issue.file_path)
-        
-        return issues
-    
-    def _check_cyclomatic_complexity_roslyn(self, file_path: str, content: str) -> List[Issue]:
-        """Roslyn-enhanced cyclomatic complexity check"""
-        if not self.roslyn_analyzer:
-            return []
-        
-        syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
-        if not syntax_tree or not root:
-            # Fallback to string-based check
-            return self._check_cyclomatic_complexity(file_path, content)
-        
-        issues = self.roslyn_analyzer.check_cyclomatic_complexity(file_path, syntax_tree, root)
-        # Clean file paths using the centralized function
-        for issue in issues:
-            issue.file_path = clean_file_path(issue.file_path)
-        
-        return issues
     
     def add_forbidden_string_check(self, forbidden_string: str, severity: str, code: str, description: str):
         """Add a check for a string that should not exist in the code"""
         self.forbidden_strings[forbidden_string] = (severity, code, description)
     
-    def _check_forbidden_strings(self, file_path: str, content: str) -> List[Issue]:
-        """Check for strings that should not exist in the code"""
-        issues = []
-        lines = content.split('\n')
-
-        # Should always be a case-sensitive check
-        for forbidden_string, (severity, code, description) in self.forbidden_strings.items():
-            for line_num, line in enumerate(lines, 1):
-                if forbidden_string in line:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=line_num,
-                        severity=severity,
-                        code=code,
-                        description=description
-                    ))
-        
-        return issues
-    
-    def _check_excessive_nesting(self, file_path: str, content: str) -> List[Issue]:
-        """Check for excessive nesting levels (more than 4 levels) - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        max_nesting = 4
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped and not stripped.startswith('//') and not stripped.startswith('*'):
-                indent_level = (len(line) - len(line.lstrip())) // 4
-                if indent_level > max_nesting and '{' in line:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=line_num,
-                        severity="warning",
-                        code="BCW010",
-                        description=f"Excessive nesting level ({indent_level} > {max_nesting}) - consider refactoring"
-                    ))
-        
-        return issues
-    
-    def _check_long_methods(self, file_path: str, content: str) -> List[Issue]:
-        """Check for methods that are too long (more than 80 lines) - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        max_method_length = 80
-        
-        in_method = False
-        method_start_line = 0
-        method_name = ""
-        brace_count = 0
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            
-            if not stripped or stripped.startswith('//') or stripped.startswith('*'):
-                continue
-            
-            method_pattern = r'(public|private|protected|internal|static).*\s+\w+\s*\([^)]*\)\s*\{?'
-            if re.search(method_pattern, stripped) and not in_method:
-                in_method = True
-                method_start_line = line_num
-                method_name = self._extract_method_name(stripped)
-                brace_count = stripped.count('{') - stripped.count('}')
-                continue
-            
-            if in_method:
-                brace_count += stripped.count('{') - stripped.count('}')
-                
-                if brace_count <= 0:
-                    method_length = line_num - method_start_line + 1
-                    if method_length > max_method_length:
-                        issues.append(Issue(
-                            file_path=clean_file_path(file_path),
-                            line_number=method_start_line,
-                            severity="warning",
-                            code="BCW011",
-                            description=f"Method '{method_name}' is too long ({method_length} lines > {max_method_length}) - consider breaking it down"
-                        ))
-                    in_method = False
-        
-        return issues
-    
-    def _extract_method_name(self, line: str) -> str:
-        """Extract method name from a method signature line"""
-        match = re.search(r'\s+(\w+)\s*\(', line)
-        return match.group(1) if match else "unknown"
-    
-    def _is_guid_context(self, line: str, number_start: int, number_end: int) -> bool:
-        """Check if a number appears to be part of a GUID"""
-        # Look for GUID patterns: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        # or within quotes that look like GUIDs
-        
-        # Get context around the number
-        context_start = max(0, number_start - 20)
-        context_end = min(len(line), number_end + 20)
-        context = line[context_start:context_end]
-        
-        # Check for GUID patterns
-        guid_patterns = [
-            r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',  # Full GUID
-            r'"[0-9a-fA-F-]+"',  # Quoted hex string that might be a GUID
-            r'\{[0-9a-fA-F-]+\}',  # GUID in braces
-        ]
-        
-        for pattern in guid_patterns:
-            if re.search(pattern, context):
-                return True
-        
-        # Check for common GUID-related keywords
-        guid_keywords = ['guid', 'Guid', 'GUID', 'assembly:', '[assembly:', 'typelib']
-        line_lower = line.lower()
-        for keyword in guid_keywords:
-            if keyword.lower() in line_lower:
-                return True
-        
-        return False
-    
-    def _check_magic_numbers(self, file_path: str, content: str) -> List[Issue]:
-        """Check for magic numbers (hardcoded numbers except common ones) - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        acceptable_numbers = {0, 1, 2, -1, 100, 1000}
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            
-            if stripped.startswith('//') or stripped.startswith('*'):
-                continue
-            
-            number_pattern = r'\b(\d{3,})\b'
-            matches = re.finditer(number_pattern, line)
-            
-            for match in matches:
-                number = int(match.group(1))
-                if number not in acceptable_numbers:
-                    if 'const' not in line.lower():
-                        # Check if this number is part of a GUID
-                        if not self._is_guid_context(line, match.start(), match.end()):
-                            issues.append(Issue(
-                                file_path=clean_file_path(file_path),
-                                line_number=line_num,
-                                severity="warning",
-                                code="BCW012",
-                                description=f"Magic number '{number}' - consider using a named constant"
-                            ))
-        
-        return issues
-    
-    def _check_todo_comments(self, file_path: str, content: str) -> List[Issue]:
-        """Check for TODO comments that should be addressed - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip().lower()
-            if 'todo' in stripped and ('//' in line or '/*' in line):
-                # Extract the actual comment text
-                comment_text = line.strip()
-                
-                # Remove common comment prefixes
-                if '//' in comment_text:
-                    comment_text = comment_text.split('//', 1)[1].strip()
-                elif '/*' in comment_text:
-                    comment_text = comment_text.split('/*', 1)[1].strip()
-                    if '*/' in comment_text:
-                        comment_text = comment_text.split('*/', 1)[0].strip()
-                
-                # Check if the comment already starts with "todo" (case-insensitive)
-                if comment_text.lower().startswith('todo'):
-                    # Remove the existing "todo" prefix and any following colon/whitespace
-                    # This handles: "TODO:", "todo:", "Todo ", "TODO ", etc.
-                    comment_without_todo = re.sub(r'^todo\s*:?\s*', '', comment_text, flags=re.IGNORECASE)
-                    
-                    # Always start with "TODO: " in uppercase
-                    if len(comment_without_todo) > 97:  # 100 - len("TODO: ") = 97
-                        description = f"TODO: {comment_without_todo[:97]}..."
-                    else:
-                        description = f"TODO: {comment_without_todo}"
-                else:
-                    # Prepend "TODO: " if it doesn't already start with it
-                    if len(comment_text) > 94:  # 100 - len("TODO: ") = 94
-                        description = f"TODO: {comment_text[:94]}..."
-                    else:
-                        description = f"TODO: {comment_text}"
-                
-                issues.append(Issue(
-                    file_path=clean_file_path(file_path),
-                    line_number=line_num,
-                    severity="warning",
-                    code="BCW013",
-                    description=description
-                ))
-        
-        return issues
-    
-    def _check_empty_catch_blocks(self, file_path: str, content: str) -> List[Issue]:
-        """Check for empty catch blocks - ERROR"""
-        issues = []
-        lines = content.split('\n')
-        
-        in_catch = False
-        catch_line = 0
-        brace_count = 0
-        has_content = False
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            
-            if not stripped or stripped.startswith('//'):
-                continue
-            
-            if 'catch' in stripped and '{' in stripped:
-                in_catch = True
-                catch_line = line_num
-                brace_count = stripped.count('{') - stripped.count('}')
-                has_content = False
-                continue
-            
-            if in_catch:
-                brace_count += stripped.count('{') - stripped.count('}')
-                
-                if stripped and not stripped.startswith('//'):
-                    has_content = True
-                
-                if brace_count <= 0:
-                    if not has_content:
-                        issues.append(Issue(
-                            file_path=clean_file_path(file_path),
-                            line_number=catch_line,
-                            severity="error",
-                            code="BCS003",
-                            description="Empty catch block found - should handle exceptions properly"
-                        ))
-                    in_catch = False
-        
-        return issues
-    
-    def _check_null_checks(self, file_path: str, content: str) -> List[Issue]:
-        """Check for old-style null checks - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//'):
-                continue
-            
-            # Look for old-style null checks
-            if re.search(r'\w+\s*!=\s*null\s*&&\s*\w+\.\w+', line):
-                issues.append(Issue(
-                    file_path=clean_file_path(file_path),
-                    line_number=line_num,
-                    severity="warning",
-                    code="BCW022", 
-                    description="Consider using null-conditional operator (?.) instead of explicit null check"
-                ))
-        
-        return issues
-
-    def _check_disposable_usage(self, file_path: str, content: str) -> List[Issue]:
-        """Check for IDisposable objects not in using statements - ERROR"""
-        issues = []
-        lines = content.split('\n')
-        
-        disposable_types = ['FileStream', 'StreamWriter', 'StreamReader', 'SqlConnection', 'HttpClient']
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//'):
-                continue
-                
-            for disposable_type in disposable_types:
-                if f'new {disposable_type}' in line and 'using' not in line:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=line_num,
-                        severity="error",
-                        code="BCS010",
-                        description=f"IDisposable type '{disposable_type}' should be wrapped in using statement"
-                    ))
-        
-        return issues
-
-    def _check_string_interpolation(self, file_path: str, content: str) -> List[Issue]:
-        """Check for string concatenation that should use interpolation - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//') or '"' not in stripped:
-                continue
-                
-            # Look for string concatenation patterns
-            if re.search(r'"\s*\+\s*\w+\s*\+\s*"', line) or re.search(r'"\w*"\s*\+\s*\w+', line):
-                issues.append(Issue(
-                    file_path=clean_file_path(file_path),
-                    line_number=line_num,
-                    severity="warning", 
-                    code="BCW021",
-                    description="Consider using string interpolation ($\"...\") instead of concatenation"
-                ))
-        
-        return issues
-
-    def _check_string_in_loops(self, file_path: str, content: str) -> List[Issue]:
-        """Check for string concatenation in loops - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        in_loop = False
-        loop_start = 0
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//'):
-                continue
-                
-            # Detect loop starts
-            if re.search(r'\b(for|foreach|while)\s*\(', line):
-                in_loop = True
-                loop_start = line_num
-                continue
-                
-            if in_loop and '{' in line:
-                continue
-            
-            if in_loop and '}' in line:
-                in_loop = False
-                continue
-            
-            # Check for string concatenation in loops - be more specific about string operations
-            if in_loop and '+=' in line:
-                # Only flag if we can determine it's actually string concatenation
-                if ('string' in line.lower() or 
-                    re.search(r'"\s*\+|string\s*\+|\w+\s*\+=\s*"', line) or
-                    re.search(r'\w+\s*\+=\s*\w+\s*\+\s*"', line)):
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=line_num,
-                        severity="warning",
-                        code="BCW025",
-                        description="String concatenation in loop - consider using StringBuilder"
-                    ))
-        
-        return issues
-
-    def _check_linq_performance(self, file_path: str, content: str) -> List[Issue]:
-        """Check for potentially inefficient LINQ usage - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//'):
-                continue
-                
-            # Check for Count() vs Any()
-            if re.search(r'\.Count\(\)\s*>\s*0', line):
-                issues.append(Issue(
-                    file_path=clean_file_path(file_path),
-                    line_number=line_num,
-                    severity="warning",
-                    code="BCW026",
-                    description="Use Any() instead of Count() > 0 for better performance"
-                ))
-                
-            # Check for multiple enumerations
-            if line.count('.ToList()') > 1:
-                issues.append(Issue(
-                    file_path=clean_file_path(file_path),
-                    line_number=line_num,
-                    severity="warning", 
-                    code="BCW027",
-                    description="Multiple ToList() calls may cause multiple enumerations"
-                ))
-
-        return issues
-
-    def _check_cyclomatic_complexity(self, file_path: str, content: str) -> List[Issue]:
-        """Check for high cyclomatic complexity - WARNING"""
-        issues = []
-        lines = content.split('\n')
-        
-        in_method = False
-        method_start = 0
-        complexity = 1  # Base complexity
-        method_name = ""
-        
-        complexity_keywords = ['if', 'else if', 'while', 'for', 'foreach', 'switch', 'case', 'catch', '&&', '||', '?']
-        
-        for line_num, line in enumerate(lines, 1):
-            stripped = line.strip()
-            if stripped.startswith('//'):
-                continue
-                
-            # Method detection logic (simplified)
-            if re.search(r'(public|private|protected|internal).*\w+\s*\([^)]*\)', line) and '{' in line:
-                if in_method and complexity > 10:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=method_start,
-                        severity="warning",
-                        code="BCW040",
-                        description=f"Method '{method_name}' has high cyclomatic complexity ({complexity}) - consider refactoring"
-                    ))
-                
-                in_method = True
-                method_start = line_num
-                complexity = 1
-                method_name = self._extract_method_name(line)
-                
-            if in_method:
-                for keyword in complexity_keywords:
-                    complexity += line.lower().count(keyword)
-                
-                if '}' in line and line.count('}') >= line.count('{'):
-                    if complexity > 10:
-                        issues.append(Issue(
-                            file_path=clean_file_path(file_path),
-                            line_number=method_start,
-                            severity="warning",
-                            code="BCW040",
-                            description=f"Method '{method_name}' has high cyclomatic complexity ({complexity}) - consider refactoring"
-                        ))
-                    in_method = False
-        
-        return issues
-
-    def _check_harmony_patch_class_declaration(self, file_path: str, content: str) -> List[Issue]:
-        """Check that classes with [HarmonyPatch] attribute are declared as internal static - ERROR"""
-        issues = []
-        lines = content.split('\n')
-        
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            
-            # Skip empty lines and comments
-            if not line or line.startswith('//') or line.startswith('*'):
-                i += 1
-                continue
-            
-            # Look for [HarmonyPatch] attribute (with or without parameters)
-            if re.match(r'\s*\[HarmonyPatch(\(.*\))?\]', line):
-                # Found HarmonyPatch attribute, now look for what follows
-                declaration_line_num = i + 1
-                declaration_found = False
-                
-                # Look ahead for the declaration (skip other attributes and empty lines)
-                j = i + 1
-                while j < len(lines):
-                    next_line = lines[j].strip()
-                    
-                    # Skip empty lines, comments, and other attributes
-                    if (not next_line or 
-                        next_line.startswith('//') or 
-                        next_line.startswith('*') or
-                        next_line.startswith('[') or
-                        next_line.startswith('#')):
-                        j += 1
-                        continue
-                    
-                    # Check if this line contains a class declaration
-                    if 'class ' in next_line:
-                        declaration_found = True
-                        declaration_line_num = j + 1  # Convert to 1-based line number
-                        
-                        # Parse the class declaration to check modifiers
-                        # Remove generic type parameters for analysis
-                        class_decl = re.sub(r'<[^>]*>', '', next_line)
-                        
-                        # Check if it's properly declared as public static
-                        if not (re.search(r'\binternal\b', class_decl) and re.search(r'\bstatic\b', class_decl)):
-                            # Extract class name for better error message
-                            class_name_match = re.search(r'class\s+(\w+)', class_decl)
-                            class_name = class_name_match.group(1) if class_name_match else "unknown"
-                            
-                            # Determine what's missing
-                            has_public = re.search(r'\binternal\b', class_decl)
-                            has_static = re.search(r'\bstatic\b', class_decl)
-                            
-                            if not has_public and not has_static:
-                                missing = "internal static"
-                            elif not has_public:
-                                missing = "internal"
-                            else:  # not has_static
-                                missing = "static"
-                            
-                            issues.append(Issue(
-                                file_path=clean_file_path(file_path),
-                                line_number=declaration_line_num,
-                                severity="error",
-                                code="BCS050",
-                                description=f"Class '{class_name}' with [HarmonyPatch] attribute must be declared as '{missing}' (currently missing: {missing})"
-                            ))
-                        break
-                    
-                    # Check if this line contains a method declaration - if so, skip this HarmonyPatch
-                    elif (re.search(r'\b(public|private|protected|internal|static).*\s+\w+\s*\([^)]*\)', next_line) or
-                          re.search(r'\w+\s+\w+\s*\([^)]*\)', next_line)):
-                        # This HarmonyPatch is on a method, not a class - ignore it
-                        declaration_found = True
-                        break
-                    
-                    # If we hit something else that looks like a declaration, break
-                    elif any(keyword in next_line for keyword in ['struct ', 'interface ', 'enum ', 'delegate ']):
-                        # This could be a struct, interface, enum, or delegate - not what we're looking for
-                        declaration_found = True
-                        break
-                    
-                    j += 1
-                
-                # If no declaration found after HarmonyPatch attribute, that's unusual
-                if not declaration_found:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=i + 1,
-                        severity="error", 
-                        code="BCS051",
-                        description="[HarmonyPatch] attribute found but no recognizable declaration follows"
-                    ))
-                
-                i = j  # Continue from where we left off
-            else:
-                i += 1
-        
-        return issues
-
-    def _check_harmony_patch_method_declaration(self, file_path: str, content: str) -> List[Issue]:
-        """Check that methods with Harmony attributes are declared as private - ERROR"""
-        issues = []
-        lines = content.split('\n')
-        
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            
-            # Skip empty lines and comments
-            if not line or line.startswith('//') or line.startswith('*'):
-                i += 1
-                continue
-            
-            # Look for Harmony attributes
-            harmony_attributes = ['HarmonyPatch', 'HarmonyPrefix', 'HarmonyPostfix', 'HarmonyTranspiler', 'HarmonyFinalizer']
-            found_harmony_attr = None
-            is_transpiler = False
-            
-            for attr_name in harmony_attributes:
-                if re.match(rf'\s*\[{attr_name}(\(.*\))?\]', line):
-                    found_harmony_attr = attr_name
-                    if 'Transpiler' in attr_name:
-                        is_transpiler = True
-                    break
-            
-            if found_harmony_attr:
-                # Found Harmony attribute, now look for the method declaration
-                method_line_num = i + 1
-                method_found = False
-                
-                # Look ahead for the method declaration (skip other attributes and empty lines)
-                j = i + 1
-                while j < len(lines):
-                    next_line = lines[j].strip()
-                    
-                    # Skip empty lines, comments, and other attributes
-                    if (not next_line or 
-                        next_line.startswith('//') or 
-                        next_line.startswith('*') or
-                        next_line.startswith('[') or
-                        next_line.startswith('#')):
-                        j += 1
-                        continue
-                    
-                    # Check if this line contains a method declaration
-                    method_pattern = r'(public|private|protected|internal|static).*\s+\w+\s*\([^)]*\)'
-                    if re.search(method_pattern, next_line):
-                        method_found = True
-                        method_line_num = j + 1  # Convert to 1-based line number
-                        
-                        # Check if method is private
-                        if not re.search(r'\bprivate\b', next_line):
-                            # Extract method name for better error message
-                            method_name_match = re.search(r'\s+(\w+)\s*\(', next_line)
-                            method_name = method_name_match.group(1) if method_name_match else "unknown"
-                            
-                            issues.append(Issue(
-                                file_path=clean_file_path(file_path),
-                                line_number=method_line_num,
-                                severity="error",
-                                code="BCS052",
-                                description=f"Method '{method_name}' with [{found_harmony_attr}] attribute must be private"
-                            ))
-                        
-                        # If it's a transpiler method, check for method calls (simple string-based check)
-                        elif is_transpiler:
-                            transpiler_issues = self._check_transpiler_method_calls_simple(
-                                lines, j, method_name_match.group(1) if method_name_match else "unknown", file_path, content
-                            )
-                            issues.extend(transpiler_issues)
-                        
-                        break
-                    
-                    j += 1
-                
-                # If no method declaration found after Harmony attribute
-                if not method_found:
-                    issues.append(Issue(
-                        file_path=clean_file_path(file_path),
-                        line_number=i + 1,
-                        severity="error", 
-                        code="BCS054",
-                        description=f"[{found_harmony_attr}] attribute found but no method declaration follows"
-                    ))
-                
-                i = j  # Continue from where we left off
-            else:
-                i += 1
-        
-        return issues
-
-    def _check_transpiler_method_calls_simple(self, lines: List[str], method_start: int, transpiler_name: str, file_path: str, content: str) -> List[Issue]:
-        """Simple string-based check for transpiler method calls"""
-        issues = []
-        
-        try:
-            # Find the end of the method (simple brace counting)
-            brace_count = 0
-            method_end = len(lines)
-            
-            for i in range(method_start, len(lines)):
-                line = lines[i].strip()
-                if not line or line.startswith('//'):
-                    continue
-                
-                brace_count += line.count('{') - line.count('}')
-                if brace_count == 0 and i > method_start:
-                    method_end = i
-                    break
-            
-            # Get all method names in the file and their visibility
-            method_visibility = {}
-            all_lines = content.split('\n')
-            
-            for line_num, line in enumerate(all_lines, 1):
-                # Look for method declarations
-                method_pattern = r'(public|private|protected|internal)\s+(static\s+)?[\w<>]+\s+(\w+)\s*\('
-                match = re.search(method_pattern, line)
-                if match:
-                    visibility = match.group(1)
-                    method_name = match.group(3)
-                    is_static = match.group(2) is not None
-                    
-                    method_visibility[method_name] = {
-                        'is_private': visibility == 'private',
-                        'is_public': visibility == 'public',
-                        'is_static': is_static
-                    }
-            
-            # Check method calls within the transpiler method
-            for i in range(method_start, method_end):
-                line = lines[i].strip()
-                line_num = i + 1
-                
-                if not line or line.startswith('//'):
-                    continue
-                
-                # Look for method calls (simple pattern)
-                call_patterns = [
-                    r'(\w+)\s*\(',  # Direct method calls
-                    r'\.(\w+)\s*\('  # Method calls on objects
-                ]
-                
-                for pattern in call_patterns:
-                    matches = re.finditer(pattern, line)
-                    for match in matches:
-                        called_method = match.group(1)
-                        
-                        if called_method in method_visibility:
-                            method_info = method_visibility[called_method]
-                            
-                            # Skip utility methods that are public static (those are OK)
-                            if method_info['is_public'] and method_info['is_static']:
-                                continue
-                            
-                            # If it's not private and not a public static utility, flag it
-                            if not method_info['is_private']:
-                                issues.append(Issue(
-                                    file_path=clean_file_path(file_path),
-                                    line_number=line_num,
-                                    severity="error",
-                                    code="BCS053",
-                                    description=f"Transpiler method '{transpiler_name}' calls method '{called_method}' which should be private (utility methods can be public static)"
-                                ))
-        
-        except Exception as e:
-            # Skip if we can't analyze the method
-            pass
-        
-        return issues
-
     def check_file(self, file_path: str) -> List[CheckResult]:
         """Check a single C# file for all registered issues"""
         try:
@@ -1366,141 +126,170 @@ class CodeQualityChecker:
         
         # Run forbidden strings check
         if self.forbidden_strings:
-            issues = self._check_forbidden_strings(file_path, content)
+            issues = self.string_checker.check_forbidden_strings(file_path, content, self.forbidden_strings)
             if issues:
                 results.append(CheckResult(
                     check_name="forbidden_strings",
                     issues=issues
                 ))
         
-        # Run Roslyn-enhanced checks
-        for check_name, check_func in self.roslyn_checks.items():
-            issues = check_func(file_path, content)
-            if issues:
-                results.append(CheckResult(
-                    check_name=check_name,
-                    issues=issues
-                ))
+        # Run Roslyn-enhanced checks if available
+        if self.roslyn_analyzer:
+            # Parse file once for all Roslyn checks
+            syntax_tree, root = self.roslyn_analyzer.parse_file(file_path)
+            if syntax_tree and root:
+                # Harmony patch class checks
+                issues = self.roslyn_analyzer.check_harmony_patch_classes(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="harmony_patch_classes_roslyn",
+                        issues=issues
+                    ))
+                
+                # Harmony patch method checks
+                issues = self.roslyn_analyzer.check_harmony_patch_methods(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="harmony_patch_methods_roslyn",
+                        issues=issues
+                    ))
+                
+                # Empty catch blocks
+                issues = self.roslyn_analyzer.check_empty_catch_blocks(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="empty_catch_blocks_roslyn",
+                        issues=issues
+                    ))
+                
+                # Magic numbers
+                issues = self.roslyn_analyzer.check_magic_numbers(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="magic_numbers_roslyn",
+                        issues=issues
+                    ))
+                
+                # Cyclomatic complexity
+                issues = self.roslyn_analyzer.check_cyclomatic_complexity(file_path, syntax_tree, root)
+                if issues:
+                    for issue in issues:
+                        issue.file_path = clean_file_path(issue.file_path)
+                    results.append(CheckResult(
+                        check_name="cyclomatic_complexity_roslyn",
+                        issues=issues
+                    ))
+            else:
+                # Fallback to string-based checks if Roslyn parsing fails
+                self._run_string_based_checks(file_path, content, results)
+        else:
+            # Run string-based checks if Roslyn is not available
+            self._run_string_based_checks(file_path, content, results)
         
-        # Run other string-based checks
-        for check_name, check_func in self.checks.items():
-            issues = check_func(file_path, content)
-            if issues:
-                results.append(CheckResult(
-                    check_name=check_name,
-                    issues=issues
-                ))
+        # Always run these string-based checks
+        self._run_additional_string_checks(file_path, content, results)
         
         return results
     
-    def find_cs_files(self, root_dir: str = ".") -> List[str]:
-        """Find all .cs files in the directory and subdirectories"""
-        cs_files = []
-        for root, dirs, files in os.walk(root_dir):
-            dirs[:] = [d for d in dirs if d not in {'.git', '.vs', 'bin', 'obj', 'packages', '.vscode'}]
-            
-            for file in files:
-                if file.endswith('.cs'):
-                    cs_files.append(os.path.join(root, file))
+    def _run_string_based_checks(self, file_path: str, content: str, results: List[CheckResult]):
+        """Run string-based versions of core checks when Roslyn is not available"""
+        # Harmony patch class checks
+        issues = self.harmony_checker.check_harmony_patch_class_declaration(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="harmony_patch_classes_string",
+                issues=issues
+            ))
         
-        return sorted(cs_files)
+        # Harmony patch method checks
+        issues = self.harmony_checker.check_harmony_patch_method_declaration(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="harmony_patch_methods_string",
+                issues=issues
+            ))
+        
+        # Empty catch blocks
+        issues = self.string_checker.check_empty_catch_blocks(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="empty_catch_blocks_string",
+                issues=issues
+            ))
+        
+        # Magic numbers
+        issues = self.string_checker.check_magic_numbers(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="magic_numbers_string",
+                issues=issues
+            ))
+        
+        # Cyclomatic complexity
+        issues = self.string_checker.check_cyclomatic_complexity(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="cyclomatic_complexity_string",
+                issues=issues
+            ))
     
-    def format_issue_compiler_style(self, issue: Issue) -> str:
-        """Format issue in compiler-style format for parsing"""
-        # Format: file(line): severity code: description
-        return f"{issue.file_path}({issue.line_number}): {issue.severity} {issue.code}: {issue.description}"
-    
-    def cleanup_old_result_files(self, keep_latest: int = 5) -> int:
-        """
-        Delete old code check result files, keeping only the latest N files per 5-minute window,
-        with a global maximum of 10 files total.
-        Only deletes files that match the expected timestamp format.
-        Renamed files that don't match the format are preserved.
+    def _run_additional_string_checks(self, file_path: str, content: str, results: List[CheckResult]):
+        """Run additional string-based checks that are always performed"""
+        # TODO comments
+        issues = self.string_checker.check_todo_comments(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="todo_comments",
+                issues=issues
+            ))
         
-        Args:
-            keep_latest: Number of latest files to keep per 5-minute window (default: 5)
-            
-        Returns:
-            Number of files deleted
-        """
-        # Find all files matching the pattern
-        pattern = "code_check_results_*.txt"
-        all_result_files = glob.glob(pattern)
+        # Null checks
+        issues = self.string_checker.check_null_checks(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="null_checks",
+                issues=issues
+            ))
         
-        if not all_result_files:
-            return 0
+        # Disposable usage
+        issues = self.string_checker.check_disposable_usage(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="disposable_usage",
+                issues=issues
+            ))
         
-        # Filter to only files that match our expected timestamp format
-        # Expected format: code_check_results_YYYYMMDD_HHMMSS.txt
-        timestamp_pattern = re.compile(r'^code_check_results_(\d{8}_\d{6})\.txt$')
-        valid_files = []
+        # String interpolation
+        issues = self.string_checker.check_string_interpolation(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="string_interpolation",
+                issues=issues
+            ))
         
-        for file in all_result_files:
-            filename = os.path.basename(file)
-            match = timestamp_pattern.match(filename)
-            if match:
-                try:
-                    # Parse the timestamp to ensure it's valid
-                    timestamp_str = match.group(1)
-                    timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
-                    valid_files.append((file, timestamp))
-                except ValueError:
-                    # Invalid timestamp format, skip this file
-                    continue
+        # String in loops
+        issues = self.string_checker.check_string_in_loops(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="string_in_loops",
+                issues=issues
+            ))
         
-        if not valid_files:
-            return 0
-        
-        # Group files by 5-minute windows
-        # Create a window key by truncating minutes to 5-minute intervals
-        windows = {}
-        for file_path, timestamp in valid_files:
-            # Create 5-minute window key: truncate minutes to nearest 5-minute boundary
-            window_minutes = (timestamp.minute // 5) * 5
-            window_key = timestamp.replace(minute=window_minutes, second=0, microsecond=0)
-            
-            if window_key not in windows:
-                windows[window_key] = []
-            windows[window_key].append((file_path, timestamp))
-        
-        # Sort files within each window by timestamp (newest first) and keep only the latest N
-        files_to_delete = []
-        files_to_keep = []
-        
-        for window_key, files_in_window in windows.items():
-            # Sort by timestamp (newest first)
-            files_in_window.sort(key=lambda x: x[1], reverse=True)
-            
-            # Keep the latest N files in this window
-            files_to_keep.extend(files_in_window[:keep_latest])
-            
-            # Mark excess files for deletion
-            if len(files_in_window) > keep_latest:
-                files_to_delete.extend(files_in_window[keep_latest:])
-        
-        # Apply global maximum limit of 10 files
-        # Sort all files to keep by timestamp (newest first)
-        files_to_keep.sort(key=lambda x: x[1], reverse=True)
-        
-        if len(files_to_keep) > 10:
-            # Move excess files from keep list to delete list
-            excess_files = files_to_keep[10:]
-            files_to_keep = files_to_keep[:10]
-            files_to_delete.extend(excess_files)
-            
-            print(f"Global file limit: keeping {len(files_to_keep)} newest files, marking {len(excess_files)} additional files for deletion")
-        
-        # Delete the marked files
-        deleted_count = 0
-        for file_path, timestamp in files_to_delete:
-            try:
-                os.remove(file_path)
-                deleted_count += 1
-                print(f"Deleted old result file: {file_path}")
-            except OSError as e:
-                print(f"Warning: Could not delete {file_path}: {e}")
-        
-        return deleted_count
+        # LINQ performance
+        issues = self.string_checker.check_linq_performance(file_path, content)
+        if issues:
+            results.append(CheckResult(
+                check_name="linq_performance",
+                issues=issues
+            ))
     
     def run_all_checks(self, root_dir: str = ".") -> bool:
         """Run all checks on all C# files and return True if no errors found"""
@@ -1508,21 +297,21 @@ class CodeQualityChecker:
         print("=" * 50)
         
         # Show Roslyn status
-        if ROSLYN_AVAILABLE:
+        if is_roslyn_available():
             print("✓ Roslyn AST parsing: ENABLED")
-            print("  Enhanced accuracy for: HarmonyPatch classes, empty catch blocks, magic numbers, cyclomatic complexity")
+            print("  Enhanced accuracy for: HarmonyPatch classes, HarmonyPatch methods, empty catch blocks, magic numbers, cyclomatic complexity")
         else:
             print("⚠ Roslyn AST parsing: DISABLED - using string-based parsing")
             print("  To enable: pip install pythonnet and ensure Roslyn assemblies are available")
         print()
         
         # Clean up old result files first
-        deleted_files = self.cleanup_old_result_files(keep_latest=5)
+        deleted_files = Reporter.cleanup_old_result_files(keep_latest=5)
         if deleted_files > 0:
             print(f"Cleaned up {deleted_files} old result file(s)")
             print()
         
-        cs_files = self.find_cs_files(root_dir)
+        cs_files = find_cs_files(root_dir)
         if not cs_files:
             print("No C# files found in the current directory and subdirectories.")
             return True
@@ -1541,61 +330,9 @@ class CodeQualityChecker:
         errors = [issue for issue in all_issues if issue.severity == "error"]
         warnings = [issue for issue in all_issues if issue.severity == "warning"]
         
-        # Create timestamped results file
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_file = f"code_check_results_{timestamp}.txt"
-        
-        # Output to both console and file
-        output_lines = []
-        
-        # Show warnings first (less critical)
-        if warnings:
-            output_lines.append("WARNINGS:")
-            output_lines.append("-" * 40)
-            for warning in warnings:
-                line = self.format_issue_compiler_style(warning)
-                output_lines.append(line)
-            output_lines.append("")
-
-        # Show errors last (most critical - will be at bottom of output)
-        if errors:
-            output_lines.append("ERRORS:")
-            output_lines.append("-" * 40)
-            for error in errors:
-                line = self.format_issue_compiler_style(error)
-                output_lines.append(line)
-            output_lines.append("")
-        
-        # Summary
-        summary = f"Code check completed: {len(errors)} error(s), {len(warnings)} warning(s) found in {len(cs_files)} files."
-        output_lines.append(summary)
-        
-        # Add build status indicator
-        if errors:
-            output_lines.append("BUILD STATUS: FAILED (errors found)")
-        elif warnings:
-            output_lines.append("BUILD STATUS: PASSED (warnings only)")
-        else:
-            output_lines.append("BUILD STATUS: PASSED (no issues)")
-        
-        # Add parsing method info
-        parsing_method = "Hybrid (Roslyn + String-based)" if ROSLYN_AVAILABLE else "String-based only"
-        output_lines.append(f"PARSING METHOD: {parsing_method}")
-        
-        # Write to file
-        try:
-            with open(results_file, 'w', encoding='utf-8') as f:
-                f.write(f"BeyondStorage Code Quality Check Results\n")
-                f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"Parsing Method: {parsing_method}\n")
-                f.write("=" * 60 + "\n\n")
-                f.write("\n".join(output_lines))
-        except IOError as e:
-            print(f"Warning: Could not write results file {results_file}: {e}")
-        
-        # Output to console
-        for line in output_lines:
-            print(line)
+        # Generate report
+        parsing_method = "Hybrid (Roslyn + String-based)" if is_roslyn_available() else "String-based only"
+        results_file = Reporter.write_results(errors, warnings, len(cs_files), parsing_method)
         
         if results_file:
             print(f"\nResults written to: {results_file}")
