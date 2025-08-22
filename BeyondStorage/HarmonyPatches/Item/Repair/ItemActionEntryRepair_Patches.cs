@@ -9,7 +9,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(ItemActionEntryRepair))]
-public class ItemActionEntryRepairPatches
+internal static class ItemActionEntryRepairPatches
 {
     // Used For:
     //      Item Repair (Allows Repair)

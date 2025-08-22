@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Functions;
 
 [HarmonyPatch(typeof(ItemActionEntryPurchase))]
-public static class Item_Action_Entry_Purchase_Patches
+internal static class Item_Action_Entry_Purchase_Patches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(ItemActionEntryPurchase.RefreshEnabled))]

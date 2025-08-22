@@ -5,7 +5,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Reload;
 
 [HarmonyPatch(typeof(Animator3PRangedReloadState))]
-public class Animator3PRangedReloadStatePatches
+internal static class Animator3PRangedReloadStatePatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(Animator3PRangedReloadState.GetAmmoCountToReload))]

@@ -10,7 +10,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Vehicle;
 
 [HarmonyPatch(typeof(EntityVehicle))]
-public class EntityVehiclePatches
+internal static class EntityVehiclePatches
 {
     [HarmonyPostfix]
     [HarmonyPatch(nameof(EntityVehicle.hasGasCan))]

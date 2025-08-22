@@ -10,7 +10,7 @@ using BeyondStorage.Scripts.Infrastructure;
 namespace BeyondStorage.HarmonyPatches.Multiplayer;
 
 [HarmonyPatch]
-public class GameManagerPatches
+internal static class GameManagerPatches
 {
 #if DEBUG
     [HarmonyPrepare]

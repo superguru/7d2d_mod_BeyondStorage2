@@ -7,7 +7,7 @@ using static ItemActionTextureBlock;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(ItemActionTextureBlock))]
-public class ItemActionTextureBlockFloodFillPatch
+internal static class ItemActionTextureBlockFloodFillPatch
 {
     [HarmonyPrefix]
     [HarmonyPatch("floodFill")]

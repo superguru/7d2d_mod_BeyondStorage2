@@ -7,7 +7,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Item;
 
 [HarmonyPatch(typeof(ItemActionEntryCraft))]
-public class ItemActionEntryCraftPatches
+internal static class ItemActionEntryCraftPatches
 {
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(ItemActionEntryCraft.HasItems))]

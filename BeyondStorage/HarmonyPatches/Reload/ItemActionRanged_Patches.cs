@@ -8,7 +8,7 @@ using HarmonyLib;
 namespace BeyondStorage.HarmonyPatches.Reload;
 
 [HarmonyPatch(typeof(ItemActionRanged))]
-public class ItemActionRangedPatches
+internal static class ItemActionRangedPatches
 {
     // Used For:
     //          Weapon Reload (check if allowed to reload)
