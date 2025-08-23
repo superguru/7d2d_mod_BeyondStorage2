@@ -10,8 +10,9 @@ public static class ItemCommon
 {
     // Used By:
     //      XUiM_PlayerInventory.RemoveItems
-    //          Item Crafting (ClearStacksForFilter items on craft)
-    //          Item Repair (ClearStacksForFilter items on repair)
+    //          Item Crafting (Remove items on craft)
+    //          Item Repair (Remove items on repair)
+    // Returns: count of items removed from storage
     public static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(ItemRemoveRemaining);
