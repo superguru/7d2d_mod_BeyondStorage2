@@ -180,12 +180,23 @@ public static class ItemPropertiesCache
     private static ItemProperties CreateProperties(int itemType)
     {
         // Create a temporary ItemValue to access properties
-        var tempItemValue = new ItemValue(itemType);
+        var tempItemValue = CreateTemporaryItemValue(itemType);
 
         var hasModSlots = tempItemValue.HasModSlots;
         var canStack = tempItemValue.ItemClass?.CanStack() ?? false;
 
         return new ItemProperties(hasModSlots, canStack);
+    }
+
+    /// <summary>
+    /// Creates a temporary ItemValue instance for the specified item type.
+    /// Used internally to access item properties without creating persistent instances.
+    /// </summary>
+    /// <param name="itemType">The item type ID</param>
+    /// <returns>A new ItemValue instance for the specified type</returns>
+    internal static ItemValue CreateTemporaryItemValue(int itemType)
+    {
+        return new ItemValue(itemType);
     }
 
     /// <summary>
