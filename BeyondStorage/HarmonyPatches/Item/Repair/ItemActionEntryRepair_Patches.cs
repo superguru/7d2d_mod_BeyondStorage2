@@ -27,7 +27,7 @@ internal static class ItemActionEntryRepairPatches
         {
             new CodeInstruction(OpCodes.Ldloc_1),        // playerInventory
             new CodeInstruction(OpCodes.Ldloc_S, 6),     // itemClass
-            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))), // getId
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))),     // get_Id()
             new CodeInstruction(OpCodes.Ldc_I4_0),
             new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
         };
@@ -37,7 +37,7 @@ internal static class ItemActionEntryRepairPatches
         {
             // Load the ItemValue that was used for GetItemCount (reconstruct it)
             new CodeInstruction(OpCodes.Ldloc_S, 6),     // itemClass
-            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))), // getId
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemData), nameof(ItemData.Id))),     // get_Id()
             new CodeInstruction(OpCodes.Ldc_I4_0),       // false
             new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
             
