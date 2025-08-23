@@ -32,11 +32,11 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
 #endif
     }
 
-    [HarmonyPostfix]
-    [HarmonyPatch(nameof(XUiM_PlayerInventory.GetItemCount), [typeof(int)])]
-#if DEBUG
-    [HarmonyDebug]
-#endif
+    //    [HarmonyPostfix]
+    //    [HarmonyPatch(nameof(XUiM_PlayerInventory.GetItemCount), [typeof(int)])]
+    //#if DEBUG
+    //    [HarmonyDebug]
+    //#endif
     private static void XUiM_PlayerInventory_GetItemCount_ItemType_Postfix(XUiM_PlayerInventory __instance, int _itemId, ref int __result)
     {
 #if DEBUG
