@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using BeyondStorage.Scripts.Configuration;
+using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
@@ -12,83 +9,66 @@ namespace BeyondStorage.HarmonyPatches.Item;
 [HarmonyPatch(typeof(XUiM_PlayerInventory))]
 internal static class XUiMPlayerInventoryCommonPatches
 {
+    // Cache the reflection calls at class level (best performance)
+    private static readonly System.Reflection.MethodInfo s_onBackpackChanged =
+        AccessTools.Method(typeof(XUiM_PlayerInventory), "onBackpackItemsChanged");
+    private static readonly System.Reflection.MethodInfo s_onToolbeltChanged =
+        AccessTools.Method(typeof(XUiM_PlayerInventory), "onToolbeltItemsChanged");
+
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static void XUiM_PlayerInventory_RemoveItems_Prefix(IList<ItemStack> _itemStacks, int _multiplier)
+    private static bool XUiM_PlayerInventory_RemoveItems_Prefix(XUiM_PlayerInventory __instance, IList<ItemStack> _itemStacks, int _multiplier, IList<ItemStack> _removedItems)
     {
-        if (!ModConfig.IsDebug())
-        {
-            return;
-        }
+#if DEBUG
+        const string d_MethodName = nameof(XUiM_PlayerInventory_RemoveItems_Prefix);
+#endif
+        // Cache frequently accessed properties
+        var backpack = __instance.Backpack;
+        var toolbelt = __instance.Toolbelt;
 
-        var targetMethodStr = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.RemoveItems)} PREFIX";
-
+        // Use foreach - it's faster for IList<T> and avoids repeated bounds checking
         foreach (var itemStack in _itemStacks)
         {
-            var num = itemStack.count * _multiplier;
-            ModLogger.DebugLog($"{targetMethodStr} | Need {num} {itemStack.itemValue.ItemClass.GetItemName()}");
-        }
-    }
-
-    // Used For:
-    //          Item Crafting (ClearStacksForFilter items on craft)
-    //          Item Repair (ClearStacksForFilter items on repair)
-    [HarmonyTranspiler]
-    [HarmonyPatch(nameof(XUiM_PlayerInventory.RemoveItems))]
+            // Cache the current item stack reference and its properties
+            var itemValue = itemStack.itemValue;
+            int stillNeeded = itemStack.count * _multiplier;
 #if DEBUG
-    [HarmonyDebug]
+            var itemName = ItemX.NameOf(itemValue);
+            ModLogger.DebugLog($"{d_MethodName}: Removing {stillNeeded} of {itemName}");
 #endif
-    private static IEnumerable<CodeInstruction> XUiM_PlayerInventory_RemoveItems_Patch(IEnumerable<CodeInstruction> instructions)
-    {
-        var targetMethodString = $"{typeof(XUiM_PlayerInventory)}.{nameof(XUiM_PlayerInventory.RemoveItems)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        var codes = new List<CodeInstruction>(instructions);
-        var set = false;
-        for (var i = 0; i < codes.Count; i++)
-        {
-            if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand !=
-                AccessTools.Method(typeof(Inventory), nameof(Inventory.DecItem)))
+            // First DecItem call: Remove from backpack
+            var removed = backpack.DecItem(itemValue, stillNeeded, true, _removedItems);
+            stillNeeded -= removed;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Backpack, still need {stillNeeded}");
+#endif
+            // If still need more, try toolbelt
+            if (stillNeeded > 0)
             {
-                continue;
+                removed = toolbelt.DecItem(itemValue, stillNeeded, true, _removedItems);
+                stillNeeded -= removed;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Toolbelt, still need {stillNeeded}");
+#endif
+                // If still need more, try storage
+                if (stillNeeded > 0)
+                {
+                    removed = ItemCommon.ItemRemoveRemaining(itemValue, stillNeeded, true, _removedItems);
+                    stillNeeded -= removed;
+#if DEBUG
+                    ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Storage, still need {stillNeeded}");
+#endif
+                }
             }
-
-            set = true;
-            ModLogger.DebugLog($"Patching {targetMethodString}");
-
-            List<CodeInstruction> newCode = [
-                // ldarg.1      // _itemStacks
-                new CodeInstruction(codes[i - 7].Clone()),
-                // ldloc.0      // index
-                new CodeInstruction(codes[i - 6].Clone()),
-                // callvirt     instance !0/*class ItemStack*/ class [mscorlib]System.Collections.Generic.IList`1<class ItemStack>::get_Item(int32)
-                new CodeInstruction(codes[i - 5].Clone()),
-                // ldfld        class ItemValue ItemStack::itemValue
-                new CodeInstruction(codes[i - 4].Clone()),
-                // IL_0051: ldloc.1      // _count2
-                new CodeInstruction(codes[i - 3].Clone()),
-                // IL_0052: ldc.i4.1    true (ignoreModded)
-                new CodeInstruction(codes[i - 2].Clone()),
-                // IL_0053: ldarg.3      // _removedItems
-                new CodeInstruction(codes[i - 1].Clone()),
-                // ItemCommon.ItemRemoveRemaining(Inventory.DecItem(...), _itemStack[index].itemValue, _count2, true, _removedItems)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemRemoveRemaining)))
-            ];
-            codes.InsertRange(i + 1, newCode);
-            break;
         }
 
-        if (!set)
-        {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
+        // Use cached method references (fastest)
+        s_onBackpackChanged?.Invoke(__instance, null);
+        s_onToolbeltChanged?.Invoke(__instance, null);
 
-        return codes.AsEnumerable();
+        return false; // Skip the original method completely
     }
 }

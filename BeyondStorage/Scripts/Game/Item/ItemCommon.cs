@@ -12,10 +12,16 @@ public static class ItemCommon
     //      XUiM_PlayerInventory.RemoveItems
     //          Item Crafting (ClearStacksForFilter items on craft)
     //          Item Repair (ClearStacksForFilter items on repair)
-    public static int ItemRemoveRemaining(int originalResult, ItemValue itemValue, int totalRequiredAmount, bool ignoreModdedItems = false, List<ItemStack> removedItems = null)
+    public static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(ItemRemoveRemaining);
-        int DEFAULT_RETURN_VALUE = originalResult;
+        int DEFAULT_RETURN_VALUE = stillNeeded;
+
+        // If we don't need anything else return the original result
+        if (stillNeeded <= 0)
+        {
+            return DEFAULT_RETURN_VALUE;
+        }
 
         if (!ValidationHelper.ValidateItemValue(itemValue, d_MethodName, out string itemName))
         {
@@ -29,16 +35,9 @@ public static class ItemCommon
             return DEFAULT_RETURN_VALUE;
         }
 
-        // stillNeeded = totalRequiredAmount (_count1) - originalResult (DecItem(...))
-        var stillNeeded = totalRequiredAmount - originalResult;
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; lastRemoved: {originalResult}; totalNeeded: {totalRequiredAmount}; ignoreModded: {ignoreModdedItems}");
+        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; ignoreModded: {ignoreModdedItems}");
 #endif
-        // If we don't need anything else return the original result
-        if (stillNeeded <= 0)
-        {
-            return DEFAULT_RETURN_VALUE;
-        }
 
         // Get what we can from storage up to required amount
         var totalRemoved = context.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
@@ -47,7 +46,7 @@ public static class ItemCommon
 #if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
 #endif
-        return newStillNeeded;
+        return totalRemoved;
     }
 
     public static List<ItemStack> ItemCommon_GetAllAvailableItemStacksFromXui(XUi xui)
