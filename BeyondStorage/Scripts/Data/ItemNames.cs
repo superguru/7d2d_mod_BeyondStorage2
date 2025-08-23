@@ -33,22 +33,31 @@ public static class ItemNames
             return name;
         }
 
-        // Fallback to a default name if not found
+        name = ResolveItemName(itemType);
+        s_itemTypeNames[itemType] = name;
+        return name;
+    }
+
+    /// <summary>
+    /// Resolves the name for a given item type by looking up the ItemClass and handling fallbacks.
+    /// </summary>
+    /// <param name="itemType">The item type to resolve</param>
+    /// <returns>The resolved item name or a fallback name if not found</returns>
+    private static string ResolveItemName(int itemType)
+    {
+        // Lookup the item class and get its name
         var itemClass = ItemClass.GetForId(itemType);
         var itemName = itemClass?.GetItemName();
 
         // Handle null or empty item names more robustly
         if (string.IsNullOrWhiteSpace(itemName))
         {
-            name = $"Unknown Item Type {itemType}";
+            return $"Unknown Item Type {itemType}";
         }
         else
         {
-            name = itemName;
+            return itemName;
         }
-
-        s_itemTypeNames[itemType] = name;
-        return name;
     }
 
     public static string LookupItemName(ItemValue itemValue)
