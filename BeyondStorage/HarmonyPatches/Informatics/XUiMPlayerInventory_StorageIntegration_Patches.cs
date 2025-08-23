@@ -47,7 +47,14 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
         var itemName = ItemX.NameOf(_itemId);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: itemId: {_itemId} ({itemName}); result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: unknown (skipped)");
+        var message = $"{d_MethodName}: itemId: {_itemId} ({itemName}); result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: unknown (skipped)";
+
+        //if (_itemId == 65672)
+        //{
+        //    message = StackTraceProvider.AppendStackTrace(message);
+        //}
+
+        ModLogger.DebugLog(message);
 #endif
     }
 
