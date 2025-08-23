@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using BeyondStorage.Scripts.Game.Ranged;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Game.Item;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Reload;
@@ -12,40 +8,56 @@ internal static class ItemActionRangedPatches
 {
     // Used For:
     //          Weapon Reload (check if allowed to reload)
-    [HarmonyTranspiler]
+    [HarmonyPrefix]
     [HarmonyPatch(nameof(ItemActionRanged.CanReload))]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> ItemActionRanged_CanReload_Patch(IEnumerable<CodeInstruction> instructions)
+    private static bool ItemActionRanged_CanReload_Prefix(ItemActionRanged __instance, ItemActionData _actionData, ref bool __result)
     {
-        var targetMethodString = $"{typeof(ItemActionRanged)}.{nameof(ItemActionRanged.CanReload)}";
-        var codeInstructions = new List<CodeInstruction>(instructions);
-        var lastBgt = codeInstructions.FindLastIndex(instruction => instruction.opcode == OpCodes.Bgt);
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        if (lastBgt != -1)
+        // Check infinite ammo first (highest priority)
+        if (__instance.HasInfiniteAmmo(_actionData))
         {
-            // if (Ranged.CanReloadFromStorage(_itemValue) > 0)
-            List<CodeInstruction> newCode = [
-                // new CodeInstruction(OpCodes.Ldarg_0),
-                // ldloc.1      // _itemValue
-                new CodeInstruction(OpCodes.Ldloc_1),
-                // Ranged.CanReloadFromStorage(ItemValue)
-                new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Ranged), nameof(Ranged.CanReloadFromStorage))),
-                // ldc.i4.0
-                new CodeInstruction(OpCodes.Ldc_I4_0),
-                // bgt
-                codeInstructions[lastBgt].Clone()
-            ];
-            // Insert right below last BGT
-            codeInstructions.InsertRange(lastBgt + 1, newCode);
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
-        else
-        {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
+            __result = true;
+            return false; // Skip original method
         }
 
-        return codeInstructions.AsEnumerable();
+        ItemActionRanged.ItemActionDataRanged actionData = (ItemActionRanged.ItemActionDataRanged)_actionData;
+        ItemValue holdingItemItemValue = _actionData.invData.holdingEntity.inventory.holdingItemItemValue;
+        ItemValue ammoItemValue = ItemClass.GetItem(__instance.MagazineItemNames[holdingItemItemValue.SelectedAmmoTypeIndex]);
+        int magazineSize = (int)EffectManager.GetValue(PassiveEffects.MagazineSize, holdingItemItemValue, __instance.BulletsPerMagazine, _actionData.invData.holdingEntity);
+        EntityPlayerLocal entityPlayerLocal = _actionData.invData.holdingEntity as EntityPlayerLocal;
+
+        // Check prerequisites (original logic)
+        if (!ItemActionRanged.NotReloading(actionData) ||
+            (entityPlayerLocal != null && entityPlayerLocal.CancellingInventoryActions) ||
+            _actionData.invData.itemValue.Meta >= magazineSize)
+        {
+            __result = false;
+            return false; // Skip original method
+        }
+
+        // Priority order: Bag → Toolbelt → Storage
+        // Check bag first
+        bool hasAmmoInBag = _actionData.invData.holdingEntity.bag.GetItemCount(ammoItemValue) > 0;
+        if (hasAmmoInBag)
+        {
+            __result = true;
+            return false; // Skip original method
+        }
+
+        // Check toolbelt second
+        bool hasAmmoInToolbelt = _actionData.invData.holdingEntity.inventory.GetItemCount(ammoItemValue) > 0;
+        if (hasAmmoInToolbelt)
+        {
+            __result = true;
+            return false; // Skip original method
+        }
+
+        // Check storage last (fallback)
+        bool canReloadFromStorage = ItemCommon.HasItemInStorage(ammoItemValue);
+        __result = canReloadFromStorage;
+
+        return false; // Skip original method
     }
 }

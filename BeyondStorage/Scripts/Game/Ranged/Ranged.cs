@@ -6,25 +6,6 @@ namespace BeyondStorage.Scripts.Game.Ranged;
 public static class Ranged
 {
     // Used By:
-    //      ItemActionRanged.CanReload (Weapon Reload - Ammo Exists Check)
-    public static bool CanReloadFromStorage(ItemValue itemValue)
-    {
-        const string d_MethodName = nameof(CanReloadFromStorage);
-        const bool DEFAULT_RETURN_VALUE = false;
-
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
-        {
-            return DEFAULT_RETURN_VALUE;
-        }
-
-        var canReloadFromStorage = context.HasItem(itemValue);
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} {canReloadFromStorage}");
-#endif
-        return canReloadFromStorage;
-    }
-
-    // Used By:
     //      AnimatorRangedReloadState.GetAmmoCount (Weapon Reload - Get Total Ammo (not displayed))
     //      Animator3PRangedReloadState.GetAmmoCount (Weapon Reload - Get Total Ammo (not displayed))
     public static int GetAmmoCount(ItemValue itemValue)

@@ -116,4 +116,22 @@ public static class ItemCommon
 #endif
         return itemCount;
     }
+
+    public static bool HasItemInStorage(ItemValue itemValue)
+    {
+        const string d_MethodName = nameof(HasItemInStorage);
+        const bool DEFAULT_RETURN_VALUE = false;
+
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
+        {
+            return DEFAULT_RETURN_VALUE;
+        }
+
+        //TODO: create a common HasItem function to reuse wherever HasItem is called
+        var result = context.HasItem(itemValue);
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} {result}");
+#endif
+        return result;
+    }
 }
