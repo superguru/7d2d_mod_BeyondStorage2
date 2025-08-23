@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Item;
@@ -23,7 +21,7 @@ internal static class XUiMPlayerInventoryCommonPatches
     private static bool XUiM_PlayerInventory_RemoveItems_Prefix(XUiM_PlayerInventory __instance, IList<ItemStack> _itemStacks, int _multiplier, IList<ItemStack> _removedItems)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiM_PlayerInventory_RemoveItems_Prefix);
+        //const string d_MethodName = nameof(XUiM_PlayerInventory_RemoveItems_Prefix);
 #endif
         // Cache frequently accessed properties
         var backpack = __instance.Backpack;
@@ -36,14 +34,14 @@ internal static class XUiMPlayerInventoryCommonPatches
             var itemValue = itemStack.itemValue;
             int stillNeeded = itemStack.count * _multiplier;
 #if DEBUG
-            var itemName = ItemX.NameOf(itemValue);
-            ModLogger.DebugLog($"{d_MethodName}: Removing {stillNeeded} of {itemName}");
+            //var itemName = ItemX.NameOf(itemValue);
+            //ModLogger.DebugLog($"{d_MethodName}: Removing {stillNeeded} of {itemName}");
 #endif
             // First DecItem call: Remove from backpack
             var removed = backpack.DecItem(itemValue, stillNeeded, true, _removedItems);
             stillNeeded -= removed;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Backpack, still need {stillNeeded}");
+            //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Backpack, still need {stillNeeded}");
 #endif
             // If still need more, try toolbelt
             if (stillNeeded > 0)
@@ -51,7 +49,7 @@ internal static class XUiMPlayerInventoryCommonPatches
                 removed = toolbelt.DecItem(itemValue, stillNeeded, true, _removedItems);
                 stillNeeded -= removed;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Toolbelt, still need {stillNeeded}");
+                //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Toolbelt, still need {stillNeeded}");
 #endif
                 // If still need more, try storage
                 if (stillNeeded > 0)
@@ -59,7 +57,7 @@ internal static class XUiMPlayerInventoryCommonPatches
                     removed = ItemCommon.ItemRemoveRemaining(itemValue, stillNeeded, true, _removedItems);
                     stillNeeded -= removed;
 #if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Storage, still need {stillNeeded}");
+                    //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} of {itemName} from Storage, still need {stillNeeded}");
 #endif
                 }
             }
