@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
@@ -52,7 +51,9 @@ public static class ItemX
         }
 
         var itemName = NameOf(stack);
-        return itemName != null ? $"{itemName}:{stack.count}" : "null:0";
+        var itemCount = stack?.count;
+
+        return $"{itemName}:{itemCount}";
     }
 
     #endregion
@@ -93,14 +94,19 @@ public static class ItemX
         return string.Equals(name1, name2, System.StringComparison.Ordinal);
     }
 
-    /// <summary>
-    /// Safely extracts the item name from an ItemStack, handling all null cases.
-    /// </summary>
-    /// <param name="stack">The ItemStack to extract name from</param>
-    /// <returns>Item name or null if any part of the hierarchy is null</returns>
-    private static string NameOf(ItemStack stack)
+    public static string NameOf(int itemType)
     {
-        return stack?.itemValue?.ItemClass?.Name;
+        return ItemNames.LookupItemName(itemType);
+    }
+
+    public static string NameOf(ItemValue itemValue)
+    {
+        return ItemNames.LookupItemName(itemValue);
+    }
+
+    public static string NameOf(ItemStack stack)
+    {
+        return ItemNames.LookupItemName(stack);
     }
 
     /// <summary>
@@ -111,18 +117,6 @@ public static class ItemX
     internal static bool IsStackPresent(ItemStack stack)
     {
         return stack != null && !stack.IsEmpty();
-    }
-
-    /// <summary>
-    /// Determines if an ItemStack is completely valid with all required data.
-    /// </summary>
-    /// <param name="stack">The ItemStack to validate</param>
-    /// <returns>True if stack has valid data and positive count; otherwise false</returns>
-    internal static bool IsCompletelyValid(ItemStack stack)
-    {
-        return stack != null &&
-               stack.count > 0 &&
-               !string.IsNullOrEmpty(NameOf(stack));
     }
 
     #endregion
@@ -158,45 +152,12 @@ public static class ItemX
     }
 
     /// <summary>
-    /// Extracts unique item types from a list of ItemStacks.
-    /// Returns -1 for null/empty stacks or when type=0 (empty item type).
-    /// If no valid items are found, returns a list containing only -1 (unfiltered).
-    /// </summary>
-    /// <param name="stacks">List of ItemStacks to extract types from</param>
-    /// <returns>Read-only list of unique item types, using -1 for unfiltered/empty</returns>
-    public static IReadOnlyList<int> GetUniqueItemTypes(List<ItemStack> stacks)
-    {
-        const string d_MethodName = nameof(GetUniqueItemTypes);
-        const int UnfilteredType = UniqueItemTypes.WILDCARD;
-
-        if (stacks == null || stacks.Count == 0)
-        {
-            return new int[] { UnfilteredType };
-        }
-
-        var validTypes = ExtractValidItemTypes(stacks);
-
-        if (validTypes.Count == 0)
-        {
-            return new int[] { UnfilteredType };
-        }
-
-        var result = validTypes.ToArray();
-        System.Array.Sort(result);
-
-        ModLogger.DebugLog($"{d_MethodName}: Found {result.Length} unique types from {stacks.Count} stacks: [{string.Join(", ", result)}]");
-
-        return result;
-    }
-
-    /// <summary>
     /// Extracts valid item types from ItemStacks, normalizing empty types to -1.
     /// </summary>
     /// <param name="stacks">List of ItemStacks to process</param>
     /// <returns>HashSet of valid item types</returns>
     private static HashSet<int> ExtractValidItemTypes(List<ItemStack> stacks)
     {
-        const int UnfilteredType = -1;
         var uniqueTypes = new HashSet<int>();
 
         foreach (var stack in stacks)
@@ -206,7 +167,7 @@ public static class ItemX
                 continue;
             }
 
-            int itemType = stack.itemValue.type <= 0 ? UnfilteredType : stack.itemValue.type;
+            int itemType = stack.itemValue.type <= 0 ? UniqueItemTypes.WILDCARD : stack.itemValue.type;
             uniqueTypes.Add(itemType);
         }
 

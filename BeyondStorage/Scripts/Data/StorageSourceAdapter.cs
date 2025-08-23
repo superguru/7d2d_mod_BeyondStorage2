@@ -57,7 +57,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         StorageSource = storageSource;
 
         _storageSourceType = storageSource.GetType();
-        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
 
         _equalsFunc = equalsFunc;
         _getItemStacksFunc = getItemStacksFunc;
@@ -107,7 +107,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     public ItemStack[] GetItemStacks()
     {
         const string d_MethodName = nameof(GetItemStacks);
-        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
 
         try
         {
@@ -139,7 +139,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     public void MarkModified()
     {
         const string d_MethodName = nameof(MarkModified);
-        var sourceTypeAbbrev = NameLookups.GetAbbrev(_storageSourceType);
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
 
         try
         {

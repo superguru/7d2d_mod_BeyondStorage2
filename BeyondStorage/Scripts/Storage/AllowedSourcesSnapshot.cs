@@ -77,7 +77,7 @@ internal sealed class AllowedSourcesSnapshot
     public string GetDiagnosticInfo()
     {
         var totalTypes = _allowSourceTypes.Count;
-        var typeDetails = string.Join(", ", _allowSourceTypes.Select(type => NameLookups.GetAbbrev(type)));
+        var typeDetails = string.Join(", ", _allowSourceTypes.Select(type => TypeNames.GetAbbrev(type)));
 
         return $"[AllowedSources] Types: {totalTypes} [{typeDetails}]";
     }

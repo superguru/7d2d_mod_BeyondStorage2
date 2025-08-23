@@ -76,7 +76,7 @@ internal class StorageSourceItemDataStore
         }
 
         var sourceType = source.GetSourceType();
-        var sourceTypeAbbrev = NameLookups.GetAbbrev(sourceType);
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(sourceType);
 
         var isAllowedSource = IsAllowedSource(sourceType);
         if (!isAllowedSource)
@@ -123,7 +123,7 @@ internal class StorageSourceItemDataStore
         // Check if this stack is already in the data store
         if (_sourcesByItemStack.TryGetValue(stack, out var existingStorageSource))
         {
-            var sourceTypeName = NameLookups.GetName(source.GetSourceType());
+            var sourceTypeName = TypeNames.GetName(source.GetSourceType());
             var itemName = stack?.itemValue?.ItemClass?.Name ?? "Unknown";
 
             // Log the duplicate registration attempt
@@ -343,7 +343,7 @@ internal class StorageSourceItemDataStore
             var details = string.Join(", ", _sourcesByType.Select(kvp =>
             {
                 var sourceType = kvp.Key;
-                var abbrev = NameLookups.GetAbbrev(sourceType);
+                var abbrev = TypeNames.GetAbbrev(sourceType);
                 var count = kvp.Value.Count;
                 return $"{abbrev}:{count}";
             }));

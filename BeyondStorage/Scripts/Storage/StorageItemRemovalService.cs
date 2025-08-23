@@ -52,8 +52,8 @@ public static class StorageItemRemovalService
                 continue;
             }
 
-            var nameInfo = NameLookups.GetNameInfo(sourceType);
-            var fullSourceTypeName = NameLookups.GetFullName(nameInfo);
+            var nameInfo = TypeNames.GetNameInfo(sourceType);
+            var fullSourceTypeName = TypeNames.GetFullName(nameInfo);
 
             var sourcesByType = context?.Sources?.DataStore?.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType?.Count;
@@ -80,7 +80,7 @@ public static class StorageItemRemovalService
         return originalNeeded - stillNeeded;
     }
 
-    private static void RemoveFromSource(string methodName, IStorageSource source, NameLookups.TypeNameInfo nameInfo, string itemName,
+    private static void RemoveFromSource(string methodName, IStorageSource source, TypeNames.TypeNameInfo nameInfo, string itemName,
         UniqueItemTypes filter, bool itemCanStack, ref int stillNeeded, bool ignoreModdedItems, IList<ItemStack> gameTrackedRemovedItems)
     {
 

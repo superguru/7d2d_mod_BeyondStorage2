@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Diagnostics;
-internal static class NameLookups
+internal static class TypeNames
 {
     public readonly struct TypeNameInfo(string abbrev, string name)
     {

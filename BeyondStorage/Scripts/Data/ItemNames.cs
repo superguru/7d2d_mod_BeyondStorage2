@@ -3,29 +3,29 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
-public static class ItemTypeNameLookupCache
+public static class ItemNames
 {
     private static readonly Dictionary<int, string> s_itemTypeNames = [];
 
-    public static string GetItemTypeName(int itemType)
+    public static string LookupItemName(int itemType)
     {
-        const string d_MethodName = nameof(GetItemTypeName);
+        const string d_MethodName = nameof(LookupItemName);
 
-        if (itemType < -1)
+        if (itemType < UniqueItemTypes.WILDCARD)
         {
             var invalidResult = $"Invalid Item Type ({itemType})";
             ModLogger.DebugLog($"{d_MethodName}({itemType}) | Invalid item type, returning: {invalidResult}");
             return invalidResult;
         }
 
-        if (itemType == -1)
+        if (itemType == UniqueItemTypes.WILDCARD)
         {
-            return "*";
+            return "*";  // Don't cache constants
         }
 
-        if (itemType == 0)
+        if (itemType == UniqueItemTypes.EMPTY)
         {
-            return "Empty Item (0)";
+            return "null";  // Don't cache constants, use consistent return value
         }
 
         if (s_itemTypeNames.TryGetValue(itemType, out var name))
@@ -48,7 +48,16 @@ public static class ItemTypeNameLookupCache
         }
 
         s_itemTypeNames[itemType] = name;
-
         return name;
+    }
+
+    public static string LookupItemName(ItemValue itemValue)
+    {
+        return LookupItemName(itemValue?.type ?? UniqueItemTypes.EMPTY);
+    }
+
+    public static string LookupItemName(ItemStack itemStack)
+    {
+        return LookupItemName(itemStack?.itemValue);
     }
 }
