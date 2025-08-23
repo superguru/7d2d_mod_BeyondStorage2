@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
+﻿using Audio;
 using BeyondStorage.Scripts.Game.Vehicle;
-using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Vehicle;
@@ -10,65 +7,99 @@ namespace BeyondStorage.HarmonyPatches.Vehicle;
 [HarmonyPatch(typeof(XUiM_Vehicle))]
 internal static class XUiMVehiclePatches
 {
-    [HarmonyTranspiler]
+    [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiM_Vehicle.RepairVehicle))]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> XUiM_Vehicle_RepairVehicle_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+    private static bool XUiM_Vehicle_RepairVehicle_Prefix(XUi _xui, global::Vehicle vehicle, ref bool __result)
     {
-        var targetMethodString = $"{typeof(XUiM_Vehicle)}.{nameof(XUiM_Vehicle.RepairVehicle)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        var codes = new List<CodeInstruction>(instructions);
-        var found = false;
-        for (var i = 0; i < codes.Count; i++)
+        // Resolve vehicle if not provided (original logic)
+        if (vehicle == null)
         {
-            // loop until we hit missing item error sound
-            if (codes[i].opcode != OpCodes.Ldstr || codes[i].operand as string != "misc/missingitemtorepair")
-            {
-                continue;
-            }
-
-            ModLogger.DebugLog($"Patching {targetMethodString}");
-
-            found = true;
-            // define new lable
-            var newLabel = generator.DefineLabel();
-            // add new label to ldstr "misc/missingitemtorepair"
-            codes[i].labels.Add(newLabel);
-            // use new label in our jump
-            var ci = new CodeInstruction(OpCodes.Ble_S, newLabel);
-            List<CodeInstruction> newCode = [
-                //  ldarg.0      // _xui
-                new CodeInstruction(OpCodes.Ldarg_0),
-                //  ldarg.1      // vehicle
-                new CodeInstruction(OpCodes.Ldarg_1),
-                //  ldloc.0      // _itemValue
-                new CodeInstruction(OpCodes.Ldloc_0),
-                // VehicleRepair.VehicleRepairRemoveRemaining(XUI _xui, Vehicle vehicle, ItemValue _itemValue)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(VehicleRepair), nameof(VehicleRepair.VehicleRepairRemoveRemaining))),
-                // 0
-                new CodeInstruction(OpCodes.Ldc_I4_0),
-                // if (VehicleRepair.VehicleRepairRemoveRemaining(...) > 0)
-                ci,
-                // return true
-                new CodeInstruction(OpCodes.Ldc_I4_1),
-                new CodeInstruction(OpCodes.Ret)
-            ];
-
-            codes.InsertRange(i, newCode);
-            break;
+            vehicle = _xui.vehicle?.GetVehicle();
         }
 
-        if (!found)
+        if (vehicle == null)
         {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
+            __result = false;
+            return false; // Skip original method
+        }
+
+        // Get repair kit itemValue (original logic)
+        ItemValue itemValue = ItemClass.GetItem("resourceRepairKit");
+        if (itemValue.ItemClass == null)
+        {
+            __result = false;
+            return false; // Skip original method
+        }
+
+        EntityPlayerLocal entityPlayer = _xui.playerUI.entityPlayer;
+        LocalPlayerUI playerUI = _xui.playerUI;
+
+        // Check repair needed (original logic)
+        int repairAmountNeeded = vehicle.GetRepairAmountNeeded();
+        if (repairAmountNeeded <= 0)
+        {
+            __result = false;
+            return false; // Skip original method - no repair needed
+        }
+
+        // Calculate perk bonus (original logic)
+        float perkBonus = 0f;
+        ProgressionValue progressionValue = entityPlayer.Progression.GetProgressionValue("perkGreaseMonkey");
+        if (progressionValue != null)
+        {
+            perkBonus += (float)progressionValue.Level * 0.1f;
+        }
+
+        bool itemConsumed = false;
+
+        // Priority order: Bag → Toolbelt → Storage
+        // Try to remove repair kit from bag first
+        int removedFromBag = entityPlayer.bag.DecItem(itemValue, 1);
+        if (removedFromBag > 0)
+        {
+            itemConsumed = true;
         }
         else
         {
-            ModLogger.Info($"Successfully patched {targetMethodString}");
+            // Try to remove from toolbelt if bag didn't have any
+            int removedFromToolbelt = entityPlayer.inventory.DecItem(itemValue, 1);
+            if (removedFromToolbelt > 0)
+            {
+                itemConsumed = true;
+            }
+            else
+            {
+                // Try storage if neither bag nor toolbelt had repair kits
+                int removedFromStorage = VehicleRepair.VehicleRepairRemoveRemaining(itemValue, 1);
+                if (removedFromStorage > 0)
+                {
+                    itemConsumed = true;
+                }
+            }
         }
 
-        return codes.AsEnumerable();
+        // If we consumed a repair kit from any source, perform the repair
+        if (itemConsumed)
+        {
+            // Perform repair (original logic)
+            vehicle.RepairParts(1000, perkBonus);
+
+            // Update UI and play success sound (original logic)
+            playerUI.xui.CollectedItemList.RemoveItemStack(new ItemStack(itemValue, 1));
+            Manager.PlayInsidePlayerHead("craft_complete_item");
+
+            __result = true;
+        }
+        else
+        {
+            // No repair kits available anywhere, play failure sound (original logic)
+            Manager.PlayInsidePlayerHead("misc/missingitemtorepair");
+            __result = false;
+        }
+
+        return false; // Skip original method
     }
 }
