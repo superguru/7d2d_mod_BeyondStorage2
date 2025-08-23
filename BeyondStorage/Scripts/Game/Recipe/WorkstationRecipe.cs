@@ -17,21 +17,15 @@ public static class WorkstationRecipe
     {
         const string d_MethodName = nameof(BackgroundWorkstation_CraftCompleted);
 
-        // Start timing the method call
         s_callStats.StartTiming(d_MethodName);
-
         try
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             long callCount = stats?.callCount ?? 0;
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
-#endif
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
         finally
         {
-            // Stop timing and record the call
             var elapsedUs = s_callStats.StopAndRecordCall(d_MethodName);
             var stats = s_callStats.GetMethodStats(d_MethodName);
 
@@ -52,16 +46,12 @@ public static class WorkstationRecipe
     {
         const string d_MethodName = nameof(ForegroundWorkstation_CraftCompleted);
 
-        // Start timing the method call
         s_callStats.StartTiming(d_MethodName);
-
         try
         {
             var stats = s_callStats.GetMethodStats(d_MethodName);
             long callCount = stats?.callCount ?? 0;
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: starting call {callCount + 1}");
-#endif
+
             Update_OpenWorkstations(d_MethodName, callCount + 1);
         }
         finally
@@ -82,18 +72,15 @@ public static class WorkstationRecipe
 
     internal static void Update_OpenWorkstations(string callType, long callCount)
     {
-        string d_MethodName = $"{callType}.{nameof(Update_OpenWorkstations)}";
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: starting call {callCount}");
-#endif
-
+        string methodName = $"{callType}.{nameof(Update_OpenWorkstations)}";
+        s
         // This check HAS to be done first, as StorageContextFactory.Create will return null if the world does not exist.
         if (!WorldTools.IsWorldExists())
         {
             return;
         }
 
-        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.PullFromWorkstationOutputs, out StorageContext context))
+        if (!ValidationHelper.ValidateStorageContextWithFeature(methodName, config => config.PullFromWorkstationOutputs, out StorageContext context))
         {
             // If we don't pull from outputs, we don't need to update the workstation windows,
             // because nothing that was crafted will be available or affect the UI.
@@ -101,16 +88,12 @@ public static class WorkstationRecipe
         }
 
         // Use the new UIRefreshHelper to validate and refresh UI
-        if (!UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName))
+        if (!UIRefreshHelper.ValidateAndRefreshUI(context, methodName))
         {
             return;
         }
 
-        RefreshOpenWorkstationRecipeLists(context, d_MethodName, callCount);
-
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Player inventory changed in call {callCount}");
-#endif
+        RefreshOpenWorkstationRecipeLists(context, methodName, callCount);
     }
 
     private static void RefreshOpenWorkstationRecipeLists(StorageContext context, string methodName, long callCount)
@@ -127,9 +110,6 @@ public static class WorkstationRecipe
 
         if (activeWorkstation == null)
         {
-#if DEBUG
-            ModLogger.DebugLog($"{methodName}: No active workstation window in call {callCount}");
-#endif
             return; // Nothing to update - exit early
         }
 
@@ -144,9 +124,5 @@ public static class WorkstationRecipe
 
         recipeList.PlayerInventory_OnBackpackItemsChanged();
         activeWorkstation.craftInfoWindow?.ingredientList?.PlayerInventory_OnBackpackItemsChanged();
-
-#if DEBUG
-        ModLogger.DebugLog($"{methodName}: Refreshed active workstation in call {callCount}");
-#endif
     }
 }
