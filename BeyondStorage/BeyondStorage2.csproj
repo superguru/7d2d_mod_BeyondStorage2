@@ -40,7 +40,7 @@
   </PropertyGroup>
   <Target Name="CopyCodeAnalysisFiles" BeforeTargets="Build">
     <Message Text="Updating code analysis files to: $(CodeAnalysisScriptFullDir)" Importance="High" />
-    <Copy SourceFiles="@(CodeAnalysisFiles)" DestinationFolder="$(CodeAnalysisScriptFullDir)" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(CodeAnalysisFiles)" DestinationFolder="$(CodeAnalysisScriptFullDir)" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="CodeQualityChecks" BeforeTargets="Build">
     <Exec Command="python $(CodeAnalysisScriptDir)\code_check.py" ContinueOnError="false" WorkingDirectory="$(ProjectDir)">
@@ -137,7 +137,7 @@
     <Compile Include="Scripts\Data\StorageSourceItemDataStore.cs" />
     <Compile Include="Scripts\Data\TypeCastingHelper.cs" />
     <Compile Include="Scripts\Data\UniqueItemTypeCache.cs" />
-    <Compile Include="Scripts\Diagnostics\NameLookups.cs" />
+    <Compile Include="Scripts\Diagnostics\TypeNames.cs" />
     <Compile Include="Scripts\Game\Functions\PurchasingCommon.cs" />
     <Compile Include="Scripts\Game\Item\ItemActionTextureBlockExposed.cs" />
     <Compile Include="Scripts\Game\Item\PaintOperationContext.cs" />
@@ -150,7 +150,7 @@
     <Compile Include="Scripts\Infrastructure\WorldTools.cs" />
     <Compile Include="Scripts\Storage\AllowedSourcesSnapshot.cs" />
     <Compile Include="Scripts\Storage\ItemStackCacheManager.cs" />
-    <Compile Include="Scripts\Data\ItemTypeNameLookupCache.cs" />
+    <Compile Include="Scripts\Data\ItemNames.cs" />
     <Compile Include="Scripts\Storage\LootableItemHandler.cs" />
     <Compile Include="Scripts\Storage\StorageContext.cs" />
     <Compile Include="Scripts\Game\Block\BlockRepair.cs" />
