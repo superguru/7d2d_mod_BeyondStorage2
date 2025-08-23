@@ -37,10 +37,10 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static void XUiM_PlayerInventory_GetItemCount_Int_Postfix(XUiM_PlayerInventory __instance, int _itemId, ref int __result)
+    private static void XUiM_PlayerInventory_GetItemCount_ItemType_Postfix(XUiM_PlayerInventory __instance, int _itemId, ref int __result)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCount_Int_Postfix);
+        const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCount_ItemType_Postfix);
 #endif
         var entityPlayerCount = __result;
         //var storageCount = ItemCommon.ItemCommon_GetStorageItemCount(_itemId);
@@ -52,7 +52,7 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(nameof(XUiM_PlayerInventory.GetItemCount), [typeof(int)])]
+    [HarmonyPatch(nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)])]
 #if DEBUG
     [HarmonyDebug]
 #endif
