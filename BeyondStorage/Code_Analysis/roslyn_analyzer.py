@@ -184,9 +184,60 @@ class RoslynAnalyzer:
                     if is_transpiler and is_private:
                         callee_issues = self._check_transpiler_method_calls(method_decl, syntax_tree, file_path, root)
                         issues.extend(callee_issues)
+                    
+                    # NEW: Check if transpiler method uses ILPatchEngine
+                    if is_transpiler:
+                        engine_issues = self._check_harmony_transpiler_uses_ilpatch_engine(method_decl, syntax_tree, file_path, method_name)
+                        issues.extend(engine_issues)
         
         except Exception as e:
             print(f"Error in Roslyn HarmonyPatch method check for {file_path}: {e}")
+        
+        return issues
+    
+    def _check_harmony_transpiler_uses_ilpatch_engine(self, method: MethodDeclarationSyntax, syntax_tree: SyntaxTree, file_path: str, method_name: str) -> List[Issue]:
+        """Check if a HarmonyTranspiler method uses ILPatchEngine.ApplyPatches"""
+        issues: List[Issue] = []
+        try:
+            # Look for ILPatchEngine.ApplyPatches calls in the method body
+            uses_ilpatch_engine = False
+            
+            if hasattr(method, 'Body') and method.Body:
+                # Check all invocation expressions in the method
+                for node in method.Body.DescendantNodes():
+                    if isinstance(node, InvocationExpressionSyntax):
+                        # Check for ILPatchEngine.ApplyPatches pattern
+                        if isinstance(node.Expression, MemberAccessExpressionSyntax):
+                            member_access = node.Expression
+                            # Get the left side (should be ILPatchEngine)
+                            left_side = str(member_access.Expression) if hasattr(member_access, 'Expression') else ""
+                            # Get the method name (should be ApplyPatches)
+                            method_call = str(member_access.Name) if hasattr(member_access, 'Name') else ""
+                            
+                            if "ILPatchEngine" in left_side and "ApplyPatches" in method_call:
+                                uses_ilpatch_engine = True
+                                break
+                        
+                        # Also check for direct ApplyPatches calls (if using static import)
+                        elif hasattr(node.Expression, 'Identifier'):
+                            method_call = str(node.Expression.Identifier)
+                            if method_call == "ApplyPatches":
+                                uses_ilpatch_engine = True
+                                break
+            
+            # If not using ILPatchEngine, report as warning
+            if not uses_ilpatch_engine:
+                method_line = syntax_tree.GetLineSpan(method.Identifier.Span).StartLinePosition.Line + 1
+                issues.append(Issue(
+                    file_path=file_path,
+                    line_number=method_line,
+                    severity="warning", 
+                    code="BCW055",
+                    description=f"HarmonyTranspiler method '{method_name}' should use ILPatchEngine.ApplyPatches for consistent IL patching"
+                ))
+        
+        except Exception as e:
+            print(f"Error checking ILPatchEngine usage for method {method_name}: {e}")
         
         return issues
     
