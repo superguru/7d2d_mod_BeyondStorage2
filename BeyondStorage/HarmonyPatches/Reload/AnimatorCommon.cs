@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.Ranged;
-using BeyondStorage.Scripts.Infrastructure;
-using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Reload;
 
@@ -15,44 +10,72 @@ public static class AnimatorCommon
         return maxAmmo == lastResult ? lastResult : Math.Min(Ranged.GetAmmoCount(ammoType) + lastResult, maxAmmo);
     }
 
-    internal static IEnumerable<CodeInstruction> GetCountToReload_Transpiler(string targetMethodString, IEnumerable<CodeInstruction> instructions)
+    /// <summary>
+    /// Replicated logic from AnimatorRangedReloadState.GetAmmoCountToReload with storage integration.
+    /// This method removes ammo from player inventories and storage, returning the amount to reload into the weapon.
+    /// </summary>
+    /// <param name="actionRanged">The ranged action instance</param>
+    /// <param name="actionData">The ranged action data instance</param>
+    /// <param name="ea">The entity performing the reload</param>
+    /// <param name="ammo">The ammo item value to remove</param>
+    /// <param name="modifiedMagazineSize">The modified magazine size</param>
+    /// <returns>The amount of ammo to add to the weapon magazine</returns>
+    public static int RemoveAndCountAmmoForReload(ItemActionRanged actionRanged, ItemActionRanged.ItemActionDataRanged actionData, EntityAlive ea, ItemValue ammo, int modifiedMagazineSize)
     {
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        var codeInstructions = new List<CodeInstruction>(instructions);
-        var lastRet = codeInstructions.FindLastIndex(codeInstruction => codeInstruction.opcode == OpCodes.Ret);
-        if (lastRet != -1)
+        // Handle infinite ammo case (original logic)
+        if (actionRanged.HasInfiniteAmmo(actionData))
         {
-            var start = new CodeInstruction(OpCodes.Ldarg_2);
-            codeInstructions[lastRet - 1].MoveLabelsTo(start);
-            codeInstructions[lastRet - 1] = new CodeInstruction(OpCodes.Nop);
-            List<CodeInstruction> newCode = [
-                // ldarg.2  // ammo (ItemValue)
-                start,
-                // this.actionRanged.AmmoIsPerMagazine
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AnimatorRangedReloadState), nameof(AnimatorRangedReloadState.actionRanged))),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemActionAttack), nameof(ItemActionAttack.AmmoIsPerMagazine))),
-                // modifiedMagazineSize
-                new CodeInstruction(OpCodes.Ldarg_3),
-                // this.actionData.invData.itemValue.Meta
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(AnimatorRangedReloadState), nameof(AnimatorRangedReloadState.actionData))),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemActionData), nameof(ItemActionData.invData))),
-                new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemInventoryData), nameof(ItemInventoryData.itemValue))),
-                new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemValue), nameof(ItemValue.Meta))),
-                // RemoveAmmoForReload(ItemValue ammoType, bool isPerMag, int maxMagSize, int currentAmmo)
-                new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Ranged), nameof(Ranged.RemoveAmmoForReload)))
-            ];
+            if (actionRanged.AmmoIsPerMagazine)
+            {
+                return modifiedMagazineSize;
+            }
+            return modifiedMagazineSize - actionData.invData.itemValue.Meta;
+        }
 
-            // insert before last ret
-            codeInstructions.InsertRange(lastRet, newCode);
-            ModLogger.Info($"Successfully patched {targetMethodString}");
+        // Calculate how much ammo is needed
+        int stillNeeded = actionRanged.AmmoIsPerMagazine ? 1 : (modifiedMagazineSize - actionData.invData.itemValue.Meta);
+        int totalAmmoRemoved = 0;
+
+        // Step 1: Try to remove ammo from bag first
+        int removed = ea.bag.DecItem(ammo, stillNeeded);
+        totalAmmoRemoved += removed;
+        stillNeeded -= removed;
+
+        // Step 2: If still need more, try toolbelt inventory
+        if (stillNeeded > 0)
+        {
+            removed = actionData.invData.holdingEntity.inventory.DecItem(ammo, stillNeeded);
+            totalAmmoRemoved += removed;
+            stillNeeded -= removed;
+        }
+
+        // Step 3: If still need more, try storage
+        if (stillNeeded > 0)
+        {
+            int currentAmmo = actionData.invData.itemValue.Meta + totalAmmoRemoved;
+            int storageReloadAmount = Ranged.RemoveAmmoForReload(ammo, actionRanged.AmmoIsPerMagazine, modifiedMagazineSize, currentAmmo);
+
+            // Add the reload amount directly to our total
+            if (actionRanged.AmmoIsPerMagazine)
+            {
+                return modifiedMagazineSize * totalAmmoRemoved + storageReloadAmount;
+            }
+            else
+            {
+                return totalAmmoRemoved + storageReloadAmount;
+            }
+        }
+
+        // Calculate final reload amount based on ammo type
+        if (actionRanged.AmmoIsPerMagazine)
+        {
+            // For per-magazine weapons: return full magazine worth for each ammo item consumed
+            return modifiedMagazineSize * totalAmmoRemoved;
         }
         else
         {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
+            // For per-bullet weapons: return actual ammo consumed
+            return totalAmmoRemoved;
         }
-
-        return codeInstructions.AsEnumerable();
     }
 }

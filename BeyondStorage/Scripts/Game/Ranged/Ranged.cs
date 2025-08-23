@@ -12,8 +12,7 @@ public static class Ranged
         const string d_MethodName = nameof(CanReloadFromStorage);
         const bool DEFAULT_RETURN_VALUE = false;
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForReload,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }
@@ -42,8 +41,8 @@ public static class Ranged
     }
 
     // Used By:
-    //      AnimatorRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
-    //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - ClearStacksForFilter Items For Reload)
+    //      AnimatorRangedReloadState.GetAmmoCountToReload (Weapon Reload - Remove Items For Reload)
+    //      Animator3PRangedReloadState.GetAmmoCountToReload (Weapon Reload - Remove Items For Reload)
     public static int RemoveAmmoForReload(ItemValue itemValue, bool isPerMag, int maxMagSize, int currentAmmo)
     {
         const string d_MethodName = nameof(RemoveAmmoForReload);
@@ -51,8 +50,7 @@ public static class Ranged
 
         // This is also called when refuelling something like an augur when there is nothing in the player inventory
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForReload,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }
@@ -60,7 +58,7 @@ public static class Ranged
         var ammoRequired = isPerMag ? 1 : maxMagSize - currentAmmo;
         var ammoRemovedFromStorage = context.RemoveRemaining(itemValue, ammoRequired);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmnmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
+        ModLogger.DebugLog($"{d_MethodName}: {itemName} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
 #endif
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;
     }
