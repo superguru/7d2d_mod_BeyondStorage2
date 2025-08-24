@@ -1,4 +1,5 @@
 ﻿using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Vehicle;
@@ -72,7 +73,7 @@ internal static class EntityVehiclePatches
             }
             else
             {
-                Log.Warning("EntityVehicle::takeFuel - Failed to remove item stack from player's collected item list.");
+                ModLogger.DebugLog("EntityVehicle::takeFuel - Failed to remove item stack from player's collected item list.");
             }
         }
 
