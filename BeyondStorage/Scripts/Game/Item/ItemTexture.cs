@@ -35,30 +35,14 @@ public static class ItemTexture
     /// <returns>True if sufficient ammo is available, false otherwise</returns>
     public static bool ItemTexture_checkAmmo(int entityAvailableCount, ItemActionData _actionData, ItemValue ammoType)
     {
-        const string d_MethodName = nameof(ItemTexture_checkAmmo);
-        const bool DEFAULT_RETURN_VALUE = false;
-
-        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.EnableForBlockTexture, out StorageContext context))
-        {
-            return DEFAULT_RETURN_VALUE;
-        }
-
-        if (!ValidationHelper.ValidateItemValue(ammoType, d_MethodName, out string itemName))
-        {
-            return DEFAULT_RETURN_VALUE;
-        }
-
         // Paint cost is 1 for everything in v2.x
         if (entityAvailableCount > 0)
         {
             return true;
         }
 
-        var hasAmmo = context.HasItem(ammoType);
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: hasAmmo is {hasAmmo} for itemValue {itemName}");
-#endif
-        return hasAmmo;
+        // Check storage using common method (no config check needed)
+        return ItemCommon.HasItemInStorage(ammoType);
     }
 
     /// <summary>
