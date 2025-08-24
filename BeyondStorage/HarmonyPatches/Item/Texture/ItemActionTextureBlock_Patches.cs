@@ -17,6 +17,7 @@ internal static class ItemActionTextureBlockPatches
 #endif
     private static IEnumerable<CodeInstruction> ItemActionTextureBlock_checkAmmo_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
+        //TODO use a prefix instead of transpiler if possible
         var targetMethodName = $"{typeof(ItemActionTextureBlock)}.{nameof(ItemActionTextureBlock.checkAmmo)}";
 
         // Create search pattern for GetItemStacksForFilter method call
