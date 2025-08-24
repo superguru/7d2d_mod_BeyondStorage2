@@ -33,7 +33,7 @@ public static class WorkstationRecipe
             {
                 var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
+                //ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
 #endif
             }
         }
@@ -64,7 +64,7 @@ public static class WorkstationRecipe
             {
                 var (callCount, totalTimeUs, avgTimeUs) = stats.Value;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
+                //ModLogger.DebugLog($"{d_MethodName}: completed call {callCount} in {PerformanceProfiler.FormatMicroseconds(elapsedUs)} (avg: {PerformanceProfiler.FormatMicroseconds(avgTimeUs)})");
 #endif
             }
         }

@@ -32,7 +32,7 @@ internal static class Item_Action_Entry_Purchase_Patches
         var replacementInstructions = new List<CodeInstruction>
         {
             new CodeInstruction(OpCodes.Ldloc_S, 6),   // _itemValue
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetStorageItemCount))),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.GetStorageItemCount))),
             new CodeInstruction(OpCodes.Add),
         };
 

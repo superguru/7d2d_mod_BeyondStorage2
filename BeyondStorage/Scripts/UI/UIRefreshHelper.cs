@@ -339,7 +339,7 @@ public static class UIRefreshHelper
 #if DEBUG
             // Log the refresh operation type for debugging UI performance issues
             // This helps identify whether rapid refreshes are coming from stack operations or storage operations
-            ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOperation ? "stack operation" : "general storage operation")}");
+            //ModLogger.DebugLog($"{methodName}: Refreshing UI for {(isStackOperation ? "stack operation" : "general storage operation")}");
 #endif
             // Check if we have a previous refresh time recorded for this specific method
             // Each method is tracked separately because different operations have different refresh patterns

@@ -25,7 +25,7 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
         var callCount = Interlocked.Increment(ref s_callCounter);
 #endif
         var entityPlayerCount = __result;
-        var storageCount = ItemCommon.ItemCommon_GetStorageItemCount(_itemValue);
+        var storageCount = ItemCommon.GetStorageItemCount(_itemValue);
         __result = entityPlayerCount + storageCount;
 #if DEBUG
         //ModLogger.DebugLog($"{d_MethodName} [{callCount}]: item: {_itemValue.ItemClass.Name}; result {__result} = entityPlayerCount: {entityPlayerCount} + storageCount: {storageCount}");
@@ -43,7 +43,7 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
         const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCount_ItemType_Postfix);
 #endif
         var entityPlayerCount = __result;
-        //var storageCount = ItemCommon.ItemCommon_GetStorageItemCount(_itemId);
+        //var storageCount = ItemCommon.GetStorageItemCount(_itemId);
         var itemName = ItemX.NameOf(_itemId);
 
 #if DEBUG
@@ -69,7 +69,7 @@ internal static class XUiMPlayerInventory_StorageIntegration_Patches
         const string d_MethodName = nameof(XUiM_PlayerInventory_GetItemCount_ItemValue_Postfix);
 #endif
         var entityPlayerCount = __result;
-        //var storageCount = ItemCommon.ItemCommon_GetStorageItemCount(_itemId);
+        //var storageCount = ItemCommon.GetStorageItemCount(_itemId);
         var itemName = ItemX.NameOf(_itemValue);
 
 #if DEBUG

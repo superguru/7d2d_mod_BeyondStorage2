@@ -34,7 +34,7 @@ internal static class Item_Action_Attack_Patches
         {
             new CodeInstruction(OpCodes.Ldloc_S, local_ammoId.LocalIndex),  // local_ammoId
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemPropertiesCache), nameof(ItemPropertiesCache.CreateTemporaryItemValue))),
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetStorageItemCount))),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.GetStorageItemCount))),
             new CodeInstruction(OpCodes.Ldloc_S, 4),                        // load itemCount
             new CodeInstruction(OpCodes.Add),                               // add storage count to player inventory count
             new CodeInstruction(OpCodes.Stloc_S, 4),                        // store result in itemCount

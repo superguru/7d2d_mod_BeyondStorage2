@@ -29,7 +29,7 @@ internal static class TEFeatureLockPickable_Lockpick_Patches
         var replacementInstructions = new List<CodeInstruction>
         {
             new CodeInstruction(OpCodes.Ldloc_1),  // itemValue
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetStorageItemCount))),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.GetStorageItemCount))),
             new CodeInstruction(OpCodes.Add),
         };
 
