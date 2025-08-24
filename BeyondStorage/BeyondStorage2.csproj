@@ -175,7 +175,6 @@
     <Compile Include="Scripts\Storage\VehicleItemDiscovery.cs" />
     <Compile Include="Scripts\TileEntities\DewCollectorStateManager.cs" />
     <Compile Include="Scripts\TileEntities\WorkstationStateManager.cs" />
-    <Compile Include="Scripts\Game\Vehicle\VehicleRefuel.cs" />
     <Compile Include="Scripts\Game\Vehicle\VehicleRepair.cs" />
     <Compile Include="Scripts\Game\WorldPlayerContext.cs" />
     <Compile Include="Scripts\Multiplayer\NetPackageBeyondStorageConfig.cs" />

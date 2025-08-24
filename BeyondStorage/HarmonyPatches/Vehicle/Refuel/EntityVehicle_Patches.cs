@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Game.Vehicle;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Game.Item;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Vehicle;
@@ -19,61 +13,70 @@ internal static class EntityVehiclePatches
 #endif
     private static void EntityVehicle_hasGasCan_Patch(EntityVehicle __instance, ref bool __result)
     {
-        // Skip if not refueling from storage
-        if (!ModConfig.EnableForVehicleRefuel())
+        // If player already has fuel, no need to check storage
+        if (__result)
         {
             return;
         }
-        // Remove result of CanRefuel if nearby storage has required gas item
-        __result = VehicleRefuel.CanRefuel(__instance, __result);
+
+        // Get the fuel item for this vehicle
+        string fuelItemName = __instance.GetVehicle()?.GetFuelItem() ?? "";
+        if (string.IsNullOrEmpty(fuelItemName))
+        {
+            return;
+        }
+
+        ItemValue fuelItemValue = ItemClass.GetItem(fuelItemName);
+
+        // Check if storage has the fuel item
+        __result = ItemCommon.HasItemInStorage(fuelItemValue);
     }
 
-    [HarmonyTranspiler]
-    [HarmonyPatch(nameof(EntityVehicle.takeFuel))]
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(EntityVehicle.takeFuel), [typeof(EntityAlive), typeof(int)])]
 #if DEBUG
     [HarmonyDebug]
 #endif
-    private static IEnumerable<CodeInstruction> EntityVehicle_takeFuel_Transpiler(IEnumerable<CodeInstruction> instructions)
+    private static bool EntityVehicle_takeFuel_Prefix(EntityVehicle __instance, EntityAlive _entityFocusing, int count, ref float __result)
     {
-        var targetMethodString = $"{typeof(EntityVehicle)}.{nameof(EntityVehicle.takeFuel)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
-        var codes = new List<CodeInstruction>(instructions);
-        var found = false;
-        for (var i = 0; i < codes.Count; i++)
+        // Validate entity is a player (original logic)
+        EntityPlayer entityPlayer = _entityFocusing as EntityPlayer;
+        if (!entityPlayer)
         {
-            if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand != AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
+            __result = 0f;
+            return false; // Skip original method
+        }
+
+        // Get fuel item for this vehicle (original logic)
+        string fuelItem = __instance.GetVehicle().GetFuelItem();
+        if (fuelItem == "")
+        {
+            __result = 0f;
+            return false; // Skip original method
+        }
+
+        ItemValue item = ItemClass.GetItem(fuelItem);
+
+        // Use sequential removal: Bag → Toolbelt → Storage (enhanced logic)
+        // Note: Original game uses Toolbelt → Bag, but we use Bag → Toolbelt for consistency
+        int totalRemoved = ItemCommon.RemoveItemsSequential(entityPlayer.bag, entityPlayer.inventory, item, count);
+
+        if (totalRemoved > 0)
+        {
+            // Update UI to show fuel consumption (original logic)
+            LocalPlayerUI uIForPlayer = LocalPlayerUI.GetUIForPlayer(_entityFocusing as EntityPlayerLocal);
+            if (uIForPlayer != null)
             {
-                continue;
+                ItemStack itemStack = new ItemStack(item, totalRemoved);
+                uIForPlayer.xui.CollectedItemList.RemoveItemStack(itemStack);
             }
-
-            ModLogger.DebugLog($"Patching {targetMethodString}");
-
-            found = true;
-            List<CodeInstruction> newCode = [
-                // ldloc.2      // _itemValue
-                new CodeInstruction(OpCodes.Ldloc_2),
-                // ldloc.3      // _count
-                new CodeInstruction(OpCodes.Ldloc_3),
-                // ldarg.2      // count
-                new CodeInstruction(OpCodes.Ldarg_2),
-                // VehicleRefuel.VehicleRefuelRemoveRemaining(_itemValue, _count, count)
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(VehicleRefuel), nameof(VehicleRefuel.VehicleRefuelRemoveRemaining))),
-                // stloc.3      // _count
-                codes[i + 1].Clone()
-            ];
-            codes.InsertRange(i + 2, newCode);
-            break;
+            else
+            {
+                Log.Warning("EntityVehicle::takeFuel - Failed to remove item stack from player's collected item list.");
+            }
         }
 
-        if (!found)
-        {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
-
-        return codes.AsEnumerable();
+        __result = (float)totalRemoved;
+        return false; // Skip original method
     }
 }

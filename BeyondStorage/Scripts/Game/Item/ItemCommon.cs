@@ -8,12 +8,101 @@ namespace BeyondStorage.Scripts.Game.Item;
 
 public static class ItemCommon
 {
-    // Used By:
-    //      XUiM_PlayerInventory.RemoveItems
+    /// <summary>
+    /// Removes multiple items from inventories following the priority order: Bag → Toolbelt → Storage
+    /// This is a common pattern used across multiple systems for sequential item removal.
+    /// </summary>
+    /// <param name="bag">The bag inventory to try first</param>
+    /// <param name="toolbelt">The toolbelt inventory to try second</param>
+    /// <param name="itemStacks">The list of items to remove</param>
+    /// <param name="multiplier">Multiplier to apply to each item count</param>
+    /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
+    /// <param name="removedItems">Optional list to store removed item stacks</param>
+    /// <returns>Total amount removed from all sources across all items</returns>
+    public static int RemoveItemsSequential(Bag bag, Inventory toolbelt, IList<ItemStack> itemStacks, int multiplier = 1, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    {
+#if DEBUG
+        //const string d_MethodName = nameof(RemoveItemsSequential);
+#endif
+        int totalRemovedAllItems = 0;
+
+        // Use foreach - it's faster for IList<T> and avoids repeated bounds checking
+        foreach (var itemStack in itemStacks)
+        {
+            // Cache the current item stack reference and its properties
+            var itemValue = itemStack.itemValue;
+            int amountNeeded = itemStack.count * multiplier;
+
+#if DEBUG
+            //var itemName = ItemX.NameOf(itemValue);
+            //ModLogger.DebugLog($"{d_MethodName}: Removing {amountNeeded} of {itemName}");
+#endif
+
+            int totalRemovedThisItem = 0;
+            int stillNeeded = amountNeeded;
+
+            // Step 1: Try to remove from bag first
+            int removed = bag.DecItem(itemValue, stillNeeded, ignoreModdedItems, removedItems);
+            totalRemovedThisItem += removed;
+            stillNeeded -= removed;
+
+#if DEBUG
+            //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Bag, still need {stillNeeded}");
+#endif
+
+            // Step 2: If still need more, try toolbelt
+            if (stillNeeded > 0)
+            {
+                removed = toolbelt.DecItem(itemValue, stillNeeded, ignoreModdedItems, removedItems);
+                totalRemovedThisItem += removed;
+                stillNeeded -= removed;
+
+#if DEBUG
+                //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Toolbelt, still need {stillNeeded}");
+#endif
+
+                // Step 3: If still need more, try storage
+                if (stillNeeded > 0)
+                {
+                    removed = ItemRemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
+                    totalRemovedThisItem += removed;
+                    stillNeeded -= removed;
+
+#if DEBUG
+                    //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Storage, still need {stillNeeded}");
+#endif
+                }
+            }
+
+            totalRemovedAllItems += totalRemovedThisItem;
+        }
+
+        return totalRemovedAllItems;
+    }
+
+    /// <summary>
+    /// Removes a single item from inventories following the priority order: Bag → Toolbelt → Storage
+    /// This is a convenience method for single item removal.
+    /// </summary>
+    /// <param name="bag">The bag inventory to try first</param>
+    /// <param name="toolbelt">The toolbelt inventory to try second</param>
+    /// <param name="itemValue">The item to remove</param>
+    /// <param name="amountNeeded">Total amount needed to remove</param>
+    /// <param name="ignoreModdedItems">Whether to ignore modded items during removal</param>
+    /// <param name="removedItems">Optional list to store removed item stacks</param>
+    /// <returns>Total amount removed from all sources</returns>
+    public static int RemoveItemsSequential(Bag bag, Inventory toolbelt, ItemValue itemValue, int amountNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    {
+        // Create a single-item list and use the multi-item method
+        var singleItemList = new List<ItemStack> { new ItemStack(itemValue, amountNeeded) };
+        return RemoveItemsSequential(bag, toolbelt, singleItemList, 1, ignoreModdedItems, removedItems);
+    }
+
+    // Used during:
     //          Item Crafting (Remove items on craft)
     //          Item Repair (Remove items on repair)
     // Returns: count of items removed from storage
-    public static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    private static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(ItemRemoveRemaining);
         int DEFAULT_RETURN_VALUE = stillNeeded;
@@ -119,7 +208,9 @@ public static class ItemCommon
 
     public static bool HasItemInStorage(ItemValue itemValue)
     {
+#if DEBUG
         const string d_MethodName = nameof(HasItemInStorage);
+#endif
         const bool DEFAULT_RETURN_VALUE = false;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
@@ -130,7 +221,7 @@ public static class ItemCommon
         //TODO: create a common HasItem function to reuse wherever HasItem is called
         var result = context.HasItem(itemValue);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} {result}");
+        //ModLogger.DebugLog($"{d_MethodName}: {itemName} {result}");
 #endif
         return result;
     }
