@@ -225,4 +225,9 @@ public static class ItemCommon
 #endif
         return result;
     }
+
+    public static bool HasItemInStorage(ItemStack stack)
+    {
+        return HasItemInStorage(stack?.itemValue);
+    }
 }
