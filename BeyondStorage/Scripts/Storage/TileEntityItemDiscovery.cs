@@ -13,8 +13,9 @@ internal static class TileEntityItemDiscovery
 {
     public static void FindItems(StorageContext context)
     {
-        const string d_MethodName = nameof(FindItems);
-
+#if DEBUG
+        //const string d_MethodName = nameof(FindItems);
+#endif
         var processingState = new TileEntityProcessingState(context);
 
         foreach (var chunk in context.WorldPlayerContext.ChunkCacheCopy)
@@ -22,7 +23,9 @@ internal static class TileEntityItemDiscovery
             ProcessChunk(chunk, processingState);
         }
 
-        LogProcessingResults(d_MethodName, processingState);
+#if DEBUG
+        //LogProcessingResults(d_MethodName, processingState);
+#endif
     }
 
     private static void ProcessChunk(Chunk chunk, TileEntityProcessingState state)

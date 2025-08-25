@@ -8,14 +8,19 @@ namespace BeyondStorage.Scripts.Storage;
 /// </summary>
 public static class ItemDiscoveryService
 {
+    // Static call counter and lock object for diagnostic logging
+    private static long s_callCounter = 0;
+    private static readonly object s_lockObject = new object();
+
     /// <summary>
     /// Discovers all available storage sources within range and registers them with the context.
     /// </summary>
     /// <param name="context">The storage context containing configuration and data store</param>
     public static void DiscoverItems(StorageContext context)
     {
+#if DEBUG
         const string d_MethodName = nameof(DiscoverItems);
-
+#endif
         if (!ValidateParameters(d_MethodName, context))
         {
             return;
@@ -24,14 +29,30 @@ public static class ItemDiscoveryService
         TileEntityItemDiscovery.FindItems(context);
         VehicleItemDiscovery.FindItems(context);
         DroneItemDiscovery.FindItems(context);
-
+#if DEBUG
         LogDiscoveryDiagnostics(context, d_MethodName);
+#endif
     }
 
     private static void LogDiscoveryDiagnostics(StorageContext context, string methodName)
     {
-        var info = context?.Sources?.DataStore?.GetDiagnosticInfo() ?? "null in context param chain";
-        ModLogger.DebugLog($"{methodName}: {info}");
+        long currentCall;
+        bool shouldLog;
+
+        // Thread-safe increment of call counter and check for logging threshold
+        lock (s_lockObject)
+        {
+            s_callCounter++;
+            currentCall = s_callCounter;
+            shouldLog = currentCall == 1 || currentCall % 100 == 0;
+        }
+
+        // Log call #1 and every 100th call
+        if (shouldLog)
+        {
+            var info = context?.Sources?.DataStore?.GetDiagnosticInfo() ?? "null in context param chain";
+            ModLogger.DebugLog($"{methodName}: Call #{currentCall}: {info}");
+        }
     }
 
     private static bool ValidateParameters(string methodName, StorageContext context)

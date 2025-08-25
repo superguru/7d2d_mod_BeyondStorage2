@@ -68,11 +68,16 @@ public class BeyondStorage : IModApi
             
             // Method-specific suppressions
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
+
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
+
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
+            nameof(ItemCraft.EntryBinding_AddPullableSourceStorageItemCount),
             nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
+
             nameof(Ranged.GetAmmoCount),
+
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
             $"{nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
         ]);
