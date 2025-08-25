@@ -39,7 +39,7 @@ internal static class XUiC_LootWindow_Patches
         s_previousLockedSlots = _csc.LockedSlots;
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Saved LockedSlots state: {(s_previousLockedSlots != null ? $"Count={s_previousLockedSlots.Length}" : "null")}");
+        //ModLogger.DebugLog($"{d_MethodName}: Saved LockedSlots state: {(s_previousLockedSlots != null ? $"Count={s_previousLockedSlots.Length}" : "null")}");
 #endif
     }
 
@@ -111,7 +111,7 @@ internal static class XUiC_LootWindow_Patches
             {
                 s_isStorageLootWindowOpen = true;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for storage: {storage}");
+                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for storage: {storage}");
 #endif
             }
 
@@ -121,13 +121,13 @@ internal static class XUiC_LootWindow_Patches
                 {
                     s_isStorageLootWindowOpen = true;
 #if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for drone. Reason: {reason}");
+                    //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for drone. Reason: {reason}");
 #endif
                 }
             }
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {s_isStorageLootWindowOpen}, te {tileEntity}");
+            //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {s_isStorageLootWindowOpen}, te {tileEntity}");
 #endif
         }
     }
@@ -168,11 +168,11 @@ internal static class XUiC_LootWindow_Patches
 #endif
     private static void XUiC_LootWindow_OnClose_Postfix(XUiC_LootWindow __instance)
     {
-        const string d_MethodName = nameof(XUiC_LootWindow_OnClose_Postfix);
-
         lock (s_lockObject)
         {
-            ModLogger.DebugLog($"{d_MethodName}: LootWindow closed");
+#if DEBUG
+            //ModLogger.DebugLog($"{d_MethodName}: LootWindow closed");
+#endif
             s_windowInstance = null;
             s_isStorageLootWindowOpen = false;
         }

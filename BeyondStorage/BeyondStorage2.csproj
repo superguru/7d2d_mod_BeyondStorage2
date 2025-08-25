@@ -31,9 +31,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup>
-    <CodeAnalysisFiles Include="Humanizer.*;Microsoft.*;System.*" />
-  </ItemGroup>
   <PropertyGroup>
     <CodeAnalysisScriptDir>Code_Analysis</CodeAnalysisScriptDir>
     <CodeAnalysisScriptFullDir>$(MSBuildProjectDirectory)\$(CodeAnalysisScriptDir)</CodeAnalysisScriptFullDir>

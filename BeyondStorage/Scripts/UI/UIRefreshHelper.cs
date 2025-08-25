@@ -143,10 +143,12 @@ public static class UIRefreshHelper
         // Update the last refresh time for this method
         UpdateLastRefreshTime(methodName);
 
+#if DEBUG
         if (cacheInvalidated)
         {
             ModLogger.DebugLog($"{methodName}: Cache invalidated due to rapid successive UI refresh calls (< {CACHE_INVALIDATION_THRESHOLD_SECONDS}s)");
         }
+#endif
 
         return true;
     }
@@ -237,13 +239,13 @@ public static class UIRefreshHelper
         var methodName = StackOperation.GetStackOpName(operation);
 
 #if DEBUG
-        string callStr = " ";
-        if (callCount > 0)
-        {
-            callStr = $"call #{callCount} ";
-        }
+        //string callStr = " ";
+        //if (callCount > 0)
+        //{
+        //    callStr = $"call #{callCount} ";
+        //}
 
-        ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(itemStack)}");
+        //ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(itemStack)}");
 #endif
 
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
@@ -292,7 +294,9 @@ public static class UIRefreshHelper
                 }
             }
 
-            ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(itemStack)}");
+#if DEBUG
+            //ModLogger.DebugLog($"Handling currency stack operation: {operation} for {ItemX.Info(itemStack)}");
+#endif
         }
     }
 
@@ -347,11 +351,6 @@ public static class UIRefreshHelper
 
             if (isFirstCall)
             {
-#if DEBUG
-                // First call from this method - ALWAYS invalidate cache because no cached data exists
-                // This ensures proper initialization and prevents stale data from being displayed
-                ModLogger.DebugLog($"{methodName}: First call detected, forcing cache invalidation");
-#endif
                 // Perform cache invalidation for first call
                 PerformCacheInvalidation(methodName);
                 return true;
