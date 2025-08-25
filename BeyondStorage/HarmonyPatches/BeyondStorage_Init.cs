@@ -54,7 +54,7 @@ public class BeyondStorage : IModApi
 
     private void ExcludeCacheLoggers()
     {
-        // Comment out the lines below to enable logging for these methods if you're debugging.
+        // Comment out the lines below to enable cache logging for these methods if you're debugging.
         ExpiringCache<StorageContext>.AddSuppressLoggingMethodNames([
             // All StackOps operations
             $"{StackOps.ItemStack_DropMerge_Operation}",
