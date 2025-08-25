@@ -1,6 +1,10 @@
 @echo off
 
-set OUT_DIR="D:\SteamLibrary\steamapps\common\7 Days To Die\Mods\BeyondStorage2"
+rem set OUT_DIR="D:\SteamLibrary\steamapps\common\7 Days To Die\Mods\BeyondStorage2"
+set OUT_DIR="%APPDATA%\7DaysToDie\Mods\BeyondStorage2"
+
+rem echo OUT_DIR is %OUT_DIR%
+rem pause
 
 echo Checking for source files...
 
