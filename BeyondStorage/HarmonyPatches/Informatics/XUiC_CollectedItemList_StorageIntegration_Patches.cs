@@ -4,7 +4,6 @@ using HarmonyLib;
 
 
 #if DEBUG
-using BeyondStorage.Scripts.Infrastructure;
 #endif
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -20,7 +19,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
     private static bool Intercept_AddItemStack_Prefix(XUiC_CollectedItemList __instance, ItemStack _is, bool _bAddOnlyIfNotExisting)
     {
 #if DEBUG
-        const string d_MethodName = nameof(Intercept_AddItemStack_Prefix);
 #endif
         var itemInfo = ItemX.Info(_is);
 
@@ -28,13 +26,13 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         if (ShouldShowItemStackNotification(_is, out string reason))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Proceeding with AddItemStack for stack ({itemInfo}). Reason: {reason}");
+            //ModLogger.DebugLog($"{d_MethodName}: Proceeding with AddItemStack for stack ({itemInfo}). Reason: {reason}");
 #endif
             return true; // Proceed with original method execution
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Skipping AddItemStack (notification) for stack ({itemInfo}). Reason: {reason}");
+        //ModLogger.DebugLog($"{d_MethodName}: Skipping AddItemStack (notification) for stack ({itemInfo}). Reason: {reason}");
 #endif
         return false; // Skip original method execution
     }
@@ -48,9 +46,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
     /// <returns>True if the operation should be shown, false otherwise</returns>
     private static bool ShouldShowItemStackNotification(ItemStack itemStack, out string reason)
     {
-#if DEBUG
-        const string d_MethodName = nameof(ShouldShowItemStackNotification);
-#endif
         // Condition 1: Check if this stack matches a current shift operation
         // This prevents duplicate notifications when items are being moved via Shift+Click
         // c:STACK_SHIFT
@@ -58,9 +53,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         if (isStackShiftOperation)
         {
             reason = "Stack matches current shift operation";
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Hide condition met - {reason}");
-#endif
             return false;
         }
 
@@ -74,9 +66,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
             var isMidSale = Item_Action_Entry_Sell_Patches.IsPlayerMidSale();
             if (isMidSale)
             {
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Currency item detected and sale is in progress, showing notification");
-#endif
                 reason = "Currency item notification during sale transaction";
                 return true;
             }
@@ -88,9 +77,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
             // If a storage container is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with storage
             reason = "Storage container is currently open";
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Hide condition met - {reason}");
-#endif
             return false;
         }
 
@@ -100,9 +86,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
             // If the vehicle storage window is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with vehicle storage
             reason = "Vehicle storage window is currently open";
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Hide condition met - {reason}");
-#endif
             return false;
         }
 
@@ -112,9 +95,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
             // If the workstation window is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with workstations
             reason = "Workstation window is currently open";
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Hide condition met - {reason}");
-#endif
             return false;
         }
 
@@ -166,7 +146,6 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
     private static bool Intercept_RemoveItemStack_Prefix(XUiC_CollectedItemList __instance, ItemStack _is)
     {
 #if DEBUG
-        const string d_MethodName = nameof(Intercept_RemoveItemStack_Prefix);
 #endif
         var itemInfo = ItemX.Info(_is);
 
@@ -174,13 +153,13 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         if (ShouldShowItemStackNotification(_is, out string reason))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Proceeding with RemoveItemStack for stack ({itemInfo}). Reason: {reason}");
+            //ModLogger.DebugLog($"{d_MethodName}: Proceeding with RemoveItemStack for stack ({itemInfo}). Reason: {reason}");
 #endif
             return true; // Proceed with original method execution
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Skipping RemoveItemStack (notification) for stack ({itemInfo}). Reason: {reason}");
+        //ModLogger.DebugLog($"{d_MethodName}: Skipping RemoveItemStack (notification) for stack ({itemInfo}). Reason: {reason}");
 #endif
         return false; // Skip original method execution
     }
