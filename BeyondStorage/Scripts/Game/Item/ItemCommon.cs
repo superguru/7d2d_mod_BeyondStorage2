@@ -126,7 +126,7 @@ public static class ItemCommon
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; ignoreModded: {ignoreModdedItems}");
+        //ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; ignoreModded: {ignoreModdedItems}");
 #endif
 
         // Get what we can from storage up to required amount
@@ -134,7 +134,7 @@ public static class ItemCommon
 
         var newStillNeeded = stillNeeded - totalRemoved;
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
+        //ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
 #endif
         return totalRemoved;
     }
@@ -156,7 +156,7 @@ public static class ItemCommon
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: returning {result.Count} items");
+        //ModLogger.DebugLog($"{d_MethodName}: returning {result.Count} items");
 #endif
         return result;
     }
@@ -183,14 +183,14 @@ public static class ItemCommon
 
         var storageCount = context.GetItemCount(itemValue);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} has {playerInventoryCount} in player inventory and {storageCount} in storage");
+        //ModLogger.DebugLog($"{d_MethodName}: {itemName} has {playerInventoryCount} in player inventory and {storageCount} in storage");
 #endif
         return playerInventoryCount + storageCount;
     }
 
-    public static int GetStorageItemCount(ItemValue itemValue)
+    public static int ItemCommon_GetStorageItemCount(ItemValue itemValue)
     {
-        const string d_MethodName = nameof(GetStorageItemCount);
+        const string d_MethodName = nameof(ItemCommon_GetStorageItemCount);
         const int DEFAULT_RETURN_VALUE = 0;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
@@ -201,7 +201,7 @@ public static class ItemCommon
 
         var itemCount = context.GetItemCount(itemValue);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} has {itemCount} available");
+        //ModLogger.DebugLog($"{d_MethodName}: {itemName} has {itemCount} available");
 #endif
         return itemCount;
     }

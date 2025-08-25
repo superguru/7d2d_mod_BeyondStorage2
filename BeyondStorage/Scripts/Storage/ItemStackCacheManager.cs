@@ -1,6 +1,5 @@
 ﻿using System;
 using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Storage;
 
@@ -40,7 +39,7 @@ public class ItemStackCacheManager
         _masterCacheTime = DateTime.Now;
         _masterCacheInvalidationCounter = s_globalInvalidationCounter;
 #if DEBUG
-        ModLogger.DebugLog("Master cache marked valid (unfiltered data cached)");
+        //ModLogger.DebugLog("Master cache marked valid (unfiltered data cached)");
 #endif
     }
 
@@ -54,7 +53,7 @@ public class ItemStackCacheManager
         _masterCacheTime = DateTime.MinValue;
         _masterCacheInvalidationCounter = s_globalInvalidationCounter;
 #if DEBUG
-        ModLogger.DebugLog("Master cache timing invalidated");
+        //ModLogger.DebugLog("Master cache timing invalidated");
 #endif
     }
 
@@ -64,7 +63,9 @@ public class ItemStackCacheManager
     public static void InvalidateGlobalCache()
     {
         s_globalInvalidationCounter++;
-        ModLogger.DebugLog($"Global ItemStack cache invalidated (counter: {s_globalInvalidationCounter})");
+#if DEBUG
+        //ModLogger.DebugLog($"Global ItemStack cache invalidated (counter: {s_globalInvalidationCounter})");
+#endif
     }
 
     /// <summary>

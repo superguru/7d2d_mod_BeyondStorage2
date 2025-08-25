@@ -4,6 +4,7 @@ using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Scripts.Game.Ranged;
 using BeyondStorage.Scripts.Game.Recipe;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
@@ -67,10 +68,11 @@ public class BeyondStorage : IModApi
             
             // Method-specific suppressions
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
-            nameof(ItemCommon.GetStorageItemCount),
+            nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
+            nameof(Ranged.GetAmmoCount),
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
             $"{nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
         ]);

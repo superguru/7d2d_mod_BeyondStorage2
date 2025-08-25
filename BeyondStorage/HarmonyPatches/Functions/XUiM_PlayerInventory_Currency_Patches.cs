@@ -33,7 +33,7 @@ internal static class XUiM_PlayerInventory_Currency_Patches
         {
             new CodeInstruction(OpCodes.Ldarg_0),  // this
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.currencyItem))),
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.GetStorageItemCount))),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCommon), nameof(ItemCommon.ItemCommon_GetStorageItemCount))),
             new CodeInstruction(OpCodes.Add),
             new CodeInstruction(OpCodes.Stloc_0),  // itemCount (set)
             new CodeInstruction(OpCodes.Ldloc_0),  // itemCount (load onto stack)
