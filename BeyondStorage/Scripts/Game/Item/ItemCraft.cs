@@ -30,19 +30,11 @@ public static class ItemCraft
             return shouldReturnInput ? stacks : null;
         }
 
-#if DEBUG
-        ModLogger.DebugLog($"{methodName}: stacks before {stacks.Count}");
-#endif
         ItemX.PurgeInvalidItemStacks(stacks);
-#if DEBUG
-        ModLogger.DebugLog($"{methodName}: stacks before {stacks.Count} (after stripping)");
-#endif
+
         var storageStacks = context.GetAllAvailableItemStacks(UniqueItemTypes.Unfiltered);
         stacks.AddRange(storageStacks);
-#if DEBUG
-        var actionText = shouldReturnInput ? "after" : "after pulling";
-        ModLogger.DebugLog($"{methodName}: stacks {actionText} {stacks.Count}, storageStacksAdded {storageStacks.Count}");
-#endif
+
         return stacks;
     }
 
@@ -95,14 +87,14 @@ public static class ItemCraft
         if (storageCount > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
+            //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; adding storage count {storageCount} to entityAvailableCount {entityAvailableCount} and setting the window controller IsDirty = true");
 #endif
             entry.windowGroup.Controller.IsDirty = true;
         }
         else
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount}, so returning {DEFAULT_RETURN_VALUE}");
+            //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; initialCount {entityAvailableCount}; storageCount {storageCount}, so returning {DEFAULT_RETURN_VALUE}");
 #endif
             return DEFAULT_RETURN_VALUE;
         }
@@ -143,15 +135,12 @@ public static class ItemCraft
             return DEFAULT_RETURN_VALUE;
         }
 
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Start: item {itemName}; stillNeeded {stillNeeded}");
-#endif
         // Get storage count and return result
         var storageCount = context.GetItemCount(itemValue);
         var result = stillNeeded - storageCount;
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: End: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
+        //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
 #endif
         return result;
     }

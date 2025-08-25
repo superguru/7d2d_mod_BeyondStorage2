@@ -53,9 +53,6 @@ public sealed class StorageContext
         Sources = sources;
         CacheManager = cacheManager;
         CreatedAt = DateTime.Now;
-#if DEBUG
-        //ModLogger.DebugLog($"StorageContext created: {Sources.GetSourceSummary()}");
-#endif
     }
 
     #region Cache Management
@@ -65,10 +62,6 @@ public sealed class StorageContext
         // Clear data first, then invalidate cache atomically
         Sources.Clear();
         CacheManager.InvalidateCache();
-#if DEBUG
-        const string d_MethodName = nameof(InvalidateCache);
-        ModLogger.DebugLog($"{d_MethodName}: Cleared sources and invalidated master cache");
-#endif
     }
 
     /// <summary>
