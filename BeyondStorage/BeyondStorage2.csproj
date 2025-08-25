@@ -86,7 +86,7 @@
     <Compile Include="HarmonyPatches\Functions\Item_Action_Attack_Patches.cs" />
     <Compile Include="HarmonyPatches\Functions\Item_Action_Entry_Sell_Patches.cs" />
     <Compile Include="HarmonyPatches\Functions\Item_Action_Entry_Purchase_Patches.cs" />
-    <Compile Include="HarmonyPatches\Functions\XUiMPlayerInventory_Buy_and_Sell_Patches.cs" />
+    <Compile Include="HarmonyPatches\Functions\XUiM_PlayerInventory_Buy_and_Sell_Patches.cs" />
     <Compile Include="HarmonyPatches\Functions\XUiM_PlayerInventory_Currency_Patches.cs" />
     <Compile Include="HarmonyPatches\Functions\TEFeatureLockPickable_Lockpick_Patches.cs" />
     <Compile Include="HarmonyPatches\Informatics\Stack_MoveAll_Patch.cs" />
