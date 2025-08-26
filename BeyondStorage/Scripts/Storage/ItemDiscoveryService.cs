@@ -28,9 +28,8 @@ public static class ItemDiscoveryService
         TileEntityItemDiscovery.FindItems(context);
         VehicleItemDiscovery.FindItems(context);
         DroneItemDiscovery.FindItems(context);
-#if DEBUG
+
         LogDiscoveryDiagnostics(context, d_MethodName);
-#endif
     }
 
     private static void LogDiscoveryDiagnostics(StorageContext context, string methodName)

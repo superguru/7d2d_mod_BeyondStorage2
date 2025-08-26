@@ -82,7 +82,7 @@ public static class ItemCommon
     //          Item Crafting (Remove items on craft)
     //          Item Repair (Remove items on repair)
     // Returns: count of items removed from storage
-    private static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
+    internal static int ItemRemoveRemaining(ItemValue itemValue, int stillNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         const string d_MethodName = nameof(ItemRemoveRemaining);
         int DEFAULT_RETURN_VALUE = stillNeeded;

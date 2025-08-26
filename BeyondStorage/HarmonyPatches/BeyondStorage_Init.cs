@@ -3,6 +3,7 @@ using BeyondStorage.HarmonyPatches.Item;
 using BeyondStorage.Scripts.Caching;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Game.Functions;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Game.Ranged;
 using BeyondStorage.Scripts.Game.Recipe;
@@ -68,14 +69,19 @@ public class BeyondStorage : IModApi
             
             // Method-specific suppressions
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
+            //nameof(XUiMPlayerInventoryCraftPatches.)
 
             nameof(ItemCommon.HasItemInStorage),
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
+            nameof(ItemCommon.ItemRemoveRemaining),
 
             nameof(ItemCraft.EntryBinding_AddPullableSourceStorageItemCount),
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks),
+
+            nameof(PurchasingCommon.GetEnhancedAvailableSpace),
+            nameof(PurchasingCommon.GetRemovableCountWithStorage),
 
             nameof(Ranged.GetAmmoCount),
 
