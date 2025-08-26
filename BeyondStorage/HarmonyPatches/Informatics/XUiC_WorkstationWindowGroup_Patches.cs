@@ -33,7 +33,7 @@ internal static class XUiC_WorkstationWindowGroup_Patches
             s_isWorkstationWindowOpen = true;
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Workstation Window Opened");
+            //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Opened");
 #endif
         }
     }
@@ -46,7 +46,6 @@ internal static class XUiC_WorkstationWindowGroup_Patches
     private static void XUiC_WorkstationWindowGroup_OnClose_Postfix(XUiC_WorkstationWindowGroup __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_WorkstationWindowGroup_OnClose_Postfix);
 #endif
         lock (s_lockObject)
         {
@@ -54,7 +53,7 @@ internal static class XUiC_WorkstationWindowGroup_Patches
             s_isWorkstationWindowOpen = false;
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Workstation Window Closed");
+            //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Closed");
 #endif
         }
     }

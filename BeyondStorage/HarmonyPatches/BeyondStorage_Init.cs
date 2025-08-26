@@ -69,6 +69,7 @@ public class BeyondStorage : IModApi
             // Method-specific suppressions
             nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
 
+            nameof(ItemCommon.HasItemInStorage),
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
 
