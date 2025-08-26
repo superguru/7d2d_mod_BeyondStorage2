@@ -25,7 +25,7 @@ public class ConsoleCmdBsShowConfig : ConsoleCmdAbstract
     {
         var snapshot = ConfigSnapshot.Current;
         string configJson = snapshot.ToJson();
-        ModLogger.Info($"Current Config Snapshot:\n{configJson}");
+        ModLogger.Info($"Current Config Snapshot:\n{configJson}\nDo not copy and paste this into the config.json file. The values above are formatted for reading in the console.");
     }
 
     public override string[] getCommands()
