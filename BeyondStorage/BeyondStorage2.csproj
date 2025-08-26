@@ -124,6 +124,8 @@
     <Compile Include="HarmonyPatches\Vehicle\Refuel\EntityVehicle_Patches.cs" />
     <Compile Include="HarmonyPatches\Vehicle\Repair\XUiM_Vehicle_Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Configuration\BsConfig.cs" />
+    <Compile Include="Scripts\Infrastructure\ConfigVersioning.cs" />
     <Compile Include="Scripts\Data\CurrencyCache.cs" />
     <Compile Include="Scripts\Data\DragDropAnalyzer.cs" />
     <Compile Include="Scripts\Data\IStorageSource.cs" />

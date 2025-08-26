@@ -16,8 +16,7 @@ public static class PowerSourceRefuel
             return DEFAULT_RETURN_VALUE;
         }
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForGeneratorRefuel,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out _, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }

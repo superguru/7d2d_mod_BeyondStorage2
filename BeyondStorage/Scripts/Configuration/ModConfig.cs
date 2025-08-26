@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using BeyondStorage.Scripts.Multiplayer;
 using BeyondStorage.Scripts.Infrastructure;
 using Newtonsoft.Json;
@@ -12,6 +13,8 @@ namespace BeyondStorage.Scripts.Configuration;
 public static class ModConfig
 {
     private const string ConfigFileName = "config.json";
+    private const string ConfigBackupPrefix = "config.backup.";
+
     public static BsConfig ClientConfig { get; private set; }
     public static BsConfig ServerConfig { get; } = new();
     private static bool IsConfigLoaded { get; set; } = false;
@@ -25,15 +28,53 @@ public static class ModConfig
         {
             try
             {
-                ClientConfig = JsonConvert.DeserializeObject<BsConfig>(File.ReadAllText(path));
-                IsConfigLoaded = true;
-                ModLogger.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
+                var configJson = File.ReadAllText(path);
+                BsConfig loadedConfig;
+                bool configWasMigrated = false;
 
+                if (ConfigVersioning.IsLegacyConfig(configJson))
+                {
+                    // Handle legacy config (pre-2.3.0)
+                    ModLogger.Info("Detected legacy config file, migrating to versioned format");
+                    CreateConfigBackup(path, "legacy");
+
+                    loadedConfig = ConfigVersioning.MigrateLegacyConfig(configJson);
+                    configWasMigrated = true;
+                }
+                else
+                {
+                    // Load versioned config
+                    loadedConfig = JsonConvert.DeserializeObject<BsConfig>(configJson);
+
+                    // Check if migration is needed
+                    if (loadedConfig.version != ConfigVersioning.CurrentVersion)
+                    {
+                        CreateConfigBackup(path, loadedConfig.version);
+                        loadedConfig = ConfigVersioning.MigrateVersionedConfig(loadedConfig);
+                        configWasMigrated = true;
+                    }
+                }
+
+                ClientConfig = loadedConfig;
+                IsConfigLoaded = true;
+
+                // Save migrated config back to file
+                if (configWasMigrated)
+                {
+                    SaveConfig(path);
+                    ModLogger.Info($"Config migrated and saved to version {ConfigVersioning.CurrentVersion}");
+                }
+
+                ModLogger.DebugLog($"Loaded config: {JsonConvert.SerializeObject(ClientConfig, Formatting.Indented)}");
                 ValidateConfig();
             }
             catch (JsonException e)
             {
-                ModLogger.Error($"Failed to load config from {path}: {e.Message}");
+                ModLogger.Error($"Failed to load config from {path}: {e.Message}", e);
+            }
+            catch (Exception e)
+            {
+                ModLogger.Error($"Unexpected error loading config from {path}: {e.Message}", e);
             }
         }
 
@@ -41,15 +82,52 @@ public static class ModConfig
         {
             ModLogger.Warning($"Config file {path} not found or invalid, using default config.");
             ClientConfig = new BsConfig();
+            IsConfigLoaded = true;
+        }
+    }
 
-            // No need to write the default config back to file, as the config file is packaged with the mod as of 2.0.1.
-            // If we reach this point, it means the config file was either deleted or corrupted, but that is not our concern, we can just work on dfaults.
+    /// <summary>
+    /// Creates a backup of the current config file before migration
+    /// </summary>
+    private static void CreateConfigBackup(string configPath, string fromVersion)
+    {
+        try
+        {
+            var backupPath = Path.Combine(
+                Path.GetDirectoryName(configPath),
+                $"{ConfigBackupPrefix}{fromVersion}.json"
+            );
+
+            File.Copy(configPath, backupPath, overwrite: true);
+            ModLogger.Info($"Created config backup: {Path.GetFileName(backupPath)}");
+        }
+        catch (Exception e)
+        {
+            ModLogger.Warning($"Failed to create config backup: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Saves the current config to file
+    /// </summary>
+    private static void SaveConfig(string path)
+    {
+        try
+        {
+            var configJson = JsonConvert.SerializeObject(ClientConfig, Formatting.Indented);
+            File.WriteAllText(path, configJson);
+            ModLogger.DebugLog("Config saved successfully");
+        }
+        catch (Exception e)
+        {
+            ModLogger.Warning($"Failed to save config to {path}: {e.Message}");
         }
     }
 
     private static void ValidateConfig()
     {
         ValidateRangeOption();
+        ValidateVersion();
     }
 
     private static void ValidateRangeOption()
@@ -58,6 +136,15 @@ public static class ModConfig
         {
             ModLogger.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
             ClientConfig.range = -1.0f;
+        }
+    }
+
+    private static void ValidateVersion()
+    {
+        if (string.IsNullOrEmpty(ClientConfig.version))
+        {
+            ModLogger.Warning("Config missing version field, setting to current version");
+            ClientConfig.version = ConfigVersioning.CurrentVersion;
         }
     }
 
@@ -103,6 +190,7 @@ public static class ModConfig
         }
     }
 #endif
+
     public static float Range()
     {
         float serverValue = ServerConfig.range;
@@ -143,10 +231,10 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool OnlyStorageCrates()
+    public static bool PullFromPlayerContainers()
     {
-        bool serverValue = ServerConfig.onlyStorageCrates;
-        bool clientValue = ClientConfig.onlyStorageCrates;
+        bool serverValue = ServerConfig.pullFromPlayerContainers;
+        bool clientValue = ClientConfig.pullFromPlayerContainers;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -157,86 +245,6 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromVehicleStorage;
         bool clientValue = ClientConfig.pullFromVehicleStorage;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForBlockRepair()
-    {
-        bool serverValue = ServerConfig.enableForBlockRepair;
-        bool clientValue = ClientConfig.enableForBlockRepair;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForBlockTexture()
-    {
-        bool serverValue = ServerConfig.enableForBlockTexture;
-        bool clientValue = ClientConfig.enableForBlockTexture;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForBlockUpgrade()
-    {
-        bool serverValue = ServerConfig.enableForBlockUpgrade;
-        bool clientValue = ClientConfig.enableForBlockUpgrade;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForGeneratorRefuel()
-    {
-        bool serverValue = ServerConfig.enableForGeneratorRefuel;
-        bool clientValue = ClientConfig.enableForGeneratorRefuel;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForItemRepair()
-    {
-        bool serverValue = ServerConfig.enableForItemRepair;
-        bool clientValue = ClientConfig.enableForItemRepair;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForReload()
-    {
-        bool serverValue = ServerConfig.enableForReload;
-        bool clientValue = ClientConfig.enableForReload;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForVehicleRefuel()
-    {
-        bool serverValue = ServerConfig.enableForVehicleRefuel;
-        bool clientValue = ClientConfig.enableForVehicleRefuel;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool EnableForVehicleRepair()
-    {
-        bool serverValue = ServerConfig.enableForVehicleRepair;
-        bool clientValue = ClientConfig.enableForVehicleRepair;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -256,62 +264,5 @@ public static class ModConfig
     public static bool ServerSyncConfig()
     {
         return ClientConfig.serverSyncConfig;
-    }
-
-    public class BsConfig
-    {
-        // ========== Source selection / eligibility =========
-        // How far to pull from (-1 is infinite range, only limited by chunks loaded)
-        public float range = -1.0f;
-
-        // if set to true it will try and pull items from nearby dew collectors
-        public bool pullFromDrones = true;
-
-        // if set to true it will try and pull items from nearby dew collectors
-        public bool pullFromDewCollectors = true;
-
-        // if set to true it will try and pull items from nearby workstation output stacks
-        public bool pullFromWorkstationOutputs = true;
-
-        // if set to true it will ignore tile entities that aren't Storage Containers (crates)
-        // otherwise will check all lootable containers placed by player(s)
-        public bool onlyStorageCrates = false;
-
-        // if set to true it will try and pull items from nearby vehicle storages
-        public bool pullFromVehicleStorage = true;
-
-        // ========== Functionality =========
-        // if set true will allow block repairs
-        public bool enableForBlockRepair = true;
-
-        // if set true will allow block textures (painting)
-        public bool enableForBlockTexture = true;
-
-        // if set true will allow block upgrades
-        public bool enableForBlockUpgrade = true;
-
-        // if set true will allow refueling generators
-        public bool enableForGeneratorRefuel = true;
-
-        // if set true will allow item repairs
-        public bool enableForItemRepair = true;
-
-        // if set true will allow gun reloading
-        public bool enableForReload = true;
-
-        // if set true will allow refueling vehicles
-        public bool enableForVehicleRefuel = true;
-
-        // if set true will allow repairing vehicles
-        public bool enableForVehicleRepair = true;
-
-        // ========== Multiplayer =========
-        // if set true on a server it will force all clients to use server settings for Beyond Storage
-        public bool serverSyncConfig = true;
-
-        // ========== Housekeeping =========
-        // if set true additional logging will be printed to logs/console
-        public bool isDebug = false;
-        public bool isDebugLogSettingsAccess = false;  // This will only work if isDebug is true and DEBUG is defined
     }
 }

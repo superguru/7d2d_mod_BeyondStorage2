@@ -13,8 +13,7 @@ public class BlockUpgrade
         const string d_MethodName = nameof(BlockUpgradeGetItemCount);
         const int DEFAULT_RETURN_VALUE = 0;
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForBlockUpgrade,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out _, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }
@@ -34,8 +33,7 @@ public class BlockUpgrade
         const string d_MethodName = nameof(BlockUpgradeRemoveRemaining);
         int DEFAULT_RETURN_VALUE = currentCount;
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForBlockUpgrade,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out _, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }

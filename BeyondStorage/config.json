@@ -1,19 +1,12 @@
 {
+    "version": "2.3.0",
     "range": -1.0,
     "pullFromDrones": true,
     "pullFromDewCollectors": true,
     "pullFromWorkstationOutputs": true,
-    "onlyStorageCrates": false,
+    "pullFromPlayerContainers": true,
     "pullFromVehicleStorage": true,
-    "enableForBlockRepair": true,
-    "enableForBlockTexture": true,
-    "enableForBlockUpgrade": true,
-    "enableForGeneratorRefuel": true,
-    "enableForItemRepair": true,
-    "enableForReload": true,
-    "enableForVehicleRefuel": true,
-    "enableForVehicleRepair": true,
     "serverSyncConfig": true,
-    "isDebug": false,
+    "isDebug": true,
     "isDebugLogSettingsAccess": false
 }

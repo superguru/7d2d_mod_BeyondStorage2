@@ -16,8 +16,7 @@ public static class ItemRepair
         const string d_MethodName = nameof(ItemRepairOnActivatedGetItemCount);
         int DEFAULT_RETURN_VALUE = currentCount;
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForItemRepair,
-            out StorageContext context, out ItemClass itemClass, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out ItemClass itemClass, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }
@@ -59,7 +58,7 @@ public static class ItemRepair
             return DEFAULT_RETURN_VALUE;
         }
 
-        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.EnableForItemRepair, out StorageContext context))
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
         {
             return DEFAULT_RETURN_VALUE;
         }

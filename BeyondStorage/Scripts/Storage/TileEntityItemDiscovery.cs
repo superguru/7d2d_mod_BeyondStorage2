@@ -196,12 +196,16 @@ internal static class TileEntityItemDiscovery
             return 0;
         }
 
-        var config = context.Config;
-        if (config.OnlyStorageCrates)
+        //Crates have the Storage feature tag
+        if (!tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
         {
-            if (!tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
+            var config = context.Config;
+            if (!config.PullFromPlayerContainers)
             {
+                // Things a player built, like a wall safe, or a desk, is lootable, lootable.bPlayerStorage is true, but doesn't have the Storage feature tag
                 return 0;
+
+                // Things just lootable out in the world, like a garbage can, is never eligible for pulling
             }
         }
 

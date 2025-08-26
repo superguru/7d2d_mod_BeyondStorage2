@@ -13,8 +13,7 @@ public class BlockRepair
         const string d_MethodName = nameof(BlockRepairGetItemCount);
         const int DEFAULT_RETURN_VALUE = 0;
 
-        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, config => config.EnableForBlockRepair,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out _, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }
@@ -39,8 +38,7 @@ public class BlockRepair
             return DEFAULT_RETURN_VALUE;
         }
 
-        if (!ValidationHelper.ValidateItemAndContext(itemStack.itemValue, d_MethodName, config => config.EnableForBlockRepair,
-            out StorageContext context, out _, out string itemName))
+        if (!ValidationHelper.ValidateItemAndContext(itemStack.itemValue, d_MethodName, out StorageContext context, out _, out string itemName))
         {
             return DEFAULT_RETURN_VALUE;
         }

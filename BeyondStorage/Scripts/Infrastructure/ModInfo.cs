@@ -1,12 +1,13 @@
 ﻿using System;
 
 namespace BeyondStorage.Scripts.Infrastructure;
-internal static class ModInfo
+
+public static class ModInfo
 {
     internal const string ModName = "[BeyondStorage2]";
 
     private static string s_version = "";
-    internal static string Version
+    public static string Version
     {
         get
         {

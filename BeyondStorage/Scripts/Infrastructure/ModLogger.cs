@@ -50,10 +50,9 @@ public static class ModLogger
     {
         if (ModConfig.IsDebug())
         {
-            if (e != null)
-            {
-                text = StackTraceProvider.AppendStackTrace(text, e);
-            }
+#if DEBUG
+            text = StackTraceProvider.AppendStackTrace(text, e);
+#endif
             Log.Out($"{Prefix}(Debug) {text}");
         }
     }

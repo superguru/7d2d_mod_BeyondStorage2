@@ -1,7 +1,5 @@
 ﻿using System.Linq;
 using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Item;
@@ -53,13 +51,6 @@ internal static class XUiCItemActionListPatches
 
     internal static void ActionList_UpdateVisibleActions(XUiC_ItemActionList itemActionList)
     {
-        const string d_MethodName = nameof(ActionList_UpdateVisibleActions);
-
-        if (!ValidationHelper.ValidateStorageContextWithFeature(d_MethodName, config => config.EnableForItemRepair, out StorageContext context))
-        {
-            return;
-        }
-
         ItemRepair.RepairActionShown = ActionList_HasRepair(itemActionList);
     }
 
