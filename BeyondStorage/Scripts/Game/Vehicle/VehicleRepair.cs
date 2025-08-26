@@ -7,9 +7,7 @@ public static class VehicleRepair
 {
     public static int VehicleRepairRemoveRemaining(ItemValue itemValue, int itemCount)
     {
-#if DEBUG
         const string d_MethodName = nameof(VehicleRepairRemoveRemaining);
-#endif
         const int DEFAULT_RETURN_VALUE = 0;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))

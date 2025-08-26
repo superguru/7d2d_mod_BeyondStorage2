@@ -72,9 +72,9 @@ public class BeyondStorage : IModApi
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
 
-            nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.EntryBinding_AddPullableSourceStorageItemCount),
-            nameof(ItemCraft.ItemCraft_GetRemainingItemCount),
+            nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
+            nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks),
 
             nameof(Ranged.GetAmmoCount),
 

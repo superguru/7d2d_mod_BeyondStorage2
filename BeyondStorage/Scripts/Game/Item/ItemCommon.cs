@@ -21,9 +21,6 @@ public static class ItemCommon
     /// <returns>Total amount removed from all sources across all items</returns>
     public static int RemoveItemsSequential(Bag bag, Inventory toolbelt, IList<ItemStack> itemStacks, int multiplier = 1, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
-#if DEBUG
-        //const string d_MethodName = nameof(RemoveItemsSequential);
-#endif
         int totalRemovedAllItems = 0;
 
         // Use foreach - it's faster for IList<T> and avoids repeated bounds checking
@@ -33,11 +30,6 @@ public static class ItemCommon
             var itemValue = itemStack.itemValue;
             int amountNeeded = itemStack.count * multiplier;
 
-#if DEBUG
-            //var itemName = ItemX.NameOf(itemValue);
-            //ModLogger.DebugLog($"{d_MethodName}: Removing {amountNeeded} of {itemName}");
-#endif
-
             int totalRemovedThisItem = 0;
             int stillNeeded = amountNeeded;
 
@@ -46,10 +38,6 @@ public static class ItemCommon
             totalRemovedThisItem += removed;
             stillNeeded -= removed;
 
-#if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Bag, still need {stillNeeded}");
-#endif
-
             // Step 2: If still need more, try toolbelt
             if (stillNeeded > 0)
             {
@@ -57,20 +45,12 @@ public static class ItemCommon
                 totalRemovedThisItem += removed;
                 stillNeeded -= removed;
 
-#if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Toolbelt, still need {stillNeeded}");
-#endif
-
                 // Step 3: If still need more, try storage
                 if (stillNeeded > 0)
                 {
                     removed = ItemRemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
                     totalRemovedThisItem += removed;
                     stillNeeded -= removed;
-
-#if DEBUG
-                    //ModLogger.DebugLog($"{d_MethodName}: Removed {removed} from Storage, still need {stillNeeded}");
-#endif
                 }
             }
 
@@ -125,17 +105,10 @@ public static class ItemCommon
             return DEFAULT_RETURN_VALUE;
         }
 
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; stillNeeded: {stillNeeded}; ignoreModded: {ignoreModdedItems}");
-#endif
-
         // Get what we can from storage up to required amount
         var totalRemoved = context.RemoveRemaining(itemValue, stillNeeded, ignoreModdedItems, removedItems);
-
         var newStillNeeded = stillNeeded - totalRemoved;
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: item: {itemName}; removedFromStorage {totalRemoved}; newStillNeeded {newStillNeeded}");
-#endif
+
         return totalRemoved;
     }
 
@@ -155,9 +128,6 @@ public static class ItemCommon
             ModLogger.DebugLog($"{d_MethodName}: called with null xui");
         }
 
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: returning {result.Count} items");
-#endif
         return result;
     }
 
@@ -182,9 +152,7 @@ public static class ItemCommon
         }
 
         var storageCount = context.GetItemCount(itemValue);
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: {itemName} has {playerInventoryCount} in player inventory and {storageCount} in storage");
-#endif
+
         return playerInventoryCount + storageCount;
     }
 
@@ -200,17 +168,14 @@ public static class ItemCommon
         }
 
         var itemCount = context.GetItemCount(itemValue);
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: {itemName} has {itemCount} available");
-#endif
+
         return itemCount;
     }
 
     public static bool HasItemInStorage(ItemValue itemValue)
     {
-#if DEBUG
         const string d_MethodName = nameof(HasItemInStorage);
-#endif
+
         const bool DEFAULT_RETURN_VALUE = false;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out string itemName))
@@ -220,9 +185,7 @@ public static class ItemCommon
 
         //TODO: create a common HasItem function to reuse wherever HasItem is called
         var result = context.HasItem(itemValue);
-#if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: {itemName} {result}");
-#endif
+
         return result;
     }
 

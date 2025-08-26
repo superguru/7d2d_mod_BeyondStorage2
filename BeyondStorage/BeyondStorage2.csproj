@@ -140,6 +140,7 @@
     <Compile Include="Scripts\Game\Item\ItemActionTextureBlockExposed.cs" />
     <Compile Include="Scripts\Game\Item\PaintOperationContext.cs" />
     <Compile Include="Scripts\Infrastructure\ActionHelper.cs" />
+    <Compile Include="Scripts\Infrastructure\ModInfo.cs" />
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
     <Compile Include="Scripts\Infrastructure\TypeMatchingHelper.cs" />

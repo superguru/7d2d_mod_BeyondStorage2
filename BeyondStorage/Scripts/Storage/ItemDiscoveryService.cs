@@ -18,9 +18,8 @@ public static class ItemDiscoveryService
     /// <param name="context">The storage context containing configuration and data store</param>
     public static void DiscoverItems(StorageContext context)
     {
-#if DEBUG
         const string d_MethodName = nameof(DiscoverItems);
-#endif
+
         if (!ValidateParameters(d_MethodName, context))
         {
             return;

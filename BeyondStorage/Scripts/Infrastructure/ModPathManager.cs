@@ -55,7 +55,7 @@ internal static class ModPathManager
             }
             else
             {
-                s_assemblyVersion = "0.0.0";
+                s_assemblyVersion = "0.0.0";  // This is kinda bad. Not sure how to handle this.
             }
         }
 

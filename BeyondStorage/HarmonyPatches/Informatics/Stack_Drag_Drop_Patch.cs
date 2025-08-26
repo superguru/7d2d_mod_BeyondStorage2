@@ -28,8 +28,8 @@ internal static class Stack_Drag_Drop_Patch
         }
 
 #if DEBUG
-        const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Prefix);
-        ModLogger.DebugLog($"{d_MethodName}: call #{callCount} STARTED - analyzing swap operation preconditions");
+        //const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Prefix);
+        //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} STARTED - analyzing swap operation preconditions");
 #endif
 
         // Capture slot state snapshot
@@ -71,7 +71,7 @@ internal static class Stack_Drag_Drop_Patch
         if (preSnapshot.IsValid && preSnapshot.IsStorageInventory && preSnapshot.PredictedOperation == SwapAction.PickupFromSource)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory pickup operation, pre {preSnapshot}, dragInfo {dragDropAnalyzer}");
+            //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory pickup operation, pre {preSnapshot}, dragInfo {dragDropAnalyzer}");
 #endif
             // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.                
             UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Pickup_Operation, __instance, callCount);

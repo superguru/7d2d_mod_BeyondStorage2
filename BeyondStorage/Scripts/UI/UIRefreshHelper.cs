@@ -144,10 +144,10 @@ public static class UIRefreshHelper
         UpdateLastRefreshTime(methodName);
 
 #if DEBUG
-        if (cacheInvalidated)
-        {
-            ModLogger.DebugLog($"{methodName}: Cache invalidated due to rapid successive UI refresh calls (< {CACHE_INVALIDATION_THRESHOLD_SECONDS}s)");
-        }
+        //if (cacheInvalidated)
+        //{
+        //    ModLogger.DebugLog($"{methodName}: Cache invalidated due to rapid successive UI refresh calls (< {CACHE_INVALIDATION_THRESHOLD_SECONDS}s)");
+        //}
 #endif
 
         return true;

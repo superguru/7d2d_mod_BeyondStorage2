@@ -108,7 +108,6 @@ public static class ItemCraft
     //          Item Crafting -
     public static int ItemCraft_GetRemainingItemCount(IList<ItemStack> itemStacks, int i, int stillNeeded)
     {
-        const string d_MethodName = nameof(ItemCraft_GetRemainingItemCount);
         int DEFAULT_RETURN_VALUE = stillNeeded;
 
         // Fast path: early return if nothing needed
@@ -124,23 +123,18 @@ public static class ItemCraft
         }
 
         var itemValue = itemStacks[i]?.itemValue;
-        if (!ValidationHelper.ValidateItemValue(itemValue, d_MethodName, out string itemName))
+        if (itemValue == null || itemValue.IsEmpty())
         {
             return DEFAULT_RETURN_VALUE;
         }
 
-        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Failed to create StorageContext, returning {DEFAULT_RETURN_VALUE}");
-            return DEFAULT_RETURN_VALUE;
-        }
-
-        // Get storage count and return result
-        var storageCount = context.GetItemCount(itemValue);
+        // Use the common storage item count method
+        var storageCount = ItemCommon.ItemCommon_GetStorageItemCount(itemValue);
         var result = stillNeeded - storageCount;
 
 #if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}; context {context != null}");
+        //var itemName = ItemX.NameOf(itemValue);
+        //ModLogger.DebugLog($"{nameof(ItemCraft_GetRemainingItemCount)}: item {itemName}; stillNeeded {stillNeeded}; storageCount {storageCount}; result {result}");
 #endif
         return result;
     }
