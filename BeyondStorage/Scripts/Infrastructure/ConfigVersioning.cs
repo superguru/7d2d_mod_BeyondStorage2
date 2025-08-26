@@ -79,7 +79,7 @@ public static class ConfigVersioning
                 pullFromDrones = legacyConfig.pullFromDrones,
                 pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
                 pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
-                pullFromPlayerContainers = !legacyConfig.onlyStorageCrates,
+                pullFromPlayerCraftedNonCrates = !legacyConfig.onlyStorageCrates,
                 pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
 
                 serverSyncConfig = legacyConfig.serverSyncConfig,

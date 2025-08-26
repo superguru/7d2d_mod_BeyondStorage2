@@ -43,7 +43,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromPlayerContainers);
+        binaryWriter.Write(ModConfig.ClientConfig.pullFromPlayerCraftedNonCrates);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
     }
 
@@ -125,7 +125,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModConfig.ServerConfig.pullFromDrones = ReadBool(reader);
         ModConfig.ServerConfig.pullFromDewCollectors = ReadBool(reader);
         ModConfig.ServerConfig.pullFromWorkstationOutputs = ReadBool(reader);
-        ModConfig.ServerConfig.pullFromPlayerContainers = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromPlayerCraftedNonCrates = ReadBool(reader);
         ModConfig.ServerConfig.pullFromVehicleStorage = ReadBool(reader);
 
         // Apply config versioning and migration to server config
@@ -152,7 +152,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDrones {ModConfig.ServerConfig.pullFromDrones}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.pullFromPlayerContainers}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.onlyStorageCrates {ModConfig.ServerConfig.pullFromPlayerCraftedNonCrates}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
 #endif
     }

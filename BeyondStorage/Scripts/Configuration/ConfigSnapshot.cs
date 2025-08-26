@@ -13,7 +13,7 @@ public sealed class ConfigSnapshot
     public bool PullFromDrones { get; }
     public bool PullFromDewCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
-    public bool PullFromPlayerContainers { get; }
+    public bool PullFromPlayerCraftedNonCrates { get; }
     public bool PullFromVehicleStorage { get; }
 
     // ========== Multiplayer =========
@@ -30,7 +30,7 @@ public sealed class ConfigSnapshot
         PullFromDrones = ModConfig.PullFromDrones();
         PullFromDewCollectors = ModConfig.PullFromDewCollectors();
         PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
-        PullFromPlayerContainers = ModConfig.PullFromPlayerContainers();
+        PullFromPlayerCraftedNonCrates = ModConfig.PullFromPlayerCraftedNonCrates();
         PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
 
         // ========== Multiplayer =========

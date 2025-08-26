@@ -231,10 +231,10 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromPlayerContainers()
+    public static bool PullFromPlayerCraftedNonCrates()
     {
-        bool serverValue = ServerConfig.pullFromPlayerContainers;
-        bool clientValue = ClientConfig.pullFromPlayerContainers;
+        bool serverValue = ServerConfig.pullFromPlayerCraftedNonCrates;
+        bool clientValue = ClientConfig.pullFromPlayerCraftedNonCrates;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
