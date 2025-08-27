@@ -14,6 +14,7 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 * In v2.2.4, add live recipe tracking updates when anything becomes available, like a workstation crafted item, a cooked item, a dew collector completion, etc.
 * In v2.2.5, add console command `bsconfig` to display the current configuration
 * In v2.2.7, add lockpicking and payments from storage sources
+* In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
 
 #### Pull Order:
   - Player Backpack (as per vanilla game)
@@ -28,6 +29,10 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 ## Installation
 
 Use a Mod Manager to install the mod, or unzip the contents of this mod into your 7 Days to Die Mods folder.
+
+INSTALL THE SAME VERSION OF THE MOD ON BOTH SERVER AND CLIENT.
+
+See the Troubleshooting section on the mod page if you have any issues.
 
 The compiled and packaged mod is available from https://www.nexusmods.com/7daystodie/mods/7809
 
