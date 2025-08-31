@@ -38,15 +38,18 @@ public class BeyondStorage : IModApi
         ExcludeCacheLoggers();
 
         ModEvents.PlayerSpawnedInWorld.RegisterHandler(ServerUtils.PlayerSpawnedInWorld);
+
         // Game Start Done Called when:
         //      - Loading into singleplayer world
         //      - Starting client hosted multiplayer world
         //      - Loading into dedicated world
         // Not Called during connecting TO client server
         ModEvents.GameStartDone.RegisterHandler(ModLifecycleManager.GameStartDone);
+
         // Game Shutdown Called when:
         //      - Leaving the world
         ModEvents.GameShutdown.RegisterHandler(ModLifecycleManager.GameShutdown);
+
         // Player Disconnected Called When:
         //      - Player disconnects from server YOU'RE hosting
         // NOT called when YOU disconnect

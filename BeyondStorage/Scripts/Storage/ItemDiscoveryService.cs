@@ -3,14 +3,14 @@
 namespace BeyondStorage.Scripts.Storage;
 
 /// <summary>
-/// Service responsible for discovering storage sources (tile entities and vehicles) based on configuration and accessibility.
+/// Service responsible for discovering storage sources (tile entities and entities) based on configuration and accessibility.
 /// The goal is to find and register all available items from storage sources within range.
 /// </summary>
 public static class ItemDiscoveryService
 {
     // Static call counter and lock object for diagnostic logging
     private static long s_callCounter = 0;
-    private static readonly object s_lockObject = new object();
+    private static readonly object s_lockObject = new();
 
     /// <summary>
     /// Discovers all available storage sources within range and registers them with the context.
@@ -25,9 +25,11 @@ public static class ItemDiscoveryService
             return;
         }
 
+        // Discover from tile entities (containers, workstations, dew collectors)
         TileEntityItemDiscovery.FindItems(context);
-        VehicleItemDiscovery.FindItems(context);
-        DroneItemDiscovery.FindItems(context);
+
+        // Discover from entities (vehicles and drones) via World.Entities.list iteration
+        EntityItemDiscovery.FindItems(context);
 
         LogDiscoveryDiagnostics(context, d_MethodName);
     }

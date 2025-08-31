@@ -146,6 +146,9 @@
     <Compile Include="Scripts\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Scripts\Configuration\ModConfig.cs" />
     <Compile Include="Scripts\Infrastructure\TypeMatchingHelper.cs" />
+    <Compile Include="Scripts\Storage\EntityItemDiscovery.cs" />
+    <Compile Include="Scripts\Storage\EntityProcessingState.cs" />
+    <Compile Include="Scripts\Storage\TileEntityProcessingState.cs" />
     <Compile Include="Scripts\UI\UIRefreshHelper.cs" />
     <Compile Include="Scripts\Infrastructure\ValidationHelper.cs" />
     <Compile Include="Scripts\Infrastructure\WorldTools.cs" />
@@ -171,8 +174,6 @@
     <Compile Include="Scripts\Storage\StorageQueryService.cs" />
     <Compile Include="Scripts\Storage\StorageDataManager.cs" />
     <Compile Include="Scripts\Storage\TileEntityItemDiscovery.cs" />
-    <Compile Include="Scripts\Storage\DroneItemDiscovery.cs" />
-    <Compile Include="Scripts\Storage\VehicleItemDiscovery.cs" />
     <Compile Include="Scripts\TileEntities\DewCollectorStateManager.cs" />
     <Compile Include="Scripts\TileEntities\WorkstationStateManager.cs" />
     <Compile Include="Scripts\Game\Vehicle\VehicleRepair.cs" />
