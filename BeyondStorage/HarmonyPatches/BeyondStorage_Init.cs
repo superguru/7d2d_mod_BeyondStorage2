@@ -80,6 +80,8 @@ public class BeyondStorage : IModApi
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
             nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks),
 
+            nameof(ItemRepair.ItemRepairOnActivatedGetItemCount),
+
             nameof(PurchasingCommon.GetAvailableSpaceWithStorage),
             nameof(PurchasingCommon.GetEnhancedAvailableSpace),
             nameof(PurchasingCommon.GetRemovableCountWithStorage),
