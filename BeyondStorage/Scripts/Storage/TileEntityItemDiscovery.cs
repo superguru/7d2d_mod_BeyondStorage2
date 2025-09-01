@@ -3,6 +3,7 @@ using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
+using BeyondStorage.Scripts.TileEntities;
 
 namespace BeyondStorage.Scripts.Storage;
 

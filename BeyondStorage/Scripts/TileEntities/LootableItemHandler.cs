@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Storage;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Scripts.TileEntities;
 
 /// <summary>
 /// Handles processing and filtering of items from entity tile entities with slot lock support.
