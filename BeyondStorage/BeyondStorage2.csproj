@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>bin\Release</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -49,7 +49,7 @@
     <Message Text="Executing mod packaging task" Importance="High" />
     <!-- Path to the compiled assembly -->
     <ItemGroup>
-      <CompiledAssembly Include="$(OutputPath)$(AssemblyName).dll" />
+      <CompiledAssembly Include="$(OutputPath)\$(AssemblyName).dll" />
     </ItemGroup>
     <!-- Use GetAssemblyIdentity to extract version -->
     <GetAssemblyIdentity AssemblyFiles="@(CompiledAssembly)">
@@ -58,7 +58,7 @@
     <!-- Output the resolved version -->
     <!-- <Message Text="Resolved AssemblyVersion: %(AssemblyIdentities.Version)" Importance="High"/> -->
     <PropertyGroup>
-      <ModPackageUploadsDir>$(TargetDir)\Uploads</ModPackageUploadsDir>
+      <ModPackageUploadsDir>$(MSBuildProjectDirectory)\Uploads</ModPackageUploadsDir>
       <ModPackageName>$(ProjectName)_%(AssemblyIdentities.Version)</ModPackageName>
       <ModPackageStagingDir>$(ModPackageUploadsDir)\$(ProjectName)\_staging</ModPackageStagingDir>
       <ModPackageDir>$(ModPackageStagingDir)\$(ProjectName)</ModPackageDir>
@@ -67,8 +67,8 @@
     <MakeDir Directories="$(ModPackageUploadsDir);$(ModPackageDir);$(ModPackageConfigDir)" />
     <Move SourceFiles="$(TargetDir)\$(ProjectName).dll;" DestinationFolder="$(ModPackageDir)" />
     <Delete Files="$(TargetDir)\$(ProjectName).pdb;" />
-    <Copy SourceFiles="$(TargetDir)\..\README.md;$(TargetDir)\ModInfo.xml;" DestinationFolder="$(ModPackageDir)" />
-    <Copy SourceFiles="$(TargetDir)\config.json;" DestinationFolder="$(ModPackageConfigDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\README.md;$(MSBuildProjectDirectory)\ModInfo.xml;" DestinationFolder="$(ModPackageDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\config.json;" DestinationFolder="$(ModPackageConfigDir)" />
     <ZipDirectory SourceDirectory="$(ModPackageStagingDir)" DestinationFile="$(ModPackageUploadsDir)\$(ModPackageName).zip" Overwrite="true" />
     <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
   </Target>
