@@ -30,7 +30,7 @@ internal static class ItemActionRangedPatches
 
         // Check prerequisites (original logic)
         if (!ItemActionRanged.NotReloading(actionData) ||
-            (entityPlayerLocal != null && entityPlayerLocal.CancellingInventoryActions) ||
+            (entityPlayerLocal?.CancellingInventoryActions == true) ||
             _actionData.invData.itemValue.Meta >= magazineSize)
         {
             __result = false;

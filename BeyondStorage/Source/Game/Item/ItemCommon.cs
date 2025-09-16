@@ -183,7 +183,6 @@ public static class ItemCommon
             return DEFAULT_RETURN_VALUE;
         }
 
-        //TODO: create a common HasItem function to reuse wherever HasItem is called
         var result = context.HasItem(itemValue);
 
         return result;

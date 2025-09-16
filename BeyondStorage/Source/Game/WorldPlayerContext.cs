@@ -93,14 +93,20 @@ public sealed class WorldPlayerContext
         var player = world.GetPrimaryPlayer();
         if (player == null)
         {
-            ModLogger.DebugLog($"{methodName}: Player is null, aborting.");
+            if (WorldTools.IsClient() || WorldTools.IsSinglePlayer())
+            {
+                ModLogger.DebugLog($"{methodName}: Player is null, aborting.");
+            }
             return null;
         }
 
         var chunkCacheCopy = world.ChunkCache.GetChunkArrayCopySync();
         if (chunkCacheCopy == null)
         {
-            ModLogger.DebugLog($"{methodName}: chunkCacheCopy is null, aborting.");
+            if (WorldTools.IsClient() || WorldTools.IsSinglePlayer())
+            {
+                ModLogger.DebugLog($"{methodName}: chunkCacheCopy is null, aborting.");
+            }
             return null;
         }
 
