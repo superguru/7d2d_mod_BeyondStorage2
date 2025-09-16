@@ -7,6 +7,6 @@
     "pullFromPlayerCraftedNonCrates": true,
     "pullFromVehicleStorage": true,
     "serverSyncConfig": true,
-    "isDebug": true,
+    "isDebug": false,
     "isDebugLogSettingsAccess": false
 }
