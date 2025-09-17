@@ -9,7 +9,7 @@ public class ConsoleCmdBsClearCache : ConsoleCmdAbstract
     static ConsoleCmdBsClearCache()
     {
         // Register this command when the class is first loaded
-        BsCommandRegistry.RegisterCommand("bsclearcache", "Invalidates cache and reloads items from storage");
+        BsCommandRegistry.RegisterCommand("bsclearcache", "Invalidates cache and reloads items from storages");
     }
 
     public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
