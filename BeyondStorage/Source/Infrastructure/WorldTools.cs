@@ -21,6 +21,11 @@ public static class WorldTools
         return GameManager.Instance?.World != null;
     }
 
+    public static bool IsWorldHasPrimaryPlayer()
+    {
+        return GameManager.Instance?.World?.GetPrimaryPlayer() != null;
+    }
+
     /// <summary>
     /// Gets comprehensive diagnostic information about the current world and connection state.
     /// This includes connection type, world existence, game state, and drone manager status.

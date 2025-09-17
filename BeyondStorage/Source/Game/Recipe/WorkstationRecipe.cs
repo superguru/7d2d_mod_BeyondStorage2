@@ -75,7 +75,7 @@ public static class WorkstationRecipe
         string methodName = $"{callType}.{nameof(Update_OpenWorkstations)}";
 
         // This check HAS to be done first, as StorageContextFactory.Create will return null if the world does not exist.
-        if (!WorldTools.IsWorldExists())
+        if (!WorldTools.IsWorldExists() || !WorldTools.IsWorldHasPrimaryPlayer())
         {
             return;
         }
