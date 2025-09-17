@@ -9,7 +9,7 @@ public class ConsoleCmdBsHelp : ConsoleCmdAbstract
     static ConsoleCmdBsHelp()
     {
         // Register this command when the class is first loaded
-        BsCommandRegistry.RegisterCommand("bshelp", "Lists all available BeyondStorage commands and their descriptions");
+        BsCommandRegistry.RegisterCommand("bshelp", "Lists all available BeyondStorageMod commands and their descriptions");
     }
 
     public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
@@ -33,11 +33,11 @@ public class ConsoleCmdBsHelp : ConsoleCmdAbstract
 
         if (allCommands.Count == 0)
         {
-            ModLogger.Info("No BeyondStorage commands are currently registered.");
+            ModLogger.Info("No BeyondStorageMod commands are currently registered.");
             return;
         }
 
-        ModLogger.Info($"BeyondStorage Commands ({allCommands.Count} available):");
+        ModLogger.Info($"BeyondStorageMod Commands ({allCommands.Count} available):");
         ModLogger.Info("==========================================");
 
         // Find the longest command name for formatting
@@ -63,6 +63,6 @@ public class ConsoleCmdBsHelp : ConsoleCmdAbstract
 
     public override string getDescription()
     {
-        return "Lists all available BeyondStorage commands and their descriptions";
+        return "Lists all available BeyondStorageMod commands and their descriptions";
     }
 }

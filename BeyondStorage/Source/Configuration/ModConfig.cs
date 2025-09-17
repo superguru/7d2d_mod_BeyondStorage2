@@ -24,9 +24,18 @@ public static class ModConfig
     public static BsConfig ServerConfig { get; } = new();
     private static bool IsConfigLoaded { get; set; } = false;
 
-    public static void LoadConfig(BeyondStorage context)
+    /// <summary>
+    /// Gets the full path to the configuration file
+    /// </summary>
+    /// <returns>Full path to the config.json file</returns>
+    private static string GetConfigFilePath()
     {
-        var path = Path.Combine(ModPathManager.GetConfigPath(true), ConfigFileName);
+        return Path.Combine(ModPathManager.GetConfigPath(true), ConfigFileName);
+    }
+
+    public static void LoadConfig(BeyondStorageMod context)
+    {
+        var path = GetConfigFilePath();
         ModLogger.DebugLog($"Loading config from {path}");
 
         if (File.Exists(path))
@@ -183,6 +192,15 @@ public static class ModConfig
     }
 
     /// <summary>
+    /// Saves the current config to the default config file location
+    /// </summary>
+    public static void SaveConfig()
+    {
+        var configPath = GetConfigFilePath();
+        SaveConfig(configPath);
+    }
+
+    /// <summary>
     /// Saves the current config to file with size validation
     /// </summary>
     private static void SaveConfig(string path)
@@ -208,28 +226,61 @@ public static class ModConfig
         }
     }
 
+    /// <summary>
+    /// Validates and corrects configuration values. Saves config if any changes are made.
+    /// </summary>
     private static void ValidateConfig()
     {
-        ValidateRangeOption();
-        ValidateVersion();
+        bool configChanged = false;
+
+        // Track if any validation methods make changes
+        configChanged |= ValidateRangeOption();
+        configChanged |= ValidateVersion();
+
+        // Save config if any changes were made during validation
+        if (configChanged)
+        {
+            try
+            {
+                var configPath = GetConfigFilePath();
+                SaveConfig(configPath);
+                ModLogger.Info("Config validation made corrections and saved updated config to file.");
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error($"Failed to save config after validation corrections: {ex.Message}", ex);
+            }
+        }
     }
 
-    private static void ValidateRangeOption()
+    /// <summary>
+    /// Validates and corrects the range option.
+    /// </summary>
+    /// <returns>True if the config was modified, false otherwise</returns>
+    private static bool ValidateRangeOption()
     {
         if (ClientConfig.range <= 0.0f && ClientConfig.range != -1.0f)
         {
             ModLogger.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
             ClientConfig.range = -1.0f;
+            return true; // Config was modified
         }
+        return false; // No changes made
     }
 
-    private static void ValidateVersion()
+    /// <summary>
+    /// Validates and corrects the version field.
+    /// </summary>
+    /// <returns>True if the config was modified, false otherwise</returns>
+    private static bool ValidateVersion()
     {
         if (string.IsNullOrEmpty(ClientConfig.version))
         {
             ModLogger.Warning("Config missing version field, setting to current version");
             ClientConfig.version = ConfigVersioning.CurrentVersion;
+            return true; // Config was modified
         }
+        return false; // No changes made
     }
 
 #if DEBUG

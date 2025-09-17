@@ -18,17 +18,19 @@ using HarmonyLib.Tools;
 
 namespace BeyondStorage;
 
-public class BeyondStorage : IModApi
+public class BeyondStorageMod : IModApi
 {
-    private static BeyondStorage _context;
+    private static BeyondStorageMod s_context;
+    public static BeyondStorageMod Context { get => s_context; set => s_context = value; }
 
-    internal static Mod ModInstance;
+    internal static Mod s_modInstance;
+
 
     public void InitMod(Mod modInstance)
     {
-        _context = this;
-        ModConfig.LoadConfig(_context);
-        ModInstance = modInstance;
+        s_context = this;
+        ModConfig.LoadConfig(s_context);
+        s_modInstance = modInstance;
         var harmony = new Harmony(GetType().ToString());
 #if DEBUG
         HarmonyFileLog.Enabled = true;
