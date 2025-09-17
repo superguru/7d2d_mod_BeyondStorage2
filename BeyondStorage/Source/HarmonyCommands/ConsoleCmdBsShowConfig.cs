@@ -2,9 +2,16 @@
 using System.Collections.Generic;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.HarmonyCommands;
 
 public class ConsoleCmdBsShowConfig : ConsoleCmdAbstract
 {
+    static ConsoleCmdBsShowConfig()
+    {
+        // Register this command when the class is first loaded
+        BsCommandRegistry.RegisterCommand("bsconfig", "Displays the current active config settings");
+    }
+
     public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
     {
         try
@@ -33,7 +40,6 @@ public class ConsoleCmdBsShowConfig : ConsoleCmdAbstract
         return
         [
             "bsconfig",
-            "bsshowconfig",
         ];
     }
 

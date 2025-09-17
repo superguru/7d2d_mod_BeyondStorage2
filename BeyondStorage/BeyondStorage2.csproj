@@ -73,7 +73,9 @@
     <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
   </Target>
   <ItemGroup>
-    <Compile Include="Source\HarmonyCommands\ConsoleCmdBsReloadStorage.cs" />
+    <Compile Include="Source\HarmonyCommands\BsCommandRegistry.cs" />
+    <Compile Include="Source\HarmonyCommands\ConsoleCmdBsHelp.cs" />
+    <Compile Include="Source\HarmonyCommands\ConsoleCmdBsClearCache.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsShowConfig.cs" />
     <Compile Include="Source\HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="Source\HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
