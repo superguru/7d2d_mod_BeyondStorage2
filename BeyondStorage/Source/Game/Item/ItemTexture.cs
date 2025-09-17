@@ -130,11 +130,9 @@ public static class ItemTexture
     /// <returns>The operation ID for tracking this paint operation</returns>
     public static Guid RegisterPaintOperation(PaintOperationContext paintContext)
     {
-        const string d_MethodName = nameof(RegisterPaintOperation);
-
         s_activeOperations[paintContext.OperationId] = paintContext;
 
-        ModLogger.DebugLog($"{d_MethodName}: Registered paint operation {paintContext.OperationId}");
+        //ModLogger.DebugLog($"{d_MethodName}: Registered paint operation {paintContext.OperationId}");
         return paintContext.OperationId;
     }
 
@@ -146,15 +144,9 @@ public static class ItemTexture
     /// <returns>True if the operation is in counting phase, false otherwise</returns>
     public static bool CountPaintUsage(Guid operationId)
     {
-#if DEBUG
-        //const string d_MethodName = nameof(CountPaintUsage);
-#endif
         if (s_activeOperations.TryGetValue(operationId, out var paintContext) && paintContext.IsCountingPhase)
         {
             paintContext.TotalPaintRequired++;
-#if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: Paint required incremented to {paintContext.TotalPaintRequired} for operation {operationId}");
-#endif
             return true; // Always return true during counting
         }
 
@@ -189,7 +181,6 @@ public static class ItemTexture
             {
                 // Skip paint removal but allow full painting
                 paintContext.FacesToPaint = paintContext.TotalPaintRequired; // Paint all faces without consuming resources
-                ModLogger.DebugLog($"{d_MethodName}: Paint consumption skipped for operation {operationId}, will paint all {paintContext.FacesToPaint} faces");
                 return paintContext.TotalPaintRequired > 0; // Return true if there are faces to paint
             }
 
@@ -222,11 +213,9 @@ public static class ItemTexture
     /// <param name="operationId">The operation ID to finish</param>
     public static void FinishPaintOperation(Guid operationId)
     {
-        const string d_MethodName = nameof(FinishPaintOperation);
-
         if (s_activeOperations.Remove(operationId))
         {
-            ModLogger.DebugLog($"{d_MethodName}: Finished paint operation {operationId}");
+            //ModLogger.DebugLog($"{d_MethodName}: Finished paint operation {operationId}");
         }
     }
 
@@ -280,7 +269,6 @@ public static class ItemTexture
     public static void SmartFloodFill(PaintOperationContext paintContext, World _world, ChunkCluster _cc, int _entityId, PersistentPlayerData _lpRelative, int _sourcePaint, Vector3 _hitPosition, Vector3 _hitFaceNormal, Vector3 _dir1, Vector3 _dir2, int _channel)
     {
         const string d_MethodName = nameof(SmartFloodFill);
-        ModLogger.DebugLog($"{d_MethodName}: Starting smart flood fill with paintContext {paintContext.OperationId}");
 
         // Register the paint paintContext for tracking
         var operationId = RegisterPaintOperation(paintContext);
@@ -288,7 +276,6 @@ public static class ItemTexture
         try
         {
             // Phase 1: Count paint usage and store faces to paint
-            ModLogger.DebugLog($"{d_MethodName}: Phase 1 - Counting paint usage and storing faces");
             paintContext.ExposedTextureBlock.CountFloodFill(_world, _cc, _entityId, paintContext.ActionData, _lpRelative, _sourcePaint, _hitPosition, _hitFaceNormal, _dir1, _dir2, _channel, operationId);
 
             // Phase 2: Calculate resources and switch to execution
@@ -300,10 +287,8 @@ public static class ItemTexture
             }
 
             var context = GetOperationContext(operationId);
-            ModLogger.DebugLog($"{d_MethodName}: Will paint {context?.FacesToPaint} out of {context?.TotalPaintRequired} required faces");
 
             // Phase 3: Execute painting using stored faces (no flood fill loop needed!)
-            ModLogger.DebugLog($"{d_MethodName}: Phase 3 - Executing painting from stored faces");
             paintContext.ExposedTextureBlock.ExecuteFloodFill(_world, _cc, _entityId, paintContext.ActionData, _lpRelative, _sourcePaint, _hitPosition, _hitFaceNormal, _dir1, _dir2, _channel, operationId);
         }
         finally
@@ -347,22 +332,18 @@ public static class ItemTexture
         try
         {
             // Phase 1: Count paint usage and store faces to paint
-            ModLogger.DebugLog($"{d_MethodName}: Phase 1 - Counting paint usage for {_mode} mode");
             paintContext.ExposedTextureBlock.CountAreaPaint(_world, _cc, _entityId, paintContext.ActionData, _lpRelative, _pos, _origin, _dir1, _dir2, _radius, operationId);
 
             // Phase 2: Calculate resources and switch to execution
             var canProceed = SwitchToExecutionPhase(operationId);
             if (!canProceed)
             {
-                ModLogger.DebugLog($"{d_MethodName}: No paint available, aborting operation");
                 return;
             }
 
             var context = GetOperationContext(operationId);
-            ModLogger.DebugLog($"{d_MethodName}: Will paint {context?.FacesToPaint} out of {context?.TotalPaintRequired} required faces");
 
             // Phase 3: Execute painting using stored faces
-            ModLogger.DebugLog($"{d_MethodName}: Phase 3 - Executing {_mode} painting from stored faces");
             paintContext.ExposedTextureBlock.ExecuteAreaPaint(_entityId, paintContext.ActionData, operationId);
         }
         finally
