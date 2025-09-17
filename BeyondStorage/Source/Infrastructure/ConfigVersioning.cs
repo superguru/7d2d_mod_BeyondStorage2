@@ -127,10 +127,10 @@ public static class ConfigVersioning
         // Apply migrations in sequence
         var migratedConfig = config;
 
-        // Migration to version 2.4.0: Disable debug mode on servers
-        if (fromVersion < new Version("2.4.0"))
+        // Migration to version 2.3.5: Disable debug mode on servers
+        if (fromVersion < new Version("2.3.5"))
         {
-            migratedConfig = MigrateTo240(migratedConfig);
+            migratedConfig = MigrateTo235(migratedConfig);
         }
 
         // Always update to current version
@@ -155,15 +155,15 @@ public static class ConfigVersioning
     }
 
     /// <summary>
-    /// Migrates config to version 2.4.0
+    /// Migrates config to version 2.3.5
     /// Changes: Disables debug mode when running on a server to prevent performance issues
     /// </summary>
     /// <param name="config">Config to migrate</param>
     /// <returns>Migrated config</returns>
-    private static BsConfig MigrateTo240(BsConfig config)
+    private static BsConfig MigrateTo235(BsConfig config)
     {
-        const string d_MethodName = nameof(MigrateTo240);
-        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.4.0");
+        const string d_MethodName = nameof(MigrateTo235);
+        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.3.5");
 
         // Check if we're running on a server and debug mode is enabled
         if (config.isDebug && WorldTools.IsServer())
@@ -187,7 +187,7 @@ public static class ConfigVersioning
             ModLogger.DebugLog($"{d_MethodName}: Debug mode already disabled - no changes needed");
         }
 
-        ModLogger.Info($"{d_MethodName}: Successfully applied 2.4.0 migration");
+        ModLogger.Info($"{d_MethodName}: Successfully applied 2.3.5 migration");
         return config;
     }
 
