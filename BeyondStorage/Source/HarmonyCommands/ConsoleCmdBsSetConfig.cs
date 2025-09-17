@@ -144,8 +144,11 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
         int maxNameLength = allProperties.Max(p => p.PropertyName.Length);
         int maxTypeLength = allProperties.Max(p => p.Type.Length);
 
-        // Use StringBuilder for efficient string building
-        var sb = new StringBuilder();
+        // Calculate approximate capacity for StringBuilder to reduce allocations
+        int estimatedCapacity = 50 + (allProperties.Count * (maxNameLength + maxTypeLength + 100)); // Header + (properties * estimated line length)
+
+        // Use StringBuilder for efficient string building with pre-calculated capacity
+        var sb = new StringBuilder(estimatedCapacity);
         sb.AppendLine("Available properties:");
 
         foreach (var propertyInfo in allProperties)
@@ -157,7 +160,7 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
 #if !DEBUG
             if (propertyInfo.SetValue == null)
             {
-                description += " (DEBUG build only)";
+                description = $"{description} (DEBUG build only)";
             }
 #endif
 

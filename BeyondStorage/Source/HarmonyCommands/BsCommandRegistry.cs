@@ -23,7 +23,7 @@ internal class BsCommandRegistry
         };
 
         _registeredCommands[commandInfo.Name] = commandInfo;
-        ModLogger.DebugLog($"Registered command: {commandName}");
+        ModLogger.Info($"Registered command: {commandName}");
     }
 
     public static List<CommandInfo> GetAllCommands()

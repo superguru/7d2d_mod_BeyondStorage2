@@ -6,15 +6,16 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-* In v2.1.0, items can be pulled from nearby Workstations (configurable).
-* In v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
-* In v2.1.4, final version to support 7D2D 2.1
-* In v2.2.0, pull from drones, paint from all storages, supports slot locking for containers, only support 7D2D 2.x and later
-* In v2.2.3, add ability to keep track of available ammo from all pullable sources
-* In v2.2.4, add live recipe tracking updates when anything becomes available, like a workstation crafted item, a cooked item, a dew collector completion, etc.
-* In v2.2.5, add console command `bsconfig` to display the current configuration
-* In v2.2.7, add lockpicking and payments from storage sources
+* In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
 * In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
+* In v2.2.7, add lockpicking and payments from storage sources
+* In v2.2.5, add console command `bsconfig` to display the current configuration
+* In v2.2.4, add live recipe tracking updates when anything becomes available, like a workstation crafted item, a cooked item, a dew collector completion, etc.
+* In v2.2.3, add ability to keep track of available ammo from all pullable sources
+* In v2.2.0, pull from drones, paint from all storages, supports slot locking for containers, only support 7D2D 2.x and later
+* In v2.1.4, final version to support 7D2D 2.1
+* In v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
+* In v2.1.0, items can be pulled from nearby Workstations (configurable).
 
 #### Pull Order:
   - Player Backpack (as per vanilla game)
