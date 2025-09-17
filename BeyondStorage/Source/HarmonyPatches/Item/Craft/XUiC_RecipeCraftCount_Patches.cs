@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Harmony;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Item;
@@ -22,38 +21,36 @@ internal static class XUiCRecipeCraftCountPatches
         IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(XUiC_RecipeCraftCount)}.{nameof(XUiC_RecipeCraftCount.calcMaxCraftable)}";
-        ModLogger.Info($"Transpiling {targetMethodString}");
+        var instructionsList = instructions as List<CodeInstruction> ?? instructions?.ToList() ?? new List<CodeInstruction>();
 
-        // Append our itemStack array to current inventory
-        var codes = new List<CodeInstruction>(instructions);
-        var set = false;
-        for (var i = 0; i < codes.Count; i++)
+        // Create search pattern to find: callvirt XUiM_PlayerInventory.GetAllItemStacks
+        var searchPattern = new List<CodeInstruction>
         {
-            if (codes[i].opcode != OpCodes.Callvirt || (MethodInfo)codes[i].operand !=
-                AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetAllItemStacks)))
-            {
-                continue;
-            }
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetAllItemStacks)))
+        };
 
-            ModLogger.DebugLog("Appending our item stacks to current inventory");
-
-            // ItemCraft.MaxCraftGetAllStorageStacks(this.xui.PlayerInventory.GetItemStacksForFilter()).ToArray()
-            codes.Insert(i + 1,
-                new CodeInstruction(OpCodes.Call,
-                    AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks))));
-            set = true;
-            break;
-        }
-
-        if (!set)
+        // Create replacement instructions that will be inserted after the GetAllItemStacks call
+        var replacementInstructions = new List<CodeInstruction>
         {
-            ModLogger.Error($"Failed to patch {targetMethodString}");
-        }
-        else
-        {
-            ModLogger.Info($"Successfully patched {targetMethodString}");
-        }
+            // ItemCraft.ItemCraft_MaxGetAllStorageStacks(result_from_GetAllItemStacks)
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemCraft), nameof(ItemCraft.ItemCraft_MaxGetAllStorageStacks)))
+        };
 
-        return codes.AsEnumerable();
+        // Create the patch request
+        var request = new ILPatchEngine.PatchRequest
+        {
+            OriginalInstructions = instructionsList,
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodString,
+            ReplacementOffset = 1, // Insert after the GetAllItemStacks call
+            IsInsertMode = true, // We want to insert, not overwrite
+            MaxPatches = 1, // Only patch the first occurrence
+            MinimumSafetyOffset = 0, // No special context requirements
+            ExtraLogging = false // Enable detailed logging for debugging
+        };
+
+        var response = ILPatchEngine.ApplyPatches(request);
+        return response.BestInstructions(request);
     }
 }
