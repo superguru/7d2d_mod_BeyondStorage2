@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.PowerSource;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Harmony;
 using HarmonyLib;
 using UniLinq;
 
@@ -19,57 +18,42 @@ internal static class XUiCPowerSourceStatsPatches
     private static IEnumerable<CodeInstruction> XUiC_PowerSourceStats_BtnRefuel_OnPress_Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         var targetMethodString = $"{typeof(XUiC_PowerSourceStats)}.{nameof(XUiC_PowerSourceStats.BtnRefuel_OnPress)}";
-        var codeList = instructions as List<CodeInstruction> ?? instructions?.ToList() ?? new List<CodeInstruction>();
-        bool patchApplied = false;
+        var instructionsList = instructions as List<CodeInstruction> ?? instructions?.ToList() ?? new List<CodeInstruction>();
 
-        for (int i = 0; i < codeList.Count; i++)
+        // Create search pattern to find: callvirt Bag.DecItem
+        var searchPattern = new List<CodeInstruction>
         {
-            // Look for: callvirt Bag.DecItem
-            if (codeList[i].opcode == OpCodes.Callvirt &&
-                codeList[i].operand is MethodInfo mi &&
-                mi == AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
-            {
-                ModLogger.DebugLog($"Patching {targetMethodString} at instruction {i}");
+            new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Bag), nameof(Bag.DecItem)))
+        };
 
-                // Ensure we have enough instructions before and after for safe patching
-                if (i - 5 >= 0 && i + 2 < codeList.Count)
-                {
-                    var injectedInstructions = new List<CodeInstruction>
-                    {
-                        // ldloc.s      _itemValue
-                        codeList[i - 5].Clone(),
-                        // ldloc.s      _count2 (last removed count)
-                        codeList[i + 2].Clone(),
-                        // ldloc.2      // _count1
-                        new CodeInstruction(OpCodes.Ldloc_2),
-                        // conv.i4      (int) _count1
-                        new CodeInstruction(OpCodes.Conv_I4),
-                        // PowerSourceRefuel.RefuelRemoveRemaining(ItemValue itemValue, int lastRemoved, int totalNeeded)
-                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PowerSourceRefuel), nameof(PowerSourceRefuel.RefuelRemoveRemaining))),
-                        // stloc.s      _count2     |   update result
-                        codeList[i + 1].Clone()
-                    };
-
-                    codeList.InsertRange(i + 2, injectedInstructions);
-                    patchApplied = true;
-                }
-                else
-                {
-                    ModLogger.Error($"Patch for {targetMethodString} failed: insufficient instruction context at index {i}.");
-                }
-                break;
-            }
-        }
-
-        if (!patchApplied)
+        // Create replacement instructions that will be inserted after the Bag.DecItem call
+        var replacementInstructions = new List<CodeInstruction>
         {
-            ModLogger.Error($"Failed to patch {targetMethodString}: target instruction not found.");
-        }
-        else if (patchApplied)
-        {
-            ModLogger.DebugLog($"Successfully patched {targetMethodString}");
-        }
+            // We need to construct the replacement instructions dynamically since we need to reference
+            // the local variables from the original method. For now, we'll create placeholders.
+            new CodeInstruction(OpCodes.Ldloc_S, 4), // _itemValue
+            new CodeInstruction(OpCodes.Ldloc_S, 5), // _count2 (last removed count) 
+            new CodeInstruction(OpCodes.Ldloc_2), // ldloc.2 _count1
+            new CodeInstruction(OpCodes.Conv_I4), // conv.i4 (int) _count1
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PowerSourceRefuel), nameof(PowerSourceRefuel.RefuelRemoveRemaining), [typeof(ItemValue), typeof(int), typeof(int)])),
+            new CodeInstruction(OpCodes.Stloc_S, 5) // _count2 (update result)
+        };
 
-        return codeList.AsEnumerable();
+        // Create the patch request
+        var request = new ILPatchEngine.PatchRequest
+        {
+            OriginalInstructions = instructionsList,
+            SearchPattern = searchPattern,
+            ReplacementInstructions = replacementInstructions,
+            TargetMethodName = targetMethodString,
+            ReplacementOffset = 2, // Insert after the Bag.DecItem call
+            IsInsertMode = true, // We want to insert, not overwrite
+            MaxPatches = 1, // Only patch the first occurrence
+            MinimumSafetyOffset = 5, // Ensure we have enough context before the match
+            ExtraLogging = false // Enable detailed logging for debugging
+        };
+
+        var response = ILPatchEngine.ApplyPatches(request);
+        return response.BestInstructions(request);
     }
 }
