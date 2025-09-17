@@ -135,6 +135,37 @@ def is_wrapped_in_debug(lines, line_index):
     
     return False
 
+def is_commented_out(line_content):
+    """
+    Check if a line is commented out with // comments.
+    
+    Args:
+        line_content: The stripped line content to check
+        
+    Returns:
+        bool: True if the line is commented out, False otherwise
+    """
+    # Check if the line starts with // (single-line comment)
+    if line_content.startswith('//'):
+        return True
+    
+    # Check for ModLogger calls that appear after // in the same line
+    # This handles cases like: // ModLogger.Info("test");
+    comment_index = line_content.find('//')
+    if comment_index != -1:
+        # Check if any ModLogger method appears only in the commented part
+        before_comment = line_content[:comment_index]
+        after_comment = line_content[comment_index:]
+        
+        # If no ModLogger call before the comment, but there is one after, it's commented out
+        has_modlogger_before = any(method in before_comment for method in MODLOGGER_METHODS)
+        has_modlogger_after = any(method in after_comment for method in MODLOGGER_METHODS)
+        
+        if not has_modlogger_before and has_modlogger_after:
+            return True
+    
+    return False
+
 def scan_file(file_path):
     """
     Scan a single C# file for ModLogger calls not wrapped in DEBUG statements.
@@ -155,6 +186,14 @@ def scan_file(file_path):
     
     for line_index, line in enumerate(lines):
         line_content = line.strip()
+        
+        # Skip empty lines
+        if not line_content:
+            continue
+        
+        # Skip commented out lines
+        if is_commented_out(line_content):
+            continue
         
         # Check if line contains any ModLogger method call
         for method in MODLOGGER_METHODS:
@@ -283,6 +322,7 @@ def generate_detailed_report(results, skipped_files_found, skip_files):
         report_lines.extend([
             f"⚠️  Found {total_calls} unwrapped ModLogger calls across {len(results)} files.",
             "   These calls may impact performance in release builds.",
+            "   (Commented out lines with // are automatically ignored)",
             ""
         ])
         
