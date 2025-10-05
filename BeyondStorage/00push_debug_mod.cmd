@@ -4,7 +4,7 @@ set MOD_NAME=BeyondStorage2
 set SOURCE_DIR=bin\Debug
 
 rem set OUT_DIR="D:\SteamLibrary\steamapps\common\7 Days To Die\Mods\%MOD_NAME%"
-set OUT_DIR="%APPDATA%\7DaysToDie\Mods\%MOD_NAME%"
+set OUT_DIR="%APPDATA%\7DaysToDie\Mods\Dev_%MOD_NAME%"
 
 rem echo OUT_DIR is %OUT_DIR%
 rem pause
