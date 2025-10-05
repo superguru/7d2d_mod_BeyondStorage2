@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
 using Newtonsoft.Json;
@@ -33,8 +34,20 @@ public static class ModConfig
         return Path.Combine(ModPathManager.GetConfigPath(true), ConfigFileName);
     }
 
+    /// <summary>
+    /// Gets the full path to the legacy configuration file location
+    /// </summary>
+    /// <returns>Full path to the legacy config.json file</returns>
+    private static string GetLegacyConfigFilePath()
+    {
+        return Path.Combine(ModPathManager.GetLegacyConfigPath(), ConfigFileName);
+    }
+
     public static void LoadConfig(BeyondStorageMod context)
     {
+        // Check for config migration needs (v2.4.0+)
+        MigrateConfigLocation();
+
         var path = GetConfigFilePath();
         ModLogger.DebugLog($"Loading config from {path}");
 
@@ -159,6 +172,112 @@ public static class ModConfig
             ModLogger.Warning($"Config file {path} not found, using default config.");
             ClientConfig = new BsConfig();
             IsConfigLoaded = true;
+
+            // Create and save default config file to new location
+            CreateDefaultConfigFile(path);
+        }
+    }
+
+    /// <summary>
+    /// Creates and saves a default config file to the specified path
+    /// </summary>
+    /// <param name="configPath">Path where to create the config file</param>
+    private static void CreateDefaultConfigFile(string configPath)
+    {
+        try
+        {
+            SaveConfig(configPath);
+            ModLogger.Info($"Created default config file at {configPath}");
+        }
+        catch (Exception ex)
+        {
+            ModLogger.Warning($"Failed to create default config file at {configPath}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Migrates config files from the legacy Config subdirectory to the mod assembly directory (v2.4.0+)
+    /// </summary>
+    private static void MigrateConfigLocation()
+    {
+        var legacyConfigDir = ModPathManager.GetLegacyConfigPath();
+        var newConfigDir = ModPathManager.GetConfigPath();
+
+        // If legacy config directory doesn't exist, no migration needed
+        if (!Directory.Exists(legacyConfigDir))
+        {
+            return;
+        }
+
+        var legacyConfigFile = GetLegacyConfigFilePath();
+        var newConfigFile = GetConfigFilePath();
+
+        try
+        {
+            // Migrate main config file if it exists and new location doesn't have it
+            if (File.Exists(legacyConfigFile) && !File.Exists(newConfigFile))
+            {
+                ModLogger.Info("Migrating config file from Config subdirectory to mod assembly directory");
+                File.Move(legacyConfigFile, newConfigFile);
+                ModLogger.Info($"Moved config file from {legacyConfigFile} to {newConfigFile}");
+            }
+
+            // Migrate all backup files
+            MigrateBackupFiles(legacyConfigDir, newConfigDir);
+
+            // Clean up empty legacy config directory
+            if (Directory.Exists(legacyConfigDir) && !Directory.EnumerateFileSystemEntries(legacyConfigDir).Any())
+            {
+                Directory.Delete(legacyConfigDir);
+                ModLogger.Info("Removed empty legacy Config directory");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModLogger.Warning($"Failed to migrate config files from legacy location: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Migrates config backup files from legacy directory to new directory
+    /// </summary>
+    /// <param name="legacyDir">Legacy config directory path</param>
+    /// <param name="newDir">New config directory path</param>
+    private static void MigrateBackupFiles(string legacyDir, string newDir)
+    {
+        try
+        {
+            var backupFiles = Directory.GetFiles(legacyDir, $"{ConfigBackupPrefix}*.json");
+            int migratedCount = 0;
+
+            foreach (var legacyBackupFile in backupFiles)
+            {
+                var fileName = Path.GetFileName(legacyBackupFile);
+                var newBackupFile = Path.Combine(newDir, fileName);
+
+                // Only migrate if destination doesn't exist
+                if (!File.Exists(newBackupFile))
+                {
+                    File.Move(legacyBackupFile, newBackupFile);
+                    migratedCount++;
+                    ModLogger.DebugLog($"Migrated backup file: {fileName}");
+                }
+                else
+                {
+                    // Remove duplicate from legacy location
+                    File.Delete(legacyBackupFile);
+                    ModLogger.DebugLog($"Removed duplicate backup file from legacy location: {fileName}");
+                }
+            }
+
+            if (migratedCount > 0)
+            {
+                ModLogger.Info($"Migrated {migratedCount} config backup files to new location");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModLogger.Warning($"Failed to migrate backup files: {ex.Message}");
         }
     }
 

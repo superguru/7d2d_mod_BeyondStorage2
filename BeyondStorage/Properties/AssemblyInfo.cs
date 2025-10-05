@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("BeyondStorage2")]
-[assembly: AssemblyDescription("Mod for 7 Days to Die that finds required items from nearby containers")]
+[assembly: AssemblyDescription("Mod for 7 Days to Die that expands your inventory to many different storage sources around you")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("aedenthorn, unv_Annihilator, superguru, gazorper")]
+[assembly: AssemblyCompany("gazorper, superguru, unv_Annihilator,aedenthorn")]
 [assembly: AssemblyProduct("BeyondStorage2.Properties")]
 [assembly: AssemblyCopyright("MIT License")]
 [assembly: AssemblyTrademark("")]
@@ -28,5 +28,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("2.3.5.*")]
-[assembly: AssemblyFileVersion("2.3.5")]
+[assembly: AssemblyVersion("2.4.0.*")]
+[assembly: AssemblyFileVersion("2.4.0")]
