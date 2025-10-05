@@ -112,7 +112,7 @@ public static class StorageQueryService
         var result = context.Sources.DataStore.GetItemStacksForFilter(filter);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Returning {result.Count} item stacks with filter: {filter}");
+        //ModLogger.DebugLog($"{d_MethodName}: Returning {result.Count} item stacks with filter: {filter}");
 #endif
         return result;
     }

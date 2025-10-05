@@ -13,7 +13,6 @@ internal static class EntityItemDiscovery
     public static void FindItems(StorageContext context)
     {
 #if DEBUG
-        const string d_MethodName = nameof(FindItems);
 #endif
         if (!ValidateWorldEntityList(context))
         {
@@ -34,7 +33,7 @@ internal static class EntityItemDiscovery
         }
 
 #if DEBUG
-        LogProcessingResults(d_MethodName, processingState);
+        //LogProcessingResults(d_MethodName, processingState);
 #endif
     }
 
@@ -132,7 +131,6 @@ internal static class EntityItemDiscovery
     private static int ProcessVehicleItems(StorageContext context, EntityVehicle vehicle)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessVehicleItems);
 #endif
 
         var sources = context.Sources;
@@ -149,7 +147,7 @@ internal static class EntityItemDiscovery
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
 #endif
         }
 

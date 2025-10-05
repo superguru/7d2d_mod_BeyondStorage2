@@ -15,7 +15,6 @@ internal static class TileEntityItemDiscovery
     public static void FindItems(StorageContext context)
     {
 #if DEBUG
-        const string d_MethodName = nameof(FindItems);
 #endif
         var processingState = new TileEntityProcessingState(context);
 
@@ -25,7 +24,7 @@ internal static class TileEntityItemDiscovery
         }
 
 #if DEBUG
-        LogProcessingResults(d_MethodName, processingState);
+        //LogProcessingResults(d_MethodName, processingState);
 #endif
     }
 
