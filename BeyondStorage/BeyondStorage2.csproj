@@ -47,12 +47,13 @@
   </Target>
   <Target Name="DeployMod" AfterTargets="Build">
     <Message Text="Executing mod deployment task" Importance="High" />
-    <Exec Command='python &quot;utils\deploy_target_build.py&quot; &quot;$(Configuration)&quot; &quot;$(OutputPath)\&quot; &quot;$(ProjectDir)\&quot;' ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
+    <Exec Command="python &quot;utils\deploy_target_build.py&quot; &quot;$(Configuration)&quot; &quot;$(OutputPath)\&quot; &quot;$(ProjectDir)\&quot;" ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
       <Output TaskParameter="ExitCode" PropertyName="DeployModExitCode" />
     </Exec>
     <Error Condition="'$(DeployModExitCode)' != '0'" Text="Deployment failed with exit code $(DeployModExitCode)" />
   </Target>
   <ItemGroup>
+    <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
     <Compile Include="Source\HarmonyCommands\BsCommandRegistry.cs" />
     <Compile Include="Source\HarmonyCommands\BsConfigPropertyRegistry.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsHelp.cs" />
@@ -86,7 +87,7 @@
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_HUDStatBar_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Item\Texture\ItemActionTextureBlock_fireShotLater_Patch.cs" />
     <Compile Include="Source\HarmonyPatches\Item\Texture\ItemActionTextureBlock_FloodFill_Patch.cs" />
-    <Compile Include="Source\HarmonyPatches\UI\XUiC_CraftingQueue_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\BugPatches\XUiC_CraftingQueue_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Item\Craft\XUiC_IngredientEntry_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Item\Craft\XUiC_RecipeCraftCount_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Item\Craft\XUiC_RecipeList_Patches.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="Source\HarmonyPatches\Reload\ItemActionRanged_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Server\GameManager_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_LootWindow_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\UI\XUiCBackpackWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\Vehicle\Refuel\EntityVehicle_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Vehicle\Repair\XUiM_Vehicle_Patches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
