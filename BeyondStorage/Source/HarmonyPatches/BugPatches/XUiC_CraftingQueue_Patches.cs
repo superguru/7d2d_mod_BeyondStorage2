@@ -3,7 +3,7 @@ using BeyondStorage.Scripts.Diagnostics;
 using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.UI;
+namespace BeyondStorage.HarmonyPatches.BugPatches;
 
 [HarmonyPatch(typeof(XUiC_CraftingQueue))]
 #if DEBUG
