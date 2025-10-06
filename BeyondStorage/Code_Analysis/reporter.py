@@ -20,7 +20,7 @@ class Reporter:
         return f"{issue.file_path}({issue.line_number}): {issue.severity} {issue.code}: {issue.description}"
     
     @staticmethod
-    def cleanup_old_result_files(keep_latest: int = 5) -> int:
+    def cleanup_old_result_files(output_directory: str, keep_latest: int = 5) -> int:
         """
         Delete old code check result files, keeping only the latest N files per 5-minute window,
         with a global maximum of 10 files total.
@@ -28,13 +28,18 @@ class Reporter:
         Renamed files that don't match the format are preserved.
         
         Args:
+            output_directory: Directory where result files are stored
             keep_latest: Number of latest files to keep per 5-minute window (default: 5)
             
         Returns:
             Number of files deleted
         """
-        # Find all files matching the pattern
-        pattern = "code_check_results_*.txt"
+        # Ensure output directory exists
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+        
+        # Find all files matching the pattern in the output directory
+        pattern = os.path.join(output_directory, "code_check_results_*.txt")
         all_result_files = glob.glob(pattern)
         
         if not all_result_files:
@@ -113,11 +118,16 @@ class Reporter:
         return deleted_count
     
     @staticmethod
-    def write_results(errors: List[Issue], warnings: List[Issue], cs_files_count: int, parsing_method: str) -> str:
+    def write_results(output_directory: str, errors: List[Issue], warnings: List[Issue], cs_files_count: int, parsing_method: str) -> str:
         """Write results to timestamped file and return filename"""
+        # Ensure output directory exists
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+        
         # Create timestamped results file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_file = f"code_check_results_{timestamp}.txt"
+        results_filename = f"code_check_results_{timestamp}.txt"
+        results_file = os.path.join(output_directory, results_filename)
         
         # Output to both console and file
         output_lines = []

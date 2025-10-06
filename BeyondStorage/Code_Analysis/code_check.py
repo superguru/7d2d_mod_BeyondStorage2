@@ -30,6 +30,9 @@ from string_checks import StringBasedChecker
 from harmony_checks import HarmonyChecker
 from reporter import Reporter
 
+# Configuration constants
+ANALYSIS_OUTPUT_DIRECTORY = "./utils/analysis_results"
+
 
 class CodeQualityChecker:
     """Main orchestrator class for code quality checking"""
@@ -324,7 +327,7 @@ class CodeQualityChecker:
         print()
         
         # Clean up old result files first
-        deleted_files = Reporter.cleanup_old_result_files(keep_latest=5)
+        deleted_files = Reporter.cleanup_old_result_files(ANALYSIS_OUTPUT_DIRECTORY, keep_latest=5)
         if deleted_files > 0:
             print(f"Cleaned up {deleted_files} old result file(s)")
             print()
@@ -350,7 +353,7 @@ class CodeQualityChecker:
         
         # Generate report
         parsing_method = "Hybrid (Roslyn + String-based)" if is_roslyn_available() else "String-based only"
-        results_file = Reporter.write_results(errors, warnings, len(cs_files), parsing_method)
+        results_file = Reporter.write_results(ANALYSIS_OUTPUT_DIRECTORY, errors, warnings, len(cs_files), parsing_method)
         
         if results_file:
             print(f"\nResults written to: {results_file}")
