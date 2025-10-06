@@ -199,7 +199,9 @@
     <Compile Include="Source\Data\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ModInfo.xml" />
+    <Content Include="ModPackage\Config\loot.xml" />
+    <Content Include="ModPackage\Config\symbol_star.png" />
+    <Content Include="ModPackage\ModInfo.xml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -305,6 +307,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="config.json" />
+    <None Include="ModPackage\README.md" />
     <None Include="packages.config" />
     <None Include="README.md" />
   </ItemGroup>
