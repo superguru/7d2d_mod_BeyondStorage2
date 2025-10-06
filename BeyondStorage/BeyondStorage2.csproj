@@ -199,9 +199,10 @@
     <Compile Include="Source\Data\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ModPackage\Config\loot.xml" />
-    <Content Include="ModPackage\Config\symbol_star.png" />
+    <Content Include="ModPackage\Config\Localization.txt" />
+    <Content Include="ModPackage\Config\XUi\windows.xml" />
     <Content Include="ModPackage\ModInfo.xml" />
+    <Content Include="ModPackage\UIAtlases\UIAtlas\ui_symbol_beyond_smart_loot_sort.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -316,5 +317,6 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.3.11.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.CSharp.4.14.0\lib\net8.0\Microsoft.CodeAnalysis.CSharp.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
