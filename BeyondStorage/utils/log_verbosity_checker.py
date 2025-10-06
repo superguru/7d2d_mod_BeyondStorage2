@@ -12,6 +12,7 @@ from pathlib import Path
 
 # Configuration
 BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Source")
+OUTPUT_DIRECTORY = os.path.dirname(__file__) + "/log_check_results"  # Output files to the same directory as this script
 MAX_RESULT_FILES = 5
 SKIP_LIST_FILE = os.path.join(os.path.dirname(__file__), "log_check_skip_list.cfg")
 
@@ -82,8 +83,11 @@ Infrastructure/ModLogger.cs
 
 def cleanup_old_results():
     """Keep only the most recent MAX_RESULT_FILES result files."""
-    script_dir = os.path.dirname(__file__)
-    pattern = os.path.join(script_dir, "log_check_results_*.txt")
+    # Ensure output directory exists
+    if not os.path.exists(OUTPUT_DIRECTORY):
+        os.makedirs(OUTPUT_DIRECTORY)
+    
+    pattern = os.path.join(OUTPUT_DIRECTORY, "log_check_results_*.txt")
     result_files = glob.glob(pattern)
     
     if len(result_files) > MAX_RESULT_FILES:
@@ -297,6 +301,7 @@ def generate_detailed_report(results, skipped_files_found, skip_files):
         "=" * 80,
         f"Base Directory: {BASE_DIR}",
         f"Skip List File: {SKIP_LIST_FILE}",
+        f"Output Directory: {OUTPUT_DIRECTORY}",
         f"Files skipped: {len(skipped_files_found)}",
         f"Total files with unwrapped ModLogger calls: {len(results)}",
         ""
@@ -389,8 +394,11 @@ def main():
         
         # Output detailed report to file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        script_dir = os.path.dirname(__file__)
-        output_file = os.path.join(script_dir, f"log_check_results_{timestamp}.txt")
+        output_file = os.path.join(OUTPUT_DIRECTORY, f"log_check_results_{timestamp}.txt")
+        
+        # Ensure output directory exists
+        if not os.path.exists(OUTPUT_DIRECTORY):
+            os.makedirs(OUTPUT_DIRECTORY)
         
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(detailed_report)
@@ -404,8 +412,12 @@ def main():
         # Still try to write error to file
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            script_dir = os.path.dirname(__file__)
-            output_file = os.path.join(script_dir, f"log_check_results_{timestamp}.txt")
+            output_file = os.path.join(OUTPUT_DIRECTORY, f"log_check_results_{timestamp}.txt")
+            
+            # Ensure output directory exists for error case too
+            if not os.path.exists(OUTPUT_DIRECTORY):
+                os.makedirs(OUTPUT_DIRECTORY)
+            
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(f"ERROR: {e}\n")
         except:
