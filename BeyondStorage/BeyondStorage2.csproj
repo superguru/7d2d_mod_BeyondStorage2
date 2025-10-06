@@ -47,7 +47,7 @@
   </Target>
   <Target Name="DeployMod" AfterTargets="Build">
     <Message Text="Executing mod deployment task" Importance="High" />
-    <Exec Command='python "$(ProjectDir)\utils\deploy_target_build.py" "$(Configuration)" "$(ProjectDir)"' ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
+    <Exec Command='python &quot;utils\deploy_target_build.py&quot; &quot;$(Configuration)&quot; &quot;$(OutputPath)\&quot; &quot;$(ProjectDir)\&quot;' ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
       <Output TaskParameter="ExitCode" PropertyName="DeployModExitCode" />
     </Exec>
     <Error Condition="'$(DeployModExitCode)' != '0'" Text="Deployment failed with exit code $(DeployModExitCode)" />
@@ -287,7 +287,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="config.json" />
+    <None Include="ModPackage\config.json" />
     <None Include="ModPackage\README.md" />
     <None Include="packages.config" />
     <None Include="README.md" />
