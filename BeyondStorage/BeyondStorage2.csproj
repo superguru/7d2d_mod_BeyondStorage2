@@ -45,32 +45,12 @@
     </Exec>
     <Error Condition="'$(CodeQualityChecksExitCode)' != '0'" Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
   </Target>
-  <Target Name="PackageMod" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <Message Text="Executing mod packaging task" Importance="High" />
-    <!-- Path to the compiled assembly -->
-    <ItemGroup>
-      <CompiledAssembly Include="$(OutputPath)\$(AssemblyName).dll" />
-    </ItemGroup>
-    <!-- Use GetAssemblyIdentity to extract version -->
-    <GetAssemblyIdentity AssemblyFiles="@(CompiledAssembly)">
-      <Output TaskParameter="Assemblies" ItemName="AssemblyIdentities" />
-    </GetAssemblyIdentity>
-    <!-- Output the resolved version -->
-    <!-- <Message Text="Resolved AssemblyVersion: %(AssemblyIdentities.Version)" Importance="High"/> -->
-    <PropertyGroup>
-      <ModPackageUploadsDir>$(MSBuildProjectDirectory)\Uploads</ModPackageUploadsDir>
-      <ModPackageName>$(ProjectName)_%(AssemblyIdentities.Version)</ModPackageName>
-      <ModPackageStagingDir>$(ModPackageUploadsDir)\$(ProjectName)\_staging</ModPackageStagingDir>
-      <ModPackageDir>$(ModPackageStagingDir)\$(ProjectName)</ModPackageDir>
-      <ModPackageConfigDir>$(ModPackageDir)\Config</ModPackageConfigDir>
-    </PropertyGroup>
-    <MakeDir Directories="$(ModPackageUploadsDir);$(ModPackageDir);$(ModPackageConfigDir)" />
-    <Move SourceFiles="$(TargetDir)\$(ProjectName).dll;" DestinationFolder="$(ModPackageDir)" />
-    <Delete Files="$(TargetDir)\$(ProjectName).pdb;" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\README.md;$(MSBuildProjectDirectory)\ModInfo.xml;" DestinationFolder="$(ModPackageDir)" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\config.json;" DestinationFolder="$(ModPackageConfigDir)" />
-    <ZipDirectory SourceDirectory="$(ModPackageStagingDir)" DestinationFile="$(ModPackageUploadsDir)\$(ModPackageName).zip" Overwrite="true" />
-    <Message Text="Mod packaged into directory $(ModPackageDir)" Importance="High" />
+  <Target Name="DeployMod" AfterTargets="Build">
+    <Message Text="Executing mod deployment task" Importance="High" />
+    <Exec Command='python "$(ProjectDir)\utils\deploy_target_build.py" "$(Configuration)" "$(ProjectDir)"' ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
+      <Output TaskParameter="ExitCode" PropertyName="DeployModExitCode" />
+    </Exec>
+    <Error Condition="'$(DeployModExitCode)' != '0'" Text="Deployment failed with exit code $(DeployModExitCode)" />
   </Target>
   <ItemGroup>
     <Compile Include="Source\HarmonyCommands\BsCommandRegistry.cs" />
