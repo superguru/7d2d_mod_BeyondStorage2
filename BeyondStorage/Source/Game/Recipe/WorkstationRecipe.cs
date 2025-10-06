@@ -1,7 +1,7 @@
-﻿using BeyondStorage.HarmonyPatches.Informatics;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 using BeyondStorage.Scripts.UI;
+using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Scripts.Game.Recipe;
 
@@ -105,8 +105,8 @@ public static class WorkstationRecipe
             return;
         }
 
-        // Get the currently active workstation instead of querying all open windows
-        var activeWorkstation = XUiC_WorkstationWindowGroup_Patches.GetCurrentlyActiveWorkstation();
+        // Get the currently active workstation using the new WindowStateManager
+        var activeWorkstation = WindowStateManager.GetActiveWorkstationWindow();
 
         if (activeWorkstation == null)
         {

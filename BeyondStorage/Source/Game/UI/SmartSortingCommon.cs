@@ -6,6 +6,6 @@ public class SmartSortingCommon
 {
     public static void SmartLootSort_EventHandler(XUiController _sender, int _mouseButton)
     {
-        ModLogger.DebugLog("SmartLootSort_EventHandler triggered");
+        ModLogger.DebugLog($"SmartLootSort_EventHandler triggered, vehicle open={WindowStateManager.IsVehicleStorageWindowOpen()}");
     }
 }

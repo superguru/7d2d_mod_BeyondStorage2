@@ -1,10 +1,7 @@
 ﻿using BeyondStorage.HarmonyPatches.Functions;
 using BeyondStorage.Scripts.Data;
+using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
-
-
-#if DEBUG
-#endif
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
@@ -72,7 +69,7 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         }
 
         // c:CRATE_OPEN
-        if (XUiC_LootWindow_Patches.IsStorageContainerOpen())
+        if (WindowStateManager.IsStorageContainerOpen())
         {
             // If a storage container is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with storage
@@ -81,7 +78,7 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         }
 
         // c:VEHICLE_OPEN
-        if (XUiC_VehicleStorageWindowGroup_Patches.IsVehicleStorageWindowOpen())
+        if (WindowStateManager.IsVehicleStorageWindowOpen())
         {
             // If the vehicle storage window is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with vehicle storage
@@ -90,7 +87,7 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         }
 
         // c:WORKSTATION_OPEN
-        if (XUiC_WorkstationWindowGroup_Patches.IsWorkstationWindowOpen())
+        if (WindowStateManager.IsWorkstationWindowOpen())
         {
             // If the workstation window is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with workstations

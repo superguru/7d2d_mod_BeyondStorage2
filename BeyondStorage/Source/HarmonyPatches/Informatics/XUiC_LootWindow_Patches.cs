@@ -2,6 +2,7 @@
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
+using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -9,10 +10,6 @@ namespace BeyondStorage.HarmonyPatches.Informatics;
 [HarmonyPatch(typeof(XUiC_LootWindow))]
 internal static class XUiC_LootWindow_Patches
 {
-    private static XUiC_LootWindow s_windowInstance = null;
-    private static bool s_isStorageLootWindowOpen = false;
-    private static readonly object s_lockObject = new();
-
     // Store the previous LockedSlots state for comparison
     private static PackedBoolArray s_previousLockedSlots = null;
 
@@ -85,51 +82,48 @@ internal static class XUiC_LootWindow_Patches
     {
         const string d_MethodName = nameof(XUiC_LootWindow_OnOpen_Postfix);
 
-        lock (s_lockObject)
+        // Check for duplicate window open (should not happen)
+        if (WindowStateManager.IsStorageContainerOpen())
         {
-            if (s_isStorageLootWindowOpen || (s_windowInstance != null))
-            {
-                ModLogger.DebugLog($"{d_MethodName}: LootWindow is already open for storage. This should not happen!");
+            ModLogger.DebugLog($"{d_MethodName}: LootWindow is already open for storage. This should not happen!");
+        }
 
-                s_isStorageLootWindowOpen = false; // Reset the flag to prevent confusion
-                s_windowInstance = null;
-            }
-
-            var tileEntity = __instance?.te;
-            if (tileEntity == null)
-            {
+        var tileEntity = __instance?.te;
+        if (tileEntity == null)
+        {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: TileEntity is null, cannot determine if this is a storage container.");
+            ModLogger.DebugLog($"{d_MethodName}: TileEntity is null, cannot determine if this is a storage container.");
 #endif
-                return;
-            }
+            return;
+        }
 
-            s_windowInstance = __instance;
+        bool isStorage = false;
 
-            // Check for TEFeatureStorage using comprehensive feature detection
-            if (tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
-            {
-                s_isStorageLootWindowOpen = true;
+        // Check for TEFeatureStorage using comprehensive feature detection
+        if (tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
+        {
+            isStorage = true;
 #if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for storage: {storage}");
-#endif
-            }
-
-            if (!s_isStorageLootWindowOpen)
-            {
-                if (IsDroneWindow(tileEntity, out string matchedTypeName, out string reason))
-                {
-                    s_isStorageLootWindowOpen = true;
-#if DEBUG
-                    //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for drone. Reason: {reason}");
-#endif
-                }
-            }
-
-#if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {s_isStorageLootWindowOpen}, te {tileEntity}");
+            //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for storage: {storage}");
 #endif
         }
+
+        if (!isStorage)
+        {
+            if (IsDroneWindow(tileEntity, out string matchedTypeName, out string reason))
+            {
+                isStorage = true;
+#if DEBUG
+                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for drone. Reason: {reason}");
+#endif
+            }
+        }
+
+        WindowStateManager.OnStorageContainerWindowOpened(__instance, isStorage);
+
+#if DEBUG
+        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {isStorage}, te {tileEntity}");
+#endif
     }
 
     private static bool IsDroneWindow(ITileEntity tileEntity, out string matchedTypeName, out string matchReason)
@@ -168,26 +162,13 @@ internal static class XUiC_LootWindow_Patches
 #endif
     private static void XUiC_LootWindow_OnClose_Postfix(XUiC_LootWindow __instance)
     {
-        lock (s_lockObject)
-        {
-#if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: LootWindow closed");
-#endif
-            s_windowInstance = null;
-            s_isStorageLootWindowOpen = false;
-        }
+        WindowStateManager.OnStorageContainerWindowClosed(__instance);
 
         // Clear the saved locked slots state when the window closes
         s_previousLockedSlots = null;
-    }
 
-    public static bool IsStorageContainerOpen()
-    {
-        lock (s_lockObject)
-        {
-            // If it isn't storage, then it's some random loot container out in the world.
-            // Maybe an abandoned car. Maybe a dumpster. Who knows?
-            return s_isStorageLootWindowOpen;
-        }
+#if DEBUG
+        //ModLogger.DebugLog($"{d_MethodName}: LootWindow closed");
+#endif
     }
 }

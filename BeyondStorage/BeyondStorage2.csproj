@@ -54,6 +54,7 @@
   </Target>
   <ItemGroup>
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
+    <Compile Include="Source\Game\UI\WindowStateManager.cs" />
     <Compile Include="Source\HarmonyCommands\BsCommandRegistry.cs" />
     <Compile Include="Source\HarmonyCommands\BsConfigPropertyRegistry.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsHelp.cs" />

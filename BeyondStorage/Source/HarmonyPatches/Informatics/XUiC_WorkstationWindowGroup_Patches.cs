@@ -1,4 +1,5 @@
 ﻿using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -6,10 +7,6 @@ namespace BeyondStorage.HarmonyPatches.Informatics;
 [HarmonyPatch(typeof(XUiC_WorkstationWindowGroup))]
 internal static class XUiC_WorkstationWindowGroup_Patches
 {
-    private static XUiC_WorkstationWindowGroup s_windowInstance = null;
-    private static bool s_isWorkstationWindowOpen = false;
-    private static readonly object s_lockObject = new();
-
     [HarmonyPostfix]
     [HarmonyPatch(nameof(XUiC_WorkstationWindowGroup.OnOpen))]
 #if DEBUG
@@ -19,23 +16,17 @@ internal static class XUiC_WorkstationWindowGroup_Patches
     {
         const string d_MethodName = nameof(XUiC_WorkstationWindowGroup_OnOpen_Postfix);
 
-        lock (s_lockObject)
+        // Check for duplicate window open (should not happen)
+        if (WindowStateManager.IsWorkstationWindowOpen())
         {
-            if (s_isWorkstationWindowOpen || (s_windowInstance != null))
-            {
-                ModLogger.Error($"{d_MethodName}: Workstation Window is already open. This should not happen!");
+            ModLogger.Error($"{d_MethodName}: Workstation Window is already open. This should not happen!");
+        }
 
-                s_isWorkstationWindowOpen = false; // Reset the flag to prevent confusion
-                s_windowInstance = null;
-            }
-
-            s_windowInstance = __instance;
-            s_isWorkstationWindowOpen = true;
+        WindowStateManager.OnWorkstationWindowOpened(__instance);
 
 #if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Opened");
+        //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Opened");
 #endif
-        }
     }
 
     [HarmonyPostfix]
@@ -47,38 +38,11 @@ internal static class XUiC_WorkstationWindowGroup_Patches
     {
 #if DEBUG
 #endif
-        lock (s_lockObject)
-        {
-            s_windowInstance = null;
-            s_isWorkstationWindowOpen = false;
+
+        WindowStateManager.OnWorkstationWindowClosed(__instance);
 
 #if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Closed");
+        //ModLogger.DebugLog($"{d_MethodName}: Workstation Window Closed");
 #endif
-        }
-    }
-
-    public static bool IsWorkstationWindowOpen()
-    {
-        lock (s_lockObject)
-        {
-            return s_isWorkstationWindowOpen;
-        }
-    }
-
-    public static bool IsCurrentlyActiveWindow(XUiC_WorkstationWindowGroup window)
-    {
-        lock (s_lockObject)
-        {
-            return s_isWorkstationWindowOpen && (s_windowInstance == window);
-        }
-    }
-
-    public static XUiC_WorkstationWindowGroup GetCurrentlyActiveWorkstation()
-    {
-        lock (s_lockObject)
-        {
-            return s_isWorkstationWindowOpen ? s_windowInstance : null;
-        }
     }
 }
