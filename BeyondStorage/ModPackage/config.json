@@ -1,5 +1,5 @@
 {
-    "version": "2.3.5",
+    "version": "2.3.6",
     "range": -1.0,
     "pullFromDrones": true,
     "pullFromDewCollectors": true,
@@ -7,6 +7,5 @@
     "pullFromPlayerCraftedNonCrates": true,
     "pullFromVehicleStorage": true,
     "serverSyncConfig": true,
-    "isDebug": false,
-    "isDebugLogSettingsAccess": false
+    "isDebug": false
 }
