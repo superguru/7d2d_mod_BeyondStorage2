@@ -196,49 +196,6 @@ public static class ModConfig
     }
 
     /// <summary>
-    /// Migrates config files from the legacy Config subdirectory to the mod assembly directory (v2.4.0+)
-    /// </summary>
-    private static void MigrateConfigLocation()
-    {
-        var legacyConfigDir = ModPathManager.GetLegacyConfigPath();
-        var newConfigDir = ModPathManager.GetConfigPath();
-
-        // If legacy config directory doesn't exist, no migration needed
-        if (!Directory.Exists(legacyConfigDir))
-        {
-            return;
-        }
-
-        var legacyConfigFile = GetLegacyConfigFilePath();
-        var newConfigFile = GetConfigFilePath();
-
-        try
-        {
-            // Migrate main config file if it exists and new location doesn't have it
-            if (File.Exists(legacyConfigFile) && !File.Exists(newConfigFile))
-            {
-                ModLogger.Info("Migrating config file from Config subdirectory to mod assembly directory");
-                File.Move(legacyConfigFile, newConfigFile);
-                ModLogger.Info($"Moved config file from {legacyConfigFile} to {newConfigFile}");
-            }
-
-            // Migrate all backup files
-            MigrateBackupFiles(legacyConfigDir, newConfigDir);
-
-            // Clean up empty legacy config directory
-            if (Directory.Exists(legacyConfigDir) && !Directory.EnumerateFileSystemEntries(legacyConfigDir).Any())
-            {
-                Directory.Delete(legacyConfigDir);
-                ModLogger.Info("Removed empty legacy Config directory");
-            }
-        }
-        catch (Exception ex)
-        {
-            ModLogger.Warning($"Failed to migrate config files from legacy location: {ex.Message}");
-        }
-    }
-
-    /// <summary>
     /// Migrates config backup files from legacy directory to new directory
     /// </summary>
     /// <param name="legacyDir">Legacy config directory path</param>
@@ -557,5 +514,180 @@ public static class ModConfig
             ModLogger.Error($"Unexpected error during config deserialization: {e.Message}", e);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Migrates config files from the legacy Config subdirectory to the mod assembly directory (v2.4.0+)
+    /// </summary>
+    private static void MigrateConfigLocation()
+    {
+        var legacyConfigDir = ModPathManager.GetLegacyConfigPath();
+        var newConfigDir = ModPathManager.GetConfigPath();
+
+        // If legacy config directory doesn't exist, no migration needed
+        if (!Directory.Exists(legacyConfigDir))
+        {
+            return;
+        }
+
+        var legacyConfigFile = GetLegacyConfigFilePath();
+        var newConfigFile = GetConfigFilePath();
+
+        try
+        {
+            // Check if we have a legacy config file to migrate from
+            if (File.Exists(legacyConfigFile))
+            {
+                ModLogger.Info("Migrating config values from legacy Config subdirectory");
+
+                BsConfig legacyConfig = null;
+                BsConfig newConfig = null;
+
+                // Load legacy config
+                try
+                {
+                    var legacyConfigJson = File.ReadAllText(legacyConfigFile);
+                    legacyConfig = SafeDeserializeConfig(legacyConfigJson);
+                    if (legacyConfig == null)
+                    {
+                        ModLogger.Warning("Failed to load legacy config for migration, using simple file move");
+                        if (!File.Exists(newConfigFile))
+                        {
+                            File.Move(legacyConfigFile, newConfigFile);
+                            ModLogger.Info($"Moved legacy config file to {newConfigFile}");
+                        }
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModLogger.Warning($"Error reading legacy config for migration: {ex.Message}");
+                    return;
+                }
+
+                // Load existing new config if it exists
+                if (File.Exists(newConfigFile))
+                {
+                    try
+                    {
+                        var newConfigJson = File.ReadAllText(newConfigFile);
+                        newConfig = SafeDeserializeConfig(newConfigJson);
+                    }
+                    catch (Exception ex)
+                    {
+                        ModLogger.Warning($"Error reading existing config during migration: {ex.Message}");
+                        newConfig = null;
+                    }
+                }
+
+                // Create merged config (legacy values take priority unless overridden)
+                var mergedConfig = MergeConfigs(legacyConfig, newConfig);
+
+                // Create backup of legacy config before deletion
+                CreateConfigBackup(legacyConfigFile, "legacy-migration");
+
+                // Save merged config to new location
+                var mergedConfigJson = JsonConvert.SerializeObject(mergedConfig, Formatting.Indented);
+                File.WriteAllText(newConfigFile, mergedConfigJson);
+
+                // Remove legacy config file after successful migration
+                File.Delete(legacyConfigFile);
+
+                ModLogger.Info($"Successfully migrated config values from legacy location to {newConfigFile}");
+            }
+
+            // Migrate all backup files
+            MigrateBackupFiles(legacyConfigDir, newConfigDir);
+
+            // Clean up empty legacy config directory
+            if (Directory.Exists(legacyConfigDir) && !Directory.EnumerateFileSystemEntries(legacyConfigDir).Any())
+            {
+                Directory.Delete(legacyConfigDir);
+                ModLogger.Info("Removed empty legacy Config directory");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModLogger.Warning($"Failed to migrate config files from legacy location: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Merges legacy config with new config, prioritizing legacy values unless special overrides apply
+    /// </summary>
+    /// <param name="legacyConfig">Config from legacy location</param>
+    /// <param name="newConfig">Config from new location (can be null)</param>
+    /// <returns>Merged configuration</returns>
+    private static BsConfig MergeConfigs(BsConfig legacyConfig, BsConfig newConfig)
+    {
+        // Start with legacy config as base
+        var mergedConfig = new BsConfig
+        {
+            version = ConfigVersioning.CurrentVersion, // Always use current version
+            range = legacyConfig.range,
+            pullFromDrones = legacyConfig.pullFromDrones,
+            pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
+            pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
+            pullFromPlayerCraftedNonCrates = legacyConfig.pullFromPlayerCraftedNonCrates,
+            pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
+            serverSyncConfig = legacyConfig.serverSyncConfig,
+            isDebug = legacyConfig.isDebug,
+            isDebugLogSettingsAccess = legacyConfig.isDebugLogSettingsAccess
+        };
+
+        // Apply special migration overrides here
+        ApplyMigrationOverrides(mergedConfig, legacyConfig, newConfig);
+
+        // If no legacy value exists but new config has a value, use new config value
+        // (This handles cases where new properties were added)
+        if (newConfig != null)
+        {
+            // Example of fallback logic for new properties that might not exist in legacy
+            // Add specific property checks here as needed for future properties
+
+            // For now, legacy takes complete priority unless overridden above
+            // Future properties can be handled with null checks and fallbacks
+        }
+
+        return mergedConfig;
+    }
+
+    /// <summary>
+    /// Applies special override rules during config migration for version-specific changes
+    /// </summary>
+    /// <param name="mergedConfig">The config being built</param>
+    /// <param name="legacyConfig">Original legacy config</param>
+    /// <param name="newConfig">New location config (can be null)</param>
+    private static void ApplyMigrationOverrides(BsConfig mergedConfig, BsConfig legacyConfig, BsConfig newConfig)
+    {
+        // Add version-specific override logic here
+        // Example:
+        // if (ShouldOverrideForVersion("2.4.0"))
+        // {
+        //     mergedConfig.someNewSetting = defaultValue;
+        //     ModLogger.Info("Applied migration override for someNewSetting");
+        // }
+
+        // Example: Reset debug settings for security in certain versions
+        // if (ShouldOverrideForVersion("2.5.0"))
+        // {
+        //     if (legacyConfig.isDebug)
+        //     {
+        //         mergedConfig.isDebug = false;
+        //         ModLogger.Info("Reset debug mode during migration for security");
+        //     }
+        // }
+    }
+
+    /// <summary>
+    /// Helper method to determine if a specific override should be applied based on version
+    /// </summary>
+    /// <param name="targetVersion">Version to check for override rules</param>
+    /// <returns>True if override should be applied</returns>
+    private static bool ShouldOverrideForVersion(string targetVersion)
+    {
+        // Implement version comparison logic as needed
+        // This is a placeholder for when you need version-specific overrides
+        return false;
     }
 }
