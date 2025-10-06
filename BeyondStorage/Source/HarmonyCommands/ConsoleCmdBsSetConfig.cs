@@ -36,14 +36,40 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
 
     private void SetConfig(List<string> parameters)
     {
-        if (parameters == null || parameters.Count < 2)
+        if (!ValidateParameters(parameters, out string propertyName, out string propertyValue))
         {
-            ShowUsage();
             return;
         }
 
-        var propertyName = parameters[0].Trim();
-        var propertyValue = parameters[1].Trim();
+        var propertyInfo = FindAndValidateProperty(propertyName);
+        if (propertyInfo == null)
+        {
+            return;
+        }
+
+        ApplyPropertyChange(propertyInfo, propertyValue);
+    }
+
+    /// <summary>
+    /// Validates input parameters and extracts property name and value
+    /// </summary>
+    /// <param name="parameters">Input parameters</param>
+    /// <param name="propertyName">Extracted property name</param>
+    /// <param name="propertyValue">Extracted property value</param>
+    /// <returns>True if parameters are valid</returns>
+    private bool ValidateParameters(List<string> parameters, out string propertyName, out string propertyValue)
+    {
+        propertyName = null;
+        propertyValue = null;
+
+        if (parameters == null || parameters.Count < 2)
+        {
+            ShowUsage();
+            return false;
+        }
+
+        propertyName = parameters[0].Trim();
+        propertyValue = parameters[1].Trim();
 
         // Handle special case where value might contain spaces (join remaining parameters)
         if (parameters.Count > 2)
@@ -55,70 +81,134 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
         {
             ModLogger.Info("Error: Property name and value cannot be empty.");
             ShowUsage();
-            return;
+            return false;
         }
 
-        // Find property (case-insensitive)
+        return true;
+    }
+
+    /// <summary>
+    /// Finds the property and validates it can be set
+    /// </summary>
+    /// <param name="propertyName">Name of the property to find</param>
+    /// <returns>Property info if found and valid, null otherwise</returns>
+    private BsConfigPropertyRegistry.ConfigPropertyInfo FindAndValidateProperty(string propertyName)
+    {
         var propertyInfo = BsConfigPropertyRegistry.FindProperty(propertyName);
         if (propertyInfo == null)
         {
             ModLogger.Info($"Error: Unknown property '{propertyName}'.");
             ShowAvailableProperties();
-            return;
+            return null;
         }
 
-        // Special handling for DEBUG-only properties
 #if !DEBUG
         if (propertyInfo.SetValue == null)
         {
             ModLogger.Info($"Property '{propertyInfo.PropertyName}' only has an effect in DEBUG builds which only a developer would have.");
-            return;
+            return null;
         }
 #endif
 
-        // Validate and set the property
+        return propertyInfo;
+    }
+
+    /// <summary>
+    /// Applies the property change and handles all related operations
+    /// </summary>
+    /// <param name="propertyInfo">Property to change</param>
+    /// <param name="propertyValue">New value to set</param>
+    private void ApplyPropertyChange(BsConfigPropertyRegistry.ConfigPropertyInfo propertyInfo, string propertyValue)
+    {
         try
         {
-            // Apply the new value to current config
-            propertyInfo.SetValue(ModConfig.ClientConfig, propertyValue);
+            SetPropertyValue(propertyInfo, propertyValue);
 
-            // Validate the config after the change
-            if (!BsConfigPropertyRegistry.ValidatePropertyChange(propertyInfo.PropertyName, propertyValue))
+            if (!ValidatePropertyChange(propertyInfo, propertyValue))
             {
-                // Reload config to revert changes
-                ReloadConfig();
-                return;
+                return; // Validation failed, config already reloaded
             }
 
-            // Save to file using ModConfig.SaveConfig()
-            try
-            {
-                ModConfig.SaveConfig();
-                ModLogger.Info($"Successfully set '{propertyInfo.PropertyName}' to '{propertyValue}' and saved to config file.");
-
-                // Show current value for confirmation
-                ShowCurrentValue(propertyInfo);
-            }
-            catch (Exception saveEx)
-            {
-                // Reload config to revert changes on save failure
-                ReloadConfig();
-                ModLogger.Info($"Failed to save config file: {saveEx.Message}. Config has been reloaded from file.");
-            }
+            SaveConfigAndConfirm(propertyInfo, propertyValue);
         }
         catch (ArgumentException ex)
         {
-            // Reload config to revert any partial changes
-            ReloadConfig();
-            ModLogger.Info($"Error: Invalid value '{propertyValue}' for property '{propertyName}'. {ex.Message}");
-            ModLogger.Info($"Expected type: {propertyInfo.Type}");
+            HandlePropertySetError(propertyInfo.PropertyName, propertyValue, ex.Message, propertyInfo.Type);
         }
         catch (Exception ex)
         {
-            // Reload config to revert any partial changes
-            ReloadConfig();
-            ModLogger.Error($"Unexpected error setting config property: {ex.Message}", ex);
+            HandleUnexpectedError(ex);
         }
+    }
+
+    /// <summary>
+    /// Sets the property value on the current config
+    /// </summary>
+    /// <param name="propertyInfo">Property to set</param>
+    /// <param name="propertyValue">Value to set</param>
+    private static void SetPropertyValue(BsConfigPropertyRegistry.ConfigPropertyInfo propertyInfo, string propertyValue)
+    {
+        propertyInfo.SetValue(ModConfig.ClientConfig, propertyValue);
+    }
+
+    /// <summary>
+    /// Validates the property change
+    /// </summary>
+    /// <param name="propertyInfo">Property that was changed</param>
+    /// <param name="propertyValue">Value that was set</param>
+    /// <returns>True if validation passed</returns>
+    private bool ValidatePropertyChange(BsConfigPropertyRegistry.ConfigPropertyInfo propertyInfo, string propertyValue)
+    {
+        if (!BsConfigPropertyRegistry.ValidatePropertyChange(propertyInfo.PropertyName, propertyValue))
+        {
+            ReloadConfig();
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Saves the config and shows confirmation
+    /// </summary>
+    /// <param name="propertyInfo">Property that was changed</param>
+    /// <param name="propertyValue">Value that was set</param>
+    private void SaveConfigAndConfirm(BsConfigPropertyRegistry.ConfigPropertyInfo propertyInfo, string propertyValue)
+    {
+        try
+        {
+            ModConfig.SaveConfig();
+            ModLogger.Info($"Successfully set '{propertyInfo.PropertyName}' to '{propertyValue}' and saved to config file.");
+            ShowCurrentValue(propertyInfo);
+        }
+        catch (Exception saveEx)
+        {
+            ReloadConfig();
+            ModLogger.Info($"Failed to save config file: {saveEx.Message}. Config has been reloaded from file.");
+        }
+    }
+
+    /// <summary>
+    /// Handles property setting errors with appropriate error messages
+    /// </summary>
+    /// <param name="propertyName">Name of the property</param>
+    /// <param name="propertyValue">Value that failed to set</param>
+    /// <param name="errorMessage">Error message from the exception</param>
+    /// <param name="expectedType">Expected type for the property</param>
+    private static void HandlePropertySetError(string propertyName, string propertyValue, string errorMessage, string expectedType)
+    {
+        ReloadConfig();
+        ModLogger.Info($"Error: Invalid value '{propertyValue}' for property '{propertyName}'. {errorMessage}");
+        ModLogger.Info($"Expected type: {expectedType}");
+    }
+
+    /// <summary>
+    /// Handles unexpected errors during property setting
+    /// </summary>
+    /// <param name="ex">The unexpected exception</param>
+    private static void HandleUnexpectedError(Exception ex)
+    {
+        ReloadConfig();
+        ModLogger.Error($"Unexpected error setting config property: {ex.Message}", ex);
     }
 
     private void ShowUsage()
