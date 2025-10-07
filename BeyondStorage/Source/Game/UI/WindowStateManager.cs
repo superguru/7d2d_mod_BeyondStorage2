@@ -66,7 +66,8 @@ public static class WindowStateManager
         {
             if (s_isVehicleStorageWindowOpen || (s_vehicleWindowInstance != null))
             {
-                // Log error but continue - reset state to prevent confusion
+                // Log error and reset state to prevent confusion
+                Log.Warning($"[WindowStateManager] Vehicle storage window opened while another was already tracked. Resetting state. Previous: {s_vehicleWindowInstance?.GetType().Name}, New: {window?.GetType().Name}");
                 s_isVehicleStorageWindowOpen = false;
                 s_vehicleWindowInstance = null;
             }
@@ -84,8 +85,16 @@ public static class WindowStateManager
     {
         lock (s_vehicleLockObject)
         {
-            s_vehicleWindowInstance = null;
-            s_isVehicleStorageWindowOpen = false;
+            // Only clear state if the closing window is the currently tracked one
+            if (s_vehicleWindowInstance == window)
+            {
+                s_vehicleWindowInstance = null;
+                s_isVehicleStorageWindowOpen = false;
+            }
+            else if (s_vehicleWindowInstance != null)
+            {
+                Log.Warning($"[WindowStateManager] Attempted to close vehicle storage window that doesn't match tracked instance. Tracked: {s_vehicleWindowInstance?.GetType().Name}, Closing: {window?.GetType().Name}");
+            }
         }
     }
 
@@ -147,7 +156,8 @@ public static class WindowStateManager
         {
             if (s_isStorageLootWindowOpen || (s_lootWindowInstance != null))
             {
-                // Reset state to prevent confusion - this can happen with multiple containers
+                // Log warning and reset state to prevent confusion - this can happen with multiple containers
+                Log.Warning($"[WindowStateManager] Storage container window opened while another was already tracked. Resetting state. Previous: {s_lootWindowInstance?.GetType().Name}, New: {window?.GetType().Name}");
                 s_isStorageLootWindowOpen = false;
                 s_lootWindowInstance = null;
             }
@@ -165,8 +175,16 @@ public static class WindowStateManager
     {
         lock (s_lootLockObject)
         {
-            s_lootWindowInstance = null;
-            s_isStorageLootWindowOpen = false;
+            // Only clear state if the closing window is the currently tracked one
+            if (s_lootWindowInstance == window)
+            {
+                s_lootWindowInstance = null;
+                s_isStorageLootWindowOpen = false;
+            }
+            else if (s_lootWindowInstance != null)
+            {
+                Log.Warning($"[WindowStateManager] Attempted to close storage container window that doesn't match tracked instance. Tracked: {s_lootWindowInstance?.GetType().Name}, Closing: {window?.GetType().Name}");
+            }
         }
     }
 
@@ -221,7 +239,8 @@ public static class WindowStateManager
         {
             if (s_isWorkstationWindowOpen || (s_workstationWindowInstance != null))
             {
-                // Log error but continue - reset state to prevent confusion
+                // Log error and reset state to prevent confusion
+                Log.Warning($"[WindowStateManager] Workstation window opened while another was already tracked. Resetting state. Previous: {s_workstationWindowInstance?.GetType().Name}, New: {window?.GetType().Name}");
                 s_isWorkstationWindowOpen = false;
                 s_workstationWindowInstance = null;
             }
@@ -239,8 +258,16 @@ public static class WindowStateManager
     {
         lock (s_workstationLockObject)
         {
-            s_workstationWindowInstance = null;
-            s_isWorkstationWindowOpen = false;
+            // Only clear state if the closing window is the currently tracked one
+            if (s_workstationWindowInstance == window)
+            {
+                s_workstationWindowInstance = null;
+                s_isWorkstationWindowOpen = false;
+            }
+            else if (s_workstationWindowInstance != null)
+            {
+                Log.Warning($"[WindowStateManager] Attempted to close workstation window that doesn't match tracked instance. Tracked: {s_workstationWindowInstance?.GetType().Name}, Closing: {window?.GetType().Name}");
+            }
         }
     }
 
