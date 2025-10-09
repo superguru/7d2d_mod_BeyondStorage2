@@ -1,2 +1,2 @@
 Key,English
-btnBeyondSmartLootSort_ToolTip,Move items to destination AND create new stacks as required. When viewing any storage inventory it will use that as the destination or otherwise the destination is all available player storages in range.
+btnBeyondSmartLootSort_ToolTip,Move items to destination AND create new stacks as required. When viewing any storage inventory it will use that as the destination or otherwise the destination is all available player container storages in range.
