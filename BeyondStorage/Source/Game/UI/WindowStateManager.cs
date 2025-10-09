@@ -1,4 +1,6 @@
-﻿namespace BeyondStorage.Source.Game.UI;
+﻿using System.Linq;
+
+namespace BeyondStorage.Source.Game.UI;
 
 /// <summary>
 /// Manages the state of various UI windows for tracking open containers and storage interfaces
@@ -269,6 +271,57 @@ public static class WindowStateManager
                 Log.Warning($"[WindowStateManager] Attempted to close workstation window that doesn't match tracked instance. Tracked: {s_workstationWindowInstance?.GetType().Name}, Closing: {window?.GetType().Name}");
             }
         }
+    }
+
+    #endregion
+
+    #region Drone Detection
+
+    /// <summary>
+    /// Determines if the specified tile entity represents a drone loot window.
+    /// </summary>
+    /// <param name="tileEntity">The tile entity to check</param>
+    /// <returns>True if the tile entity is a drone; otherwise, false</returns>
+    public static bool IsDroneWindow(ITileEntity tileEntity)
+    {
+        return IsDroneWindow(tileEntity, out _, out _);
+    }
+
+    /// <summary>
+    /// Determines if the specified tile entity represents a drone loot window,
+    /// providing additional diagnostic information about the match.
+    /// </summary>
+    /// <param name="tileEntity">The tile entity to check</param>
+    /// <param name="matchedTypeName">Output parameter for the matched type name (currently unused)</param>
+    /// <param name="matchReason">Output parameter describing why the check succeeded or failed</param>
+    /// <returns>True if the tile entity is a drone; otherwise, false</returns>
+    public static bool IsDroneWindow(ITileEntity tileEntity, out string matchedTypeName, out string matchReason)
+    {
+        matchedTypeName = string.Empty;
+        matchReason = string.Empty;
+
+        if (tileEntity == null)
+        {
+            matchReason = "TileEntity is null";
+            return false;
+        }
+
+        var drones = DroneManager.Instance?.dronesActive;
+        if (drones == null)
+        {
+            matchReason = "No drones, cannot determine if this is a drone loot window";
+            return false;
+        }
+
+        var entityId = tileEntity.EntityId;
+        if (drones.Any(drone => drone.EntityId == entityId))
+        {
+            matchReason = "Matching entity id in active drone list";
+            return true;
+        }
+
+        matchReason = $"No match found for {tileEntity}";
+        return false;
     }
 
     #endregion

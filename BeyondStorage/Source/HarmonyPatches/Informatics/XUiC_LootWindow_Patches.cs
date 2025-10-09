@@ -110,7 +110,7 @@ internal static class XUiC_LootWindow_Patches
 
         if (!isStorage)
         {
-            if (IsDroneWindow(tileEntity, out string matchedTypeName, out string reason))
+            if (WindowStateManager.IsDroneWindow(tileEntity, out string matchedTypeName, out string reason))
             {
                 isStorage = true;
 #if DEBUG
@@ -124,35 +124,6 @@ internal static class XUiC_LootWindow_Patches
 #if DEBUG
         //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {isStorage}, te {tileEntity}");
 #endif
-    }
-
-    private static bool IsDroneWindow(ITileEntity tileEntity, out string matchedTypeName, out string matchReason)
-    {
-        matchedTypeName = string.Empty;
-        matchReason = string.Empty;
-
-        if (tileEntity == null)
-        {
-            matchReason = "TileEntity is null";
-            return false;
-        }
-
-        var drones = DroneManager.Instance?.dronesActive;
-        if (drones == null)
-        {
-            matchReason = "No drones, cannot determine if this is a drone loot window";
-            return false;
-        }
-
-        var entityId = tileEntity.EntityId;
-        if (drones.Any(drone => drone.EntityId == entityId))
-        {
-            matchReason = "Matching entity id in active drone list";
-            return true;
-        }
-
-        matchReason = $"No match found for {tileEntity}";
-        return false;
     }
 
     [HarmonyPostfix]
