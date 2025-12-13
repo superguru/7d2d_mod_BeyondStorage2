@@ -10,13 +10,13 @@ namespace BeyondStorage.HarmonyPatches.Item;
 internal static class ItemActionEntryCraftPatches
 {
     [HarmonyTranspiler]
-    [HarmonyPatch(nameof(ItemActionEntryCraft.HasItems))]
+    [HarmonyPatch(nameof(ItemActionEntryCraft.hasItems))]
 #if DEBUG
     [HarmonyDebug]
 #endif
     private static IEnumerable<CodeInstruction> ItemActionEntryCraft_HasItems_Patch(IEnumerable<CodeInstruction> originalInstructions)
     {
-        var targetMethodString = $"{typeof(ItemActionEntryCraft)}.{nameof(ItemActionEntryCraft.HasItems)}";
+        var targetMethodString = $"{typeof(ItemActionEntryCraft)}.{nameof(ItemActionEntryCraft.hasItems)}";
 
         // Create search pattern for GetItemStacksForFilter method call
         var searchPattern = new List<CodeInstruction>
