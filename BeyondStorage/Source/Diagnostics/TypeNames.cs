@@ -33,7 +33,7 @@ internal static class TypeNames
         s_nonPluralNames = new Dictionary<Type, TypeNameInfo>
         {
             { typeof(EntityDrone), new TypeNameInfo("DR", "Drone") },
-            { typeof(TileEntityDewCollector), new TypeNameInfo("DC", "Dew Collector") },
+            { typeof(TileEntityCollector), new TypeNameInfo("DC", "Dew Collector") },
             { typeof(TileEntityWorkstation), new TypeNameInfo("WS", "Workstation") },
             { typeof(ITileEntityLootable), new TypeNameInfo("LC", "Lootable Container") },
             { typeof(EntityVehicle), new TypeNameInfo("VH", "Vehicle") },

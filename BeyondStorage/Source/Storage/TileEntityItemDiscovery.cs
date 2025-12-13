@@ -99,7 +99,7 @@ internal static class TileEntityItemDiscovery
     private static void ProcessValidTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
     {
         // Process each type separately with clear logic and collect stats
-        if (state.Config.PullFromDewCollectors && tileEntity is TileEntityDewCollector dewCollector)
+        if (state.Config.PullFromDewCollectors && tileEntity is TileEntityCollector dewCollector)
         {
             ProcessDewCollectorEntity(state.Context, dewCollector, state);
             return;
@@ -120,7 +120,7 @@ internal static class TileEntityItemDiscovery
 
     #region Dew Collector Processing
 
-    private static void ProcessDewCollectorEntity(StorageContext context, TileEntityDewCollector dewCollector, TileEntityProcessingState state)
+    private static void ProcessDewCollectorEntity(StorageContext context, TileEntityCollector dewCollector, TileEntityProcessingState state)
     {
         state.DewCollectorsProcessed++;
 
@@ -133,7 +133,7 @@ internal static class TileEntityItemDiscovery
         state.ValidDewCollectorsFound++;
     }
 
-    private static bool ShouldProcessDewCollector(TileEntityDewCollector dewCollector)
+    private static bool ShouldProcessDewCollector(TileEntityCollector dewCollector)
     {
         if (dewCollector.bUserAccessing)
         {
@@ -143,13 +143,13 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static int ProcessDewCollectorItems(StorageContext context, TileEntityDewCollector dewCollector)
+    private static int ProcessDewCollectorItems(StorageContext context, TileEntityCollector dewCollector)
     {
 #if DEBUG
 #endif
 
         var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<TileEntityDewCollector>(
+        var sourceAdapter = new StorageSourceAdapter<TileEntityCollector>(
             dewCollector,
             sources.EqualsDewCollectorFunc,
             sources.GetItemsDewCollectorFunc,

@@ -9,7 +9,7 @@ public static class DewCollectorStateManager
     /// <summary>
     /// Marks a dew collector as modified after items are removed from it
     /// </summary>
-    public static void MarkDewCollectorModified(TileEntityDewCollector dewCollector)
+    public static void MarkDewCollectorModified(TileEntityCollector dewCollector)
     {
         const string d_method_name = "MarkModifiedDewCollectorFunc";
         ModLogger.DebugLog($"{d_method_name}: Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");
@@ -26,7 +26,7 @@ public static class DewCollectorStateManager
         dewCollector.SetModified();
     }
 
-    private static void PackDewCollector(TileEntityDewCollector dewCollector)
+    private static void PackDewCollector(TileEntityCollector dewCollector)
     {
         const string d_method_name = "MarkModifiedDewCollectorFunc.PackDewCollector";
 

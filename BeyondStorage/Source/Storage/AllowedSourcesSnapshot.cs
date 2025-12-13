@@ -35,7 +35,7 @@ internal sealed class AllowedSourcesSnapshot
         // Dew Collectors
         if (config.PullFromDewCollectors)
         {
-            _allowSourceTypes.Add(typeof(TileEntityDewCollector));
+            _allowSourceTypes.Add(typeof(TileEntityCollector));
         }
 
         // Workstations
