@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Harmony;
+using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
 using XMLData.Item;
 
@@ -46,7 +47,7 @@ internal static class ItemActionEntryRepairPatches
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairOnActivatedGetItemCount))),
             new CodeInstruction(OpCodes.Ldloc_S, 7),    // int b
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
-            new CodeInstruction(OpCodes.Stloc_S, 10),   // int _count
+            new CodeInstruction(OpCodes.Stloc_S, 8),   // int _count
         };
 
         var request = new ILPatchEngine.PatchRequest
@@ -81,25 +82,25 @@ internal static class ItemActionEntryRepairPatches
         var searchPattern = new List<CodeInstruction>
         {
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)])),
-            new CodeInstruction(OpCodes.Ldloc_S, 7),  // int b
+            new CodeInstruction(OpCodes.Ldloc_S, 6),  // int b
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
-            new CodeInstruction(OpCodes.Ldloc_S, 6),      // itemClass2
+            new CodeInstruction(OpCodes.Ldloc_S, 5),      // itemClass2
         };
 
         // Create replacement instructions to add storage count
         var replacementInstructions = new List<CodeInstruction>
         {
             // Load the ItemValue that was used for GetItemCount (reconstruct it)
-            new CodeInstruction(OpCodes.Ldloc_S, 6),      // itemClass2
+            new CodeInstruction(OpCodes.Ldloc_S, 5),      // itemClass2
             new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemClass), nameof(ItemClass.Id))),
             new CodeInstruction(OpCodes.Ldc_I4_0),
             new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
             
             // Call our storage method and add to existing count
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairRefreshGetItemCount))),
-            new CodeInstruction(OpCodes.Ldloc_S, 7),  // int b
+            new CodeInstruction(OpCodes.Ldloc_S, 6),  // int b
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
-            new CodeInstruction(OpCodes.Ldloc_S, 6),  // itemClass2
+            new CodeInstruction(OpCodes.Ldloc_S, 5),  // itemClass2
             new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemClass), nameof(ItemClass.RepairAmount))),
             new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(DataItem<int>), nameof(DataItem<int>.Value))),
             new CodeInstruction(OpCodes.Mul),
@@ -119,14 +120,32 @@ internal static class ItemActionEntryRepairPatches
             ExtraLogging = false
         };
 
+        // Find the Ret instruction to get or create an end label
         var endInstruction = request.OriginalInstructions.LastOrDefault(instr => instr.opcode == OpCodes.Ret);
-        var endLabel = endInstruction?.labels[0];
-        if (endLabel != null)
+        
+        Label endLabel;
+        if (endInstruction != null && endInstruction.labels.Count > 0)
         {
-            request.ReplacementInstructions.Add(new CodeInstruction(OpCodes.Bgt, endLabel));
+            // Use existing label if available
+            endLabel = endInstruction.labels[0];
+        }
+        else if (endInstruction != null)
+        {
+            // Create a new label if the Ret instruction exists but has no labels
+            endLabel = new Label();
+            endInstruction.labels.Add(endLabel);
+        }
+        else
+        {
+            // If no Ret instruction found, we can't create a proper branch
+            var response = ILPatchEngine.ApplyPatches(request);
+            return response.BestInstructions(request);
         }
 
-        var response = ILPatchEngine.ApplyPatches(request);
-        return response.BestInstructions(request);
+        // Add the branch instruction with the label
+        request.ReplacementInstructions.Add(new CodeInstruction(OpCodes.Bgt, endLabel));
+
+        var patchResponse = ILPatchEngine.ApplyPatches(request);
+        return patchResponse.BestInstructions(request);
     }
 }
