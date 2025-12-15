@@ -201,6 +201,9 @@ public static class ModConfig
         CreateConfigBackup(path, "legacy");
 
         var loadedConfig = ConfigVersioning.MigrateLegacyConfig(configJson);
+        
+        // Set ClientConfig before saving so SaveConfig has something to serialize
+        ClientConfig = loadedConfig;
         SaveConfigAfterMigration(path);
 
         return loadedConfig;
@@ -225,6 +228,9 @@ public static class ModConfig
         {
             CreateConfigBackup(path, loadedConfig.version);
             loadedConfig = ConfigVersioning.MigrateVersionedConfig(loadedConfig);
+            
+            // Set ClientConfig before saving so SaveConfig has something to serialize
+            ClientConfig = loadedConfig;
             SaveConfigAfterMigration(path);
         }
 
@@ -767,7 +773,8 @@ public static class ModConfig
             pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
             serverSyncConfig = legacyConfig.serverSyncConfig,
             isDebug = legacyConfig.isDebug,
-            isDebugLogSettingsAccess = legacyConfig.isDebugLogSettingsAccess
+            isDebugLogSettingsAccess = legacyConfig.isDebugLogSettingsAccess,
+            metaDescription = legacyConfig.metaDescription
         };
 
         // Apply special migration overrides here

@@ -1,6 +1,6 @@
 {
     "metaDescription": "RELEASE Configuration file for Beyond Storage mod package",
-    "version": "2.4.0",
+    "version": "2.5.1",
     "range": -1.0,
     "pullFromDrones": true,
     "pullFromDewCollectors": true,
