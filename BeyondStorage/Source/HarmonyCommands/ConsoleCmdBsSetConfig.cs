@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BeyondStorage;
 using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Source.HarmonyCommands;
@@ -22,9 +21,9 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
     {
         try
         {
-            var paramList = string.Join(" ", _params);
 #if DEBUG
-            ModLogger.Info($"Executing {nameof(ConsoleCmdBsSetConfig)} with parameters: [{paramList}]");
+            var paramList = string.Join(" ", _params);
+            ModLogger.DebugLog($"Executing {nameof(ConsoleCmdBsSetConfig)} with parameters: [{paramList}]");
 #endif
             SetConfig(_params);
         }
@@ -161,7 +160,7 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
     {
         if (!BsConfigPropertyRegistry.ValidatePropertyChange(propertyInfo.PropertyName, propertyValue))
         {
-            ReloadConfig();
+            ConfigReloadHelper.ReloadConfig();
             return false;
         }
         return true;
@@ -182,7 +181,7 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
         }
         catch (Exception saveEx)
         {
-            ReloadConfig();
+            ConfigReloadHelper.ReloadConfig();
             ModLogger.Info($"Failed to save config file: {saveEx.Message}. Config has been reloaded from file.");
         }
     }
@@ -196,7 +195,7 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
     /// <param name="expectedType">Expected type for the property</param>
     private static void HandlePropertySetError(string propertyName, string propertyValue, string errorMessage, string expectedType)
     {
-        ReloadConfig();
+        ConfigReloadHelper.ReloadConfig();
         ModLogger.Info($"Error: Invalid value '{propertyValue}' for property '{propertyName}'. {errorMessage}");
         ModLogger.Info($"Expected type: {expectedType}");
     }
@@ -207,7 +206,7 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
     /// <param name="ex">The unexpected exception</param>
     private static void HandleUnexpectedError(Exception ex)
     {
-        ReloadConfig();
+        ConfigReloadHelper.ReloadConfig();
         ModLogger.Error($"Unexpected error setting config property: {ex.Message}", ex);
     }
 
@@ -268,18 +267,6 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
     {
         var currentValue = BsConfigPropertyRegistry.GetCurrentPropertyValue(propertyInfo.PropertyName);
         ModLogger.Info($"Current value of '{propertyInfo.PropertyName}': {currentValue}");
-    }
-
-    private static void ReloadConfig()
-    {
-        try
-        {
-            ModConfig.LoadConfig(BeyondStorageMod.Context);
-        }
-        catch (Exception ex)
-        {
-            ModLogger.Error($"Failed to reload config: {ex.Message}", ex);
-        }
     }
 
     public override string[] getCommands()

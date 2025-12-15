@@ -53,6 +53,8 @@
     <Error Condition="'$(DeployModExitCode)' != '0'" Text="Deployment failed with exit code $(DeployModExitCode)" />
   </Target>
   <ItemGroup>
+    <Compile Include="Source\Configuration\ConfigDisplayHelper.cs" />
+    <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
     <Compile Include="Source\Game\UI\UIControlHelpers.cs" />
     <Compile Include="Source\Game\UI\WindowStateManager.cs" />
@@ -60,6 +62,7 @@
     <Compile Include="Source\HarmonyCommands\BsConfigPropertyRegistry.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsHelp.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsClearCache.cs" />
+    <Compile Include="Source\HarmonyCommands\ConsoleCmdBsReloadConfig.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsSetConfig.cs" />
     <Compile Include="Source\HarmonyCommands\ConsoleCmdBsShowConfig.cs" />
     <Compile Include="Source\HarmonyPatches\BeyondStorage_Init.cs" />

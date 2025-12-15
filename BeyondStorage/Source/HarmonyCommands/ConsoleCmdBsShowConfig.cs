@@ -16,11 +16,11 @@ public class ConsoleCmdBsShowConfig : ConsoleCmdAbstract
     {
         try
         {
-            var paramList = string.Join(" ", _params);
 #if DEBUG
-            ModLogger.Info($"Executing {nameof(ConsoleCmdBsShowConfig)} with parameters: [{paramList}]");
+            var paramList = string.Join(" ", _params);
+            ModLogger.DebugLog($"Executing {nameof(ConsoleCmdBsShowConfig)} with parameters: [{paramList}]");
 #endif
-            ShowConfig();
+            ConfigDisplayHelper.ShowConfig();
         }
         catch (Exception e)
         {
@@ -28,19 +28,12 @@ public class ConsoleCmdBsShowConfig : ConsoleCmdAbstract
         }
     }
 
-    public void ShowConfig()
-    {
-        var snapshot = ConfigSnapshot.Current;
-        string configJson = snapshot.ToJson();
-        ModLogger.Info($"Current Config Snapshot:\n{configJson}\nDo not copy and paste this into the config.json file. The values above are formatted for reading in the console.");
-    }
-
     public override string[] getCommands()
     {
-        return
-        [
-            "bsshowconfig",
-        ];
+        return new[]
+        {
+            "bsshowconfig"
+        };
     }
 
     public override string getDescription()
