@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <windows>
 
-<!-- This is the compatibility code copied from Jakmeister999's Enhanced HUD (V2.3) -->
+<!-- This is the Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) -->
 	<set xpath="/windows/window[@name='windowBackpack']/panel/rect/button[@name='btnToggleLockMode']/@pos">-145,-22</set>
 	<set xpath="/windows/window[@name='windowBackpack']/panel/rect/button[@name='btnSort']/@pos">-95,-22</set>
 	<set xpath="/windows/window[@name='windowBackpack']/panel/rect/rect/button[@name='btnMoveFillAndSmart']/@pos">-45,-22</set>
