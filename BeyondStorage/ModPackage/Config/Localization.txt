@@ -1,2 +1,2 @@
 Key,English
-btnBeyondSmartLootSort_ToolTip,Auto-sort: Not enabled yet as it is In Development.
+btnBeyondSmartLootSort_ToolTip,Smart loot sort: Not enabled yet as it is In Development.
