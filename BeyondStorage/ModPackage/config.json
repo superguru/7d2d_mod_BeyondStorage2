@@ -1,12 +1,13 @@
 {
-  "version": "2.4.0",
-  "range": -1.0,
-  "pullFromDrones": true,
-  "pullFromDewCollectors": true,
-  "pullFromWorkstationOutputs": true,
-  "pullFromPlayerCraftedNonCrates": false,
-  "pullFromVehicleStorage": true,
-  "serverSyncConfig": true,
-  "isDebug": true,
-  "isDebugLogSettingsAccess": false
+    "metaDescription": "RELEASE Configuration file for Beyond Storage mod package",
+    "version": "2.4.0",
+    "range": -1.0,
+    "pullFromDrones": true,
+    "pullFromDewCollectors": true,
+    "pullFromWorkstationOutputs": true,
+    "pullFromPlayerCraftedNonCrates": true,
+    "pullFromVehicleStorage": true,
+    "serverSyncConfig": true,
+    "isDebug": false,
+    "isDebugLogSettingsAccess": false
 }
