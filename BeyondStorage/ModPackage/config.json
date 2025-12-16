@@ -5,7 +5,7 @@
     "pullFromDrones": true,
     "pullFromDewCollectors": true,
     "pullFromWorkstationOutputs": true,
-    "pullFromPlayerCraftedNonCrates": true,
+    "pullFromPlayerCraftedNonCrates": false,
     "pullFromVehicleStorage": true,
     "serverSyncConfig": true,
     "isDebug": false,
