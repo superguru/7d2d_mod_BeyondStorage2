@@ -2,8 +2,9 @@
 <xml>
   <Name value="BeyondStorage2"/>
   <DisplayName value="Beyond Storage 2"/>
-  <Version value="2.4.0"/>
+  <Version value="2.5.1"/>
   <Description value="Expand your inventory to your vehicles, drones, storage crates, workstations, dew collectors, and craftable containers like safes. Use resources from all of those when you refuel, paint, repair, pick locks, craft, upgrade, and pay traders or vending machines! Originally BeyondStorage by unv_Annihilator, and before that, Really Originally 'CraftFromContainers' by aedenthorn."/>
-  <Author value="aedenthorn, unv_Annihilator, gazorper, superguru"/>
+  <Author value="superguru, gazorper, unv_Annihilator, aedenthorn"/>
+  <Credits value="Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3)"/>
   <Website value="https://github.com/superguru/7d2d_mod_BeyondStorage2"/>
 </xml>

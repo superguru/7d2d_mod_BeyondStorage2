@@ -6,6 +6,7 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
+* In v2.5.1, initial iteration to support v2.5_b18_exp of the game
 * In v2.4.0, add smart sort functionality to backpack window
 * In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
 * In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
@@ -53,8 +54,9 @@ Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Sou
 
 It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
 
-
 ## Credits
+- Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
+- Undead Legacy for inspiring us all
 - [aedenthorn](https://github.com/aedenthorn) for the original mod
 - [unv-annihilator](https://github.com/unv-annihilator) for the 7 Days to Die v1 fork
 - [superguru](https://github.com/superguru) for the 7 Days to Die v2 refactor
