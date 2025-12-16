@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using BeyondStorage.Scripts.Game.Item;
 using BeyondStorage.Scripts.Harmony;
 using BeyondStorage.Scripts.Infrastructure;
 using HarmonyLib;
+using UnityEngine;
 using XMLData.Item;
 
 namespace BeyondStorage.HarmonyPatches.Item;
@@ -81,30 +85,44 @@ internal static class ItemActionEntryRepairPatches
         // Create search pattern to find the GetItemCount call
         var searchPattern = new List<CodeInstruction>
         {
+            new CodeInstruction(OpCodes.Ldc_I4_0),    // Load false on to stack as _bCreateDefaultParts param for ItemValue(int _type, bool _bCreateDefaultParts = false)
+            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
+
             new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(XUiM_PlayerInventory), nameof(XUiM_PlayerInventory.GetItemCount), [typeof(ItemValue)])),
+            // Game code leaves the stack like this:
+            // value1 = (player inventory count)
+
+            // >> insert patch code here
+
             new CodeInstruction(OpCodes.Ldloc_S, 6),  // int b
+            // Game code leaves the stack like this:
+            // value1 = (player inventory count)
+            // value2 = b
+
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
-            new CodeInstruction(OpCodes.Ldloc_S, 5),      // itemClass2
+            new CodeInstruction(OpCodes.Ldloc_S, 5),  // itemClass2
         };
 
-        // Create replacement instructions to add storage count
+        // We want the stack to be like this:
+        // value1 = (player inventory count + storage count)
+        // value2 = b
         var replacementInstructions = new List<CodeInstruction>
         {
             // Load the ItemValue that was used for GetItemCount (reconstruct it)
-            new CodeInstruction(OpCodes.Ldloc_S, 5),      // itemClass2
+            new CodeInstruction(OpCodes.Ldloc_S, 5),  // itemClass2
             new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(ItemClass), nameof(ItemClass.Id))),
-            new CodeInstruction(OpCodes.Ldc_I4_0),
-            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass.Id, false)
+            new CodeInstruction(OpCodes.Ldc_I4_0),    // false
+            new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ItemValue), [typeof(int), typeof(bool)])), // new ItemValue(itemClass2.Id, false)
             
             // Call our storage method and add to existing count
             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ItemRepair), nameof(ItemRepair.ItemRepairRefreshGetItemCount))),
-            new CodeInstruction(OpCodes.Ldloc_S, 6),  // int b
-            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UnityEngine.Mathf), nameof(UnityEngine.Mathf.Min), [typeof(int), typeof(int)])),
-            new CodeInstruction(OpCodes.Ldloc_S, 5),  // itemClass2
-            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ItemClass), nameof(ItemClass.RepairAmount))),
-            new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(DataItem<int>), nameof(DataItem<int>.Value))),
-            new CodeInstruction(OpCodes.Mul),
-            new CodeInstruction(OpCodes.Ldc_I4_0),
+            // Now the stack is like this:
+            // value1 = (player inventory count)
+            // value2 = (storage count)
+
+            new CodeInstruction(OpCodes.Add),
+            // Now the stack is like this:
+            // value1 = (player inventory count + storage count)
         };
 
         var request = new ILPatchEngine.PatchRequest
@@ -113,37 +131,12 @@ internal static class ItemActionEntryRepairPatches
             SearchPattern = searchPattern,
             ReplacementInstructions = replacementInstructions,
             TargetMethodName = targetMethodString,
-            ReplacementOffset = 9,
+            ReplacementOffset = 3,
             IsInsertMode = true,
             MaxPatches = 1,
             MinimumSafetyOffset = 5,
-            ExtraLogging = false
+            ExtraLogging = true
         };
-
-        // Find the Ret instruction to get or create an end label
-        var endInstruction = request.OriginalInstructions.LastOrDefault(instr => instr.opcode == OpCodes.Ret);
-        
-        Label endLabel;
-        if (endInstruction != null && endInstruction.labels.Count > 0)
-        {
-            // Use existing label if available
-            endLabel = endInstruction.labels[0];
-        }
-        else if (endInstruction != null)
-        {
-            // Create a new label if the Ret instruction exists but has no labels
-            endLabel = new Label();
-            endInstruction.labels.Add(endLabel);
-        }
-        else
-        {
-            // If no Ret instruction found, we can't create a proper branch
-            var response = ILPatchEngine.ApplyPatches(request);
-            return response.BestInstructions(request);
-        }
-
-        // Add the branch instruction with the label
-        request.ReplacementInstructions.Add(new CodeInstruction(OpCodes.Bgt, endLabel));
 
         var patchResponse = ILPatchEngine.ApplyPatches(request);
         return patchResponse.BestInstructions(request);
