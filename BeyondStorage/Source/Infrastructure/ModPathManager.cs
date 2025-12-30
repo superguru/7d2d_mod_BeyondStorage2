@@ -7,7 +7,6 @@ namespace BeyondStorage.Scripts.Infrastructure;
 internal static class ModPathManager
 {
     private static string s_assemblyLocation = "";
-    private static string s_mod_assembly_path = "";
     private static string s_assemblyVersion = "";
 
     /// <summary>
@@ -18,7 +17,7 @@ internal static class ModPathManager
     internal static string GetConfigPath(bool create = false)
     {
         // As of v2.4.0, config files are stored in the mod assembly directory
-        var result = GetModAssemblyPath();
+        var result = BeyondStorageMod.GetModAssemblyPath();
 
         if (create && !Directory.Exists(result))
         {
@@ -34,7 +33,7 @@ internal static class ModPathManager
     /// <returns>Path to legacy config directory</returns>
     internal static string GetLegacyConfigPath()
     {
-        return Path.Combine(GetModAssemblyPath(), "Config");
+        return Path.Combine(BeyondStorageMod.GetModAssemblyPath(), "Config");
     }
 
     private static string GetAssemblyLocation()
@@ -44,22 +43,6 @@ internal static class ModPathManager
             s_assemblyLocation = Assembly.GetExecutingAssembly().Location ?? throw new InvalidOperationException("no assembly");
         }
         return s_assemblyLocation;
-    }
-
-    private static string GetModAssemblyPath()
-    {
-        if (string.IsNullOrEmpty(s_mod_assembly_path))
-        {
-            var assemblyLocation = GetAssemblyLocation();
-            s_mod_assembly_path = Path.GetDirectoryName(assemblyLocation) ?? throw new InvalidOperationException("no path");
-        }
-
-        if (string.IsNullOrEmpty(s_mod_assembly_path))
-        {
-            throw new InvalidOperationException("Mod assembly path is null or empty.");
-        }
-
-        return s_mod_assembly_path;
     }
 
     internal static string GetAssemblyVersion()
@@ -90,7 +73,7 @@ internal static class ModPathManager
     /// <returns>Full path to the asset directory</returns>
     private static string GetAssetPath(string assetname, bool create = false)
     {
-        var result = Path.Combine(GetModAssemblyPath(), assetname);
+        var result = Path.Combine(BeyondStorageMod.GetModAssemblyPath(), assetname);
 
         if (create && !Directory.Exists(result))
         {

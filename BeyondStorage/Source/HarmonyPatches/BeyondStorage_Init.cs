@@ -24,11 +24,17 @@ public class BeyondStorageMod : IModApi
     public static BeyondStorageMod Context { get => s_context; set => s_context = value; }
 
     internal static Mod s_modInstance;
+    private static string s_mod_assembly_path = "";
 
+    internal static string GetModAssemblyPath()
+    {
+        return s_mod_assembly_path;
+    }
 
     public void InitMod(Mod modInstance)
     {
         s_context = this;
+        s_mod_assembly_path = modInstance.Path;
         ModConfig.LoadConfig(s_context);
         s_modInstance = modInstance;
         var harmony = new Harmony(GetType().ToString());
