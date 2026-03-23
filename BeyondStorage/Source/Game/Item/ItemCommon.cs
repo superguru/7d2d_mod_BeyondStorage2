@@ -74,7 +74,7 @@ public static class ItemCommon
     public static int RemoveItemsSequential(Bag bag, Inventory toolbelt, ItemValue itemValue, int amountNeeded, bool ignoreModdedItems = false, IList<ItemStack> removedItems = null)
     {
         // Create a single-item list and use the multi-item method
-        var singleItemList = new List<ItemStack> { new ItemStack(itemValue, amountNeeded) };
+        var singleItemList = new List<ItemStack> { new(itemValue, amountNeeded) };
         return RemoveItemsSequential(bag, toolbelt, singleItemList, 1, ignoreModdedItems, removedItems);
     }
 

@@ -17,8 +17,9 @@ internal static class XUiCBackpackWindowPatches
 #endif
     private static void XUiC_BackpackWindow_Init_Postfix(XUiC_BackpackWindow __instance)
     {
+#if DEBUG
         const string d_MethodName = nameof(XUiC_BackpackWindow_Init_Postfix);
-
+#endif
         var btnBeyondSmartLootSort = UIControlHelpers.GetSmartLootSortButton(__instance);
         if (btnBeyondSmartLootSort != null)
         {

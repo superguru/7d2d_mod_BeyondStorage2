@@ -55,12 +55,12 @@ Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Sou
 It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
 
 ## Credits
-- Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
 - Undead Legacy for inspiring us all
 - [aedenthorn](https://github.com/aedenthorn) for the original mod
 - [unv-annihilator](https://github.com/unv-annihilator) for the 7 Days to Die v1 fork
 - [superguru](https://github.com/superguru) for the 7 Days to Die v2 refactor
 - [gazorper](https://next.nexusmods.com/profile/gazorper/mods) for the Beyond Storage 2 mod
+- For v2.5.x mod series: Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
 - The 7 Days to Die community for their support and contributions
 
 

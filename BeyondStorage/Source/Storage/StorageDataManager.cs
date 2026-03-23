@@ -21,7 +21,7 @@ public class StorageDataManager
     public readonly Action<EntityDrone> MarkModifiedDroneCollectorFunc = (dr) => LootableItemHandler.MarkLootableModified(dr.lootContainer);
 
     public readonly Func<TileEntityCollector, TileEntityCollector, bool> EqualsDewCollectorFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<TileEntityCollector, ItemStack[]> GetItemsDewCollectorFunc = (dc) => dc.items;
+    public readonly Func<TileEntityCollector, ItemStack[]> GetItemsDewCollectorFunc = (dc) => dc.Items;
     public readonly Action<TileEntityCollector> MarkModifiedDewCollectorFunc = (dc) => DewCollectorStateManager.MarkDewCollectorModified(dc);
 
     public readonly Func<TileEntityWorkstation, TileEntityWorkstation, bool> EqualsWorkstationFunc = (a, b) => ReferenceEquals(a, b);

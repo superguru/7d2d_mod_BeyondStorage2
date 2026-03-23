@@ -38,10 +38,10 @@ public static class DewCollectorStateManager
 
         var s = "";
 
-        s = string.Join(",", dewCollector.fillValuesArr.Select(f => f.ToString()));
+        s = string.Join(",", dewCollector.FillValues.Select(f => f.ToString()));
         ModLogger.DebugLog($"{d_method_name}: Fill values after item removal: {s}");
 
-        s = string.Join(",", dewCollector.items.Select(stack => stack.count.ToString()));
+        s = string.Join(",", dewCollector.Items.Select(stack => stack.count.ToString()));
         ModLogger.DebugLog($"{d_method_name}: Slot counts after item removal: {s}");
 
         /* Scenario: 
