@@ -6,7 +6,8 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-* In v2.5.1, initial iteration to support v2.5_b18_exp of the game
+* In v2.6.2, Compatibility with v2.6 of the game, as well as UI fixes for the smart loot button
+* In v2.5.2, initial iteration to support v2.5 of the game
 * In v2.4.0, add smart sort functionality to backpack window
 * In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
 * In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
