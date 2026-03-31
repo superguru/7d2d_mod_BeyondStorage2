@@ -41,7 +41,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // do not change the order of these
         binaryWriter.Write(ModConfig.ClientConfig.range);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromDewCollectors);
+        binaryWriter.Write(ModConfig.ClientConfig.pullFromCollectors);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
         binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
     }
@@ -122,7 +122,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // do not change the order of these
         ModConfig.ServerConfig.range = reader.ReadSingle();
         ModConfig.ServerConfig.pullFromDrones = ReadBool(reader);
-        ModConfig.ServerConfig.pullFromDewCollectors = ReadBool(reader);
+        ModConfig.ServerConfig.pullFromCollectors = ReadBool(reader);
         ModConfig.ServerConfig.pullFromWorkstationOutputs = ReadBool(reader);
         ModConfig.ServerConfig.pullFromVehicleStorage = ReadBool(reader);
 
@@ -148,7 +148,7 @@ public class NetPackageBeyondStorageConfig : NetPackage
         ModLogger.DebugLog($"ModConfig.ServerConfig.version {ModConfig.ServerConfig.version}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDrones {ModConfig.ServerConfig.pullFromDrones}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDewCollectors {ModConfig.ServerConfig.pullFromDewCollectors}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromCollectors {ModConfig.ServerConfig.pullFromCollectors}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
 #endif

@@ -11,6 +11,7 @@ public sealed class ConfigSnapshot
     // ========== Source selection / eligibility =========
     public float Range { get; }
     public bool PullFromDrones { get; }
+    public bool PullFromCollectors { get; }
     public bool PullFromDewCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
     public bool PullFromVehicleStorage { get; }
@@ -27,7 +28,7 @@ public sealed class ConfigSnapshot
         // ========== Source selection / eligibility =========
         Range = ModConfig.Range();
         PullFromDrones = ModConfig.PullFromDrones();
-        PullFromDewCollectors = ModConfig.PullFromDewCollectors();
+        PullFromCollectors = ModConfig.PullFromCollectors();
         PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
         PullFromVehicleStorage = ModConfig.PullFromVehicleStorage();
 

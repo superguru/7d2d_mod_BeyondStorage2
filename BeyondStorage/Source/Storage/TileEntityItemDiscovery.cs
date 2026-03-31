@@ -102,9 +102,9 @@ internal static class TileEntityItemDiscovery
     private static void ProcessValidTileEntity(TileEntity tileEntity, TileEntityProcessingState state, float distance)
     {
         // Process each type separately with clear logic and collect stats
-        if (state.Config.PullFromDewCollectors && tileEntity is TileEntityCollector dewCollector)
+        if (state.Config.PullFromCollectors && tileEntity is TileEntityCollector collector)
         {
-            ProcessCollectorEntity(dewCollector, state);
+            ProcessCollectorEntity(collector, state);
             return;
         }
 

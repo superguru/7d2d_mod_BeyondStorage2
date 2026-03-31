@@ -73,11 +73,10 @@ public static class ConfigVersioning
             {
                 version = CurrentVersion,
 
-                // Migrate existing settings (no changes for 2.3.0)
                 range = legacyConfig.range,
 
                 pullFromDrones = legacyConfig.pullFromDrones,
-                pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
+                pullFromCollectors = legacyConfig.pullFromDewCollectors,
                 pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
                 pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
 
@@ -206,8 +205,41 @@ public static class ConfigVersioning
     {
         const string d_MethodName = nameof(MigrateTo263);
         ModLogger.Info($"{d_MethodName}: Applying migration to version 2.6.3");
-        ModLogger.Info($"{d_MethodName}: The 'pullFromPlayerCraftedNonCrates' setting has been removed");
+        ModLogger.Info($"{d_MethodName}: 'pullFromPlayerCraftedNonCrates' has been removed");
+        ModLogger.Info($"{d_MethodName}: 'pullFromDewCollectors' has been renamed to 'pullFromCollectors'");
         return config;
+    }
+
+    /// <summary>
+    /// Pre-processes raw config JSON to apply field renames before deserialization.
+    /// Must be called before deserializing into BsConfig to preserve renamed field values.
+    /// </summary>
+    /// <param name="configJson">Raw JSON string from config file</param>
+    /// <returns>JSON string with field names updated to the current schema</returns>
+    public static string PreprocessConfigJson(string configJson)
+    {
+        try
+        {
+            var jsonObject = JObject.Parse(configJson);
+
+            if (!TryParseVersion(jsonObject["version"]?.Value<string>(), out var version))
+            {
+                return configJson;
+            }
+
+            // Pre-2.6.3: rename pullFromDewCollectors -> pullFromCollectors
+            if (version < new Version("2.6.3") && jsonObject.ContainsKey("pullFromDewCollectors"))
+            {
+                jsonObject["pullFromCollectors"] = jsonObject["pullFromDewCollectors"];
+                jsonObject.Remove("pullFromDewCollectors");
+            }
+
+            return jsonObject.ToString(Formatting.None);
+        }
+        catch (JsonException)
+        {
+            return configJson; // Return original if JSON is malformed; SafeDeserializeConfig will handle the error
+        }
     }
 
     /// <summary>

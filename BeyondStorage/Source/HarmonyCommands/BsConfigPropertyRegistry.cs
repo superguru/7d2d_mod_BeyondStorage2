@@ -44,8 +44,8 @@ internal static class BsConfigPropertyRegistry
         RegisterProperty("pullFromDrones", "bool", "Pull items from nearby drones",
             (config, value) => config.pullFromDrones = ParseBool(value));
 
-        RegisterProperty("pullFromDewCollectors", "bool", "Pull items from nearby dew collectors",
-            (config, value) => config.pullFromDewCollectors = ParseBool(value));
+        RegisterProperty("pullFromCollectors", "bool", "Pull items from nearby collectors (e.g. dew collectors)",
+            (config, value) => config.pullFromCollectors = ParseBool(value));
 
         RegisterProperty("pullFromWorkstationOutputs", "bool", "Pull items from nearby workstation output stacks",
             (config, value) => config.pullFromWorkstationOutputs = ParseBool(value));
@@ -133,7 +133,7 @@ internal static class BsConfigPropertyRegistry
         {
             "range" => config.range.ToString(CultureInfo.InvariantCulture),
             "pullFromDrones" => config.pullFromDrones.ToString(),
-            "pullFromDewCollectors" => config.pullFromDewCollectors.ToString(),
+            "pullFromCollectors" => config.pullFromCollectors.ToString(),
             "pullFromWorkstationOutputs" => config.pullFromWorkstationOutputs.ToString(),
             "pullFromVehicleStorage" => config.pullFromVehicleStorage.ToString(),
             "isDebug" => config.isDebug.ToString(),

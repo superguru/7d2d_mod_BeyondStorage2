@@ -512,10 +512,10 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromDewCollectors()
+    public static bool PullFromCollectors()
     {
-        bool serverValue = ServerConfig.pullFromDewCollectors;
-        bool clientValue = ClientConfig.pullFromDewCollectors;
+        bool serverValue = ServerConfig.pullFromCollectors;
+        bool clientValue = ClientConfig.pullFromCollectors;
 #if DEBUG
         LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
 #endif
@@ -566,15 +566,15 @@ public static class ModConfig
     {
         try
         {
+            // Rename fields for configs created before field renames were introduced
+            configJson = ConfigVersioning.PreprocessConfigJson(configJson);
+
             // Use JsonConvert with strict settings for security
             var settings = new JsonSerializerSettings
             {
-                // Prevent potential security issues
                 TypeNameHandling = TypeNameHandling.None,
                 MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-                // Handle missing properties gracefully
                 MissingMemberHandling = MissingMemberHandling.Ignore,
-                // Don't crash on unknown properties (for forward compatibility)
                 Error = (sender, args) =>
                 {
                     ModLogger.Warning($"JSON deserialization warning: {args.ErrorContext.Error.Message}");
@@ -754,10 +754,10 @@ public static class ModConfig
         // Start with legacy config as base
         var mergedConfig = new BsConfig
         {
-            version = ConfigVersioning.CurrentVersion, // Always use current version
+            version = ConfigVersioning.CurrentVersion,
             range = legacyConfig.range,
             pullFromDrones = legacyConfig.pullFromDrones,
-            pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
+            pullFromCollectors = legacyConfig.pullFromCollectors,
             pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
             pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
             serverSyncConfig = legacyConfig.serverSyncConfig,

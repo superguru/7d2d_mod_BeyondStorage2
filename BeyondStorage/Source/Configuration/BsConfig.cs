@@ -25,9 +25,9 @@ public class BsConfig
     public bool pullFromDrones = true;
 
     /// <summary>
-    /// If set to true it will try and pull items from nearby dew collectors
+    /// If set to true it will try and pull items from nearby collectors (e.g. dew collectors, apiaries)
     /// </summary>
-    public bool pullFromDewCollectors = true;
+    public bool pullFromCollectors = true;
 
     /// <summary>
     /// If set to true it will try and pull items from nearby workstation output stacks

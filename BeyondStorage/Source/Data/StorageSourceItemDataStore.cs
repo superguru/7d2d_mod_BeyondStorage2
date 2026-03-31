@@ -10,7 +10,9 @@ namespace BeyondStorage.Scripts.Data;
 internal class StorageSourceItemDataStore
 {
     private readonly Dictionary<IStorageSource, List<ItemStack>> _itemStacksBySource = [];
+#pragma warning disable IDE0028 // Simplify collection initialization
     private readonly Dictionary<ItemStack, IStorageSource> _sourcesByItemStack = new(ItemStackReferenceComparer.Instance);
+#pragma warning restore IDE0028 // Simplify collection initialization
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
     private readonly FilterStacksStore _collectionStore = new();
     private readonly ContainerDistanceStore _containerStore = new();
