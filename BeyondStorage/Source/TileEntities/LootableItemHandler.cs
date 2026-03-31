@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
 
@@ -194,25 +195,56 @@ public static class LootableItemHandler
 
     public static string GetLootableName(ITileEntityLootable lootable)
     {
+        const string d_MethodName = nameof(GetLootableName);
+
+        string name = "Unnamed Lootable";
+
         if (lootable == null)
         {
-            return "Unknown Lootable";
+            ModLogger.DebugLog($"{d_MethodName}: lootable is null, returning default '{name}'");
+            return name;
         }
 
-        string name = lootable.lootListName;
-        if (string.IsNullOrEmpty(name))
+        if (lootable.TryGetSelfOrFeature(out TEFeatureSignable signable) && signable != null)
         {
-            name = "Unnamed Lootable";
+            ModLogger.DebugLog($"{d_MethodName}: found signable entity {signable}, checking for name sources");
+
+            var authoredText = signable.GetAuthoredText();
+            if (authoredText == null)
+            {
+                ModLogger.DebugLog($"{d_MethodName}: authored text is null");
+            }
+            else if (string.IsNullOrEmpty(authoredText.Text))
+            {
+                ModLogger.DebugLog($"{d_MethodName}: authored text exists but Text is null or empty");
+            }
+            else
+            {
+                name = authoredText.Text;
+                ModLogger.DebugLog($"{d_MethodName}: resolved name '{name}' from sign text");
+            }
+        }
+        else if (!string.IsNullOrEmpty(lootable.lootListName))
+        {
+            name = lootable.lootListName;
+            ModLogger.DebugLog($"{d_MethodName}: resolved name '{name}' from lootListName");
+        }
+        else
+        {
+            ModLogger.DebugLog($"{d_MethodName}: no name source found for {lootable} (lootListName='{lootable.lootListName ?? "null"}'), using default '{name}'");
         }
 
+        ModLogger.DebugLog($"{d_MethodName}: returning '{name}'");
         return name;
     }
 
     public static void MarkLootableModified(ITileEntityLootable lootable)
     {
+        const string d_MethodName = nameof(MarkLootableModified);
+
         if (lootable == null)
         {
-            ModLogger.DebugLog("MarkLootableModified: entity is null");
+            ModLogger.DebugLog($"{d_MethodName}: entity is null");
             return;
         }
 
@@ -220,9 +252,11 @@ public static class LootableItemHandler
     }
     public static void MarkLootableModified(EntityVehicle entity)
     {
+        const string d_MethodName = nameof(MarkLootableModified);
+
         if (entity == null || entity.bag == null)
         {
-            ModLogger.DebugLog("MarkLootableModified: entity or bag is null");
+            ModLogger.DebugLog($"{d_MethodName}: entity or bag is null");
             return;
         }
 
