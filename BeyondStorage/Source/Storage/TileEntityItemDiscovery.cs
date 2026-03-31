@@ -273,7 +273,6 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidLootablesFound<100) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
         state.ValidLootablesFound++;
 
         if (validStacksRegistered > 0)
