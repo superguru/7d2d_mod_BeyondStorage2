@@ -195,46 +195,26 @@ public static class LootableItemHandler
 
     public static string GetLootableName(ITileEntityLootable lootable)
     {
-        const string d_MethodName = nameof(GetLootableName);
-
         string name = "Unnamed Lootable";
 
         if (lootable == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: lootable is null, returning default '{name}'");
             return name;
         }
 
         if (lootable.TryGetSelfOrFeature(out TEFeatureSignable signable) && signable != null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: found signable entity {signable}, checking for name sources");
-
             var authoredText = signable.GetAuthoredText();
-            if (authoredText == null)
-            {
-                ModLogger.DebugLog($"{d_MethodName}: authored text is null");
-            }
-            else if (string.IsNullOrEmpty(authoredText.Text))
-            {
-                ModLogger.DebugLog($"{d_MethodName}: authored text exists but Text is null or empty");
-            }
-            else
+            if (authoredText != null && !string.IsNullOrEmpty(authoredText.Text))
             {
                 name = authoredText.Text;
-                ModLogger.DebugLog($"{d_MethodName}: resolved name '{name}' from sign text");
             }
         }
         else if (!string.IsNullOrEmpty(lootable.lootListName))
         {
             name = lootable.lootListName;
-            ModLogger.DebugLog($"{d_MethodName}: resolved name '{name}' from lootListName");
-        }
-        else
-        {
-            ModLogger.DebugLog($"{d_MethodName}: no name source found for {lootable} (lootListName='{lootable.lootListName ?? "null"}'), using default '{name}'");
         }
 
-        ModLogger.DebugLog($"{d_MethodName}: returning '{name}'");
         return name;
     }
 
