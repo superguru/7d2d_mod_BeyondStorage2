@@ -3,7 +3,7 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.TileEntities;
 
-public static class DewCollectorStateManager
+public static class CollectorStateManager
 {
     public static string GetCollectorName(TileEntityCollector collector)
     {
@@ -19,40 +19,40 @@ public static class DewCollectorStateManager
     /// <summary>
     /// Marks a dew collector as modified after items are removed from it
     /// </summary>
-    public static void MarkCollectorModified(TileEntityCollector dewCollector)
+    public static void MarkCollectorModified(TileEntityCollector collector)
     {
-        const string d_method_name = "MarkModifiedDewCollectorFunc";
-        ModLogger.DebugLog($"{d_method_name}: Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");
+        const string d_MethodName = nameof(MarkCollectorModified);
+        ModLogger.DebugLog($"{d_MethodName}: Marking Collector '{collector?.GetType().Name}' as modified");
 
-        if (dewCollector == null)
+        if (collector == null)
         {
-            ModLogger.DebugLog($"{d_method_name}: dew collector is null");
+            ModLogger.DebugLog($"{d_MethodName}: collector is null");
             return;
         }
 
-        PackDewCollector(dewCollector);
+        PackCollector(collector);
 
-        dewCollector.SetChunkModified();
-        dewCollector.SetModified();
+        collector.SetChunkModified();
+        collector.SetModified();
     }
 
-    private static void PackDewCollector(TileEntityCollector dewCollector)
+    private static void PackCollector(TileEntityCollector collector)
     {
-        const string d_method_name = "MarkModifiedDewCollectorFunc.PackDewCollector";
+        const string d_MethodName = nameof(PackCollector);
 
-        if (dewCollector == null)
+        if (collector == null)
         {
-            ModLogger.DebugLog($"{d_method_name}: dew collector is null");
+            ModLogger.DebugLog($"{d_MethodName}: collector is null");
             return;
         }
 
         var s = "";
 
-        s = string.Join(",", dewCollector.FillValues.Select(f => f.ToString()));
-        ModLogger.DebugLog($"{d_method_name}: Fill values after item removal: {s}");
+        s = string.Join(",", collector.FillValues.Select(f => f.ToString()));
+        ModLogger.DebugLog($"{d_MethodName}: Fill values after item removal: {s}");
 
-        s = string.Join(",", dewCollector.Items.Select(stack => stack.count.ToString()));
-        ModLogger.DebugLog($"{d_method_name}: Slot counts after item removal: {s}");
+        s = string.Join(",", collector.Items.Select(stack => stack.count.ToString()));
+        ModLogger.DebugLog($"{d_MethodName}: Slot counts after item removal: {s}");
 
         /* Scenario: 
          * - Dew Collector has these items counts in the slots 1, 2, 0; slot 0 is partially filled, slot 1 is full, slot 2 is producing

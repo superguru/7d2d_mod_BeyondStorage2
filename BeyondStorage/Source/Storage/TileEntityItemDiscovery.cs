@@ -125,7 +125,7 @@ internal static class TileEntityItemDiscovery
 
     private static void ProcessCollectorEntity(TileEntityCollector collector, TileEntityProcessingState state)
     {
-        state.DewCollectorsProcessed++;
+        state.CollectorsProcessed++;
 
         if (!ShouldProcessCollector(collector))
         {
@@ -162,13 +162,12 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidDewCollectorsFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Collector Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
-        state.ValidDewCollectorsFound++;
+        state.ValidCollectorsFound++;
 
         if (validStacksRegistered > 0)
         {
 #if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {dewCollector}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {collector}");
 #endif
         }
 
@@ -218,7 +217,6 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidWorkstationsFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
         state.ValidWorkstationsFound++;
 
         if (validStacksRegistered > 0)
@@ -275,7 +273,7 @@ internal static class TileEntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidLootablesFound<1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        if (state.ValidLootablesFound<100) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
         state.ValidLootablesFound++;
 
         if (validStacksRegistered > 0)
@@ -312,7 +310,7 @@ internal static class TileEntityItemDiscovery
     {
         ModLogger.DebugLog($"{methodName}: Processed {state.ChunksProcessed} chunks ({state.NullChunks} null), " +
                           $"{state.TileEntitiesProcessed} tile entities - " +
-                          $"DewCollectors: {state.ValidDewCollectorsFound}/{state.DewCollectorsProcessed}, " +
+                          $"Collectors: {state.ValidCollectorsFound}/{state.CollectorsProcessed}, " +
                           $"Workstations: {state.ValidWorkstationsFound}/{state.WorkstationsProcessed}, " +
                           $"Lootables: {state.ValidLootablesFound}/{state.LootablesProcessed}");
     }

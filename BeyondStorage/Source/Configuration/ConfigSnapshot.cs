@@ -12,7 +12,6 @@ public sealed class ConfigSnapshot
     public float Range { get; }
     public bool PullFromDrones { get; }
     public bool PullFromCollectors { get; }
-    public bool PullFromDewCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
     public bool PullFromVehicleStorage { get; }
 

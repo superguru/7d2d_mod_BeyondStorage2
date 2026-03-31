@@ -150,8 +150,8 @@ public static class ServerUtils
 
         switch (tileEntity)
         {
-            case TileEntityCollector dewCollector:
-                position = dewCollector.ToWorldPos();
+            case TileEntityCollector collector:
+                position = collector.ToWorldPos();
                 return true;
             case TileEntityWorkstation workstation:
                 position = workstation.ToWorldPos();

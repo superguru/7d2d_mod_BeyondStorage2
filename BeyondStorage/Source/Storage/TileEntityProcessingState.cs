@@ -24,8 +24,8 @@ internal class TileEntityProcessingState
     public int TileEntitiesProcessed = 0;
 
     // Specific tile entity type stats
-    public int DewCollectorsProcessed = 0;
-    public int ValidDewCollectorsFound = 0;
+    public int CollectorsProcessed = 0;
+    public int ValidCollectorsFound = 0;
 
     public int WorkstationsProcessed = 0;
     public int ValidWorkstationsFound = 0;

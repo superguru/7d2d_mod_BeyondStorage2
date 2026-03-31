@@ -7,7 +7,7 @@
 - [ ] **Vehicle Storage**: Test that vehicle storage is accessible when `pullFromVehicleStorage` is enabled
 - [ ] **Drone Storage**: Confirm drone storage integration works with owned drones
 - [ ] **Workstation Output**: Verify workstation output stacks are pulled when `pullFromWorkstationOutputs` is enabled
-- [ ] **Dew Collector**: Test dew collector integration when `pullFromDewCollectors` is enabled
+- [ ] **Dew Collector**: Test dew collector integration when `pullFromCollectors` is enabled
 - [ ] **Range Limiting**: Confirm storage sources outside configured range are ignored
 - [ ] **Ownership Checks**: Verify only player-owned/accessible storage is used
 

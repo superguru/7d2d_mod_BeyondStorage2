@@ -23,8 +23,8 @@ public class StorageDataManager
 
     public readonly Func<TileEntityCollector, TileEntityCollector, bool> EqualsCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorItemsFunc = (dc) => dc.Items;
-    public readonly Action<TileEntityCollector> MarkCollectorModifiedFunc = (dc) => DewCollectorStateManager.MarkCollectorModified(dc);
-    public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = (dc) => DewCollectorStateManager.GetCollectorName(dc);
+    public readonly Action<TileEntityCollector> MarkCollectorModifiedFunc = (dc) => CollectorStateManager.MarkCollectorModified(dc);
+    public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = (dc) => CollectorStateManager.GetCollectorName(dc);
 
     public readonly Func<TileEntityWorkstation, TileEntityWorkstation, bool> EqualsWorkstationFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationItemsFunc = (workstation) => workstation.output;

@@ -168,7 +168,7 @@
     <Compile Include="Source\Storage\StorageQueryService.cs" />
     <Compile Include="Source\Storage\StorageDataManager.cs" />
     <Compile Include="Source\Storage\TileEntityItemDiscovery.cs" />
-    <Compile Include="Source\TileEntities\DewCollectorStateManager.cs" />
+    <Compile Include="Source\TileEntities\CollectorStateManager.cs" />
     <Compile Include="Source\TileEntities\WorkstationStateManager.cs" />
     <Compile Include="Source\Game\Vehicle\VehicleRepair.cs" />
     <Compile Include="Source\Game\WorldPlayerContext.cs" />

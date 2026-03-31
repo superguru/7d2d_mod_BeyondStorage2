@@ -143,7 +143,6 @@ internal static class EntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidVehiclesFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
         state.ValidVehiclesFound++;
 
         if (validStacksRegistered > 0)
@@ -225,7 +224,6 @@ internal static class EntityItemDiscovery
         );
 
         sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
-        if (state.ValidDronesFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
         state.ValidDronesFound++;
 
         if (validStacksRegistered > 0)
