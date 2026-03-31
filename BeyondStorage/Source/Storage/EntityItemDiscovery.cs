@@ -14,7 +14,7 @@ internal static class EntityItemDiscovery
     {
 #if DEBUG
 #endif
-        if (!ValidateWorldEntityList(context))
+        if (!ValidateWorldEntityList())
         {
             return;
         }
@@ -37,7 +37,7 @@ internal static class EntityItemDiscovery
 #endif
     }
 
-    private static bool ValidateWorldEntityList(StorageContext context)
+    private static bool ValidateWorldEntityList()
     {
         var world = GameManager.Instance?.World;
         if (world == null)
@@ -85,20 +85,20 @@ internal static class EntityItemDiscovery
         // Process based on entity type using pattern matching
         if (pullFromVehicles && entity is EntityVehicle vehicle)
         {
-            ProcessVehicleEntity(state.Context, vehicle, state);
+            ProcessVehicleEntity(vehicle, state);
             return;
         }
 
         if (pullFromDrones && entity is EntityDrone drone)
         {
-            ProcessDroneEntity(state.Context, drone, state);
+            ProcessDroneEntity(drone, state);
             return;
         }
     }
 
     #region Vehicle Processing
 
-    private static void ProcessVehicleEntity(StorageContext context, EntityVehicle vehicle, EntityProcessingState state)
+    private static void ProcessVehicleEntity(EntityVehicle vehicle, EntityProcessingState state)
     {
         state.VehiclesProcessed++;
 
@@ -107,8 +107,7 @@ internal static class EntityItemDiscovery
             return;
         }
 
-        ProcessVehicleItems(context, vehicle);
-        state.ValidVehiclesFound++;
+        ProcessVehicleItems(vehicle, state);
     }
 
     private static bool ShouldProcessVehicle(EntityVehicle vehicle, EntityProcessingState state)
@@ -128,21 +127,24 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static int ProcessVehicleItems(StorageContext context, EntityVehicle vehicle)
+    private static int ProcessVehicleItems(EntityVehicle vehicle, EntityProcessingState state)
     {
 #if DEBUG
 #endif
+        var context = state.Context;
 
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<EntityVehicle>(
             vehicle,
             sources.EqualsVehicleFunc,
-            sources.GetItemsVehicleFunc,
-            sources.MarkModifiedVehicleFunc
+            sources.GetVehicleItemsFunc,
+            sources.MarkVehicleModifiedFunc,
+            sources.GetVehicleNameFunc
         );
 
-        int validStacksRegistered = 0;
-        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        if (state.ValidVehiclesFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        state.ValidVehiclesFound++;
 
         if (validStacksRegistered > 0)
         {
@@ -158,7 +160,7 @@ internal static class EntityItemDiscovery
 
     #region Drone Processing
 
-    private static void ProcessDroneEntity(StorageContext context, EntityDrone drone, EntityProcessingState state)
+    private static void ProcessDroneEntity(EntityDrone drone, EntityProcessingState state)
     {
         state.DronesProcessed++;
 
@@ -167,8 +169,7 @@ internal static class EntityItemDiscovery
             return;
         }
 
-        ProcessDroneItems(context, drone);
-        state.ValidDronesFound++;
+        ProcessDroneItems(drone, state);
     }
 
     private static bool ShouldProcessDrone(EntityDrone drone, EntityProcessingState state)
@@ -207,22 +208,25 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static int ProcessDroneItems(StorageContext context, EntityDrone drone)
+    private static int ProcessDroneItems(EntityDrone drone, EntityProcessingState state)
     {
 #if DEBUG
         const string d_MethodName = nameof(ProcessDroneItems);
 #endif
+        var context = state.Context;
 
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<EntityDrone>(
             drone,
-            sources.EqualsDroneCollectorFunc,
-            sources.GetItemsDroneCollectorFunc,
-            sources.MarkModifiedDroneCollectorFunc
+            sources.EqualsDroneEntityFunc,
+            sources.GetDroneEntityItemsFunc,
+            sources.MarkDroneEntityModifiedFunc,
+            sources.GetDroneEntityNameFunc
         );
 
-        int validStacksRegistered = 0;
-        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        if (state.ValidDronesFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        state.ValidDronesFound++;
 
         if (validStacksRegistered > 0)
         {

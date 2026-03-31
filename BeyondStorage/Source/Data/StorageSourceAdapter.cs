@@ -17,14 +17,16 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     private readonly Func<T, T, bool> _equalsFunc;
     private readonly Func<T, ItemStack[]> _getItemStacksFunc;
     private readonly Action<T> _markModifiedAction;
+    private readonly Func<T, string> _getNameFunc;
 
     public StorageSourceAdapter(
         T storageSource,
         Func<T, T, bool> equalsFunc,
         Func<T, ItemStack[]> getItemStacksFunc,
-        Action<T> markModifiedAction)
+        Action<T> markModifiedAction,
+        Func<T, string> getNameFunc)
     {
-        const string d_MethodName = nameof(StorageSourceAdapter<T>);
+        const string d_MethodName = nameof(StorageSourceAdapter<>);
 
         if (storageSource == null)
         {
@@ -62,6 +64,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         _equalsFunc = equalsFunc;
         _getItemStacksFunc = getItemStacksFunc;
         _markModifiedAction = markModifiedAction;
+        _getNameFunc = getNameFunc;
     }
 
     public override bool Equals(object obj)
@@ -128,6 +131,23 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         {
             ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}");
             return [];
+        }
+    }
+
+    public string GetName()
+    {
+        const string d_MethodName = nameof(GetName);
+        const string UNKNOWN = "Unknown Storage";
+
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
+        try
+        {
+            return _getNameFunc(StorageSource) ?? UNKNOWN;
+        }
+        catch (Exception ex)
+        {
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error getting name: {ex.Message}");
+            return UNKNOWN;
         }
     }
 

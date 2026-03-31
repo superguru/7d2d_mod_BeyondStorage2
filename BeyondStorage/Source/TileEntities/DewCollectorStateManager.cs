@@ -5,11 +5,21 @@ namespace BeyondStorage.Scripts.TileEntities;
 
 public static class DewCollectorStateManager
 {
+    public static string GetCollectorName(TileEntityCollector collector)
+    {
+        if (collector == null)
+        {
+            return "Unknown Collector";
+        }
+
+        string name = collector.block.GetBlockName();
+        return name;
+    }
 
     /// <summary>
     /// Marks a dew collector as modified after items are removed from it
     /// </summary>
-    public static void MarkDewCollectorModified(TileEntityCollector dewCollector)
+    public static void MarkCollectorModified(TileEntityCollector dewCollector)
     {
         const string d_method_name = "MarkModifiedDewCollectorFunc";
         ModLogger.DebugLog($"{d_method_name}: Marking Dew Collector '{dewCollector?.GetType().Name}' as modified");

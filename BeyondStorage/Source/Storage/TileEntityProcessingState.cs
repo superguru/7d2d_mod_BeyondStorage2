@@ -32,6 +32,7 @@ internal class TileEntityProcessingState
 
     public int LootablesProcessed = 0;
     public int ValidLootablesFound = 0;
+    public int ValidContainersFound = 0;
 
     public TileEntityProcessingState(StorageContext context)
     {

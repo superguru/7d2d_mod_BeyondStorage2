@@ -13,6 +13,7 @@ internal class StorageSourceItemDataStore
     private readonly Dictionary<ItemStack, IStorageSource> _sourcesByItemStack = new(ItemStackReferenceComparer.Instance);
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
     private readonly FilterStacksStore _collectionStore = new();
+    private readonly ContainerDistanceStore _containerStore = new();
 
     internal AllowedSourcesSnapshot AllowedSources { get; }
 
@@ -56,6 +57,7 @@ internal class StorageSourceItemDataStore
         _sourcesByItemStack.Clear();
         _sourcesByType.Clear();
         _collectionStore.Clear();
+        _containerStore.Clear();
     }
 
     /// <summary>
@@ -168,6 +170,19 @@ internal class StorageSourceItemDataStore
         _collectionStore.AddStackForItemType(stack);
 
         return true; // Stack was successfully added
+    }
+
+    public void RegisterContainerSource<T>(StorageSourceAdapter<T> container, float distance) where T : class
+    {
+        const string d_MethodName = nameof(RegisterContainerSource);
+
+        if (container == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Null container supplied");
+            return;
+        }
+
+        _containerStore.Add(container, distance);
     }
 
     public IReadOnlyList<IStorageSource> GetSourcesByType<T>() where T : class, IStorageSource

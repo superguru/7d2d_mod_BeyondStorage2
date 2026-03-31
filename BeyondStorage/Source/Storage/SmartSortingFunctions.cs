@@ -56,17 +56,18 @@ public class SmartSortingFunctions
             return;
         }
 
-        var sourceItems = LootableItemHandler.GetLootableItems(context.Player);
+        var sources = LootableItemHandler.GetLootableItems(context.Player);
 #if DEBUG
-        LogSourceItems(d_MethodName, sourceItems);
+        LogSourceItems(d_MethodName, sources);
 #endif
+
+        var targets = context.GetClosestContainers();
 
 #if DEBUG
         string availableSourcesDescr = context.GetSourceSummary();
-        ModLogger.DebugLog($"{d_MethodName}: Available sources: {availableSourcesDescr}");
+        ModLogger.DebugLog($"{d_MethodName}: Targets: {availableSourcesDescr}");
 #endif
 
-        var availableSources = context.GetClosestContainers();
 
         context.InvalidateCache();
     }

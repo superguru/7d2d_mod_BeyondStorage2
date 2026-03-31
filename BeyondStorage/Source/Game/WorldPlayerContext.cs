@@ -131,7 +131,20 @@ public sealed class WorldPlayerContext
     /// <returns>True if within range or range is unlimited</returns>
     public bool IsWithinRange(Vector3 worldPosition, float range)
     {
-        return range <= 0 || DistanceToPlayer(worldPosition) < range;
+        return IsWithinRange(worldPosition, range, out _);
+    }
+
+    /// <summary>
+    /// Checks if a position is within the specified range of the player.
+    /// </summary>
+    /// <param name="worldPosition">The world position to check</param>
+    /// <param name="range">The maximum range (0 or negative means no range limit)</param>
+    /// <param name="distance">The distance to the world position from the player</param>
+    /// <returns>True if within range or range is unlimited</returns>
+    public bool IsWithinRange(Vector3 worldPosition, float range, out float distance)
+    {
+        distance = DistanceToPlayer(worldPosition);
+        return range <= 0 || distance < range;
     }
 
     /// <summary>

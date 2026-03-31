@@ -54,6 +54,11 @@ internal sealed class AllowedSourcesSnapshot
         }
     }
 
+    public bool IsLootableSource(Type sourceType)
+    {
+        return TypeMatchingHelper.IsMatchingType(sourceType, [typeof(ITileEntityLootable)]);
+    }
+
     public bool IsAllowedSource(Type sourceType)
     {
         return TypeMatchingHelper.IsMatchingType(sourceType, _allowSourceTypes);

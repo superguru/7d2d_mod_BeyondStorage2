@@ -192,6 +192,22 @@ public static class LootableItemHandler
 #endif
     }
 
+    public static string GetLootableName(ITileEntityLootable lootable)
+    {
+        if (lootable == null)
+        {
+            return "Unknown Lootable";
+        }
+
+        string name = lootable.lootListName;
+        if (string.IsNullOrEmpty(name))
+        {
+            name = "Unnamed Lootable";
+        }
+
+        return name;
+    }
+
     public static void MarkLootableModified(ITileEntityLootable lootable)
     {
         if (lootable == null)

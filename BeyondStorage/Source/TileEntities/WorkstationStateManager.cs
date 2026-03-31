@@ -6,6 +6,17 @@ public static class WorkstationStateManager
 {
     public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;
 
+    public static string GetWorkstationName(TileEntityWorkstation workstation)
+    {
+        if (workstation == null)
+        {
+            return "Unknown Workstation";
+        }
+
+        string name = workstation.block.GetBlockName();
+        return name;
+    }
+
     /// <summary>
     /// Marks a workstation as modified when items are removed from its output, such as when pulling items from the workstation.
     /// </summary>
@@ -39,8 +50,7 @@ public static class WorkstationStateManager
 
         var player = GameManager.Instance.World.GetPrimaryPlayer();
 
-        var windowGroup = player.windowManager.GetWindow(windowName) as XUiWindowGroup;
-        if (windowGroup == null)
+        if (player.windowManager.GetWindow(windowName) is not XUiWindowGroup windowGroup)
         {
             ModLogger.DebugLog($"{d_method_name}: windowGroup is null for '{windowName}'");
             return;
@@ -51,8 +61,7 @@ public static class WorkstationStateManager
             return;
         }
 
-        var workstationWindowGroup = windowGroup.Controller as XUiC_WorkstationWindowGroup;
-        if (workstationWindowGroup == null)
+        if (windowGroup.Controller is not XUiC_WorkstationWindowGroup workstationWindowGroup)
         {
             ModLogger.DebugLog($"{d_method_name}: WorkstationWindowGroup is null for '{windowName}'");
             return;

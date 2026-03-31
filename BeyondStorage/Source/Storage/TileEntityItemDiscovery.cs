@@ -1,4 +1,5 @@
-﻿using BeyondStorage.Scripts.Configuration;
+﻿using System;
+using BeyondStorage.Scripts.Configuration;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
@@ -54,16 +55,18 @@ internal static class TileEntityItemDiscovery
     {
         state.TileEntitiesProcessed++;
 
-        if (!ShouldProcessTileEntity(tileEntity, state))
+        if (!ShouldProcessTileEntity(tileEntity, state, out float distance))
         {
             return;
         }
 
-        ProcessValidTileEntity(tileEntity, state);
+        ProcessValidTileEntity(tileEntity, state, distance);
     }
 
-    private static bool ShouldProcessTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
+    private static bool ShouldProcessTileEntity(TileEntity tileEntity, TileEntityProcessingState state, out float distance)
     {
+        distance = 0f;
+
         if (tileEntity.IsRemoving)
         {
             return false;
@@ -72,7 +75,7 @@ internal static class TileEntityItemDiscovery
         var tileEntityWorldPos = tileEntity.ToWorldPos();
 
         // Early range check to avoid unnecessary processing
-        if (!state.World.IsWithinRange(tileEntityWorldPos, state.Config.Range))
+        if (!state.World.IsWithinRange(tileEntityWorldPos, state.Config.Range, out distance))
         {
             return false;
         }
@@ -96,46 +99,45 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static void ProcessValidTileEntity(TileEntity tileEntity, TileEntityProcessingState state)
+    private static void ProcessValidTileEntity(TileEntity tileEntity, TileEntityProcessingState state, float distance)
     {
         // Process each type separately with clear logic and collect stats
         if (state.Config.PullFromDewCollectors && tileEntity is TileEntityCollector dewCollector)
         {
-            ProcessDewCollectorEntity(state.Context, dewCollector, state);
+            ProcessCollectorEntity(dewCollector, state);
             return;
         }
 
         if (state.Config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
         {
-            ProcessWorkstationEntity(state.Context, workstation, state);
+            ProcessWorkstationEntity(workstation, state);
             return;
         }
 
         // Process lootables (containers) - always enabled since they're primary storage
         if (tileEntity.TryGetSelfOrFeature(out ITileEntityLootable lootable))
         {
-            ProcessLootableEntity(state.Context, lootable, tileEntity, state);
+            ProcessLootableEntity(lootable, tileEntity, distance, state);
         }
     }
 
     #region Dew Collector Processing
 
-    private static void ProcessDewCollectorEntity(StorageContext context, TileEntityCollector dewCollector, TileEntityProcessingState state)
+    private static void ProcessCollectorEntity(TileEntityCollector collector, TileEntityProcessingState state)
     {
         state.DewCollectorsProcessed++;
 
-        if (!ShouldProcessDewCollector(dewCollector))
+        if (!ShouldProcessCollector(collector))
         {
             return;
         }
 
-        ProcessDewCollectorItems(context, dewCollector);
-        state.ValidDewCollectorsFound++;
+        ProcessCollectorItems(collector, state);
     }
 
-    private static bool ShouldProcessDewCollector(TileEntityCollector dewCollector)
+    private static bool ShouldProcessCollector(TileEntityCollector collector)
     {
-        if (dewCollector.bUserAccessing)
+        if (collector.bUserAccessing)
         {
             return false;
         }
@@ -143,21 +145,25 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static int ProcessDewCollectorItems(StorageContext context, TileEntityCollector dewCollector)
+    private static int ProcessCollectorItems(TileEntityCollector collector, TileEntityProcessingState state)
     {
 #if DEBUG
-#endif
+        //const string d_MethodName = nameof(ProcessCollectorItems);
+#endif        
+        var context = state.Context;
 
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<TileEntityCollector>(
-            dewCollector,
-            sources.EqualsDewCollectorFunc,
-            sources.GetItemsDewCollectorFunc,
-            sources.MarkModifiedDewCollectorFunc
+            collector,
+            sources.EqualsCollectorFunc,
+            sources.GetCollectorItemsFunc,
+            sources.MarkCollectorModifiedFunc,
+            sources.GetCollectorNameFunc
         );
 
-        int validStacksRegistered = 0;
-        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        if (state.ValidDewCollectorsFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Collector Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        state.ValidDewCollectorsFound++;
 
         if (validStacksRegistered > 0)
         {
@@ -173,7 +179,7 @@ internal static class TileEntityItemDiscovery
 
     #region Workstation Processing
 
-    private static void ProcessWorkstationEntity(StorageContext context, TileEntityWorkstation workstation, TileEntityProcessingState state)
+    private static void ProcessWorkstationEntity(TileEntityWorkstation workstation, TileEntityProcessingState state)
     {
         state.WorkstationsProcessed++;
 
@@ -182,8 +188,7 @@ internal static class TileEntityItemDiscovery
             return;
         }
 
-        ProcessWorkstationItems(context, workstation);
-        state.ValidWorkstationsFound++;
+        ProcessWorkstationItems(workstation, state);
     }
 
     private static bool ShouldProcessWorkstation(TileEntityWorkstation workstation)
@@ -196,21 +201,25 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static int ProcessWorkstationItems(StorageContext context, TileEntityWorkstation workstation)
+    private static int ProcessWorkstationItems(TileEntityWorkstation workstation, TileEntityProcessingState state)
     {
 #if DEBUG
+        //const string d_MethodName = nameof(ProcessWorkstationItems);
 #endif
+        var context = state.Context;
 
         var sources = context.Sources;
         var sourceAdapter = new StorageSourceAdapter<TileEntityWorkstation>(
             workstation,
             sources.EqualsWorkstationFunc,
-            sources.GetItemsWorkstationFunc,
-            sources.MarkModifiedWorkstationFunc
+            sources.GetWorkstationItemsFunc,
+            sources.MarkWorkstationModifiedFunc,
+            sources.GetWorkstationNameFunc
         );
 
-        int validStacksRegistered = 0;
-        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        if (state.ValidWorkstationsFound < 1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        state.ValidWorkstationsFound++;
 
         if (validStacksRegistered > 0)
         {
@@ -226,7 +235,7 @@ internal static class TileEntityItemDiscovery
 
     #region Lootable Processing
 
-    private static void ProcessLootableEntity(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity, TileEntityProcessingState state)
+    private static void ProcessLootableEntity(ITileEntityLootable lootable, TileEntity tileEntity, float distance, TileEntityProcessingState state)
     {
         state.LootablesProcessed++;
 
@@ -235,8 +244,8 @@ internal static class TileEntityItemDiscovery
             return;
         }
 
-        ProcessLootableItems(context, lootable, tileEntity);
-        state.ValidLootablesFound++;
+        ProcessLootableItems(lootable, tileEntity, state);
+        ProcessLootableContainer(lootable, distance, state);
     }
 
     private static bool ShouldProcessLootable(ITileEntityLootable lootable)
@@ -244,11 +253,13 @@ internal static class TileEntityItemDiscovery
         return lootable.bPlayerStorage;
     }
 
-    private static int ProcessLootableItems(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity)
+    private static int ProcessLootableItems(ITileEntityLootable lootable, TileEntity tileEntity, TileEntityProcessingState state)
     {
 #if DEBUG
         const string d_MethodName = nameof(ProcessLootableItems);
 #endif
+
+        var context = state.Context;
 
 #if DEBUG
         LootableItemHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
@@ -258,12 +269,14 @@ internal static class TileEntityItemDiscovery
         var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
             lootable,
             sources.EqualsLootableFunc,
-            sources.GetItemsLootableFunc,
-            sources.MarkModifiedLootableFunc
+            sources.GetLootableItemsFunc,
+            sources.MarkLootableModifiedFunc,
+            sources.GetLootableNameFunc
         );
 
-        int validStacksRegistered = 0;
-        sources?.DataStore?.RegisterSource(sourceAdapter, out validStacksRegistered);
+        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        if (state.ValidLootablesFound<1) { ModLogger.DebugLog($"BS_NAME_TEST: Lootable Name = {sourceAdapter.GetName()}"); }  // TODO: Remove this after verifying names are correct
+        state.ValidLootablesFound++;
 
         if (validStacksRegistered > 0)
         {
@@ -271,8 +284,24 @@ internal static class TileEntityItemDiscovery
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
 #endif
         }
-
         return validStacksRegistered;
+    }
+
+    private static void ProcessLootableContainer(ITileEntityLootable lootable, float distance, TileEntityProcessingState state)
+    {
+        var context = state.Context;
+
+        var sources = context.Sources;
+        var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
+            lootable,
+            sources.EqualsLootableFunc,
+            sources.GetLootableItemsFunc,
+            sources.MarkLootableModifiedFunc,
+            sources.GetLootableNameFunc
+        );
+
+        sources.DataStore.RegisterContainerSource(sourceAdapter, distance);
+        state.ValidContainersFound++;
     }
 
     #endregion
@@ -289,37 +318,4 @@ internal static class TileEntityItemDiscovery
     }
 
     #endregion
-
-    /// <summary>
-    /// Helper class to encapsulate processing state and reduce parameter passing
-    /// </summary>
-    private class TileEntityProcessingState
-    {
-        public readonly StorageContext Context;
-        public readonly ConfigSnapshot Config;
-        public readonly WorldPlayerContext World;
-        public readonly int PlayerId;
-        public readonly bool HasLockedEntities;
-
-        public int ChunksProcessed = 0;
-        public int NullChunks = 0;
-        public int TileEntitiesProcessed = 0;
-
-        // Stats for collectors, workstations, and lootables
-        public int DewCollectorsProcessed = 0;
-        public int ValidDewCollectorsFound = 0;
-        public int WorkstationsProcessed = 0;
-        public int ValidWorkstationsFound = 0;
-        public int LootablesProcessed = 0;
-        public int ValidLootablesFound = 0;
-
-        public TileEntityProcessingState(StorageContext context)
-        {
-            Context = context;
-            Config = context.Config;
-            World = context.WorldPlayerContext;
-            PlayerId = World.PlayerEntityId;
-            HasLockedEntities = TileEntityLockManager.LockedTileEntities.Count > 0;
-        }
-    }
 }

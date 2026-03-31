@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Source\Configuration\ConfigDisplayHelper.cs" />
     <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
+    <Compile Include="Source\Data\ContainerDistanceStore.cs" />
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
     <Compile Include="Source\Game\UI\UIControlHelpers.cs" />
     <Compile Include="Source\Game\UI\WindowStateManager.cs" />
