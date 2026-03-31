@@ -6,6 +6,7 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
+* In v2.6.3, add pushing item stacks from player inventory to nearby storage
 * In v2.6.2, Compatibility with v2.6 of the game, as well as UI fixes for the smart loot button
 * In v2.5.2, initial iteration to support v2.5 of the game
 * In v2.4.0, add smart sort functionality to backpack window

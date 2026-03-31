@@ -35,12 +35,6 @@ public class BsConfig
     public bool pullFromWorkstationOutputs = true;
 
     /// <summary>
-    /// If set to true it will ignore tile entities that aren't Storage Containers (crates)
-    /// otherwise will check all lootable containers placed by player(s)
-    /// </summary>
-    public bool pullFromPlayerCraftedNonCrates = false;
-
-    /// <summary>
     /// If set to true it will try and pull items from nearby vehicle storages
     /// </summary>
     public bool pullFromVehicleStorage = true;

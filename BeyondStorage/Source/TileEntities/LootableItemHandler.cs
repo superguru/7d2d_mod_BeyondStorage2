@@ -11,7 +11,7 @@ namespace BeyondStorage.Scripts.TileEntities;
 /// </summary>
 public static class LootableItemHandler
 {
-    private static readonly PackedBoolArray s_emptyLockedSlots = new PackedBoolArray();
+    private static readonly PackedBoolArray s_emptyLockedSlots = new();
 
     public static ItemStack[] GetLootableItems(EntityAlive entity)
     {
@@ -103,13 +103,13 @@ public static class LootableItemHandler
             }
 
             var stack = items[slotIndex];
-            if (stack != null)
+            if (stack != null && stack.count > 0)
             {
                 result.Add(stack);
             }
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     /// <summary>

@@ -9,7 +9,7 @@ public static class UIControlHelpers
     /// <summary>
     /// The ID of the smart loot sort button defined in windows.xml
     /// </summary>
-    public const string SMART_LOOT_SORT_BUTTON_ID = "btnBeyondSmartLootSort";
+    public const string SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID = "btnBeyondSmartPlayerInventoryPush";
 
     /// <summary>
     /// Gets the smart loot sort button from the specified controller instance.
@@ -17,7 +17,7 @@ public static class UIControlHelpers
     /// </summary>
     /// <param name="instance">The controller instance to search in</param>
     /// <returns>The button control if found, null otherwise</returns>
-    public static XUiController GetSmartLootSortButton(XUiController instance)
+    public static XUiController GetSmartPlayerInventoryPushButton(XUiController instance)
     {
         if (instance == null)
         {
@@ -30,7 +30,7 @@ public static class UIControlHelpers
             return null;
         }
 
-        var btnBeyondSmartLootSort = stdControls.GetChildById(SMART_LOOT_SORT_BUTTON_ID);
-        return btnBeyondSmartLootSort;
+        var btnBeyondSmartPlayerInventoryPush = stdControls.GetChildById(SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID);
+        return btnBeyondSmartPlayerInventoryPush;
     }
 }

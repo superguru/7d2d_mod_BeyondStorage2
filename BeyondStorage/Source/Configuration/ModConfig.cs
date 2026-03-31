@@ -532,16 +532,6 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromPlayerCraftedNonCrates()
-    {
-        bool serverValue = ServerConfig.pullFromPlayerCraftedNonCrates;
-        bool clientValue = ClientConfig.pullFromPlayerCraftedNonCrates;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
     public static bool PullFromVehicleStorage()
     {
         bool serverValue = ServerConfig.pullFromVehicleStorage;
@@ -769,7 +759,6 @@ public static class ModConfig
             pullFromDrones = legacyConfig.pullFromDrones,
             pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
             pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
-            pullFromPlayerCraftedNonCrates = legacyConfig.pullFromPlayerCraftedNonCrates,
             pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
             serverSyncConfig = legacyConfig.serverSyncConfig,
             isDebug = legacyConfig.isDebug,

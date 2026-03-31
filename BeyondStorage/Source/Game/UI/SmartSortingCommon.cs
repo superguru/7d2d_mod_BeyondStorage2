@@ -1,11 +1,12 @@
 ﻿using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.Storage;
 
 namespace BeyondStorage.Source.Game.UI;
 
 public class SmartSortingCommon
 {
-    public static void SmartLootSort_EventHandler(XUiController _sender, int _mouseButton)
+    public static void SmartPlayerInventoryPush_EventHandler(XUiController _sender, int _mouseButton)
     {
-        ModLogger.DebugLog($"SmartLootSort_EventHandler triggered, vehicle open={WindowStateManager.IsVehicleStorageWindowOpen()}");
+        SmartSortingFunctions.SmartPlayerInventoryPush();
     }
 }

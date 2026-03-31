@@ -147,7 +147,7 @@ public static class ItemCommon
 
         if (UIRefreshHelper.ValidateUIComponents(context, d_MethodName))
         {
-            var playerInventory = context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory;
+            var playerInventory = context.PlayerInventory;
             playerInventoryCount = playerInventory.GetItemCount(itemValue);
         }
 

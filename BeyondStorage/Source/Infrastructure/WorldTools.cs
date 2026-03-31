@@ -75,7 +75,7 @@ public static class WorldTools
     {
         var droneManagerExists = DroneManager.Instance != null;
         var serverDroneCount = DroneManager.GetServerDroneCount();
-        var dronesActiveExists = droneManagerExists ? DroneManager.Instance.dronesActive != null : false;
+        var dronesActiveExists = droneManagerExists && DroneManager.Instance.dronesActive != null;
 
         return $"ManagerExists: {droneManagerExists}, ServerDroneCount: {serverDroneCount}, ActiveListExists: {dronesActiveExists}";
     }

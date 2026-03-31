@@ -140,6 +140,7 @@
     <Compile Include="Source\Infrastructure\TypeMatchingHelper.cs" />
     <Compile Include="Source\Storage\EntityItemDiscovery.cs" />
     <Compile Include="Source\Storage\EntityProcessingState.cs" />
+    <Compile Include="Source\Storage\SmartSortingFunctions.cs" />
     <Compile Include="Source\Storage\TileEntityProcessingState.cs" />
     <Compile Include="Source\UI\UIRefreshHelper.cs" />
     <Compile Include="Source\Infrastructure\ValidationHelper.cs" />
@@ -190,7 +191,7 @@
     <Content Include="ModPackage\Config\Localization.txt" />
     <Content Include="ModPackage\Config\XUi\windows.xml" />
     <Content Include="ModPackage\ModInfo.xml" />
-    <Content Include="ModPackage\UIAtlases\UIAtlas\ui_symbol_beyond_smart_loot_sort.png" />
+    <Content Include="ModPackage\UIAtlases\UIAtlas\ui_symbol_beyond_smart_loot_push.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">

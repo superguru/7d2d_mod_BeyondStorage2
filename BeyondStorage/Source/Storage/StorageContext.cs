@@ -14,6 +14,9 @@ public sealed class StorageContext
     internal StorageDataManager Sources { get; }
     internal ItemStackCacheManager CacheManager { get; }
 
+    internal EntityPlayerLocal Player => WorldPlayerContext.Player;
+    internal XUiM_PlayerInventory PlayerInventory => Player.playerUI.xui.PlayerInventory;
+
     private DateTime CreatedAt { get; }
 
     internal StorageContext(ConfigSnapshot config, WorldPlayerContext worldPlayerContext, StorageDataManager sources, ItemStackCacheManager cacheManager)
@@ -103,6 +106,22 @@ public sealed class StorageContext
         //var cacheStatus = hit ? "HIT" : "MISS";
         //ModLogger.DebugLog($"{methodName}: CACHE_CHECK_{cacheStatus}");
         return hit;
+    }
+
+    private void LoadCache()
+    {
+        const string d_MethodName = nameof(LoadCache);
+        if (!EnsureValidCache(d_MethodName))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Cache validation failed during manual load");
+        }
+    }
+
+    public IList<IStorageSource> GetClosestContainers()
+    {
+        LoadCache();
+
+        return StorageQueryService.GetClosestContainers(this);
     }
 
     /// <summary>

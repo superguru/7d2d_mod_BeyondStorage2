@@ -24,12 +24,12 @@ internal static class XUiControllerPatches
 
         try
         {
-            var btnBeyondSmartLootSort = UIControlHelpers.GetSmartLootSortButton(__instance);
-            if (btnBeyondSmartLootSort != null)
+            var btnBeyondSmartPlayerInventoryPush = UIControlHelpers.GetSmartPlayerInventoryPushButton(__instance);
+            if (btnBeyondSmartPlayerInventoryPush != null)
             {
-                btnBeyondSmartLootSort.OnPress -= SmartSortingCommon.SmartLootSort_EventHandler;
+                btnBeyondSmartPlayerInventoryPush.OnPress -= SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart loot sorting button event handler removed");
+                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
 #endif
             }
         }

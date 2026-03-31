@@ -230,7 +230,7 @@ internal static class TileEntityItemDiscovery
     {
         state.LootablesProcessed++;
 
-        if (!ShouldProcessLootable(context, lootable, tileEntity))
+        if (!ShouldProcessLootable(lootable))
         {
             return;
         }
@@ -239,27 +239,9 @@ internal static class TileEntityItemDiscovery
         state.ValidLootablesFound++;
     }
 
-    private static bool ShouldProcessLootable(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity)
+    private static bool ShouldProcessLootable(ITileEntityLootable lootable)
     {
-        if (!lootable.bPlayerStorage)
-        {
-            return false;
-        }
-
-        // Storage crates have the Storage feature tag
-        if (!tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
-        {
-            var config = context.Config;
-            if (!config.PullFromPlayerCraftedNonCrates)
-            {
-                // Things a player built, like a wall safe, or a desk, is lootable, lootable.bPlayerStorage is true, but doesn't have the Storage feature tag
-                return false;
-
-                // Things just lootable out in the world, like a garbage can, is never eligible for pulling
-            }
-        }
-
-        return true;
+        return lootable.bPlayerStorage;
     }
 
     private static int ProcessLootableItems(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity)

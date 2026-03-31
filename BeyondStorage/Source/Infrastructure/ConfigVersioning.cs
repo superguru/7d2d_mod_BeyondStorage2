@@ -79,7 +79,6 @@ public static class ConfigVersioning
                 pullFromDrones = legacyConfig.pullFromDrones,
                 pullFromDewCollectors = legacyConfig.pullFromDewCollectors,
                 pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
-                pullFromPlayerCraftedNonCrates = !legacyConfig.onlyStorageCrates,
                 pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
 
                 serverSyncConfig = legacyConfig.serverSyncConfig,
@@ -131,6 +130,12 @@ public static class ConfigVersioning
         if (fromVersion < new Version("2.3.5"))
         {
             migratedConfig = MigrateTo235(migratedConfig);
+        }
+
+        // Migration to version 2.6.3: Remove pullFromPlayerCraftedNonCrates setting
+        if (fromVersion < new Version("2.6.3"))
+        {
+            migratedConfig = MigrateTo263(migratedConfig);
         }
 
         // Always update to current version
@@ -192,6 +197,20 @@ public static class ConfigVersioning
     }
 
     /// <summary>
+    /// Migrates config to version 2.6.3
+    /// Changes: Removes the pullFromPlayerCraftedNonCrates setting
+    /// </summary>
+    /// <param name="config">Config to migrate</param>
+    /// <returns>Migrated config</returns>
+    private static BsConfig MigrateTo263(BsConfig config)
+    {
+        const string d_MethodName = nameof(MigrateTo263);
+        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.6.3");
+        ModLogger.Info($"{d_MethodName}: The 'pullFromPlayerCraftedNonCrates' setting has been removed");
+        return config;
+    }
+
+    /// <summary>
     /// Legacy config structure for migration (pre-2.3.0)
     /// </summary>
     private class LegacyBsConfig
@@ -200,7 +219,6 @@ public static class ConfigVersioning
         public bool pullFromDrones = true;
         public bool pullFromDewCollectors = true;
         public bool pullFromWorkstationOutputs = true;
-        public bool onlyStorageCrates = false;
         public bool pullFromVehicleStorage = true;
         public bool enableForBlockRepair = true;
         public bool enableForBlockTexture = true;

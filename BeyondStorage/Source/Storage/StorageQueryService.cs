@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 
@@ -30,6 +31,12 @@ public static class StorageQueryService
         }
 
         return true;
+    }
+
+    public static IList<IStorageSource> GetClosestContainers(StorageContext storageContext)
+    {
+        // TODO: Implement logic to determine closest containers based on player position and config settings
+        return [];
     }
 
     public static int GetItemCount(StorageContext context, ItemValue filterItem)

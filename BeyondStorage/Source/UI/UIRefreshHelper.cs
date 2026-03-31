@@ -283,7 +283,7 @@ public static class UIRefreshHelper
                 if (ValidationHelper.ValidateStorageContext(StackOperation.GetStackOpName(operation), out StorageContext context) &&
                     ValidateUIComponents(context, StackOperation.GetStackOpName(operation)))
                 {
-                    var fallbackPlayerInventory = context.WorldPlayerContext.Player.playerUI.xui.PlayerInventory;
+                    var fallbackPlayerInventory = context.PlayerInventory;
                     ActionHelper.SetTimeout(
                         () =>
                             {
