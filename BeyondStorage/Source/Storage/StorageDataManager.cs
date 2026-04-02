@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.TileEntities;
@@ -39,7 +40,12 @@ public class StorageDataManager
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityVehicle, ItemStack[]> GetVehicleItemsFunc = vehicle => LootableItemHandler.GetLootableItems(vehicle);
     public Action<EntityVehicle> MarkVehicleModifiedFunc = vehicle => LootableItemHandler.MarkLootableModified(vehicle);
-    public readonly Func<EntityVehicle, string> GetVehicleNameFunc = (vehicle) => LootableItemHandler.GetLootableName(vehicle.lootContainer);
+    public readonly Func<EntityVehicle, string> GetVehicleNameFunc = (vehicle) => LootableItemHandler.GetLootableName(vehicle?.lootContainer);
+
+    public readonly Func<EntityPlayerLocal, EntityPlayerLocal, bool> EqualsPlayerLootableFunc = (a, b) => ReferenceEquals(a, b);
+    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerLootableItemsFunc = player => LootableItemHandler.GetLootableItems(player);
+    public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => LootableItemHandler.MarkLootableModified(player);
+    public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = (player) => LootableItemHandler.GetPlayerLootableName(player);
 
     internal StorageDataManager(StorageSourceItemDataStore dataStore)
     {
@@ -66,5 +72,11 @@ public class StorageDataManager
     internal int CountCachedItems(UniqueItemTypes filter)
     {
         return DataStore.GetFilteredItemCount(filter);
+    }
+
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    {
+        var containers = DataStore.GetClosestTargetContainers();
+        return containers;
     }
 }

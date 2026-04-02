@@ -43,7 +43,7 @@ public static class LootableItemHandler
             totalSlots = containerSize.x * containerSize.y;
         }
 
-        return GetItemsWithSlotFiltering(items, lockedSlots, totalSlots);
+        return GetItemsWithLockedSlotFiltering(items, lockedSlots, totalSlots);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public static class LootableItemHandler
 
         var containerSize = lootable.GetContainerSize();
         int totalSlots = containerSize.x * containerSize.y;
-        return GetItemsWithSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
+        return GetItemsWithLockedSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public static class LootableItemHandler
     /// <param name="lockedSlots">The locked slots array</param>
     /// <param name="totalSlots">Total container slots (null if unknown)</param>
     /// <returns>Array of ItemStack objects from unlocked slots</returns>
-    private static ItemStack[] GetItemsWithSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
+    private static ItemStack[] GetItemsWithLockedSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
     {
         // Calculate maximum slots to check
         int lockedSlotsLength = lockedSlots.Length;
@@ -230,6 +230,43 @@ public static class LootableItemHandler
 
         lootable.SetModified();
     }
+
+    public static string GetPlayerLootableName(EntityPlayerLocal entity)
+    {
+        string name = "Unnamed Player Lootable";
+        
+        if (entity == null)
+        {
+            return name;
+        }
+
+        var cp = entity.cachedPlayerName;
+        if (cp != null)
+        {
+            var displayname = cp.DisplayName;
+            if (!string.IsNullOrEmpty(displayname))
+            {
+                name = displayname;
+            }
+        }
+
+        return name;
+    }
+
+    public static void MarkLootableModified(EntityPlayerLocal entity)
+    {
+        const string d_MethodName = nameof(MarkLootableModified);
+
+        if (entity == null || entity.playerUI == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: entity or player UI is null");
+            return;
+        }
+
+        entity.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
+        entity.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
+    }
+
     public static void MarkLootableModified(EntityVehicle entity)
     {
         const string d_MethodName = nameof(MarkLootableModified);
