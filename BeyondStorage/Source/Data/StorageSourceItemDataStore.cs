@@ -174,7 +174,7 @@ internal class StorageSourceItemDataStore
         return true; // Stack was successfully added
     }
 
-    public void RegisterContainerSource<T>(StorageSourceAdapter<T> container, float distance) where T : class
+    public void RegisterContainerSource(StorageSourceAdapter<ITileEntityLootable> container, float distance)
     {
         const string d_MethodName = nameof(RegisterContainerSource);
 
@@ -411,5 +411,11 @@ internal class StorageSourceItemDataStore
         }
 
         return _collectionStore.ContainsStacksForFilter(filter);
+    }
+
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    {
+        var containers = _containerStore.GetClosestTargetContainers();
+        return containers;
     }
 }

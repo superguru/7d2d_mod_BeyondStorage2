@@ -117,11 +117,12 @@ public sealed class StorageContext
         }
     }
 
-    public IList<IStorageSource> GetClosestContainers()
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
     {
         LoadCache();
 
-        return StorageQueryService.GetClosestContainers(this);
+        var containers = StorageQueryService.GetClosestTargetContainers(this);
+        return containers;
     }
 
     /// <summary>

@@ -33,10 +33,10 @@ public static class StorageQueryService
         return true;
     }
 
-    public static IList<IStorageSource> GetClosestContainers(StorageContext storageContext)
+    internal static IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(StorageContext context)
     {
-        // TODO: Implement logic to determine closest containers based on player position and config settings
-        return [];
+        var containers = context.Sources.GetClosestTargetContainers();
+        return containers;
     }
 
     public static int GetItemCount(StorageContext context, ItemValue filterItem)

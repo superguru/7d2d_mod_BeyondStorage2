@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
@@ -9,13 +11,13 @@ namespace BeyondStorage.Scripts.Data;
 /// </summary>
 internal sealed class ContainerDistanceStore
 {
-    private readonly List<(IStorageSource Container, float Distance)> _entries = [];
+    private readonly List<(StorageSourceAdapter<ITileEntityLootable> Container, float Distance)> _entries = [];
 
     public bool IsSorted { get; private set; } = true;
     public int Count => _entries.Count;
-    public IReadOnlyList<(IStorageSource Container, float Distance)> Entries => _entries;
+    public IReadOnlyList<(StorageSourceAdapter<ITileEntityLootable> Container, float Distance)> Entries => _entries;
 
-    public void Add<T>(StorageSourceAdapter<T> container, float distance) where T : class
+    public void Add(StorageSourceAdapter<ITileEntityLootable> container, float distance)
     {
         const string d_MethodName = nameof(Add);
 
@@ -47,5 +49,12 @@ internal sealed class ContainerDistanceStore
     {
         _entries.Clear();
         IsSorted = true;
+    }
+
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    {
+        Sort();
+
+        return Entries.Select(entry => new StorageTargetAdapter<ITileEntityLootable>(entry.Container, entry.Distance)).ToList();
     }
 }
