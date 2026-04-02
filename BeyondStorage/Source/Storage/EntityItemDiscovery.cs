@@ -130,28 +130,20 @@ internal static class EntityItemDiscovery
     private static int ProcessVehicleItems(EntityVehicle vehicle, EntityProcessingState state)
     {
 #if DEBUG
+        //const string d_MethodName = nameof(ProcessVehicleItems);
 #endif
         var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<EntityVehicle>(
-            vehicle,
-            sources.EqualsVehicleFunc,
-            sources.GetVehicleItemsFunc,
-            sources.MarkVehicleModifiedFunc,
-            sources.GetVehicleNameFunc
-        );
-
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         state.ValidVehiclesFound++;
 
+#if DEBUG
         if (validStacksRegistered > 0)
         {
-#if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
-#endif
         }
-
+#endif
         return validStacksRegistered;
     }
 
@@ -213,26 +205,17 @@ internal static class EntityItemDiscovery
         const string d_MethodName = nameof(ProcessDroneItems);
 #endif
         var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<EntityDrone>(
-            drone,
-            sources.EqualsDroneEntityFunc,
-            sources.GetDroneEntityItemsFunc,
-            sources.MarkDroneEntityModifiedFunc,
-            sources.GetDroneEntityNameFunc
-        );
-
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         state.ValidDronesFound++;
 
+#if DEBUG
         if (validStacksRegistered > 0)
         {
-#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
-#endif
         }
-
+#endif
         return validStacksRegistered;
     }
 

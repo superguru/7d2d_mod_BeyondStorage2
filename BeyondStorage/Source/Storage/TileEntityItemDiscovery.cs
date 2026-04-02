@@ -121,7 +121,7 @@ internal static class TileEntityItemDiscovery
         }
     }
 
-    #region Dew Collector Processing
+    #region Collector Processing
 
     private static void ProcessCollectorEntity(TileEntityCollector collector, TileEntityProcessingState state)
     {
@@ -149,28 +149,19 @@ internal static class TileEntityItemDiscovery
     {
 #if DEBUG
         //const string d_MethodName = nameof(ProcessCollectorItems);
-#endif        
+#endif
         var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<TileEntityCollector>(
-            collector,
-            sources.EqualsCollectorFunc,
-            sources.GetCollectorItemsFunc,
-            sources.MarkCollectorModifiedFunc,
-            sources.GetCollectorNameFunc
-        );
-
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         state.ValidCollectorsFound++;
 
+#if DEBUG
         if (validStacksRegistered > 0)
         {
-#if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {collector}");
-#endif
         }
-
+#endif
         return validStacksRegistered;
     }
 
@@ -206,26 +197,17 @@ internal static class TileEntityItemDiscovery
         //const string d_MethodName = nameof(ProcessWorkstationItems);
 #endif
         var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<TileEntityWorkstation>(
-            workstation,
-            sources.EqualsWorkstationFunc,
-            sources.GetWorkstationItemsFunc,
-            sources.MarkWorkstationModifiedFunc,
-            sources.GetWorkstationNameFunc
-        );
-
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         state.ValidWorkstationsFound++;
 
+#if DEBUG
         if (validStacksRegistered > 0)
         {
-#if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {workstation}");
-#endif
         }
-
+#endif
         return validStacksRegistered;
     }
 
@@ -263,41 +245,26 @@ internal static class TileEntityItemDiscovery
         LootableItemHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
 #endif
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
-            lootable,
-            sources.EqualsLootableFunc,
-            sources.GetLootableItemsFunc,
-            sources.MarkLootableModifiedFunc,
-            sources.GetLootableNameFunc
-        );
+        var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
 
-        sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
         state.ValidLootablesFound++;
 
+#if DEBUG
         if (validStacksRegistered > 0)
         {
-#if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
-#endif
         }
+#endif
         return validStacksRegistered;
     }
 
     private static void ProcessLootableContainer(ITileEntityLootable lootable, float distance, TileEntityProcessingState state)
     {
         var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
 
-        var sources = context.Sources;
-        var sourceAdapter = new StorageSourceAdapter<ITileEntityLootable>(
-            lootable,
-            sources.EqualsLootableFunc,
-            sources.GetLootableItemsFunc,
-            sources.MarkLootableModifiedFunc,
-            sources.GetLootableNameFunc
-        );
-
-        sources.DataStore.RegisterContainerSource(sourceAdapter, distance);
+        context.Sources.DataStore.RegisterContainerSource(sourceAdapter, distance);
         state.ValidContainersFound++;
     }
 
