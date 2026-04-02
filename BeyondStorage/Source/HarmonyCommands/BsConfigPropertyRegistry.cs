@@ -44,7 +44,7 @@ internal static class BsConfigPropertyRegistry
         RegisterProperty("pullFromDrones", "bool", "Pull items from nearby drones",
             (config, value) => config.pullFromDrones = ParseBool(value));
 
-        RegisterProperty("pullFromCollectors", "bool", "Pull items from nearby collectors (e.g. dew collectors)",
+        RegisterProperty("pullFromCollectors", "bool", "Pull items from nearby collectors (e.g. dew collectors, apiaries)",
             (config, value) => config.pullFromCollectors = ParseBool(value));
 
         RegisterProperty("pullFromWorkstationOutputs", "bool", "Pull items from nearby workstation output stacks",

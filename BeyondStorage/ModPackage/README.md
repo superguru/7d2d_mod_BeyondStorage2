@@ -26,7 +26,7 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
   - Player Toolbelt (as per vanilla game)
   - Then:
     1. Drones <<== Added this because of community requests
-    2. Dew Collectors
+    2. Dew Collectors / Apiaries
     3. Workstations
     4. Containers (storage crates, etc.)
     5. Vehicles

@@ -25,7 +25,7 @@ public static class ItemDiscoveryService
             return;
         }
 
-        // Discover from tile entities (containers, workstations, dew collectors)
+        // Discover from tile entities (containers, workstations, collectors)
         TileEntityItemDiscovery.FindItems(context);
 
         // Discover from entities (vehicles and drones) via World.Entities.list iteration

@@ -17,7 +17,7 @@ public static class CollectorStateManager
     }
 
     /// <summary>
-    /// Marks a dew collector as modified after items are removed from it
+    /// Marks a collector as modified after items are removed from it
     /// </summary>
     public static void MarkCollectorModified(TileEntityCollector collector)
     {
@@ -55,18 +55,18 @@ public static class CollectorStateManager
         ModLogger.DebugLog($"{d_MethodName}: Slot counts after item removal: {s}");
 
         /* Scenario: 
-         * - Dew Collector has these items counts in the slots 1, 2, 0; slot 0 is partially filled, slot 1 is full, slot 2 is producing
+         * - Collector has these items counts in the slots 1, 2, 0; slot 0 is partially filled, slot 1 is full, slot 2 is producing
          * - Why is slot 0 partially filled? 
          *   a) Maybe the player previously removed only 1 out of 2 already produced items out of it.
          *   b) Maybe this mod removed 1 item from it for crafting
          *   --> Either way, that slot is not filled completely, but it is also not producing anything
          *   --> Case a) is already how the game behaves unmodded, so for now not changing that behaviour
-         * - In the future, we might want to change this behaviour to always remove full stacks from the dew collector
+         * - In the future, we might want to change this behaviour to always remove full stacks from the collector
          * - "Compressing" the slots, where we change the slots counts to be 2,1,0 would not mean slot 1 is producing
          * - Alternatively, making slot 0 start producing at 50% would mean destroying the already produced water in it
          * - We can consolidate all the producted items into the available slots, up to max stack size of the item, but that
          *   seems like too much work with not much gain, and probably not very predictable.
-         *   Also this would change the behaviour a lot, meaning dew collectors could produce many more items than
+         *   Also this would change the behaviour a lot, meaning collectors could produce many more items than
          *   usual, which might not be what players expect, and might be too powerful.
         */
     }

@@ -32,7 +32,7 @@ internal sealed class AllowedSourcesSnapshot
             _allowSourceTypes.Add(typeof(EntityDrone));
         }
 
-        // Dew Collectors
+        // Dew Collectors / Apiaries
         if (config.PullFromCollectors)
         {
             _allowSourceTypes.Add(typeof(TileEntityCollector));
