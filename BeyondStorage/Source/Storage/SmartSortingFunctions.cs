@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.TileEntities;
@@ -7,6 +8,7 @@ namespace BeyondStorage.Scripts.Storage;
 
 public class SmartSortingFunctions
 {
+#if DEBUG
     private static void LogSourceItems(string d_MethodName, ItemStack[] sourceItems)
     {
         if (sourceItems == null || sourceItems.Length == 0)
@@ -22,29 +24,60 @@ public class SmartSortingFunctions
             var itemStack = sourceItems[i];
             if (itemStack != null)
             {
-                ModLogger.DebugLog($"  Slot {i}/{maxItems}: {itemStack.count}x {ItemX.NameOf(itemStack)}");
+                ModLogger.DebugLog($"  Slot {i+1}/{maxItems}: {itemStack.count}x {ItemX.NameOf(itemStack)}");
             }
             else
             {
-                ModLogger.DebugLog($"  Slot {i}/{maxItems}: Empty");
+                ModLogger.DebugLog($"  Slot {i+1}/{maxItems}: Empty");
             }
         }
     }
+#endif
+
+#if DEBUG
+    private static void LogTargetItems(string d_MethodName, IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> targets)
+    {
+        if (targets == null || targets.Count == 0)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No target containers found.");
+            return;
+        }
+
+        ModLogger.DebugLog($"{d_MethodName}: Target containers:");
+        int maxContainers = targets.Count;
+        for (int i = 0; i < maxContainers; i++)
+        {
+            var lootable = targets[i].Source.StorageSource;
+            if (lootable == null)
+            {
+                ModLogger.DebugLog($"  Container {i+1}/{maxContainers}: Null");
+                continue;
+            }
+
+            string containerName = LootableItemHandler.GetLootableName(lootable);
+            var items = lootable.items;
+            int maxItems = items?.Length ?? 0;
+            ModLogger.DebugLog($"  Container {i+1}/{maxContainers}: {containerName} ({maxItems} slots) Distance: {targets[i].Distance:0.###}");
+
+            //for (int j = 0; j < maxItems; j++)
+            //{
+            //    var itemStack = items[j];
+            //    if (itemStack != null)
+            //    {
+            //        ModLogger.DebugLog($"    Slot {j+1}/{maxItems}: {itemStack.count}x {ItemX.NameOf(itemStack)}");
+            //    }
+            //    else
+            //    {
+            //        ModLogger.DebugLog($"    Slot {j+1}/{maxItems}: Empty");
+            //    }
+            //}
+        }
+    }
+#endif
 
     public static void SmartPlayerInventoryPush()
     {
         const string d_MethodName = nameof(SmartPlayerInventoryPush);
-
-        /* 1. Determine the Source ItemStacks for the smart loot sort based on the active window.
-         * 1a. If the active window is the player's inventory, get the ItemStacks for the player's inventory.
-         * 1b. Otherwise if the active window is a loot container, get the ItemStacks for the loot container.
-         * 1c. Otherwise if the active window is a vehicle storage window. If so, get the ItemStacks for the vehicle.
-         * 1d. Otherwise if the active window is a workstation, get the ItemStacks for the workstation.
-         * 1e. If no valid window is found, log a warning and exit the function.
-         * 2. Determine the Target nearby containers that are valid for smart loot sorting. If no valid containers are found, 
-         *    log a warning and exit the function.
-         * 3. Perform the smart loot sort on the retrieved ItemStacks.
-         */
 
 #if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: Performing smart player inventory push");
@@ -56,19 +89,36 @@ public class SmartSortingFunctions
             return;
         }
 
-        var sources = LootableItemHandler.GetLootableItems(context.Player);
+        var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
+
+        var targets = context.GetClosestTargetContainers();
 #if DEBUG
-        LogSourceItems(d_MethodName, sources);
+        LogTargetItems(d_MethodName, targets);
 #endif
 
-        var targets = context.GetClosestContainers();
-
-#if DEBUG
-        string availableSourcesDescr = context.GetSourceSummary();
-        ModLogger.DebugLog($"{d_MethodName}: Targets: {availableSourcesDescr}");
-#endif
-
-
-        context.InvalidateCache();
+        PerformSmartPush(context, source, targets);
     }
+
+    private static void PerformSmartPush<T, S>(StorageContext context, StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets) where T : class where S : class
+    {
+        const string d_MethodName = nameof(PerformSmartPush);
+
+        if (source == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Source is null, returning");
+            return;
+        }
+
+        if (targets == null || targets.Count == 0)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No target containers found, returning");
+            return;
+        }
+
+#if DEBUG
+        var sourceItems = source.GetItemStacks();
+        LogSourceItems(d_MethodName, sourceItems);
+#endif
+        context.InvalidateCache();
+    }   
 }
