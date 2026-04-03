@@ -124,6 +124,24 @@ public static class ItemX
         return ItemDataLookup.LookupMaxStackSize(stack);
     }
 
+    public static int CurrentStackSizeOf(ItemStack stack)
+    {
+        return stack?.count ?? 0;
+    }
+
+    public static bool IsEmpty(ItemStack stack)
+    {
+        return (CurrentStackSizeOf(stack) <= 0);
+    }
+
+    public static bool IsFull(ItemStack stack)
+    {
+        var maxSize = MaxStackSizeOf(stack);
+        var currentSize = CurrentStackSizeOf(stack);
+
+        return (currentSize >= maxSize);
+    }
+
     /// <summary>
     /// Determines if an ItemStack contains valid item data and has a positive count.
     /// </summary>
