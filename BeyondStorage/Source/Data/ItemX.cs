@@ -96,32 +96,32 @@ public static class ItemX
 
     public static string NameOf(int itemType)
     {
-        return ItemDataLookup.LookupItemName(itemType);
+        return ItemClassCache.LookupItemName(itemType);
     }
 
     public static string NameOf(ItemValue itemValue)
     {
-        return ItemDataLookup.LookupItemName(itemValue);
+        return ItemClassCache.LookupItemName(itemValue);
     }
 
     public static string NameOf(ItemStack stack)
     {
-        return ItemDataLookup.LookupItemName(stack);
+        return ItemClassCache.LookupItemName(stack);
     }
 
     public static int MaxStackSizeOf(int itemType)
     {
-        return ItemDataLookup.LookupMaxStackSize(itemType);
+        return ItemClassCache.LookupMaxStackSize(itemType);
     }
 
     public static int MaxStackSizeOf(ItemValue itemValue)
     {
-        return ItemDataLookup.LookupMaxStackSize(itemValue);
+        return ItemClassCache.LookupMaxStackSize(itemValue);
     }
 
     public static int MaxStackSizeOf(ItemStack stack)
     {
-        return ItemDataLookup.LookupMaxStackSize(stack);
+        return ItemClassCache.LookupMaxStackSize(stack);
     }
 
     public static int CurrentStackSizeOf(ItemStack stack)

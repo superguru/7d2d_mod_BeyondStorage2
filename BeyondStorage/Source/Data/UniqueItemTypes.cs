@@ -405,7 +405,7 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
     public string GetDiagnosticInfo()
     {
         var info = $"Filter({_itemTypes.Length})";
-        var details = string.Join(", ", _itemTypes.Select(itemType => ItemDataLookup.LookupItemName(itemType)));
+        var details = string.Join(", ", _itemTypes.Select(itemType => ItemClassCache.LookupItemName(itemType)));
 
         return $"{info}:[{details}]";
     }

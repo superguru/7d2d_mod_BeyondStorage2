@@ -3,7 +3,7 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
-public static class ItemDataLookup
+public static class ItemClassCache
 {
     private static readonly Dictionary<int, string> s_itemTypeNames = [];
     private static readonly Dictionary<int, int> s_itemMaxStackSizes = [];
