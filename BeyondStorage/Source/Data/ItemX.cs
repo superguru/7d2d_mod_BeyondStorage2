@@ -131,7 +131,7 @@ public static class ItemX
 
     public static bool IsEmpty(ItemStack stack)
     {
-        return (CurrentStackSizeOf(stack) <= 0);
+        return (CurrentStackSizeOf(stack) == 0);
     }
 
     public static bool IsFull(ItemStack stack)
@@ -140,6 +140,11 @@ public static class ItemX
         var currentSize = CurrentStackSizeOf(stack);
 
         return (currentSize >= maxSize);
+    }
+
+    public static int ItemTypeOf(ItemStack stack)
+    {
+        return stack?.itemValue?.type ?? UniqueItemTypes.EMPTY;
     }
 
     /// <summary>
@@ -176,7 +181,7 @@ public static class ItemX
     /// </summary>
     /// <param name="stack">The ItemStack to validate</param>
     /// <returns>True if the stack is valid; otherwise false</returns>
-    private static bool IsValidItemStack(ItemStack stack)
+    public static bool IsValidItemStack(ItemStack stack)
     {
         return stack?.count > 0 &&
                stack.itemValue?.ItemClass != null &&

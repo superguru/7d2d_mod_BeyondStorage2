@@ -9,26 +9,86 @@ namespace BeyondStorage.Scripts.Data;
 internal class StorageTargetAdapter<T> where T : class
 {
     private readonly StorageSourceAdapter<T> _source;
-    private readonly float _distance;
+    private readonly HashSet<ItemStack> _filledSlots = [];
+    private readonly HashSet<ItemStack> _emptySlots = [];
+    private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
+    private readonly HashSet<ItemStack> _invalidSlots = [];
 
     public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance)
     {
         _source = source;
-        _distance = distance;
+        Distance = distance;
     }
 
-    public float Distance => _distance;
+    public float Distance { get; }
+
+    public bool Dirty { get; set; } = true;
 
     private void BuildDescriptorMaps()
     {
-        // We need to build maps about metadata. This is currently not efficient at all.
+        //TODO: We need to build maps about metadata. This is currently not efficient at all.
+        if (!Dirty)
+        {
+            return;
+        }
 
+        Clear();
+
+        var items = _source.GetAllSlotItemsStacks();
+        for (int i = 0; i < items.Length; i++)
+        {
+            var slot = items[i];
+
+            if (!ItemX.IsValidItemStack(slot))
+            {
+                _invalidSlots.Add(slot);
+                continue;
+            }
+
+            if (ItemX.IsFull(slot))
+            {
+                _filledSlots.Add(slot);
+                continue;
+            }
+
+            if (ItemX.IsEmpty(slot))
+            {
+                _emptySlots.Add(slot);
+                continue;
+            }
+
+            var itemType = ItemX.ItemTypeOf(slot);
+            if (!_partialSlots.TryGetValue(itemType, out var slots)) 
+            {
+                slots = CollectionFactory.CreateItemStackList();
+                _partialSlots[itemType] = slots;
+            }
+
+            slots.Add(slot);
+        }
+
+        Dirty = false;
     }
 
-    internal bool ContainsItem(ItemStack itemStack)
+    private void Clear()
+    {
+        _filledSlots.Clear();
+        _emptySlots.Clear();
+        _invalidSlots.Clear();
+        _partialSlots.Clear();
+    }
+
+    internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
     {
         BuildDescriptorMaps();
-        return false;
+
+        var itemType = ItemX.ItemTypeOf(stack);
+        if (_partialSlots.TryGetValue(itemType, out var slots))
+        {
+            return slots;
+        }
+
+        return [];
     }
 
     internal string GetTargetName()

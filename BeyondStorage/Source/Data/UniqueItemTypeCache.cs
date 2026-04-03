@@ -4,7 +4,7 @@ using BeyondStorage.Scripts.Infrastructure;
 namespace BeyondStorage.Scripts.Data;
 internal class UniqueItemTypeCache
 {
-    private readonly Dictionary<int, UniqueItemTypes> _filterCache = new();
+    private readonly Dictionary<int, UniqueItemTypes> _filterCache = [];
 
     public void Clear()
     {

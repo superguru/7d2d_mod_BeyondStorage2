@@ -130,16 +130,17 @@ public class SmartSortingFunctions
 
         for (int i = 0; i< sourceItems.Length; i++)
         {
-            var itemStack = sourceItems[i];
-            if (itemStack == null || itemStack.count <= 0)
+            var sourceStack = sourceItems[i];
+            if (ItemX.IsEmpty(sourceStack))
                 continue;
 
             foreach (var target in targets)
             {
-                if (!target.ContainsItem(itemStack))
-                    continue;   
+                var partialSlots = target.GetPartialSlotsFor(sourceStack);
+                if (partialSlots.Count == 0)
+                    continue;
 
-                if (itemStack.count <= 0)
+                if (sourceStack.count <= 0)
                     break;
             }
         }

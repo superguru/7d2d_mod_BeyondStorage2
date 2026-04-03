@@ -109,7 +109,7 @@ public static class ItemClassCache
     private static int ResolveMaxStackSize(int itemType)
     {
         var itemClass = ItemClass.GetForId(itemType);
-        return itemClass?.Stacknumber?.Value ?? 1;
+        return itemClass?.Stacknumber?.Value ?? 0;
     }
 
     public static int LookupMaxStackSize(ItemValue itemValue)
