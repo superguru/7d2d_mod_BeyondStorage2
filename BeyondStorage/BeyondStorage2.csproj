@@ -150,7 +150,7 @@
     <Compile Include="Source\Infrastructure\WorldTools.cs" />
     <Compile Include="Source\Storage\AllowedSourcesSnapshot.cs" />
     <Compile Include="Source\Storage\ItemStackCacheManager.cs" />
-    <Compile Include="Source\Data\ItemNames.cs" />
+    <Compile Include="Source\Data\ItemDataLookup.cs" />
     <Compile Include="Source\TileEntities\LootableItemHandler.cs" />
     <Compile Include="Source\Storage\StorageContext.cs" />
     <Compile Include="Source\Game\Block\BlockRepair.cs" />

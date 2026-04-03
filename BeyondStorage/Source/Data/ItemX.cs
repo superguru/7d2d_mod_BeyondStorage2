@@ -96,17 +96,17 @@ public static class ItemX
 
     public static string NameOf(int itemType)
     {
-        return ItemNames.LookupItemName(itemType);
+        return ItemDataLookup.LookupItemName(itemType);
     }
 
     public static string NameOf(ItemValue itemValue)
     {
-        return ItemNames.LookupItemName(itemValue);
+        return ItemDataLookup.LookupItemName(itemValue);
     }
 
     public static string NameOf(ItemStack stack)
     {
-        return ItemNames.LookupItemName(stack);
+        return ItemDataLookup.LookupItemName(stack);
     }
 
     /// <summary>

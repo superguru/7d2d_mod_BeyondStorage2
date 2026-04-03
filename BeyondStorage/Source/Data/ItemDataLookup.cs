@@ -3,9 +3,10 @@ using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Scripts.Data;
 
-public static class ItemNames
+public static class ItemDataLookup
 {
     private static readonly Dictionary<int, string> s_itemTypeNames = [];
+    private static readonly Dictionary<int, int> s_itemMaxStackSizes = [];
 
     public static string LookupItemName(int itemType)
     {
@@ -68,5 +69,56 @@ public static class ItemNames
     public static string LookupItemName(ItemStack itemStack)
     {
         return LookupItemName(itemStack?.itemValue);
+    }
+
+    public static int LookupMaxStackSize(int itemType)
+    {
+        const string d_MethodName = nameof(LookupMaxStackSize);
+
+        if (itemType < UniqueItemTypes.WILDCARD)
+        {
+            ModLogger.DebugLog($"{d_MethodName}({itemType}) | Invalid item type, returning 0");
+            return 0;  // Don't cache constants
+        }
+
+        if (itemType == UniqueItemTypes.WILDCARD)
+        {
+            return 0;  // Don't cache constants
+        }
+
+        if (itemType == UniqueItemTypes.EMPTY)
+        {
+            return 0;  // Don't cache constants
+        }
+
+        if (s_itemMaxStackSizes.TryGetValue(itemType, out var stackSize))
+        {
+            return stackSize;
+        }
+
+        stackSize = ResolveMaxStackSize(itemType);
+        s_itemMaxStackSizes[itemType] = stackSize;
+        return stackSize;
+    }
+
+    /// <summary>
+    /// Resolves the max stack size for a given item type by looking up the ItemClass and handling fallbacks.
+    /// </summary>
+    /// <param name="itemType">The item type to resolve</param>
+    /// <returns>The resolved max stack size, or 1 if not found</returns>
+    private static int ResolveMaxStackSize(int itemType)
+    {
+        var itemClass = ItemClass.GetForId(itemType);
+        return itemClass?.Stacknumber?.Value ?? 1;
+    }
+
+    public static int LookupMaxStackSize(ItemValue itemValue)
+    {
+        return LookupMaxStackSize(itemValue?.type ?? UniqueItemTypes.EMPTY);
+    }
+
+    public static int LookupMaxStackSize(ItemStack itemStack)
+    {
+        return LookupMaxStackSize(itemStack?.itemValue);
     }
 }
