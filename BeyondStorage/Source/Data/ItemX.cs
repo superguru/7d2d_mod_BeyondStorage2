@@ -109,6 +109,21 @@ public static class ItemX
         return ItemDataLookup.LookupItemName(stack);
     }
 
+    public static int MaxStackSizeOf(int itemType)
+    {
+        return ItemDataLookup.LookupMaxStackSize(itemType);
+    }
+
+    public static int MaxStackSizeOf(ItemValue itemValue)
+    {
+        return ItemDataLookup.LookupMaxStackSize(itemValue);
+    }
+
+    public static int MaxStackSizeOf(ItemStack stack)
+    {
+        return ItemDataLookup.LookupMaxStackSize(stack);
+    }
+
     /// <summary>
     /// Determines if an ItemStack contains valid item data and has a positive count.
     /// </summary>
