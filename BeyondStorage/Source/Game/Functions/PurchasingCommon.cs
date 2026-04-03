@@ -82,7 +82,7 @@ public class PurchasingCommon
         // Apply limitToOneStack constraint if requested
         if (limitToOneStack)
         {
-            int maxStackSize = itemValue.ItemClass.Stacknumber.Value;
+            int maxStackSize = ItemX.MaxStackSizeOf(itemValue);
             if (enhancedSpace > maxStackSize)
             {
                 enhancedSpace = maxStackSize;
@@ -183,7 +183,7 @@ public class PurchasingCommon
     /// <returns>Available space count in player inventory only</returns>
     public static int GetAvailableSpace(XUiM_PlayerInventory inventory, ItemValue itemValue)
     {
-        int maxStackSize = itemValue.ItemClass.Stacknumber.Value;
+        int maxStackSize = ItemX.MaxStackSizeOf(itemValue);
         int availableSpace = 0;
 
         // Check backpack slots
@@ -234,7 +234,7 @@ public class PurchasingCommon
             return 0; // Invalid item or nothing to remove
         }
 
-        int maxStackSize = removedStack.itemValue.ItemClass.Stacknumber.Value;
+        int maxStackSize = ItemX.MaxStackSizeOf(removedStack);
         int remainingToRemove = removedStack.count;
         int spaceFreed = 0;
 
@@ -357,7 +357,7 @@ public class PurchasingCommon
     /// </summary>
     private static int GetStorageAvailableSpace(StorageContext context, ItemValue itemValue)
     {
-        int maxStackSize = itemValue.ItemClass.Stacknumber.Value;
+        int maxStackSize = ItemX.MaxStackSizeOf(itemValue);
         int availableSpace = 0;
 
         try
