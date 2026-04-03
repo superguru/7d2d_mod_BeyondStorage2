@@ -90,7 +90,7 @@ public class SmartSortingFunctions
 
         var targets = context.GetClosestTargetContainers();
 #if DEBUG
-        LogTargetItems(d_MethodName, targets);
+        //LogTargetItems(d_MethodName, targets);
 #endif
 
         PerformSmartPush(context, source, targets);
@@ -123,25 +123,56 @@ public class SmartSortingFunctions
         const string d_MethodName = nameof(PushToExistingPartialStacks);
 #endif
 
-        var sourceItems = source.GetPullableItemStacks();
+        var sourceSlots = source.GetPullableItemStacks();
 #if DEBUG
-        LogSourceItems(d_MethodName, sourceItems);
+        //LogSourceItems(d_MethodName, sourceSlots);
 #endif
 
-        for (int i = 0; i< sourceItems.Length; i++)
+        for (int i = 0; i< sourceSlots.Length; i++)
         {
-            var sourceStack = sourceItems[i];
-            if (ItemX.IsEmpty(sourceStack))
+            var sourceSlot = sourceSlots[i];
+            if (ItemX.IsEmpty(sourceSlot))
                 continue;
+
+            int sourceSlotRemaining = ItemX.CurrentStackSizeOf(sourceSlot);
+            int maxStackSize = ItemX.MaxStackSizeOf(sourceSlot);
 
             foreach (var target in targets)
             {
-                var partialSlots = target.GetPartialSlotsFor(sourceStack);
-                if (partialSlots.Count == 0)
-                    continue;
+                var partialSlots = target.GetPartialSlotsFor(sourceSlot);
+                var transferredToTarget = 0;
 
-                if (sourceStack.count <= 0)
-                    break;
+                for (int j = 0; j < partialSlots.Count; j++)
+                {
+                    if (sourceSlotRemaining <= 0)
+                    {
+                        break;
+                    }
+
+                    var targetSlot = partialSlots[j];
+
+                    int targetSlotSpace = maxStackSize - ItemX.CurrentStackSizeOf(targetSlot);
+                    if (targetSlotSpace <= 0)
+                    {
+                        continue;
+                    }
+
+                    int transferAmount = Math.Min(sourceSlotRemaining, targetSlotSpace);
+#if DEBUG
+                    ModLogger.DebugLog($"{d_MethodName}: Transferring {transferAmount} of {ItemX.NameOf(sourceSlot)} from source slot {i} to target slot {j} in container {target.GetTargetName()}");
+#endif
+                    targetSlot.count += transferAmount;
+                    sourceSlotRemaining -= transferAmount;
+                    sourceSlot.count = sourceSlotRemaining;
+
+                    transferredToTarget += transferAmount;
+                }
+
+                if (transferredToTarget > 0)
+                {
+                    source.MarkModified();
+                    target.MarkModified();
+                }
             }
         }
     }

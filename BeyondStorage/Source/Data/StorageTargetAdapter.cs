@@ -9,10 +9,11 @@ namespace BeyondStorage.Scripts.Data;
 internal class StorageTargetAdapter<T> where T : class
 {
     private readonly StorageSourceAdapter<T> _source;
-    private readonly HashSet<ItemStack> _filledSlots = [];
-    private readonly HashSet<ItemStack> _emptySlots = [];
-    private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
+
     private readonly HashSet<ItemStack> _invalidSlots = [];
+    private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
+    private readonly Dictionary<int, List<ItemStack>> _emptySlots = [];
+    private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
 
     public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance)
     {
@@ -45,36 +46,42 @@ internal class StorageTargetAdapter<T> where T : class
                 continue;
             }
 
+            var itemType = ItemX.ItemTypeOf(slot);
+
             if (ItemX.IsFull(slot))
             {
-                _filledSlots.Add(slot);
+                RegisterSlot(_filledSlots, itemType, slot);
                 continue;
             }
 
             if (ItemX.IsEmpty(slot))
             {
-                _emptySlots.Add(slot);
+                RegisterSlot(_emptySlots, itemType, slot);
                 continue;
             }
 
-            var itemType = ItemX.ItemTypeOf(slot);
-            if (!_partialSlots.TryGetValue(itemType, out var slots)) 
-            {
-                slots = CollectionFactory.CreateItemStackList();
-                _partialSlots[itemType] = slots;
-            }
-
-            slots.Add(slot);
+            RegisterSlot(_partialSlots, itemType, slot);
         }
 
         Dirty = false;
     }
 
+    private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot)
+    {
+        if (!registry.TryGetValue(itemType, out var slots))
+        {
+            slots = CollectionFactory.CreateItemStackList();
+            registry[itemType] = slots;
+        }
+
+        slots.Add(slot);
+    }
+
     private void Clear()
     {
+        _invalidSlots.Clear();
         _filledSlots.Clear();
         _emptySlots.Clear();
-        _invalidSlots.Clear();
         _partialSlots.Clear();
     }
 
@@ -109,5 +116,15 @@ internal class StorageTargetAdapter<T> where T : class
         }
 
         return _source.GetAllSlotItemsStacks();
+    }
+
+    public void MarkModified()
+    {
+        if (_source != null)
+        {
+            _source.MarkModified();
+        }
+
+        Dirty = true;
     }
 }
