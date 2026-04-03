@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BeyondStorage.Scripts.Diagnostics;
 using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
@@ -14,7 +15,7 @@ public static class LootableItemHandler
 {
     private static readonly PackedBoolArray s_emptyLockedSlots = new();
 
-    public static ItemStack[] GetLootableItems(EntityAlive entity)
+    public static ItemStack[] GetAllSlotItems(EntityAlive entity)
     {
         if (entity == null || entity.bag == null)
         {
@@ -28,7 +29,20 @@ public static class LootableItemHandler
             return [];
         }
 
+        return items;
+    }
+
+    public static ItemStack[] GetPullableItems(EntityAlive entity)
+    {
+        var items = GetAllSlotItems(entity);
+
+        if (items.Length == 0)
+        {
+            return items;
+        }
+
         // Check if the bag has locked slots support
+        var bag = entity.bag;
         var lockedSlots = bag.LockedSlots;
         if (lockedSlots == null || lockedSlots.Length == 0)
         {
@@ -43,15 +57,10 @@ public static class LootableItemHandler
             totalSlots = containerSize.x * containerSize.y;
         }
 
-        return GetItemsWithLockedSlotFiltering(items, lockedSlots, totalSlots);
+        return GetItemsWithEmptyAndLockedSlotFiltering(items, lockedSlots, totalSlots);
     }
 
-    /// <summary>
-    /// Gets items from a entity entity, filtering out items from locked slots.
-    /// </summary>
-    /// <param name="lootable">The entity entity to extract items from</param>
-    /// <returns>Array of ItemStack objects from unlocked slots</returns>
-    public static ItemStack[] GetLootableItems(ITileEntityLootable lootable)
+    public static ItemStack[] GetAllSlotItemsStacks(ITileEntityLootable lootable)
     {
         if (lootable == null)
         {
@@ -64,6 +73,23 @@ public static class LootableItemHandler
             return [];
         }
 
+        return items;
+    }
+
+    /// <summary>
+    /// Gets items from a lootable, filtering out items from locked slots.
+    /// </summary>
+    /// <param name="lootable">The entity entity to extract items from</param>
+    /// <returns>Array of ItemStack objects from unlocked slots</returns>
+    public static ItemStack[] GetPullableItems(ITileEntityLootable lootable)
+    {
+        var items = GetAllSlotItemsStacks(lootable);
+
+        if (items.Length == 0)
+        {
+            return items;
+        }
+
         if (!lootable.HasSlotLocksSupport)
         {
             return items;
@@ -71,7 +97,7 @@ public static class LootableItemHandler
 
         var containerSize = lootable.GetContainerSize();
         int totalSlots = containerSize.x * containerSize.y;
-        return GetItemsWithLockedSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
+        return GetItemsWithEmptyAndLockedSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
     }
 
     /// <summary>
@@ -81,7 +107,7 @@ public static class LootableItemHandler
     /// <param name="lockedSlots">The locked slots array</param>
     /// <param name="totalSlots">Total container slots (null if unknown)</param>
     /// <returns>Array of ItemStack objects from unlocked slots</returns>
-    private static ItemStack[] GetItemsWithLockedSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
+    private static ItemStack[] GetItemsWithEmptyAndLockedSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
     {
         // Calculate maximum slots to check
         int lockedSlotsLength = lockedSlots.Length;
@@ -144,7 +170,7 @@ public static class LootableItemHandler
     /// <param name="methodName">The calling method name for logging</param>
     public static void LogLootableSlotLocks(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity, string methodName)
     {
-        if (!(context?.Config?.IsDebugLogSettingsAccess ?? false))
+        if (context?.Config?.IsDebugLogSettingsAccess != true)
         {
             return;
         }
@@ -257,12 +283,13 @@ public static class LootableItemHandler
     {
         const string d_MethodName = nameof(MarkLootableModified);
 
-        if (entity == null || entity.playerUI == null)
+        if (entity == null || entity.playerUI == null || entity.playerUI.xui == null)
         {
             ModLogger.DebugLog($"{d_MethodName}: entity or player UI is null");
             return;
         }
 
+        //TODO: This is a bit hacky, but we need to mark both backpack and toolbelt as modified to ensure the UI updates correctly.
         entity.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
         entity.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
     }

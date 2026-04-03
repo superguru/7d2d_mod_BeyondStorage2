@@ -4,7 +4,7 @@ namespace BeyondStorage.Scripts.Data;
 
 public interface IStorageSource : IEquatable<IStorageSource>
 {
-    ItemStack[] GetItemStacks();
+    ItemStack[] GetPullableItemStacks();
     Type GetSourceType();
     void MarkModified();
 }

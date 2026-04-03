@@ -15,14 +15,16 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     private readonly Type _storageSourceType;
 
     private readonly Func<T, T, bool> _equalsFunc;
-    private readonly Func<T, ItemStack[]> _getItemStacksFunc;
+    private readonly Func<T, ItemStack[]> _getPullableItemStacksFunc;
+    private readonly Func<T, ItemStack[]> _getAllSlotsItemStacksFunc;
     private readonly Action<T> _markModifiedAction;
     private readonly Func<T, string> _getNameFunc;
 
     public StorageSourceAdapter(
         T storageSource,
         Func<T, T, bool> equalsFunc,
-        Func<T, ItemStack[]> getItemStacksFunc,
+        Func<T, ItemStack[]> getPullableItemStacksFunc,
+        Func<T, ItemStack[]> getAllSlotsItemStacksFunc,
         Action<T> markModifiedAction,
         Func<T, string> getNameFunc)
     {
@@ -42,11 +44,18 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             throw new ArgumentNullException(nameof(equalsFunc), error);
         }
 
-        if (getItemStacksFunc == null)
+        if (getPullableItemStacksFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getItemStacksFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getPullableItemStacksFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getItemStacksFunc), error);
+            throw new ArgumentNullException(nameof(getPullableItemStacksFunc), error);
+        }
+
+        if (getAllSlotsItemStacksFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(getAllSlotsItemStacksFunc)} cannot be null";
+            ModLogger.DebugLog(error);
+            throw new ArgumentNullException(nameof(getAllSlotsItemStacksFunc), error);
         }
 
         if (markModifiedAction == null)
@@ -56,13 +65,20 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             throw new ArgumentNullException(nameof(markModifiedAction), error);
         }
 
+        if (getNameFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(getNameFunc)} cannot be null";
+            ModLogger.DebugLog(error);
+            throw new ArgumentNullException(nameof(getNameFunc), error);
+        }
+
         StorageSource = storageSource;
 
         _storageSourceType = storageSource.GetType();
-        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
 
         _equalsFunc = equalsFunc;
-        _getItemStacksFunc = getItemStacksFunc;
+        _getPullableItemStacksFunc = getPullableItemStacksFunc;
+        _getAllSlotsItemStacksFunc = getAllSlotsItemStacksFunc;
         _markModifiedAction = markModifiedAction;
         _getNameFunc = getNameFunc;
     }
@@ -94,11 +110,6 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
 
     public override int GetHashCode()
     {
-        if (StorageSource == null)
-        {
-            return typeof(T).GetHashCode();
-        }
-
         unchecked
         {
             int hash = RuntimeHelpers.GetHashCode(StorageSource);
@@ -107,31 +118,42 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         }
     }
 
-    public ItemStack[] GetItemStacks()
+    private ItemStack[] GetSpecifiedItemStacks(string methodName, Func<T, ItemStack[]> getItemStacksFunc)
     {
-        const string d_MethodName = nameof(GetItemStacks);
         var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
 
         try
         {
-            var items = _getItemStacksFunc(StorageSource);
+            var items = getItemStacksFunc(StorageSource);
             if (items == null)
             {
-                ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Returned null items, using empty array");
+                ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Returned null items, using empty array");
                 return [];
             }
             return items;
         }
         catch (NullReferenceException ex)
         {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Null reference accessing items: {ex.Message}. Storage source may have been disposed.");
+            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Null reference accessing items: {ex.Message}. Storage source may have been disposed.");
             return [];
         }
         catch (Exception ex)
         {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}");
+            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}");
             return [];
         }
+    }
+
+    public ItemStack[] GetPullableItemStacks()
+    {
+        const string d_MethodName = nameof(GetPullableItemStacks);
+        return GetSpecifiedItemStacks(d_MethodName, _getPullableItemStacksFunc);
+    }
+
+    public ItemStack[] GetAllSlotItemsStacks()
+    {
+        const string d_MethodName = nameof(GetAllSlotItemsStacks);
+        return GetSpecifiedItemStacks(d_MethodName, _getAllSlotsItemStacksFunc);
     }
 
     public string GetName()

@@ -47,30 +47,27 @@ public class SmartSortingFunctions
         int maxContainers = targets.Count;
         for (int i = 0; i < maxContainers; i++)
         {
-            var lootable = targets[i].Source.StorageSource;
-            if (lootable == null)
-            {
-                ModLogger.DebugLog($"  Container {i+1}/{maxContainers}: Null");
-                continue;
-            }
+            var target = targets[i];
 
-            string containerName = LootableItemHandler.GetLootableName(lootable);
-            var items = lootable.items;
-            int maxItems = items?.Length ?? 0;
+            string containerName = target.GetTargetName();
+
+            var items = target.GetAllSlotItemStacks();
+            int maxItems = items.Length;
+
             ModLogger.DebugLog($"  Container {i+1}/{maxContainers}: {containerName} ({maxItems} slots) Distance: {targets[i].Distance:0.###}");
 
-            //for (int j = 0; j < maxItems; j++)
-            //{
-            //    var itemStack = items[j];
-            //    if (itemStack != null)
-            //    {
-            //        ModLogger.DebugLog($"    Slot {j+1}/{maxItems}: {itemStack.count}x {ItemX.NameOf(itemStack)}");
-            //    }
-            //    else
-            //    {
-            //        ModLogger.DebugLog($"    Slot {j+1}/{maxItems}: Empty");
-            //    }
-            //}
+            for (int j = 0; j < maxItems; j++)
+            {
+                var itemStack = items[j];
+                if (itemStack == null || itemStack.count <= 0)
+                {
+                    ModLogger.DebugLog($"    Slot {j + 1}/{maxItems}: Empty");
+                }
+                else
+                {
+                    ModLogger.DebugLog($"    Slot {j + 1}/{maxItems}: {itemStack.count}x {ItemX.NameOf(itemStack)}");
+                }
+            }
         }
     }
 #endif
@@ -115,10 +112,36 @@ public class SmartSortingFunctions
             return;
         }
 
+        PushToExistingPartialStacks(source, targets);
+
+        context.InvalidateCache();
+    }
+
+    private static void PushToExistingPartialStacks<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets) where T : class where S : class
+    {
 #if DEBUG
-        var sourceItems = source.GetItemStacks();
+        const string d_MethodName = nameof(PushToExistingPartialStacks);
+#endif
+
+        var sourceItems = source.GetPullableItemStacks();
+#if DEBUG
         LogSourceItems(d_MethodName, sourceItems);
 #endif
-        context.InvalidateCache();
-    }   
+
+        for (int i = 0; i< sourceItems.Length; i++)
+        {
+            var itemStack = sourceItems[i];
+            if (itemStack == null || itemStack.count <= 0)
+                continue;
+
+            foreach (var target in targets)
+            {
+                if (!target.ContainsItem(itemStack))
+                    continue;   
+
+                if (itemStack.count <= 0)
+                    break;
+            }
+        }
+    }
 }

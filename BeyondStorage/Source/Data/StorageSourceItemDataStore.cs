@@ -89,7 +89,7 @@ internal class StorageSourceItemDataStore
             return;
         }
 
-        ItemStack[] stacks = source.GetItemStacks();
+        ItemStack[] stacks = source.GetPullableItemStacks();
         if (stacks == null)
         {
             ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}): Null stacks supplied for source {source}");
