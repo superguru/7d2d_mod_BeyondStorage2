@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Source\Configuration\ConfigDisplayHelper.cs" />
     <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
+    <Compile Include="Source\Data\CollectionHelper.cs" />
     <Compile Include="Source\Data\ContainerDistanceStore.cs" />
     <Compile Include="Source\Data\StorageSourceAdapterFactory.cs" />
     <Compile Include="Source\Data\StorageTargetAdapter.cs" />

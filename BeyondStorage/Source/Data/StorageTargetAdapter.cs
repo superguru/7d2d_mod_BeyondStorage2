@@ -28,27 +28,34 @@ internal class StorageTargetAdapter<T> where T : class
         var items = _source.GetAllSlotItemsStacks();
         for (int i = 0; i < items.Length; i++)
         {
-            var slot = items[i];
-
-            var itemType = ItemX.ItemTypeOf(slot);
-
-            if (itemType == UniqueItemTypes.EMPTY || slot?.count <= 0)
-            {
-                _emptySlots.Add(slot);
-                continue;
-            }
-
-            if (ItemX.IsFull(slot))
-            {
-                RegisterSlot(_filledSlots, itemType, slot);
-                continue;
-            }
-
-            RegisterSlot(_partialSlots, itemType, slot);
+            ClassifySlot(items[i]);
         }
     }
 
-    private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot)
+    private void ClassifySlot(ItemStack slot, bool orderedFirst = false)
+    {
+        var itemType = ItemX.ItemTypeOf(slot);
+        if (itemType == UniqueItemTypes.EMPTY || slot?.count <= 0)
+        {
+            _emptySlots.Add(slot);
+        }
+        else if (ItemX.IsFull(slot))
+        {
+            RegisterSlot(_filledSlots, itemType, slot, orderedFirst);
+        }
+        else
+        {
+            RegisterSlot(_partialSlots, itemType, slot, orderedFirst);
+        }
+    }
+
+    internal void ReclassifySlot(IList<ItemStack> currentList, ItemStack slot, int slotIndex)
+    {
+        currentList.RemoveAt(slotIndex);
+        ClassifySlot(slot, orderedFirst: true);
+    }
+
+    private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot, bool orderedFirst = false)
     {
         if (!registry.TryGetValue(itemType, out var slots))
         {
@@ -56,7 +63,14 @@ internal class StorageTargetAdapter<T> where T : class
             registry[itemType] = slots;
         }
 
-        slots.Add(slot);
+        if (orderedFirst)
+        {
+            slots.Insert(0, slot);
+        }
+        else
+        {
+            slots.Add(slot);
+        }
     }
 
     private void Clear()
@@ -68,8 +82,6 @@ internal class StorageTargetAdapter<T> where T : class
 
     internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
     {
-        BuildDescriptorMaps();
-
         var itemType = ItemX.ItemTypeOf(stack);
         if (_partialSlots.TryGetValue(itemType, out var slots))
         {
@@ -81,8 +93,6 @@ internal class StorageTargetAdapter<T> where T : class
 
     internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
     {
-        BuildDescriptorMaps();
-
         var itemType = ItemX.ItemTypeOf(sourceSlot);
         if (itemType == UniqueItemTypes.EMPTY)
         {

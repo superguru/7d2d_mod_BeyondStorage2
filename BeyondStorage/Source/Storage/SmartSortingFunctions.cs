@@ -137,54 +137,19 @@ public class SmartSortingFunctions
             return;
         }
 
-        PushToExistingPartialSlots(source, targets);
-        PushToOverflowSlots(source, targets);
+        // First fill up existing partial slots as at the start of the operation
+        PushSourceItemsToTarget(source, targets, allowPushtoEmpty: false);
+
+        // Then fill up any empty slots, and any new partial slots that are created when partially filling these empty slots
+        PushSourceItemsToTarget(source, targets, allowPushtoEmpty: true);
 
         context.InvalidateCache();
     }
 
-    private static void PushToExistingPartialSlots<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets) where T : class where S : class
+    private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, bool allowPushtoEmpty) where T : class where S : class
     {
 #if DEBUG
-        const string d_MethodName = nameof(PushToExistingPartialSlots);
-#endif
-
-        var sourceSlots = source.GetPullableItemStacks();
-#if DEBUG
-        LogSourceItems(d_MethodName, sourceSlots);
-#endif
-
-        for (int i = 0; i < sourceSlots.Length; i++)
-        {
-            var sourceSlot = sourceSlots[i];
-            if (ItemX.IsEmpty(sourceSlot))
-                continue;
-
-            int maxStackSize = ItemX.MaxStackSizeOf(sourceSlot);
-            if (maxStackSize <= 0)
-            {
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Source slot {i} has invalid max stack size {maxStackSize}, skipping");
-#endif
-                continue;
-            }
-
-            int sourceSlotRemaining = ItemX.CurrentStackSizeOf(sourceSlot);
-
-            for (int k = 0; k < targets.Count; k++)
-            {
-                var target = targets[k];
-
-                var partialSlots = target.GetPartialSlotsFor(sourceSlot);
-                TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, ref sourceSlotRemaining);
-            }
-        }
-    }
-
-    private static void PushToOverflowSlots<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets) where T : class where S : class
-    {
-#if DEBUG
-        const string d_MethodName = nameof(PushToOverflowSlots);
+        const string d_MethodName = nameof(PushSourceItemsToTarget);
 #endif
         var sourceSlots = source.GetPullableItemStacks();
 #if DEBUG
@@ -217,33 +182,45 @@ public class SmartSortingFunctions
 
                 var target = targets[k];
 
-                var emptySlots = target.GetEmptySlotsFor(sourceSlot);
-                TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, ref sourceSlotRemaining);
+                var partialSlots = target.GetPartialSlotsFor(sourceSlot);
+                var emptySlots = allowPushtoEmpty ? target.GetEmptySlotsFor(sourceSlot) : [];
+
+                while ((sourceSlotRemaining > 0) && (partialSlots.Count > 0 || emptySlots.Count > 0))
+                {
+                    // Try to transfer to any new partial slots that may have opened up after previous transfers in this loop
+                    TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, ref sourceSlotRemaining);
+                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after partial slot transfer to target containerXX {target.GetTargetName()}");
+
+                    if (sourceSlotRemaining > 0)
+                    {
+                        // If there are still items remaining, try to transfer to empty slots
+                        TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, ref sourceSlotRemaining);
+                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after empty slot transfer to target containerXX {target.GetTargetName()}");
+
+                        // At this point, there might be less empty slots, and more partial slots
+                    }
+                }
             }
         }
     }
 
     private static void TransferToTargetSlots<T, S>(string methodName, StorageSourceAdapter<T> source, ItemStack sourceSlot, StorageTargetAdapter<S> target, IList<ItemStack> targetSlots, ref int sourceSlotRemaining) where T : class where S : class
     {
+        const int FIRST_SLOT = 0;
+
         int maxStackSize = ItemX.MaxStackSizeOf(sourceSlot);
         int transferredToTarget = 0;
 
-        for (int j = 0; j < targetSlots.Count; j++)
+        while (targetSlots.Count > FIRST_SLOT && sourceSlotRemaining > 0)
         {
-            if (sourceSlotRemaining <= 0)
-            {
-                break;
-            }
-
-            var targetSlot = targetSlots[j];
-
+            var targetSlot = targetSlots[FIRST_SLOT];
             int targetSlotSpace = maxStackSize - ItemX.CurrentStackSizeOf(targetSlot);
-            if (targetSlotSpace <= 0)
-            {
-                continue;
-            }
 
-            TransferSlotItems(methodName, sourceSlot, targetSlot, j, target.GetTargetName(), targetSlotSpace, ref sourceSlotRemaining, ref transferredToTarget);
+            var transferAmount = TransferSlotItems(methodName, sourceSlot, targetSlot, target.GetTargetName(), targetSlotSpace, ref sourceSlotRemaining, ref transferredToTarget);
+            if (transferAmount > 0)
+            {
+                target.ReclassifySlot(targetSlots, targetSlot, FIRST_SLOT);
+            }
         }
 
         if (transferredToTarget > 0)
@@ -253,16 +230,17 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void TransferSlotItems(string methodName, ItemStack sourceSlot, ItemStack targetSlot, int slotIndex, string containerName, int targetSlotSpace, ref int sourceSlotRemaining, ref int transferredToTarget)
+    private static int TransferSlotItems(string methodName, ItemStack sourceSlot, ItemStack targetSlot, string containerName, int targetSlotSpace, ref int sourceSlotRemaining, ref int transferredToTarget)
     {
         int transferAmount = Math.Min(sourceSlotRemaining, targetSlotSpace);
 #if DEBUG
-        ModLogger.DebugLog($"{methodName}: Transferring {transferAmount} of {ItemX.NameOf(sourceSlot)} to target slot {slotIndex} in container {containerName}");
+        ModLogger.DebugLog($"{methodName}: Transferring {transferAmount} of {ItemX.NameOf(sourceSlot)} to target {containerName}");
 #endif
+
         if (ItemX.ItemTypeOf(targetSlot) == UniqueItemTypes.EMPTY || targetSlot?.count <= 0)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{methodName}: Target slot {slotIndex} in container {containerName} is empty, cloning source slot item type");
+            ModLogger.DebugLog($"{methodName}: Target slot in container {containerName} is empty, cloning source slot item type");
 #endif
             targetSlot.itemValue = sourceSlot.itemValue.Clone();
             targetSlot.count = 0;
@@ -273,5 +251,7 @@ public class SmartSortingFunctions
         sourceSlot.count = sourceSlotRemaining;
 
         transferredToTarget += transferAmount;
+
+        return transferAmount;
     }
 }
