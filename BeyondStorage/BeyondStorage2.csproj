@@ -82,6 +82,7 @@
     <Compile Include="Source\HarmonyPatches\Informatics\Stack_MoveAll_Patch.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_CollectedItemList_StorageIntegration_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_VehicleStorageWindowGroup_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\Informatics\XUiC_CollectorWindowGroup_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_WorkstationWindowGroup_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiMPlayerInventory_StorageIntegration_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\Find_ItemStack_Setter_Patch.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Source\HarmonyPatches\Reload\ItemActionRanged_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Server\GameManager_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_LootWindow_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\UI\XUiCDewCollectorWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\UI\XUiCBackpackWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\UI\XUiControllerPatches.cs" />
     <Compile Include="Source\HarmonyPatches\Vehicle\Refuel\EntityVehicle_Patches.cs" />

@@ -32,6 +32,15 @@ internal static class XUiControllerPatches
                 ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
 #endif
             }
+
+            var btnBeyondSmartCollectorPush = UIControlHelpers.GetSmartCollectorPushButton(__instance);
+            if (btnBeyondSmartCollectorPush != null)
+            {
+                btnBeyondSmartCollectorPush.OnPress -= SmartSortingCommon.SmartCollectorPush_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart collector push button event handler removed");
+#endif
+            }
         }
         catch (System.Exception ex)
         {

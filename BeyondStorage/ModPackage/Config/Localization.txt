@@ -1,2 +1,3 @@
 Key,English
-btnBeyondSmartPlayerInventoryPush_ToolTip,(coming soon) Smart loot push: Not enabled yet as it is In Development.
+btnBeyondSmartPlayerInventoryPush_ToolTip,Pushes items from unlocked slots in the player's inventory to the nearest containers that already have that type of item
+btnBeyondSmartCollectorPush_ToolTip,Pushes completed items from here to the nearest containers that already have that type of item

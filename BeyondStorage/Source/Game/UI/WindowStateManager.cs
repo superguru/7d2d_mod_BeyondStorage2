@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -18,6 +19,10 @@ public static class WindowStateManager
     private static XUiC_WorkstationWindowGroup s_workstationWindowInstance = null;
     private static bool s_isWorkstationWindowOpen = false;
     private static readonly object s_workstationLockObject = new();
+
+    private static XUiC_DewCollectorWindowGroup s_collectorWindowInstance = null;
+    private static bool s_isCollectorWindowOpen = false;
+    private static readonly object s_collectorLockObject = new();
 
     #region Vehicle Storage Window
 
@@ -322,6 +327,63 @@ public static class WindowStateManager
 
         matchReason = $"No match found for {tileEntity}";
         return false;
+    }
+    #endregion
+
+    #region Collector Window
+
+    public static XUiC_DewCollectorWindowGroup GetActiveCollectorWindow()
+    {
+        lock (s_collectorLockObject)
+        {
+            return s_isCollectorWindowOpen ? s_collectorWindowInstance : null;
+        }
+    }
+
+    internal static void OnCollectorWindowOpened(XUiC_DewCollectorWindowGroup window)
+    {
+        lock (s_collectorLockObject)
+        {
+            if (s_isCollectorWindowOpen || (s_collectorWindowInstance != null))
+            {
+                // Log error and reset state to prevent confusion
+                Log.Warning($"[WindowStateManager] Collector window opened while another was already tracked. Resetting state. Previous: {s_collectorWindowInstance?.GetType().Name}, New: {window?.GetType().Name}");
+                s_isCollectorWindowOpen = false;
+                s_collectorWindowInstance = null;
+            }
+
+            s_collectorWindowInstance = window;
+            s_isCollectorWindowOpen = true;
+        }
+    }
+    internal static void OnCollectorWindowClosed(XUiC_DewCollectorWindowGroup window)
+    {
+        lock (s_collectorLockObject)
+        {
+            // Only clear state if the closing window is the currently tracked one
+            if (s_collectorWindowInstance == window)
+            {
+                s_collectorWindowInstance = null;
+                s_isCollectorWindowOpen  = false;
+            }
+            else if (s_collectorWindowInstance != null)
+            {
+                Log.Warning($"[WindowStateManager] Attempted to close collector window that doesn't match tracked instance. Tracked: {s_collectorWindowInstance?.GetType().Name}, Closing: {window?.GetType().Name}");
+            }
+        }
+    }
+    public static bool IsCollectorWindowOpen()
+    {
+        lock (s_collectorLockObject)
+        {
+            return s_isCollectorWindowOpen;
+        }
+    }
+
+    public static TileEntityCollector GetOpenCollectorTileEntity()
+    {
+        var collectorWindow = GetActiveCollectorWindow();
+        return collectorWindow?.te;
     }
 
     #endregion

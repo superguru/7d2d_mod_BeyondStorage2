@@ -10,14 +10,9 @@ public static class UIControlHelpers
     /// The ID of the smart loot sort button defined in windows.xml
     /// </summary>
     public const string SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID = "btnBeyondSmartPlayerInventoryPush";
+    public const string SMART_COLLECTOR_PUSH_BUTTON_ID = "btnBeyondSmartCollectorPush";
 
-    /// <summary>
-    /// Gets the smart loot sort button from the specified controller instance.
-    /// Searches for the button in the XUiC_ContainerStandardControls child.
-    /// </summary>
-    /// <param name="instance">The controller instance to search in</param>
-    /// <returns>The button control if found, null otherwise</returns>
-    public static XUiController GetSmartPlayerInventoryPushButton(XUiController instance)
+    private static XUiController GetSmartButtonByID(XUiController instance, string buttonId)
     {
         if (instance == null)
         {
@@ -30,7 +25,19 @@ public static class UIControlHelpers
             return null;
         }
 
-        var btnBeyondSmartPlayerInventoryPush = stdControls.GetChildById(SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID);
+        var btnSmartButton = stdControls.GetChildById(buttonId);
+        return btnSmartButton;
+    }
+
+    public static XUiController GetSmartCollectorPushButton(XUiController instance)
+    {
+        var btnBeyondSmartCollectorPush = GetSmartButtonByID(instance, SMART_COLLECTOR_PUSH_BUTTON_ID);
+        return btnBeyondSmartCollectorPush;
+    }
+
+    public static XUiController GetSmartPlayerInventoryPushButton(XUiController instance)
+    {
+        var btnBeyondSmartPlayerInventoryPush = GetSmartButtonByID(instance, SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID);
         return btnBeyondSmartPlayerInventoryPush;
     }
 }
