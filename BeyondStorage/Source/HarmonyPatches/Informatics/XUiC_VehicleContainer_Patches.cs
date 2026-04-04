@@ -2,6 +2,7 @@
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.UI;
+using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -11,6 +12,26 @@ internal static class XUiC_VehicleContainer_Patches
 {
     // Store the previous LockedSlots state for comparison
     private static PackedBoolArray s_previousLockedSlots = null;
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(XUiC_VehicleContainer.Init))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static void XUiC_VehicleContainer_Init_Postfix(XUiC_VehicleContainer __instance)
+    {
+#if DEBUG
+        const string d_MethodName = nameof(XUiC_VehicleContainer_Init_Postfix);
+#endif
+        var btnBeyondSmartButton = UIControlHelpers.GetSmartVehiclePushButton(__instance);
+        if (btnBeyondSmartButton != null)
+        {
+            btnBeyondSmartButton.OnPress += SmartSortingCommon.SmartVehiclePush_EventHandler;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button initialized");
+#endif
+        }
+    }
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiC_VehicleContainer.UpdateLockedSlots))]

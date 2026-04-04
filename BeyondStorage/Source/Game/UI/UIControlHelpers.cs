@@ -11,6 +11,8 @@ public static class UIControlHelpers
     /// </summary>
     public const string SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID = "btnBeyondSmartPlayerInventoryPush";
     public const string SMART_COLLECTOR_PUSH_BUTTON_ID = "btnBeyondSmartCollectorPush";
+    public const string SMART_VEHICLE_PUSH_BUTTON_ID = "btnBeyondSmartVehiclePush";
+    public const string SMART_WORKSTATION_OUTPUT_PUSH_BUTTON_ID = "btnBeyondSmartWorkstationOutputPush";
 
     private static XUiController GetSmartButtonByID(XUiController instance, string buttonId)
     {
@@ -39,5 +41,16 @@ public static class UIControlHelpers
     {
         var btnBeyondSmartPlayerInventoryPush = GetSmartButtonByID(instance, SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID);
         return btnBeyondSmartPlayerInventoryPush;
+    }
+
+    public static XUiController GetSmartVehiclePushButton(XUiController instance)
+    {
+        var btnBeyondSmartVehiclePush = GetSmartButtonByID(instance, SMART_VEHICLE_PUSH_BUTTON_ID);
+        return btnBeyondSmartVehiclePush;
+    }
+    public static XUiController GetSmartWorkstationOutputPushButton(XUiController instance)
+    {
+        var btnBeyondSmartWorkstationOutputPush = GetSmartButtonByID(instance, SMART_WORKSTATION_OUTPUT_PUSH_BUTTON_ID);
+        return btnBeyondSmartWorkstationOutputPush;
     }
 }

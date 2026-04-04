@@ -41,6 +41,24 @@ internal static class XUiControllerPatches
                 ModLogger.DebugLog($"{d_MethodName}: Smart collector push button event handler removed");
 #endif
             }
+
+            var btnBeyondSmartVehiclePush = UIControlHelpers.GetSmartVehiclePushButton(__instance);
+            if (btnBeyondSmartVehiclePush != null)
+            {
+                btnBeyondSmartVehiclePush.OnPress -= SmartSortingCommon.SmartVehiclePush_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button event handler removed");
+#endif
+            }
+
+            var btnBeyondSmartWorkstationOutputPush = UIControlHelpers.GetSmartWorkstationOutputPushButton(__instance);
+            if (btnBeyondSmartWorkstationOutputPush != null)
+            {
+                btnBeyondSmartWorkstationOutputPush.OnPress -= SmartSortingCommon.SmartWorkstationOutputPush_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart workstation output push button event handler removed");
+#endif
+            }
         }
         catch (System.Exception ex)
         {

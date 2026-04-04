@@ -28,7 +28,7 @@ internal class StorageTargetAdapter<T> where T : class
         var items = _source.GetAllSlotItemsStacks();
         for (int i = 0; i < items.Length; i++)
         {
-            ClassifySlot(items[i]);
+            ClassifySlot(items[i], orderedFirst: false);
         }
     }
 

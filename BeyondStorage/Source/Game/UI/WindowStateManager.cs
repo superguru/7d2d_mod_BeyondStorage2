@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -364,7 +363,7 @@ public static class WindowStateManager
             if (s_collectorWindowInstance == window)
             {
                 s_collectorWindowInstance = null;
-                s_isCollectorWindowOpen  = false;
+                s_isCollectorWindowOpen = false;
             }
             else if (s_collectorWindowInstance != null)
             {
@@ -384,6 +383,28 @@ public static class WindowStateManager
     {
         var collectorWindow = GetActiveCollectorWindow();
         return collectorWindow?.te;
+    }
+
+    internal static EntityVehicle GetOpenVehicleTileEntity()
+    {
+        var vehicleWindow = GetActiveVehicleStorageWindow();
+        return vehicleWindow?.CurrentVehicleEntity;
+    }
+
+    internal static void SetOpenVehicleEntityModified()
+    {
+        var vehicleWindow = GetActiveVehicleStorageWindow();
+        if (vehicleWindow?.CurrentVehicleEntity != null)
+        {
+            vehicleWindow.IsDirty = true;
+            vehicleWindow.SetAllChildrenDirty();
+        }
+    }
+
+    internal static TileEntityWorkstation GetOpenWorkstationTileEntity()
+    {
+        var workstationWindow = GetActiveWorkstationWindow();
+        return workstationWindow?.WorkstationData?.TileEntity;
     }
 
     #endregion

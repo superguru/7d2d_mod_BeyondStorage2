@@ -116,6 +116,7 @@
     <Compile Include="Source\HarmonyPatches\Reload\ItemActionRanged_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Server\GameManager_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Informatics\XUiC_LootWindow_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\UI\XUiCWorkstationOutputWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\UI\XUiCDewCollectorWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\UI\XUiCBackpackWindowPatches.cs" />
     <Compile Include="Source\HarmonyPatches\UI\XUiControllerPatches.cs" />

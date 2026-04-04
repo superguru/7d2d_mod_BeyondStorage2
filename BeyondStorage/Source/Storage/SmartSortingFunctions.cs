@@ -74,9 +74,7 @@ public class SmartSortingFunctions
 
     public static void SmartCollectorPush()
     {
-#if DEBUG
         const string d_MethodName = nameof(SmartCollectorPush);
-#endif
 
         if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
         {
@@ -101,10 +99,6 @@ public class SmartSortingFunctions
     {
         const string d_MethodName = nameof(SmartPlayerInventoryPush);
 
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Performing smart player inventory push");
-#endif
-
         if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
         {
             ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
@@ -112,11 +106,57 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
-
         var targets = context.GetClosestTargetContainers();
 #if DEBUG
         //LogTargetItems(d_MethodName, targets);
 #endif
+
+        PerformSmartPush(context, source, targets);
+    }
+
+    public static void SmartVehiclePush()
+    {
+        const string d_MethodName = nameof(SmartVehiclePush);
+
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
+            return;
+        }
+
+        var vehicle = WindowStateManager.GetOpenVehicleTileEntity();
+        if (vehicle == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No open vehicle found, returning");
+            return;
+        }
+
+        var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
+        var targets = context.GetClosestTargetContainers();
+
+        PerformSmartPush(context, source, targets);
+    }
+
+
+    public static void SmartWorkstationOutputPush()
+    {
+        const string d_MethodName = nameof(SmartWorkstationOutputPush);
+
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
+            return;
+        }
+
+        var workstation = WindowStateManager.GetOpenWorkstationTileEntity();
+        if (workstation == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No open workstation found, returning");
+            return;
+        }
+
+        var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
+        var targets = context.GetClosestTargetContainers();
 
         PerformSmartPush(context, source, targets);
     }

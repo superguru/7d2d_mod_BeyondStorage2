@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Game;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Scripts.TileEntities;
 
@@ -260,7 +259,7 @@ public static class LootableItemHandler
     public static string GetPlayerLootableName(EntityPlayerLocal entity)
     {
         string name = "Unnamed Player Lootable";
-        
+
         if (entity == null)
         {
             return name;
@@ -305,5 +304,6 @@ public static class LootableItemHandler
         }
 
         entity.SetBagModified();
+        WindowStateManager.SetOpenVehicleEntityModified();
     }
 }
