@@ -139,7 +139,8 @@ public static class ItemX
         var maxSize = MaxStackSizeOf(stack);
         var currentSize = CurrentStackSizeOf(stack);
 
-        return (currentSize >= maxSize);
+        // maxSize of 0 means the slot is empty or invalid, so we consider it not full
+        return (maxSize > 0) && (currentSize >= maxSize);
     }
 
     public static int ItemTypeOf(ItemStack stack)

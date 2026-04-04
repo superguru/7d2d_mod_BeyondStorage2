@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace BeyondStorage.Scripts.Data;
 
@@ -10,29 +6,23 @@ internal class StorageTargetAdapter<T> where T : class
 {
     private readonly StorageSourceAdapter<T> _source;
 
-    private readonly HashSet<ItemStack> _invalidSlots = [];
+    private readonly List<ItemStack> _emptySlots = [];
+
     private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
-    private readonly Dictionary<int, List<ItemStack>> _emptySlots = [];
     private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
 
     public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance)
     {
         _source = source;
         Distance = distance;
+
+        BuildDescriptorMaps();
     }
 
     public float Distance { get; }
 
-    public bool Dirty { get; set; } = true;
-
     private void BuildDescriptorMaps()
     {
-        //TODO: We need to build maps about metadata. This is currently not efficient at all.
-        if (!Dirty)
-        {
-            return;
-        }
-
         Clear();
 
         var items = _source.GetAllSlotItemsStacks();
@@ -40,13 +30,13 @@ internal class StorageTargetAdapter<T> where T : class
         {
             var slot = items[i];
 
-            if (!ItemX.IsValidItemStack(slot))
+            var itemType = ItemX.ItemTypeOf(slot);
+
+            if (itemType == UniqueItemTypes.EMPTY || slot?.count <= 0)
             {
-                _invalidSlots.Add(slot);
+                _emptySlots.Add(slot);
                 continue;
             }
-
-            var itemType = ItemX.ItemTypeOf(slot);
 
             if (ItemX.IsFull(slot))
             {
@@ -54,16 +44,8 @@ internal class StorageTargetAdapter<T> where T : class
                 continue;
             }
 
-            if (ItemX.IsEmpty(slot))
-            {
-                RegisterSlot(_emptySlots, itemType, slot);
-                continue;
-            }
-
             RegisterSlot(_partialSlots, itemType, slot);
         }
-
-        Dirty = false;
     }
 
     private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot)
@@ -79,7 +61,6 @@ internal class StorageTargetAdapter<T> where T : class
 
     private void Clear()
     {
-        _invalidSlots.Clear();
         _filledSlots.Clear();
         _emptySlots.Clear();
         _partialSlots.Clear();
@@ -98,11 +79,29 @@ internal class StorageTargetAdapter<T> where T : class
         return [];
     }
 
+    internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
+    {
+        BuildDescriptorMaps();
+
+        var itemType = ItemX.ItemTypeOf(sourceSlot);
+        if (itemType == UniqueItemTypes.EMPTY)
+        {
+            return [];
+        }
+
+        if (_filledSlots.ContainsKey(itemType) || _partialSlots.ContainsKey(itemType))
+        {
+            return _emptySlots;
+        }
+
+        return [];
+    }
+
     internal string GetTargetName()
     {
         if (_source == null)
         {
-            return "null source has no name";
+            return "null source in target has no name";
         }
 
         return _source.GetName();
@@ -120,11 +119,6 @@ internal class StorageTargetAdapter<T> where T : class
 
     public void MarkModified()
     {
-        if (_source != null)
-        {
-            _source.MarkModified();
-        }
-
-        Dirty = true;
+        _source?.MarkModified();
     }
 }
