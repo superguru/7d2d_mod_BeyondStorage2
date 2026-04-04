@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Storage;
@@ -31,7 +30,7 @@ public static class LootableItemHandler
         return items;
     }
 
-    public static ItemStack[] GetPullableItems(EntityAlive entity)
+    public static ItemStack[] GetPushableItems(EntityAlive entity)
     {
         var items = GetAllSlotItems(entity);
 
@@ -42,21 +41,25 @@ public static class LootableItemHandler
 
         // Check if the bag has locked slots support
         var bag = entity.bag;
-        var lockedSlots = bag.LockedSlots;
+        var lockedSlots = bag?.LockedSlots;
         if (lockedSlots == null || lockedSlots.Length == 0)
         {
             return items;
         }
 
-        // Get container size from lootContainer if available
-        int? totalSlots = null;
-        if (entity.lootContainer != null)
+        return GetItemsWithSlotFiltering(items, lockedSlots, filterEmptySlots: true);
+    }
+
+    public static ItemStack[] GetPullableItems(EntityAlive entity)
+    {
+        var items = GetAllSlotItems(entity);
+
+        if (items.Length == 0)
         {
-            var containerSize = entity.lootContainer.GetContainerSize();
-            totalSlots = containerSize.x * containerSize.y;
+            return items;
         }
 
-        return GetItemsWithEmptyAndLockedSlotFiltering(items, lockedSlots, totalSlots);
+        return GetItemsWithSlotFiltering(items, s_emptyLockedSlots, filterEmptySlots: true);
     }
 
     public static ItemStack[] GetAllSlotItemsStacks(ITileEntityLootable lootable)
@@ -75,6 +78,29 @@ public static class LootableItemHandler
         return items;
     }
 
+    public static ItemStack[] GetPushableItems(ITileEntityLootable lootable)
+    {
+        var items = GetAllSlotItemsStacks(lootable);
+
+        if (items.Length == 0)
+        {
+            return items;
+        }
+
+        if (!lootable.HasSlotLocksSupport)
+        {
+            return items;
+        }
+
+        var slotLocks = lootable.SlotLocks;
+        if (slotLocks == null || slotLocks.Length == 0)
+        {
+            return items;
+        }
+
+        return GetItemsWithSlotFiltering(items, slotLocks, filterEmptySlots: true);
+    }
+
     /// <summary>
     /// Gets items from a lootable, filtering out items from locked slots.
     /// </summary>
@@ -89,14 +115,7 @@ public static class LootableItemHandler
             return items;
         }
 
-        if (!lootable.HasSlotLocksSupport)
-        {
-            return items;
-        }
-
-        var containerSize = lootable.GetContainerSize();
-        int totalSlots = containerSize.x * containerSize.y;
-        return GetItemsWithEmptyAndLockedSlotFiltering(items, lootable.SlotLocks ?? s_emptyLockedSlots, totalSlots);
+        return GetItemsWithSlotFiltering(items, s_emptyLockedSlots, filterEmptySlots: true);
     }
 
     /// <summary>
@@ -104,60 +123,36 @@ public static class LootableItemHandler
     /// </summary>
     /// <param name="items">The item array to filter</param>
     /// <param name="lockedSlots">The locked slots array</param>
-    /// <param name="totalSlots">Total container slots (null if unknown)</param>
     /// <returns>Array of ItemStack objects from unlocked slots</returns>
-    private static ItemStack[] GetItemsWithEmptyAndLockedSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, int? totalSlots)
+    private static ItemStack[] GetItemsWithSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, bool filterEmptySlots)
     {
-        // Calculate maximum slots to check
-        int lockedSlotsLength = lockedSlots.Length;
         int itemsLength = items.Length;
-        int maxSlots = totalSlots.HasValue
-            ? Math.Min(totalSlots.Value, itemsLength)
-            : Math.Min(lockedSlotsLength, itemsLength);
+
+        int lockedSlotsLength = lockedSlots?.Length ?? 0;
+        bool filterLockedSlots = lockedSlotsLength > 0;
 
         // Pre-calculate result capacity to minimize reallocations
-        int estimatedUnlockedSlots = Math.Min(maxSlots, Math.Max(0, maxSlots - CountLockedSlots(lockedSlots, maxSlots)));
-        var result = new List<ItemStack>(estimatedUnlockedSlots);
+        var result = new List<ItemStack>(itemsLength);
 
         // Single loop optimization - avoid nested loops
-        for (int slotIndex = 0; slotIndex < maxSlots; slotIndex++)
+        for (int slotIndex = 0; slotIndex < itemsLength; slotIndex++)
         {
             // Skip locked slots early
-            if (slotIndex < lockedSlotsLength && lockedSlots[slotIndex])
+            if (filterLockedSlots && (slotIndex < lockedSlotsLength && lockedSlots[slotIndex]))
             {
                 continue;
             }
 
             var stack = items[slotIndex];
-            if (stack != null && stack.count > 0)
+            if (filterEmptySlots && (stack == null || stack.count == 0))
             {
-                result.Add(stack);
+                continue;
             }
+
+            result.Add(stack);
         }
 
         return [.. result];
-    }
-
-    /// <summary>
-    /// Counts the number of locked slots within the specified range.
-    /// </summary>
-    /// <param name="lockedSlots">The packed boolean array representing locked slots</param>
-    /// <param name="maxSlots">The maximum number of slots to check</param>
-    /// <returns>The count of locked slots</returns>
-    private static int CountLockedSlots(PackedBoolArray lockedSlots, int maxSlots)
-    {
-        int count = 0;
-        int checkSlots = Math.Min(lockedSlots.Length, maxSlots);
-
-        for (int i = 0; i < checkSlots; i++)
-        {
-            if (lockedSlots[i])
-            {
-                count++;
-            }
-        }
-
-        return count;
     }
 
     /// <summary>
@@ -304,6 +299,8 @@ public static class LootableItemHandler
         }
 
         entity.SetBagModified();
+        entity?.lootContainer?.setModified();
+
         WindowStateManager.SetOpenVehicleEntityModified();
     }
 }

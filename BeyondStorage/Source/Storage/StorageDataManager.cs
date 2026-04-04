@@ -18,37 +18,43 @@ public class StorageDataManager
     internal StorageSourceItemDataStore DataStore => _dataStore;
 
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneEntityFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityItemsPullableFunc = (dr) => LootableItemHandler.GetPullableItems(dr.lootContainer);
+    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityPullableItemsFunc = (dr) => LootableItemHandler.GetPullableItems(dr.lootContainer);
+    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityPushableItemsFunc = (dr) => LootableItemHandler.GetPushableItems(dr.lootContainer);
     public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityAllSlotItemsFunc = (dr) => LootableItemHandler.GetAllSlotItemsStacks(dr.lootContainer);
     public readonly Action<EntityDrone> MarkDroneEntityModifiedFunc = (dr) => LootableItemHandler.MarkLootableModified(dr.lootContainer);
     public readonly Func<EntityDrone, string> GetDroneEntityNameFunc = (dr) => LootableItemHandler.GetLootableName(dr.lootContainer);
 
     public readonly Func<TileEntityCollector, TileEntityCollector, bool> EqualsCollectorFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorPullableItemsFunc = (dc) => dc.Items;
+    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorPushableItemsFunc = (dc) => dc.Items;
     public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorAllSlotItemsFunc = (dc) => dc.Items;
     public readonly Action<TileEntityCollector> MarkCollectorModifiedFunc = (dc) => CollectorStateManager.MarkCollectorModified(dc);
     public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = (dc) => CollectorStateManager.GetCollectorName(dc);
 
     public readonly Func<TileEntityWorkstation, TileEntityWorkstation, bool> EqualsWorkstationFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationPullableItemsFunc = (workstation) => workstation.output;
+    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationPushableItemsFunc = (workstation) => workstation.output;
     public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationAllSlotItemsItemsFunc = (workstation) => workstation.output;
     public Action<TileEntityWorkstation> MarkWorkstationModifiedFunc = (workstation) => WorkstationStateManager.MarkWorkstationModified(workstation);
     public readonly Func<TileEntityWorkstation, string> GetWorkstationNameFunc = (workstation) => WorkstationStateManager.GetWorkstationName(workstation);
 
     public readonly Func<ITileEntityLootable, ITileEntityLootable, bool> EqualsLootableFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<ITileEntityLootable, ItemStack[]> GetLootablePullableItemsFunc = (lootable) => LootableItemHandler.GetPullableItems(lootable);
+    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootablePushableItemsFunc = (lootable) => LootableItemHandler.GetPushableItems(lootable);
     public readonly Func<ITileEntityLootable, ItemStack[]> GetLootableAllSlotItemsFunc = (lootable) => LootableItemHandler.GetAllSlotItemsStacks(lootable);
     public Action<ITileEntityLootable> MarkLootableModifiedFunc = (lootable) => LootableItemHandler.MarkLootableModified(lootable);
     public readonly Func<ITileEntityLootable, string> GetLootableNameFunc = (lootable) => LootableItemHandler.GetLootableName(lootable);
 
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityVehicle, ItemStack[]> GetVehiclePullableItemsFunc = vehicle => LootableItemHandler.GetPullableItems(vehicle);
+    public readonly Func<EntityVehicle, ItemStack[]> GetVehiclePushableItemsFunc = vehicle => LootableItemHandler.GetPushableItems(vehicle);
     public readonly Func<EntityVehicle, ItemStack[]> GetVehicleAllSlotItemsItemsFunc = vehicle => LootableItemHandler.GetAllSlotItems(vehicle);
     public Action<EntityVehicle> MarkVehicleModifiedFunc = vehicle => LootableItemHandler.MarkLootableModified(vehicle);
     public readonly Func<EntityVehicle, string> GetVehicleNameFunc = (vehicle) => LootableItemHandler.GetLootableName(vehicle?.lootContainer);
 
     public readonly Func<EntityPlayerLocal, EntityPlayerLocal, bool> EqualsPlayerLootableFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerPullableItemsFunc = player => LootableItemHandler.GetPullableItems(player);
+    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerPushableItemsFunc = player => LootableItemHandler.GetPushableItems(player);
     public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerAllSlotItemsFunc = player => LootableItemHandler.GetAllSlotItems(player);
     public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => LootableItemHandler.MarkLootableModified(player);
     public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = (player) => LootableItemHandler.GetPlayerLootableName(player);

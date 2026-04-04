@@ -14,6 +14,7 @@ internal static class StorageSourceAdapterFactory
             collector,
             sources.EqualsCollectorFunc,
             sources.GetCollectorPullableItemsFunc,
+            sources.GetCollectorPushableItemsFunc,
             sources.GetCollectorAllSlotItemsFunc,
             sources.MarkCollectorModifiedFunc,
             sources.GetCollectorNameFunc
@@ -26,7 +27,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityDrone>(
             drone,
             sources.EqualsDroneEntityFunc,
-            sources.GetDroneEntityItemsPullableFunc,
+            sources.GetDroneEntityPullableItemsFunc,
+            sources.GetDroneEntityPushableItemsFunc,
             sources.GetDroneEntityAllSlotItemsFunc,
             sources.MarkDroneEntityModifiedFunc,
             sources.GetDroneEntityNameFunc
@@ -40,6 +42,7 @@ internal static class StorageSourceAdapterFactory
             lootable,
             sources.EqualsLootableFunc,
             sources.GetLootablePullableItemsFunc,
+            sources.GetLootablePushableItemsFunc,
             sources.GetLootableAllSlotItemsFunc,
             sources.MarkLootableModifiedFunc,
             sources.GetLootableNameFunc
@@ -53,6 +56,7 @@ internal static class StorageSourceAdapterFactory
             player,
             sources.EqualsPlayerLootableFunc,
             sources.GetPlayerPullableItemsFunc,
+            sources.GetPlayerPushableItemsFunc,
             sources.GetPlayerAllSlotItemsFunc,
             sources.MarkPlayerLootableModifiedFunc,
             sources.GetPlayerLootableNameFunc
@@ -66,6 +70,7 @@ internal static class StorageSourceAdapterFactory
             vehicle,
             sources.EqualsVehicleFunc,
             sources.GetVehiclePullableItemsFunc,
+            sources.GetVehiclePushableItemsFunc,
             sources.GetVehicleAllSlotItemsItemsFunc,
             sources.MarkVehicleModifiedFunc,
             sources.GetVehicleNameFunc
@@ -79,6 +84,7 @@ internal static class StorageSourceAdapterFactory
             workstation,
             sources.EqualsWorkstationFunc,
             sources.GetWorkstationPullableItemsFunc,
+            sources.GetWorkstationPushableItemsFunc,
             sources.GetWorkstationAllSlotItemsItemsFunc,
             sources.MarkWorkstationModifiedFunc,
             sources.GetWorkstationNameFunc
