@@ -13,6 +13,26 @@ internal static class XUiC_LootWindow_Patches
     // Store the previous LockedSlots state for comparison
     private static PackedBoolArray s_previousLockedSlots = null;
 
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(XUiC_LootWindow.Init))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static void XUiC_LootWindow_Init_Postfix(XUiC_LootWindow __instance)
+    {
+#if DEBUG
+        const string d_MethodName = nameof(XUiC_LootWindow_Init_Postfix);
+#endif
+        var btnBeyondSmartButton = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
+        if (btnBeyondSmartButton != null)
+        {
+            btnBeyondSmartButton.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button initialized");
+#endif
+        }
+    }
+
     [HarmonyPrefix]
     [HarmonyPatch(nameof(XUiC_LootWindow.UpdateLockedSlots))]
 #if DEBUG

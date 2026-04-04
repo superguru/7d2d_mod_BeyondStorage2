@@ -9,8 +9,9 @@ public static class UIControlHelpers
     /// <summary>
     /// The ID of the smart loot sort button defined in windows.xml
     /// </summary>
-    public const string SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID = "btnBeyondSmartPlayerInventoryPush";
     public const string SMART_COLLECTOR_PUSH_BUTTON_ID = "btnBeyondSmartCollectorPush";
+    public const string SMART_LOOT_WINDOW_PUSH_BUTTON_ID = "btnBeyondSmartLootWindowPush";
+    public const string SMART_PLAYER_INVENTORY_PUSH_BUTTON_ID = "btnBeyondSmartPlayerInventoryPush";
     public const string SMART_VEHICLE_PUSH_BUTTON_ID = "btnBeyondSmartVehiclePush";
     public const string SMART_WORKSTATION_OUTPUT_PUSH_BUTTON_ID = "btnBeyondSmartWorkstationOutputPush";
 
@@ -35,6 +36,11 @@ public static class UIControlHelpers
     {
         var btnBeyondSmartCollectorPush = GetSmartButtonByID(instance, SMART_COLLECTOR_PUSH_BUTTON_ID);
         return btnBeyondSmartCollectorPush;
+    }
+    public static XUiController GetSmartLootWindowPushButton(XUiController instance)
+    {
+        var btnBeyondSmartLootWindowPush = GetSmartButtonByID(instance, SMART_LOOT_WINDOW_PUSH_BUTTON_ID);
+        return btnBeyondSmartLootWindowPush;
     }
 
     public static XUiController GetSmartPlayerInventoryPushButton(XUiController instance)

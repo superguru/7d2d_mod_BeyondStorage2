@@ -16,6 +16,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
 
     private readonly Func<T, T, bool> _equalsFunc;
     private readonly Func<T, ItemStack[]> _getPullableItemStacksFunc;
+    private readonly Func<T, ItemStack[]> _getPushableItemStacksFunc;
     private readonly Func<T, ItemStack[]> _getAllSlotsItemStacksFunc;
     private readonly Action<T> _markModifiedAction;
     private readonly Func<T, string> _getNameFunc;
@@ -24,6 +25,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         T storageSource,
         Func<T, T, bool> equalsFunc,
         Func<T, ItemStack[]> getPullableItemStacksFunc,
+        Func<T, ItemStack[]> getPushableItemStacksFunc,
         Func<T, ItemStack[]> getAllSlotsItemStacksFunc,
         Action<T> markModifiedAction,
         Func<T, string> getNameFunc)
@@ -49,6 +51,13 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             var error = $"{d_MethodName}: {nameof(getPullableItemStacksFunc)} cannot be null";
             ModLogger.DebugLog(error);
             throw new ArgumentNullException(nameof(getPullableItemStacksFunc), error);
+        }
+
+        if (getPushableItemStacksFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(getPushableItemStacksFunc)} cannot be null";
+            ModLogger.DebugLog(error);
+            throw new ArgumentNullException(nameof(getPushableItemStacksFunc), error);
         }
 
         if (getAllSlotsItemStacksFunc == null)
@@ -78,6 +87,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
 
         _equalsFunc = equalsFunc;
         _getPullableItemStacksFunc = getPullableItemStacksFunc;
+        _getPushableItemStacksFunc = getPushableItemStacksFunc;
         _getAllSlotsItemStacksFunc = getAllSlotsItemStacksFunc;
         _markModifiedAction = markModifiedAction;
         _getNameFunc = getNameFunc;
@@ -148,6 +158,12 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     {
         const string d_MethodName = nameof(GetPullableItemStacks);
         return GetSpecifiedItemStacks(d_MethodName, _getPullableItemStacksFunc);
+    }
+
+    public ItemStack[] GetPushableItemStacks()
+    {
+        const string d_MethodName = nameof(GetPushableItemStacks);
+        return GetSpecifiedItemStacks(d_MethodName, _getPushableItemStacksFunc);
     }
 
     public ItemStack[] GetAllSlotItemsStacks()

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BeyondStorage.Scripts.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -394,10 +395,24 @@ public static class WindowStateManager
     internal static void SetOpenVehicleEntityModified()
     {
         var vehicleWindow = GetActiveVehicleStorageWindow();
-        if (vehicleWindow?.CurrentVehicleEntity != null)
+        var vehicle = vehicleWindow?.CurrentVehicleEntity;
+        if (vehicle != null)
         {
+#if DEBUG
+            ModLogger.DebugLog($"Marking open vehicle entity as modified: {vehicle}");
+#endif
             vehicleWindow.IsDirty = true;
             vehicleWindow.SetAllChildrenDirty();
+
+            var containerWindow = vehicleWindow.containerWindow;
+            if (containerWindow != null)
+            {
+                ModLogger.DebugLog($"Also marking vehicle container window as modified: {containerWindow}");
+                containerWindow.IsDirty = true;
+                containerWindow.SetAllChildrenDirty();
+
+                containerWindow.OnBagItemChangedInternal();
+            }
         }
     }
 
@@ -405,6 +420,12 @@ public static class WindowStateManager
     {
         var workstationWindow = GetActiveWorkstationWindow();
         return workstationWindow?.WorkstationData?.TileEntity;
+    }
+
+    internal static ITileEntityLootable GetOpenWindowLootable()
+    {
+        var lootWindow = GetActiveStorageContainerWindow();
+        return lootWindow?.te;
     }
 
     #endregion

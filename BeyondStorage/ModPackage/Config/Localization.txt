@@ -3,3 +3,4 @@ btnBeyondSmartPlayerInventoryPush_ToolTip,Pushes items from unlocked slots in th
 btnBeyondSmartCollectorPush_ToolTip,Pushes completed items from here to the nearest storages that already have that type of item
 btnBeyondSmartVehiclePush_ToolTip,Pushes items from unlocked slots in the vehicle's inventory to the nearest storages that already have that type of item
 btnBeyondSmartWorkstationOutputPush_ToolTip,Pushes completed items from here to the nearest storages that already have that type of item
+btnBeyondSmartLootWindowPush_ToolTip,Pushes items from here to the nearest other storages that already have that type of item

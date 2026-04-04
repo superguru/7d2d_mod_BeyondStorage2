@@ -24,21 +24,30 @@ internal static class XUiControllerPatches
 
         try
         {
-            var btnBeyondSmartPlayerInventoryPush = UIControlHelpers.GetSmartPlayerInventoryPushButton(__instance);
-            if (btnBeyondSmartPlayerInventoryPush != null)
-            {
-                btnBeyondSmartPlayerInventoryPush.OnPress -= SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
-#endif
-            }
-
             var btnBeyondSmartCollectorPush = UIControlHelpers.GetSmartCollectorPushButton(__instance);
             if (btnBeyondSmartCollectorPush != null)
             {
                 btnBeyondSmartCollectorPush.OnPress -= SmartSortingCommon.SmartCollectorPush_EventHandler;
 #if DEBUG
                 ModLogger.DebugLog($"{d_MethodName}: Smart collector push button event handler removed");
+#endif
+            }
+
+            var btnBeyondSmartLootWindowPush = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
+            if (btnBeyondSmartLootWindowPush != null)
+            {
+                btnBeyondSmartLootWindowPush.OnPress -= SmartSortingCommon.SmartLootWindowPush_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button event handler removed");
+#endif
+            }
+
+            var btnBeyondSmartPlayerInventoryPush = UIControlHelpers.GetSmartPlayerInventoryPushButton(__instance);
+            if (btnBeyondSmartPlayerInventoryPush != null)
+            {
+                btnBeyondSmartPlayerInventoryPush.OnPress -= SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
 #endif
             }
 

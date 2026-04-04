@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Scripts.UI;
 using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Scripts.Storage;
@@ -95,6 +96,29 @@ public class SmartSortingFunctions
         PerformSmartPush(context, source, targets);
     }
 
+    public static void SmartLootWindowPush()
+    {
+        const string d_MethodName = nameof(SmartLootWindowPush);
+
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
+            return;
+        }
+
+        var lootable = WindowStateManager.GetOpenWindowLootable();
+        if (lootable == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No open lootable window found, returning");
+            return;
+        }
+
+        var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
+        var targets = context.GetClosestTargetContainers();
+
+        PerformSmartPush(context, source, targets);
+    }
+
     public static void SmartPlayerInventoryPush()
     {
         const string d_MethodName = nameof(SmartPlayerInventoryPush);
@@ -183,7 +207,7 @@ public class SmartSortingFunctions
         // Then fill up any empty slots, and any new partial slots that are created when partially filling these empty slots
         PushSourceItemsToTarget(source, targets, allowPushtoEmpty: true);
 
-        context.InvalidateCache();
+        UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
     }
 
     private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, bool allowPushtoEmpty) where T : class where S : class
@@ -191,9 +215,9 @@ public class SmartSortingFunctions
 #if DEBUG
         const string d_MethodName = nameof(PushSourceItemsToTarget);
 #endif
-        var sourceSlots = source.GetPullableItemStacks();
+        var sourceSlots = source.GetPushableItemStacks();
 #if DEBUG
-        LogSourceItems(d_MethodName, sourceSlots);
+        //LogSourceItems(d_MethodName, sourceSlots);
 #endif
 
         for (int i = 0; i < sourceSlots.Length; i++)
@@ -229,14 +253,16 @@ public class SmartSortingFunctions
                 {
                     // Try to transfer to any new partial slots that may have opened up after previous transfers in this loop
                     TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, ref sourceSlotRemaining);
+#if DEBUG
                     ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after partial slot transfer to target containerXX {target.GetTargetName()}");
-
+#endif
                     if (sourceSlotRemaining > 0)
                     {
                         // If there are still items remaining, try to transfer to empty slots
                         TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, ref sourceSlotRemaining);
+#if DEBUG
                         ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after empty slot transfer to target containerXX {target.GetTargetName()}");
-
+#endif
                         // At this point, there might be less empty slots, and more partial slots
                     }
                 }
@@ -279,9 +305,7 @@ public class SmartSortingFunctions
 
         if (ItemX.ItemTypeOf(targetSlot) == UniqueItemTypes.EMPTY || targetSlot?.count <= 0)
         {
-#if DEBUG
-            ModLogger.DebugLog($"{methodName}: Target slot in container {containerName} is empty, cloning source slot item type");
-#endif
+            // Target slot in container is empty, cloning source slot item type
             targetSlot.itemValue = sourceSlot.itemValue.Clone();
             targetSlot.count = 0;
         }
