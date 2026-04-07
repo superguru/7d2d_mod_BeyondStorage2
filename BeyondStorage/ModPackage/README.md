@@ -197,3 +197,4 @@ Beyond Storage 2 added pulling from all conceivable sources, like drones, workst
 
 I would recommend Beyond Storage 2 over other "craft from container" type mods, due to speed, stability, functionality, and code quality.
 
+*** PACKAGED `README.md` EOF ***

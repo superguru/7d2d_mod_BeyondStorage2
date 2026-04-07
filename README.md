@@ -1,11 +1,17 @@
 # Beyond Storage 2
 
-Mod to allow crafting, repairing, reloading, refueling and upgrading items and blocks using items from nearby storage.  
+If you can do it using items in your inventory, you can now also do it by PULLING from items in nearby storage crates, vehicles, drones, workstations, collectors, etc.
+
+In addition, you can easily PUSH from any of those sources to nearby crates, for excellent inventory management. 
 
 This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Storage 2'.
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
+* In v2.6.3, add pushing item stacks from player inventory to nearby storage
+* In v2.6.2, Compatibility with v2.6 of the game, as well as UI fixes for the smart loot button
+* In v2.5.2, initial iteration to support v2.5 of the game
+* In v2.4.0, add smart sort functionality to backpack window
 * In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
 * In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
 * In v2.2.7, add lockpicking and payments from storage sources
@@ -22,7 +28,7 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
   - Player Toolbelt (as per vanilla game)
   - Then:
     1. Drones <<== Added this because of community requests
-    2. Dew Collectors
+    2. Dew Collectors / Apiaries
     3. Workstations
     4. Containers (storage crates, etc.)
     5. Vehicles
@@ -52,13 +58,13 @@ Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Sou
 
 It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
 
-
 ## Credits
+- [Undead Legacy](https://www.snowbeegaming.com/undead-legacy) by Subquake for inspiring us all
 - [aedenthorn](https://github.com/aedenthorn) for the original mod
 - [unv-annihilator](https://github.com/unv-annihilator) for the 7 Days to Die v1 fork
 - [superguru](https://github.com/superguru) for the 7 Days to Die v2 refactor
 - [gazorper](https://next.nexusmods.com/profile/gazorper/mods) for the Beyond Storage 2 mod
+- For v2.5.x mod series: Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
 - The 7 Days to Die community for their support and contributions
 
-
-
+*** MAIN REPO `README.md` EOF ***
