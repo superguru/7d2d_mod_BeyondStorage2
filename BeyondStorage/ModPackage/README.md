@@ -160,10 +160,10 @@ the Nexus Mod mod details section more easily.
 ## 🤝Mod compatibility list
 
 ### ✅Considered compatible:
+
 I run these mods, among others, and so the development and testing of this mod means it works perfectly with the mods listed below:
 
-[list]
-[*][url=https://www.nexusmods.com/7daystodie/mods/1684]AGF V2 Larger Backpacks[/url][/*]
+[list][*][url=https://www.nexusmods.com/7daystodie/mods/1684]AGF V2 Larger Backpacks[/url][/*]
 [*][url=https://www.nexusmods.com/7daystodie/mods/342]Bdub's Vehicles (2.0)[/url][/*]
 [*][url=https://www.nexusmods.com/7daystodie/mods/305]Bigger Backpack[/url][/*]
 [*][url=https://www.nexusmods.com/7daystodie/mods/7554]Endless Harvest[/url][/*]
@@ -174,12 +174,12 @@ I run these mods, among others, and so the development and testing of this mod m
 [*][url=https://www.nexusmods.com/7daystodie/mods/1357]QuickStack[/url] <-- this is the best auto sort mod[/*]
 [*][url=https://www.nexusmods.com/7daystodie/mods/5418]Reclaim Storage Crates[/url][/*]
 [*][url=https://www.nexusmods.com/7daystodie/mods/8634]Recipe Tracker[/url][/*]
-[*][url=https://www.nexusmods.com/7daystodie/mods/8634]https://7daystodiemods.com/vehicle-madness/]Vehicle Madness[/url][/*]
+[*][url=https://7daystodiemods.com/vehicle-madness]Vehicle Madness[/url][/*][/list]
 
 ### ❌Not considered compatible:
-[*]v2.5.x of the mod is compatible [url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] (also most other versions of this mod and Farm Life should work ok)[/*]
-[*]Since Farm Life edition for 2.6 of the game, this mod no longer considered compatible, but YMMV[/*]
-[/list]
+
+[list][*]v2.5.x of the mod is compatible [url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] (also most other versions of this mod and Farm Life should work ok)[/*]
+[*]Since Farm Life edition for 2.6 of the game, this mod no longer considered compatible, but YMMV[/*][/list]
 
 In addition, don't use any remote crafting type of mods at the same time. They are generally not compatible with each other. 
 
