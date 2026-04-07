@@ -1,109 +1,68 @@
 # Beyond Storage 2
 
-## Regression Testing Checklist
+If you can do it using items in your inventory, you can now also do it by PULLING from items in nearby storage crates, vehicles, drones, workstations, collectors, etc.
 
-### Core Storage Functionality
-- [ ] **Storage Discovery**: Verify nearby storage containers (chests, crates) are detected within configured range
-- [ ] **Vehicle Storage**: Test that vehicle storage is accessible when `pullFromVehicleStorage` is enabled
-- [ ] **Drone Storage**: Confirm drone storage integration works with owned drones
-- [ ] **Workstation Output**: Verify workstation output stacks are pulled when `pullFromWorkstationOutputs` is enabled
-- [ ] **Dew Collector**: Test dew collector integration when `pullFromCollectors` is enabled
-- [ ] **Range Limiting**: Confirm storage sources outside configured range are ignored
-- [ ] **Ownership Checks**: Verify only player-owned/accessible storage is used
+In addition, you can easily PUSH from any of those sources to nearby crates, for excellent inventory management. 
 
-### Item Operations
-- [ ] **Item Crafting**: Test that crafting pulls required materials from storage
-- [ ] **Recipe Display**: Verify ingredient counts show storage + inventory totals
-- [ ] **Max Craftable**: Confirm max craftable calculations include storage items
-- [ ] **Item Repair**: Test tool/weapon repair pulls repair materials from storage
-- [ ] **Item Removal**: Verify correct items are removed from storage during operations
+This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Storage 2'.
 
-### Inventory movement
-| Operation         | Source Type  | Source Inventory | Target Type  | Target Inventory | Expected  | Pass?                      |
-|-------------------|--------------|------------------|--------------|------------------|-----------|:--------------------------:|
-| Pickup Stack      | Simple Stack | Storage          | Simple Stack | N/A              | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Drop Stack        | Simple Stack | N/A              | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Shift-Move        | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Shift-Move        | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Take All          | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Take All          | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Force Take All    | Simple Stack | Player           | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Force Take All    | Simple Stack | Storage          | Simple Stack | Player           | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Drop One Item     | Simple Stack | N/A              | Simple Stack | Storage          | RefreshUI | <ul><li> - [ ] </li></ul>  |
-| Pickup Half Stack | Simple Stack | Storage          | Simple Stack | N/A              | RefreshUI | <ul><li> - [ ] </li></ul>  |
+The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
-_(the above formatting renders correctly in GitHub with checkboxes inside the table)_
+* In v2.6.3, add pushing item stacks from player inventory to nearby storage
+* In v2.6.2, Compatibility with v2.6 of the game, as well as UI fixes for the smart loot button
+* In v2.5.2, initial iteration to support v2.5 of the game
+* In v2.4.0, add smart sort functionality to backpack window
+* In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
+* In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
+* In v2.2.7, add lockpicking and payments from storage sources
+* In v2.2.5, add console command `bsconfig` to display the current configuration
+* In v2.2.4, add live recipe tracking updates when anything becomes available, like a workstation crafted item, a cooked item, a dew collector completion, etc.
+* In v2.2.3, add ability to keep track of available ammo from all pullable sources
+* In v2.2.0, pull from drones, paint from all storages, supports slot locking for containers, only support 7D2D 2.x and later
+* In v2.1.4, final version to support 7D2D 2.1
+* In v2.1.3, items can be pulled from nearby Dew Collectors (configurable).
+* In v2.1.0, items can be pulled from nearby Workstations (configurable).
 
-### Block Operations  
-- [ ] **Block Repair**: Test that block repairs pull required materials from storage
-- [ ] **Block Upgrade**: Verify block upgrades use materials from storage
-- [ ] **Block Texturing**: Test that painting/texturing operations pull paint from storage
-- [ ] **Paint Counting**: Verify paint usage is accurately calculated and limited by available paint
+#### Pull Order:
+  - Player Backpack (as per vanilla game)
+  - Player Toolbelt (as per vanilla game)
+  - Then:
+    1. Drones <<== Added this because of community requests
+    2. Dew Collectors / Apiaries
+    3. Workstations
+    4. Containers (storage crates, etc.)
+    5. Vehicles
 
-### Vehicle Operations
-- [ ] **Vehicle Repair**: Test vehicle repairs pull parts from storage
-- [ ] **Vehicle Refuel**: Verify vehicle refueling uses fuel from storage
-- [ ] **Fuel Type Detection**: Confirm correct fuel type is identified for each vehicle
+## Installation
 
-### Weapon/Ranged Operations
-- [ ] **Weapon Reload**: Test that weapon reloading pulls ammo from storage
-- [ ] **Ammo Count Display**: Verify ammo counts show storage + inventory totals
-- [ ] **Ammo Type Matching**: Confirm correct ammo type is used for each weapon
-- [ ] **Magazine vs Individual**: Test both magazine-fed and individual round weapons
+Use a Mod Manager to install the mod, or unzip the contents of this mod into your 7 Days to Die Mods folder.
 
-### Power Source Operations
-- [ ] **Generator Refuel**: Test generator refueling pulls fuel from storage
-- [ ] **Fuel Consumption**: Verify fuel is properly removed when consumed
-- [ ] **Multiple Fuel Types**: Test different generator fuel types
+INSTALL THE SAME VERSION OF THE MOD ON BOTH SERVER AND CLIENT.
 
-### User Interface Integration
-- [ ] **Recipe Lists**: Verify crafting UI shows updated ingredient availability
-- [ ] **Ingredient Entries**: Test ingredient count displays include storage
-- [ ] **Recipe Tracker**: Confirm recipe tracker shows accurate availability
-- [ ] **Workstation Windows**: Test workstation UI updates when storage changes
-- [ ] **HUD Elements**: Verify any HUD integrations work correctly
+See the Troubleshooting section on the mod page if you have any issues.
 
-### Configuration Management
-- [ ] **Client Config**: Test client-side configuration loading and validation
-- [ ] **Server Config**: Verify server configuration sync when enabled
-- [ ] **Feature Toggles**: Test each enable/disable option works correctly
-- [ ] **Range Settings**: Verify range configuration (-1 for unlimited, positive values)
-- [ ] **Storage Type Filters**: Test `onlyStorageCrates` setting
+The compiled and packaged mod is available from https://www.nexusmods.com/7daystodie/mods/7809
 
-### Performance & Caching
-- [ ] **Cache Invalidation**: Test cache clears appropriately when storage changes
-- [ ] **Context Expiration**: Verify storage contexts expire and refresh correctly
-- [ ] **Performance Profiling**: Check that performance tracking works without errors
-- [ ] **Memory Usage**: Monitor for memory leaks during extended play
+## Configuration
 
-### Multiplayer Compatibility
-- [ ] **Server-Client Sync**: Test functionality works in multiplayer
-- [ ] **Permission Checks**: Verify players can only access their own storage
-- [ ] **Network Performance**: Check for excessive network traffic
-- [ ] **Concurrent Access**: Test multiple players using storage simultaneously
+The mod can be configured by editing the `config.json` file in the `Mods/BeyondStorage2/Config` folder.
 
-### Error Handling & Edge Cases
-- [ ] **Null Reference Prevention**: Verify no null reference exceptions occur
-- [ ] **Invalid Items**: Test handling of corrupted/invalid items
-- [ ] **Missing Storage**: Confirm graceful handling when storage is removed
-- [ ] **World Loading**: Test functionality during world load/save operations
-- [ ] **Mod Conflicts**: Verify compatibility with other common mods
+Please refer to the mod description on Nexus Mods for details of the configuration options.
 
-### Validation & Data Integrity
-- [ ] **Item Stack Validation**: Test that invalid item stacks are properly handled
-- [ ] **Context Validation**: Verify storage context validation works correctly
-- [ ] **Feature Flag Validation**: Test that disabled features are properly ignored
-- [ ] **Data Store Integrity**: Confirm storage data remains consistent
+## License
+This mod is licensed under the MIT License. See the LICENSE file in the root of the repository for details.
 
-### Logging & Debugging
-- [ ] **Debug Logging**: Verify debug logs provide useful information when enabled
-- [ ] **Error Logging**: Test that errors are properly logged with context
-- [ ] **Performance Metrics**: Check performance profiler output is accurate
-- [ ] **Code Quality**: Run code quality checker and verify clean results
+## History
 
-### Regression-Specific Tests
-- [ ] **Previous Bug Fixes**: Re-test any previously fixed bugs to ensure no regression
-- [ ] **API Changes**: Verify all public method signatures remain compatible
-- [ ] **Configuration Compatibility**: Test that old config files still work
-- [ ] **Save Game Compatibility**: Confirm existing save games load without issues
+Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Source code is at https://github.com/aedenthorn/7D2DMods.
 
+It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
+
+## Credits
+- [Undead Legacy](https://www.snowbeegaming.com/undead-legacy) by Subquake for inspiring us all
+- [aedenthorn](https://github.com/aedenthorn) for the original mod
+- [unv-annihilator](https://github.com/unv-annihilator) for the 7 Days to Die v1 fork
+- [superguru](https://github.com/superguru) for the 7 Days to Die v2 refactor
+- [gazorper](https://next.nexusmods.com/profile/gazorper/mods) for the Beyond Storage 2 mod
+- For v2.5.x mod series: Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
+- The 7 Days to Die community for their support and contributions
