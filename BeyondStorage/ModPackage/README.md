@@ -74,7 +74,7 @@ Fix many errors by [verifying the integrity of your game installation](https://h
 
 Install the same version on **CLIENT AND SERVER** if you are hosting or participating in a multi-player game.
 
-### Articles that might help:
+### 📚Articles that might help:
 [How To Disable Easy Anti Cheat - 7 Days To Die](https://help.sparkedhost.com/en/article/how-to-disable-easy-anti-cheat-7-days-to-die-11jgs21)
 <!-- [color=#ff0000][BBCode][/color] [url=https://help.sparkedhost.com/en/article/how-to-disable-easy-anti-cheat-7-days-to-die-11jgs21]How To Disable Easy Anti Cheat - 7 Days To Die[/url] [color=#ff0000][/BBCode][/color] -->
 
@@ -193,7 +193,7 @@ Just pick one you like and use that.
 
 [url=https://www.nexusmods.com/7daystodie/mods/5087]1.0 Beyond Storage[/url] was refactored and updated for 7 Days to Die v1 by unv-annihilator and extended this idea, based on the code from aedenthorn, into the addition of vehicles to pull items from. The code quality and stability of this mod high. See [url=https://github.com/unv-annihilator/7D2D_Mods/tree/main]https://github.com/unv-annihilator/7D2D_Mods/tree/main[/url] for that fork.
 
-Beyond Storage 2 added pulling from all conceivable sources, like drones, workstation outputs, dew collectors. Also added all inventory operations like paying for items at a trader, painting, lock picking. The mod also fixes many notification bugs from the original game, and all operations are seamless. Pushing items from any place you can pull from, in order to auto-sort items, was also added.
+[url=https://www.nexusmods.com/7daystodie/mods/7809]Beyond Storage 2[/url] added pulling from all conceivable sources, like drones, workstation outputs, dew collectors. Also added all inventory operations like paying for items at a trader, painting, lock picking. The mod also fixes many notification bugs from the original game, and all operations are seamless. Pushing items from any place you can pull from, in order to auto-sort items, was also added.
 
 I would recommend Beyond Storage 2 over other "craft from container" type mods, due to speed, stability, functionality, and code quality.
 
