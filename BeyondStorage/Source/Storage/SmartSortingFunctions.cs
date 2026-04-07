@@ -212,9 +212,8 @@ public class SmartSortingFunctions
 
     private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, bool allowPushtoEmpty) where T : class where S : class
     {
-#if DEBUG
         const string d_MethodName = nameof(PushSourceItemsToTarget);
-#endif
+
         var sourceSlots = source.GetPushableItemStacks();
 #if DEBUG
         //LogSourceItems(d_MethodName, sourceSlots);

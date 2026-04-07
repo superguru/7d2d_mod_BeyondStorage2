@@ -6,7 +6,7 @@ Use resources from all of those when you refuel, paint, repair, pick locks, craf
 
 If you can do it from your player inventory, you can now also do it from your extended inventory.
 
-This README is a mix of BBCode and Markdown. You might [read it more easily on GitHub](https://github.com/superguru/7d2d_mod_BeyondStorage2/blob/master/BeyondStorage/README.md).
+[quote]This README is a mix of BBCode and Markdown. You might read it more easily on [url=https://github.com/superguru/7d2d_mod_BeyondStorage2/blob/master/BeyondStorage/README.md]GitHub[/url].[/quote]
 
 This is a [7 Days to Die](https://store.steampowered.com/app/251570/7_Days_to_Die) mod.
 <!-- [color=#ff0000][BBCode][/color] [url=https://store.steampowered.com/app/251570/7_Days_to_Die]7 Days to Die on Steam[/url] [color=#ff0000][/BBCode][/color] -->
