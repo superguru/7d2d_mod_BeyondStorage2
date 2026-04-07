@@ -131,4 +131,11 @@ internal class StorageTargetAdapter<T> where T : class
     {
         _source?.MarkModified();
     }
+
+    internal bool IsSameSource<T>(StorageSourceAdapter<T> source) where T : class
+    {
+        var result = _source.Equals(source);
+
+        return result;
+    }
 }

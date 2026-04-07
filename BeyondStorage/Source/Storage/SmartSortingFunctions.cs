@@ -245,6 +245,10 @@ public class SmartSortingFunctions
                 }
 
                 var target = targets[k];
+                if (target.IsSameSource(source))
+                {
+                    continue;
+                }
 
                 var partialSlots = target.GetPartialSlotsFor(sourceSlot);
                 var emptySlots = allowPushtoEmpty ? target.GetEmptySlotsFor(sourceSlot) : [];
