@@ -1,7 +1,4 @@
-﻿using System;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Game;
+﻿using BeyondStorage.Scripts.Data;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
 using BeyondStorage.Scripts.TileEntities;
@@ -16,6 +13,7 @@ internal static class TileEntityItemDiscovery
     public static void FindItems(StorageContext context)
     {
 #if DEBUG
+        //const string d_MethodName = nameof(FindItems);
 #endif
         var processingState = new TileEntityProcessingState(context);
 
