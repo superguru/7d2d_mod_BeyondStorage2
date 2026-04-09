@@ -244,4 +244,46 @@ public sealed class StorageContext
         return Sources.DataStore.GetAllowedSourceTypes();
     }
     #endregion
+
+    #region User Actions and Interactions
+    internal void ShowLocalPlayerNotification(string localisationKey, string alertSound, params object[] formatArgs)
+    {
+        const string d_MethodName = nameof(ShowLocalPlayerNotification);
+
+        if (string.IsNullOrEmpty(localisationKey))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Localisation key is null or empty, cannot show notification");
+            return;
+        }
+
+        if (!EnsureValidCache(d_MethodName))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Cache validation failed, not showing anything");
+            return;
+        }
+
+        if (Player == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Player reference is null, cannot show notification");
+            return;
+        }
+
+        if (!WorldTools.IsWorldExists())
+        {
+            ModLogger.DebugLog($"{d_MethodName}: World does not exist, skipping local notification");
+            return;
+        }
+
+        if (GameManager.Instance == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: GameManager reference is null, cannot show notification");
+            return;
+        }
+
+        string localisedMessageFmt = Localization.Get(localisationKey);
+        string localisedMessage = string.Format(localisedMessageFmt, formatArgs);
+
+        GameManager.ShowTooltip(Player, localisedMessage, string.Empty, alertSound);
+    }
+    #endregion
 }
