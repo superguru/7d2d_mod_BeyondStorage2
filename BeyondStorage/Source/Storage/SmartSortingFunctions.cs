@@ -201,6 +201,8 @@ public class SmartSortingFunctions
             return;
         }
 
+        context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", null, source.GetName(), targets.Count);
+
         // First fill up existing partial slots as at the start of the operation
         PushSourceItemsToTarget(source, targets, allowPushtoEmpty: false);
 
@@ -244,7 +246,7 @@ public class SmartSortingFunctions
                 }
 
                 var target = targets[k];
-                if (target.IsSameSource(source))
+                if (target.HasSameSource(source))
                 {
                     continue;
                 }
