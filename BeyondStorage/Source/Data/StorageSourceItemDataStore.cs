@@ -415,6 +415,7 @@ internal class StorageSourceItemDataStore
 
     internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
     {
+        // These are already naturally in the config.range, because of the tile entity discovery process
         var containers = _containerStore.GetClosestTargetContainers();
         return containers;
     }
