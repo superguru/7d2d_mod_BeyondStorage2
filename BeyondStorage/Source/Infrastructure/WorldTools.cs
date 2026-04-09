@@ -1,4 +1,5 @@
 ﻿namespace BeyondStorage.Scripts.Infrastructure;
+
 public static class WorldTools
 {
     public static bool IsServer()

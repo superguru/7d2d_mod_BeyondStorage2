@@ -252,36 +252,36 @@ public sealed class StorageContext
 
         if (string.IsNullOrEmpty(localisationKey))
         {
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Localisation key is null or empty, cannot show notification");
+#endif
             return;
         }
 
         if (!EnsureValidCache(d_MethodName))
         {
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Cache validation failed, not showing anything");
+#endif
             return;
         }
 
         if (Player == null)
         {
+#if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Player reference is null, cannot show notification");
+#endif
             return;
         }
 
-        if (!WorldTools.IsWorldExists())
+        string localisedMessage = GameTools.GetLocalisedMessage(d_MethodName, localisationKey, formatArgs);
+        if (string.IsNullOrEmpty(localisedMessage))
         {
-            ModLogger.DebugLog($"{d_MethodName}: World does not exist, skipping local notification");
+#if DEBUG
+            ModLogger.DebugLog(d_MethodName + ": Localised message is null or empty, cannot show notification");
+#endif
             return;
         }
-
-        if (GameManager.Instance == null)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: GameManager reference is null, cannot show notification");
-            return;
-        }
-
-        string localisedMessageFmt = Localization.Get(localisationKey);
-        string localisedMessage = string.Format(localisedMessageFmt, formatArgs);
 
         GameManager.ShowTooltip(Player, localisedMessage, string.Empty, alertSound);
     }

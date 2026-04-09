@@ -141,6 +141,7 @@
     <Compile Include="Source\Game\Item\ItemActionTextureBlockExposed.cs" />
     <Compile Include="Source\Game\Item\PaintOperationContext.cs" />
     <Compile Include="Source\Infrastructure\ActionHelper.cs" />
+    <Compile Include="Source\Infrastructure\GameTools.cs" />
     <Compile Include="Source\Infrastructure\ModInfo.cs" />
     <Compile Include="Source\Infrastructure\ModLifecycleManager.cs" />
     <Compile Include="Source\Configuration\ModConfig.cs" />
