@@ -173,10 +173,7 @@ public static class ServerUtils
 #endif
 
         // Use the original direct call pattern with null check
-        if (SingletonMonoBehaviour<ConnectionManager>.Instance != null)
-        {
-            SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(new NetPackageLockedTEs().Setup(filteredDict));
-        }
+        SingletonMonoBehaviour<ConnectionManager>.Instance?.SendPackage(new NetPackageLockedTEs().Setup(filteredDict));
 
         TileEntityLockManager.UpdateLockedTEs(filteredDict);
     }
