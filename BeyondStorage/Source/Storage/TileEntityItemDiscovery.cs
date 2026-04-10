@@ -1,7 +1,7 @@
 ﻿using BeyondStorage.Scripts.Data;
+using BeyondStorage.Scripts.Entities;
 using BeyondStorage.Scripts.Infrastructure;
 using BeyondStorage.Scripts.Multiplayer;
-using BeyondStorage.Scripts.TileEntities;
 
 namespace BeyondStorage.Scripts.Storage;
 
@@ -240,7 +240,7 @@ internal static class TileEntityItemDiscovery
         var context = state.Context;
 
 #if DEBUG
-        LootableItemHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
+        LootableHandler.LogLootableSlotLocks(context, lootable, tileEntity, d_MethodName);
 #endif
 
         var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
