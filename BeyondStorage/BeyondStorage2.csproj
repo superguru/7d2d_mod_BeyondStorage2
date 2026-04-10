@@ -59,6 +59,7 @@
     <Compile Include="Source\Data\ContainerDistanceStore.cs" />
     <Compile Include="Source\Data\StorageSourceAdapterFactory.cs" />
     <Compile Include="Source\Data\StorageTargetAdapter.cs" />
+    <Compile Include="Source\Entities\EntityHandler.cs" />
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
     <Compile Include="Source\Game\UI\UIControlHelpers.cs" />
     <Compile Include="Source\Game\UI\WindowStateManager.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="Source\HarmonyPatches\BeyondStorage_Init.cs" />
     <Compile Include="Source\HarmonyPatches\Block\Repair\ItemActionRepair_Repair_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Block\Upgrade\ItemActionRepair_Upgrade_Patches.cs" />
+    <Compile Include="Source\HarmonyPatches\Features\TEFeatureSignable_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Functions\BlockSecureLootSigned_Lockpick_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Functions\BlockSecureLoot_Lockpick_Patches.cs" />
     <Compile Include="Source\HarmonyPatches\Functions\Item_Action_Attack_Patches.cs" />
@@ -150,13 +152,14 @@
     <Compile Include="Source\Storage\EntityProcessingState.cs" />
     <Compile Include="Source\Storage\SmartSortingFunctions.cs" />
     <Compile Include="Source\Storage\TileEntityProcessingState.cs" />
+    <Compile Include="Source\Entities\EntityNameCache.cs" />
     <Compile Include="Source\UI\UIRefreshHelper.cs" />
     <Compile Include="Source\Infrastructure\ValidationHelper.cs" />
     <Compile Include="Source\Infrastructure\WorldTools.cs" />
     <Compile Include="Source\Storage\AllowedSourcesSnapshot.cs" />
     <Compile Include="Source\Storage\ItemStackCacheManager.cs" />
     <Compile Include="Source\Data\ItemClassCache.cs" />
-    <Compile Include="Source\TileEntities\LootableItemHandler.cs" />
+    <Compile Include="Source\Entities\LootableHandler.cs" />
     <Compile Include="Source\Storage\StorageContext.cs" />
     <Compile Include="Source\Game\Block\BlockRepair.cs" />
     <Compile Include="Source\Game\Block\BlockUpgrade.cs" />
@@ -175,8 +178,8 @@
     <Compile Include="Source\Storage\StorageQueryService.cs" />
     <Compile Include="Source\Storage\StorageDataManager.cs" />
     <Compile Include="Source\Storage\TileEntityItemDiscovery.cs" />
-    <Compile Include="Source\TileEntities\CollectorStateManager.cs" />
-    <Compile Include="Source\TileEntities\WorkstationStateManager.cs" />
+    <Compile Include="Source\Entities\CollectorHandler.cs" />
+    <Compile Include="Source\Entities\WorkstationHandler.cs" />
     <Compile Include="Source\Game\Vehicle\VehicleRepair.cs" />
     <Compile Include="Source\Game\WorldPlayerContext.cs" />
     <Compile Include="Source\Multiplayer\NetPackageBeyondStorageConfig.cs" />
