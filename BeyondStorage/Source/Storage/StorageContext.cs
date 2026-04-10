@@ -274,7 +274,7 @@ public sealed class StorageContext
             return;
         }
 
-        string localisedMessage = GameTools.GetLocalisedMessage(d_MethodName, localisationKey, formatArgs);
+        string localisedMessage = GameTools.GetLocalisedValue(d_MethodName, localisationKey, formatArgs);
         if (string.IsNullOrEmpty(localisedMessage))
         {
 #if DEBUG

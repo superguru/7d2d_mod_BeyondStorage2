@@ -80,4 +80,21 @@ public static class WorldTools
 
         return $"ManagerExists: {droneManagerExists}, ServerDroneCount: {serverDroneCount}, ActiveListExists: {dronesActiveExists}";
     }
+
+    public static Block GetBlockFromEntity(ITileEntity tileEntity)
+    {
+        if (tileEntity == null)
+        {
+            return null;
+        }
+
+        World world = GameManager.Instance?.World;
+        if (world == null)
+        {
+            return null;
+        }
+
+        var blockValue = world.GetBlock(tileEntity.ToWorldPos());
+        return blockValue.Block;
+    }
 }
