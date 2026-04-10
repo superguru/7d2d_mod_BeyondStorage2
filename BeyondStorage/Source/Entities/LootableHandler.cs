@@ -277,7 +277,6 @@ public static class LootableHandler
             return;
         }
 
-        //TODO: This is a bit hacky, but we need to mark both backpack and toolbelt as modified to ensure the UI updates correctly.
         entity.playerUI.xui.PlayerInventory.onBackpackItemsChanged();
         entity.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
     }
