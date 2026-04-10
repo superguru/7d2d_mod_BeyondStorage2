@@ -149,7 +149,7 @@ internal static class XUiC_LootWindow_Patches
         WindowStateManager.OnStorageContainerWindowOpened(__instance, isStorage, drone);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
+        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
 #endif
     }
 
@@ -168,5 +168,23 @@ internal static class XUiC_LootWindow_Patches
 #if DEBUG
         //ModLogger.DebugLog($"{d_MethodName}: LootWindow closed");
 #endif
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(XUiC_LootWindow.GetBindingValueInternal))]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static bool XUiC_LootWindow_GetBindingValueInternal_Prefix(XUiC_LootWindow __instance, ref string _value, string _bindingName, ref bool __result)
+    {
+        switch (_bindingName)
+        {
+            case "bs_is_player_storage_open":
+                _value = WindowStateManager.IsStorageContainerOpen() ? "true" : "false";
+                __result = true;
+                return false; // Skip original method
+        }
+
+        return true; // Run original method for other bindings
     }
 }
