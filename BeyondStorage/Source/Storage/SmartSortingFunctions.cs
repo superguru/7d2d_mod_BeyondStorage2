@@ -167,10 +167,10 @@ public class SmartSortingFunctions
         var state = new PushProcessingState();
 
         // First fill up existing partial slots as at the start of the operation
-        PushSourceItemsToTarget(source, targets, state, allowPushtoEmpty: false);
+        PushSourceItemsToTarget(source, targets, state, allowPushToEmpty: false);
 
         // Then fill up any empty slots, and any new partial slots that are created when partially filling those empty slots
-        PushSourceItemsToTarget(source, targets, state, allowPushtoEmpty: true);
+        PushSourceItemsToTarget(source, targets, state, allowPushToEmpty: true);
 
 #if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: {state}"); // Log the results
@@ -181,7 +181,7 @@ public class SmartSortingFunctions
         UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
     }
 
-    private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, PushProcessingState state, bool allowPushtoEmpty) where T : class where S : class
+    private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, PushProcessingState state, bool allowPushToEmpty) where T : class where S : class
     {
         const string d_MethodName = nameof(PushSourceItemsToTarget);
 
@@ -218,21 +218,21 @@ public class SmartSortingFunctions
                 }
 
                 var partialSlots = target.GetPartialSlotsFor(sourceSlot);
-                var emptySlots = allowPushtoEmpty ? target.GetEmptySlotsFor(sourceSlot) : [];
+                var emptySlots = allowPushToEmpty ? target.GetEmptySlotsFor(sourceSlot) : [];
 
                 while ((sourceSlotRemaining > 0) && (partialSlots.Count > 0 || emptySlots.Count > 0))
                 {
                     // Try to transfer to any new partial slots that may have opened up after previous transfers in this loop
                     TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, state, ref sourceSlotRemaining);
 #if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after partial slot transfer to target container {target.GetTargetName()}");
+                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after transfer to target container partial slot {target.GetTargetName()}");
 #endif
                     if (sourceSlotRemaining > 0)
                     {
                         // If there are still items remaining, try to transfer to empty slots
                         TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, state, ref sourceSlotRemaining);
 #if DEBUG
-                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after empty slot transfer to target container {target.GetTargetName()}");
+                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after transfer to target container empty slot {target.GetTargetName()}");
 #endif
                         // At this point, there might be less empty slots, and more partial slots
                     }
