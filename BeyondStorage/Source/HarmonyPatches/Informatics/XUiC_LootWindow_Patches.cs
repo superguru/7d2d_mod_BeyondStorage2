@@ -128,21 +128,28 @@ internal static class XUiC_LootWindow_Patches
 #endif
         }
 
+        EntityDrone drone = null;
         if (!isStorage)
         {
-            if (WindowStateManager.IsDroneWindow(tileEntity, out string matchedTypeName, out string reason))
+            if (WindowStateManager.IsDroneWindow(tileEntity, out drone, out string matchedTypeName, out string reason))
             {
                 isStorage = true;
 #if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for drone. Reason: {reason}");
+                ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
 #endif
             }
         }
 
-        WindowStateManager.OnStorageContainerWindowOpened(__instance, isStorage);
+        // Last try: Cehck for player storage, for example player crafted desk safes, refrigirators, lockers, etc.
+        if (!isStorage)
+        {
+            isStorage = tileEntity.bPlayerStorage;
+        }
+
+        WindowStateManager.OnStorageContainerWindowOpened(__instance, isStorage, drone);
 
 #if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for player storage: {isStorage}, te {tileEntity}");
+        ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
 #endif
     }
 

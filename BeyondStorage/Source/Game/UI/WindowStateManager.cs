@@ -14,6 +14,7 @@ public static class WindowStateManager
 
     private static XUiC_LootWindow s_lootWindowInstance = null;
     private static bool s_isStorageLootWindowOpen = false;
+    private static EntityDrone s_droneForWindow;
     private static readonly object s_lootLockObject = new();
 
     private static XUiC_WorkstationWindowGroup s_workstationWindowInstance = null;
@@ -127,6 +128,14 @@ public static class WindowStateManager
         }
     }
 
+    public static EntityDrone GetDroneForOpenStorageContainer()
+    {
+        lock (s_lootLockObject)
+        {
+            return s_isStorageLootWindowOpen ? s_droneForWindow : null;
+        }
+    }
+
     /// <summary>
     /// Gets the currently active storage container window instance
     /// </summary>
@@ -140,24 +149,12 @@ public static class WindowStateManager
     }
 
     /// <summary>
-    /// Checks if the specified storage container window is the currently active one
-    /// </summary>
-    /// <param name="window">The window to check</param>
-    /// <returns>True if the window is the currently active storage container window</returns>
-    public static bool IsCurrentlyActiveStorageContainerWindow(XUiC_LootWindow window)
-    {
-        lock (s_lootLockObject)
-        {
-            return s_isStorageLootWindowOpen && (s_lootWindowInstance == window);
-        }
-    }
-
-    /// <summary>
     /// Called when a storage container window opens
     /// </summary>
     /// <param name="window">The storage container window that opened</param>
     /// <param name="isStorage">True if this is a storage container (not a random world loot container)</param>
-    internal static void OnStorageContainerWindowOpened(XUiC_LootWindow window, bool isStorage)
+    /// <param name="drone">The drone associated with the storage container, if any</param>
+    internal static void OnStorageContainerWindowOpened(XUiC_LootWindow window, bool isStorage, EntityDrone drone)
     {
         lock (s_lootLockObject)
         {
@@ -167,10 +164,12 @@ public static class WindowStateManager
                 Log.Warning($"[WindowStateManager] Storage container window opened while another was already tracked. Resetting state. Previous: {s_lootWindowInstance?.GetType().Name}, New: {window?.GetType().Name}");
                 s_isStorageLootWindowOpen = false;
                 s_lootWindowInstance = null;
+                s_droneForWindow = null;
             }
 
             s_lootWindowInstance = window;
             s_isStorageLootWindowOpen = isStorage;
+            s_droneForWindow = drone;
         }
     }
 
@@ -187,6 +186,7 @@ public static class WindowStateManager
             {
                 s_lootWindowInstance = null;
                 s_isStorageLootWindowOpen = false;
+                s_droneForWindow = null;
             }
             else if (s_lootWindowInstance != null)
             {
@@ -289,7 +289,7 @@ public static class WindowStateManager
     /// <returns>True if the tile entity is a drone; otherwise, false</returns>
     public static bool IsDroneWindow(ITileEntity tileEntity)
     {
-        return IsDroneWindow(tileEntity, out _, out _);
+        return IsDroneWindow(tileEntity, out _, out _, out _);
     }
 
     /// <summary>
@@ -300,10 +300,11 @@ public static class WindowStateManager
     /// <param name="matchedTypeName">Output parameter for the matched type name (currently unused)</param>
     /// <param name="matchReason">Output parameter describing why the check succeeded or failed</param>
     /// <returns>True if the tile entity is a drone; otherwise, false</returns>
-    public static bool IsDroneWindow(ITileEntity tileEntity, out string matchedTypeName, out string matchReason)
+    public static bool IsDroneWindow(ITileEntity tileEntity, out EntityDrone drone, out string matchedTypeName, out string matchReason)
     {
         matchedTypeName = string.Empty;
         matchReason = string.Empty;
+        drone = null;
 
         if (tileEntity == null)
         {
@@ -319,7 +320,8 @@ public static class WindowStateManager
         }
 
         var entityId = tileEntity.EntityId;
-        if (drones.Any(drone => drone.EntityId == entityId))
+        drone = drones.FirstOrDefault(d => d.EntityId == entityId);
+        if (drone != null)
         {
             matchReason = "Matching entity id in active drone list";
             return true;
