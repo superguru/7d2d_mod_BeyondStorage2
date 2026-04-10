@@ -49,7 +49,37 @@ public class SmartSortingFunctions
             return;
         }
 
+        var drone = WindowStateManager.GetDroneForOpenStorageContainer();
+        if (drone == null)
+        {
+            SmartPushFromPlayerCreatedStorage(context, lootable);
+        }
+        else
+        {
+            SmartPushFromDroneStorage(context, drone);
+        }
+
+    }
+
+    private static void SmartPushFromPlayerCreatedStorage(StorageContext context, ITileEntityLootable lootable)
+    {
+#if DEBUG
+        const string d_MethodName = nameof(SmartPushFromPlayerCreatedStorage);
+        ModLogger.DebugLog($"{d_MethodName}: Performing smart push from player created storage");
+#endif
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
+        var targets = context.GetClosestTargetContainers();
+
+        PerformSmartPush(context, source, targets);
+    }
+
+    private static void SmartPushFromDroneStorage(StorageContext context, EntityDrone drone)
+    {
+#if DEBUG
+        const string d_MethodName = nameof(SmartPushFromDroneStorage);
+        ModLogger.DebugLog($"{d_MethodName}: Performing smart push from drone storage");
+#endif
+        var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
         var targets = context.GetClosestTargetContainers();
 
         PerformSmartPush(context, source, targets);
@@ -139,7 +169,7 @@ public class SmartSortingFunctions
         // First fill up existing partial slots as at the start of the operation
         PushSourceItemsToTarget(source, targets, allowPushtoEmpty: false);
 
-        // Then fill up any empty slots, and any new partial slots that are created when partially filling these empty slots
+        // Then fill up any empty slots, and any new partial slots that are created when partially filling those empty slots
         PushSourceItemsToTarget(source, targets, allowPushtoEmpty: true);
 
         UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
