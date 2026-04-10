@@ -246,6 +246,11 @@ public sealed class StorageContext
     #endregion
 
     #region User Actions and Interactions
+    internal void ShowLocalPlayerNotification(string localisationKey, params object[] formatArgs)
+    {
+        ShowLocalPlayerNotification(localisationKey, null, formatArgs);
+    }
+
     internal void ShowLocalPlayerNotification(string localisationKey, string alertSound, params object[] formatArgs)
     {
         const string d_MethodName = nameof(ShowLocalPlayerNotification);

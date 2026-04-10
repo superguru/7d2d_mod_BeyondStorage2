@@ -52,7 +52,8 @@ public static class EntityHandler
             var displayname = cachedPlayerName.DisplayName;
             if (!string.IsNullOrEmpty(displayname))
             {
-                name = $"[007F0E]{displayname}[-]";
+                //name = $"[007F0E]{displayname}[-]";  // decorated version with green color
+                name = displayname;
             }
         }
 

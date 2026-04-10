@@ -164,18 +164,24 @@ public class SmartSortingFunctions
             return;
         }
 
-        context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", null, source.GetName(), targets.Count);
+        var state = new PushProcessingState();
 
         // First fill up existing partial slots as at the start of the operation
-        PushSourceItemsToTarget(source, targets, allowPushtoEmpty: false);
+        PushSourceItemsToTarget(source, targets, state, allowPushtoEmpty: false);
 
         // Then fill up any empty slots, and any new partial slots that are created when partially filling those empty slots
-        PushSourceItemsToTarget(source, targets, allowPushtoEmpty: true);
+        PushSourceItemsToTarget(source, targets, state, allowPushtoEmpty: true);
+
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: {state}"); // Log the results
+#endif
+
+        context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", state.TotalItemsMoved, source.GetName(), state.TargetCount);
 
         UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
     }
 
-    private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, bool allowPushtoEmpty) where T : class where S : class
+    private static void PushSourceItemsToTarget<T, S>(StorageSourceAdapter<T> source, IReadOnlyList<StorageTargetAdapter<S>> targets, PushProcessingState state, bool allowPushtoEmpty) where T : class where S : class
     {
         const string d_MethodName = nameof(PushSourceItemsToTarget);
 
@@ -217,16 +223,16 @@ public class SmartSortingFunctions
                 while ((sourceSlotRemaining > 0) && (partialSlots.Count > 0 || emptySlots.Count > 0))
                 {
                     // Try to transfer to any new partial slots that may have opened up after previous transfers in this loop
-                    TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, ref sourceSlotRemaining);
+                    TransferToTargetSlots(d_MethodName, source, sourceSlot, target, partialSlots, state, ref sourceSlotRemaining);
 #if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after partial slot transfer to target containerXX {target.GetTargetName()}");
+                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after partial slot transfer to target container {target.GetTargetName()}");
 #endif
                     if (sourceSlotRemaining > 0)
                     {
                         // If there are still items remaining, try to transfer to empty slots
-                        TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, ref sourceSlotRemaining);
+                        TransferToTargetSlots(d_MethodName, source, sourceSlot, target, emptySlots, state, ref sourceSlotRemaining);
 #if DEBUG
-                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after empty slot transfer to target containerXX {target.GetTargetName()}");
+                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after empty slot transfer to target container {target.GetTargetName()}");
 #endif
                         // At this point, there might be less empty slots, and more partial slots
                     }
@@ -235,7 +241,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void TransferToTargetSlots<T, S>(string methodName, StorageSourceAdapter<T> source, ItemStack sourceSlot, StorageTargetAdapter<S> target, IList<ItemStack> targetSlots, ref int sourceSlotRemaining) where T : class where S : class
+    private static void TransferToTargetSlots<T, S>(string methodName, StorageSourceAdapter<T> source, ItemStack sourceSlot, StorageTargetAdapter<S> target, IList<ItemStack> targetSlots, PushProcessingState state, ref int sourceSlotRemaining) where T : class where S : class
     {
         const int FIRST_SLOT = 0;
 
@@ -258,6 +264,7 @@ public class SmartSortingFunctions
         {
             source.MarkModified();
             target.MarkModified();
+            state.RecordTransfer(target, transferredToTarget);
         }
     }
 
