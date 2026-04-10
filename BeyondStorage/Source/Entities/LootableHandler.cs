@@ -224,7 +224,7 @@ public static class LootableHandler
             if (EntityNameCache.TryGetName(signable, out string cachedName))
             {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for signable");
+                //ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for signable");
 #endif
                 return cachedName;
             }
@@ -234,7 +234,7 @@ public static class LootableHandler
             {
                 name = authoredText.Text;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Found signed text '{name}' for signable");
+                //ModLogger.DebugLog($"{d_MethodName}: Found signed text '{name}' for signable");
 #endif
                 EntityNameCache.CacheName(signable, name);
                 return name;

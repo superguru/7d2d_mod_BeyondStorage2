@@ -25,7 +25,7 @@ public static class WorkstationHandler
         if (EntityNameCache.TryGetName(workstation, out string cachedName))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for workstation at {workstation.ToWorldPos()}");
+            //ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for workstation at {workstation.ToWorldPos()}");
 #endif
             return cachedName;
         }
@@ -33,7 +33,7 @@ public static class WorkstationHandler
         name = workstation.block.GetLocalizedBlockName();
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for workstation at {workstation.ToWorldPos()}");
+        //ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for workstation at {workstation.ToWorldPos()}");
 #endif
         EntityNameCache.CacheName(workstation, name);
 
@@ -46,7 +46,7 @@ public static class WorkstationHandler
     public static void MarkWorkstationModified(TileEntityWorkstation workstation)
     {
         const string d_MethodName = nameof(MarkWorkstationModified);
-        ModLogger.DebugLog($"{d_MethodName}: Marking Workstation '{workstation?.GetType().Name}' as modified");
+        //ModLogger.DebugLog($"{d_MethodName}: Marking Workstation '{workstation?.GetType().Name}' as modified");
 
         if (workstation == null)
         {
@@ -69,7 +69,7 @@ public static class WorkstationHandler
             ? workstationData.WorkstationWindow
             : $"workstation_{blockName}";
 
-        ModLogger.DebugLog($"{d_MethodName}: blockName '{blockName}', windowName '{windowName}'");
+        //ModLogger.DebugLog($"{d_MethodName}: blockName '{blockName}', windowName '{windowName}'");
 
         var player = GameManager.Instance.World.GetPrimaryPlayer();
 
@@ -97,7 +97,7 @@ public static class WorkstationHandler
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Syncing UI from TE for '{windowName}'");
+        //ModLogger.DebugLog($"{d_MethodName}: Syncing UI from TE for '{windowName}'");
 #endif
         workstationWindowGroup.syncUIfromTE();
     }

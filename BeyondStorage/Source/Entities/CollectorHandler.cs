@@ -25,7 +25,7 @@ public static class CollectorHandler
         if (EntityNameCache.TryGetName(collector, out string cachedName))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for collector");
+            //ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for collector");
 #endif
             return cachedName;
         }
@@ -42,7 +42,7 @@ public static class CollectorHandler
             name = block.GetLocalizedBlockName();
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for collector");
+            //ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for collector");
 #endif
         }
 

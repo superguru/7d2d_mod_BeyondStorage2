@@ -9,6 +9,7 @@ namespace BeyondStorage.Scripts.Storage;
 internal class PushProcessingState
 {
     private readonly HashSet<object> _affectedTargets = [];
+    private readonly HashSet<ItemStack> _affectedSourceStacks = [];
 
     /// <summary>
     /// Gets the number of distinct target containers that received items during this push operation.
@@ -16,24 +17,31 @@ internal class PushProcessingState
     public int TargetCount => _affectedTargets.Count;
 
     /// <summary>
-    /// Gets the total number of items moved from the source during this push operation.
+    /// Gets the number of distinct source item stacks that were transferred from (partially or fully).
     /// </summary>
-    public int TotalItemsMoved { get; set; } = 0;
+    public int TotalStackCount => _affectedSourceStacks.Count;
 
     /// <summary>
-    /// Records that items were transferred to a specific target.
+    /// Gets the total number of items moved from the source during this push operation.
     /// </summary>
+    public int TotalItemCount { get; set; } = 0;
+
+    /// <summary>
+    /// Records that items were transferred from a source stack to a target.
+    /// </summary>
+    /// <param name="sourceStack">The source item stack that items were transferred from</param>
     /// <param name="target">The target container that received items</param>
-    /// <param name="itemCount">The number of items transferred to this target</param>
-    internal void RecordTransfer<T>(StorageTargetAdapter<T> target, int itemCount) where T : class
+    /// <param name="itemCount">The number of items transferred</param>
+    internal void RecordTransfer<T>(ItemStack sourceStack, StorageTargetAdapter<T> target, int itemCount) where T : class
     {
-        if (target == null || itemCount <= 0)
+        if (sourceStack == null || target == null || itemCount <= 0)
         {
             return;
         }
 
-        TotalItemsMoved += itemCount;
+        TotalItemCount += itemCount;
         _ = _affectedTargets.Add(target);
+        _ = _affectedSourceStacks.Add(sourceStack);
     }
 
     /// <summary>
@@ -42,8 +50,9 @@ internal class PushProcessingState
     /// </summary>
     internal void Reset()
     {
-        TotalItemsMoved = 0;
+        TotalItemCount = 0;
         _affectedTargets.Clear();
+        _affectedSourceStacks.Clear();
     }
 
     /// <summary>
@@ -52,6 +61,6 @@ internal class PushProcessingState
     /// <returns>A formatted string describing the operation results</returns>
     public override string ToString()
     {
-        return $"Moved {TotalItemsMoved} items to {TargetCount} target(s)";
+        return $"Moved {TotalItemCount} item(s) from {TotalStackCount} source stack(s) to {TargetCount} target(s)";
     }
 }

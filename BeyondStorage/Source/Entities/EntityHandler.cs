@@ -23,7 +23,7 @@ public static class EntityHandler
         if (EntityNameCache.TryGetName(entity, out string cachedName))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for entity {entity.entityId}");
+            //ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for entity {entity.entityId}");
 #endif
             return cachedName;
         }
@@ -35,7 +35,7 @@ public static class EntityHandler
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for entity {entity.entityId} ({entity.GetType().Name})");
+        //ModLogger.DebugLog($"{d_MethodName}: Resolved and caching name '{name}' for entity {entity.entityId} ({entity.GetType().Name})");
 #endif
 
         EntityNameCache.CacheName(entity, name);

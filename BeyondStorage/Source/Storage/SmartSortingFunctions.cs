@@ -176,7 +176,7 @@ public class SmartSortingFunctions
         ModLogger.DebugLog($"{d_MethodName}: {state}"); // Log the results
 #endif
 
-        context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", state.TotalItemsMoved, source.GetName(), state.TargetCount);
+        context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", state.TotalStackCount, source.GetName(), state.TargetCount);
 
         UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
     }
@@ -197,7 +197,7 @@ public class SmartSortingFunctions
             if (maxStackSize <= 0)
             {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Source slot {i} has invalid max stack size {maxStackSize}, skipping");
+                ModLogger.DebugLog($"{d_MethodName}: Source slot {i} in {source.GetName()} has invalid max stack size {maxStackSize}, skipping");
 #endif
                 continue;
             }
@@ -264,7 +264,7 @@ public class SmartSortingFunctions
         {
             source.MarkModified();
             target.MarkModified();
-            state.RecordTransfer(target, transferredToTarget);
+            state.RecordTransfer(sourceSlot, target, transferredToTarget);
         }
     }
 
