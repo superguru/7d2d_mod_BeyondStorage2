@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Handles finding and processing items from entity storage sources (vehicles and drones).

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 public static class CollectionHelper
 {

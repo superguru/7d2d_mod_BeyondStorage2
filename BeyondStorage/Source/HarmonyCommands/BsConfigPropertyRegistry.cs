@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.HarmonyCommands;
 

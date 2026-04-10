@@ -1,15 +1,15 @@
 ﻿using System.Reflection;
 using BeyondStorage.HarmonyPatches.Item;
-using BeyondStorage.Scripts.Caching;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Game.Functions;
-using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Game.Ranged;
-using BeyondStorage.Scripts.Game.Recipe;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Multiplayer;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Caching;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game.Functions;
+using BeyondStorage.Source.Game.Item;
+using BeyondStorage.Source.Game.Ranged;
+using BeyondStorage.Source.Game.Recipe;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Multiplayer;
+using BeyondStorage.Source.Storage;
 using HarmonyLib;
 
 #if DEBUG

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 /// <summary>
 /// Analyzes drag and drop system state for XUiC_ItemStack operations.

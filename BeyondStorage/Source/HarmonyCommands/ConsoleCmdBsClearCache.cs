@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 using BeyondStorage.Source.HarmonyCommands;
 
 public class ConsoleCmdBsClearCache : ConsoleCmdAbstract

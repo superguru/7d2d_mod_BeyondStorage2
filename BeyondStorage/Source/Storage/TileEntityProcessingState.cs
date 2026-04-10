@@ -1,8 +1,8 @@
-﻿using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Game;
-using BeyondStorage.Scripts.Multiplayer;
+﻿using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Game;
+using BeyondStorage.Source.Multiplayer;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Helper class to encapsulate tile entity processing state and reduce parameter passing.

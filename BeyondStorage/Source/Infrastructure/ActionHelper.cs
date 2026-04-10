@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace BeyondStorage.Scripts.Infrastructure;
+namespace BeyondStorage.Source.Infrastructure;
 internal static class ActionHelper
 {
     internal static void SetTimeout(Action action, TimeSpan delay)

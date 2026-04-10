@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace BeyondStorage.Scripts.Infrastructure;
+namespace BeyondStorage.Source.Infrastructure;
 
 /// <summary>
 /// Thread-safe class for tracking method call statistics including call count, total time, and average time.

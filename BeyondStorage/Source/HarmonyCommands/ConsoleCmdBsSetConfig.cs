@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.HarmonyCommands;
 
 public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract

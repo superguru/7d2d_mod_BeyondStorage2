@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.UI;
+namespace BeyondStorage.Source.UI;
 
 /// <summary>
 /// Utility class for refreshing UI components when storage changes affect game state.

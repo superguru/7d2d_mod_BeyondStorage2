@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Game.Functions;
+﻿using BeyondStorage.Source.Game.Functions;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Functions;

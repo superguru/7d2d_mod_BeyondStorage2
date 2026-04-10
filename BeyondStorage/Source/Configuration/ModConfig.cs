@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Multiplayer;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Multiplayer;
 using Newtonsoft.Json;
 
 #if DEBUG
 using System.Reflection;
 #endif
 
-namespace BeyondStorage.Scripts.Configuration;
+namespace BeyondStorage.Source.Configuration;
 
 public static class ModConfig
 {

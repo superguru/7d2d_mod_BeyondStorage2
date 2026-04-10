@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Game.Recipe;
+﻿using BeyondStorage.Source.Game.Recipe;
 using HarmonyLib;
 
 

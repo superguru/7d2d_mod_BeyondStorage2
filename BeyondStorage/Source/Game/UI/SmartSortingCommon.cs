@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Game.UI;
 

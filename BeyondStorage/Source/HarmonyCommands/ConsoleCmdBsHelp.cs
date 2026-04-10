@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.HarmonyCommands;
 
 public class ConsoleCmdBsHelp : ConsoleCmdAbstract

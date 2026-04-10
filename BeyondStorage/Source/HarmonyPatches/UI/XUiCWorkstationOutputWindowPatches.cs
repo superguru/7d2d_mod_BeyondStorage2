@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 

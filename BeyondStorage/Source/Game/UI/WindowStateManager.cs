@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 

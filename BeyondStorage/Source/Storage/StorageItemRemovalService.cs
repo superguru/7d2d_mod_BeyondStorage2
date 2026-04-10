@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Caching;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Caching;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Service responsible for removing items from various storage sources.

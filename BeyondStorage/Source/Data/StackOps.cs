@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 /// <summary>
 /// Enum for stack operation types used for UI refresh triggers

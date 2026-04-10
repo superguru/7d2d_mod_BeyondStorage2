@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Game.Item;
+namespace BeyondStorage.Source.Game.Item;
 
 public static class ItemRepair
 {

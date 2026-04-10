@@ -1,7 +1,7 @@
 ﻿using System.Threading;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;

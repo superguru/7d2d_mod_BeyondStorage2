@@ -1,9 +1,9 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
-using BeyondStorage.Scripts.UI;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
+using BeyondStorage.Source.UI;
 using BeyondStorage.Source.Game.UI;
 
-namespace BeyondStorage.Scripts.Game.Recipe;
+namespace BeyondStorage.Source.Game.Recipe;
 
 public static class WorkstationRecipe
 {

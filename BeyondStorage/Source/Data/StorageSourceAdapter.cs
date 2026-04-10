@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 internal class StorageSourceAdapter<T> : IStorageSource where T : class
 {

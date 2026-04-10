@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.BugPatches;

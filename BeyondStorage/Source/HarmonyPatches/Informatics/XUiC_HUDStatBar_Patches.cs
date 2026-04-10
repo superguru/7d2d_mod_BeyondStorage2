@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
-using BeyondStorage.Scripts.Game.Ranged;
-using BeyondStorage.Scripts.Harmony;
+using BeyondStorage.Source.Game.Ranged;
+using BeyondStorage.Source.Harmony;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;

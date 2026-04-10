@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 /// <summary>
 /// Factory for creating <see cref="StorageSourceAdapter{T}"/> instances from a <see cref="StorageContext"/>.

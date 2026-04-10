@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using BeyondStorage.Scripts.Multiplayer;
+using BeyondStorage.Source.Multiplayer;
 using HarmonyLib;
 
 #if DEBUG
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Infrastructure;
 #endif
 
 namespace BeyondStorage.HarmonyPatches.Multiplayer;

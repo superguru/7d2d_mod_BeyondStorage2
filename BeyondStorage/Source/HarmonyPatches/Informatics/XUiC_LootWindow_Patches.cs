@@ -1,7 +1,7 @@
 ﻿using System.Linq;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.UI;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.UI;
 using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 

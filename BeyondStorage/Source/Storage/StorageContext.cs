@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Game;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 public sealed class StorageContext
 {

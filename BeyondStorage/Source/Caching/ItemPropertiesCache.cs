@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Caching;
+namespace BeyondStorage.Source.Caching;
 
 /// <summary>
 /// Caches frequently accessed item properties to improve performance in item processing loops.

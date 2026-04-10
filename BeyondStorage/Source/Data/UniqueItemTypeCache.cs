@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 internal class UniqueItemTypeCache
 {
     private readonly Dictionary<int, UniqueItemTypes> _filterCache = [];

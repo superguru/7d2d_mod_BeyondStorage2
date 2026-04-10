@@ -1,11 +1,11 @@
 ﻿using System;
-using BeyondStorage.Scripts.Caching;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Data;
-using BeyondStorage.Scripts.Game;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Caching;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Factory responsible for creating and caching StorageContext instances.

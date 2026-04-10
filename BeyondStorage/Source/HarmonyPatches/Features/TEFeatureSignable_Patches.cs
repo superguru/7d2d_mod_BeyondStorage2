@@ -1,4 +1,4 @@
-﻿using BeyondStorage.Scripts.Entities;
+﻿using BeyondStorage.Source.Entities;
 using HarmonyLib;
 
 namespace BeyondStorage.Source.HarmonyPatches.Features;

@@ -1,5 +1,5 @@
-﻿using BeyondStorage.Scripts.Game.Item;
-using BeyondStorage.Scripts.Infrastructure;
+﻿using BeyondStorage.Source.Game.Item;
+using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 using UnityEngine;
 using static ItemActionTextureBlock;

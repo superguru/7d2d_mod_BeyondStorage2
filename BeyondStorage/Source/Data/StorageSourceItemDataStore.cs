@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Scripts.Diagnostics;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Data;
+namespace BeyondStorage.Source.Data;
 
 internal class StorageSourceItemDataStore
 {

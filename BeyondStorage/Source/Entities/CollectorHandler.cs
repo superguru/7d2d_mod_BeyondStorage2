@@ -1,7 +1,7 @@
 ﻿using System.Linq;
-using BeyondStorage.Scripts.Infrastructure;
+using BeyondStorage.Source.Infrastructure;
 
-namespace BeyondStorage.Scripts.Entities;
+namespace BeyondStorage.Source.Entities;
 
 public static class CollectorHandler
 {

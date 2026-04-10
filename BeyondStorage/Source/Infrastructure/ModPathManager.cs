@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace BeyondStorage.Scripts.Infrastructure;
+namespace BeyondStorage.Source.Infrastructure;
 
 internal static class ModPathManager
 {

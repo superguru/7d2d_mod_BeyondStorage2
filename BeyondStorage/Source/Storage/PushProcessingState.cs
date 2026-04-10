@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Scripts.Data;
+using BeyondStorage.Source.Data;
 
-namespace BeyondStorage.Scripts.Storage;
+namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Tracks the state of a smart push operation, including items transferred and targets affected.

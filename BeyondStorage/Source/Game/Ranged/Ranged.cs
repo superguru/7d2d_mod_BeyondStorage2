@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Game.Ranged;
+namespace BeyondStorage.Source.Game.Ranged;
 
 public static class Ranged
 {

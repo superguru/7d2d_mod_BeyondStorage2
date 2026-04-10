@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Game.Block;
+namespace BeyondStorage.Source.Game.Block;
 
 public class BlockRepair
 {

@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using BeyondStorage.Scripts.Game.Item;
+using BeyondStorage.Source.Game.Item;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;

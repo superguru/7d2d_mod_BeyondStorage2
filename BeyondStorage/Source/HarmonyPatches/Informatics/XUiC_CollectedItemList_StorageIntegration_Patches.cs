@@ -1,5 +1,5 @@
 ﻿using BeyondStorage.HarmonyPatches.Functions;
-using BeyondStorage.Scripts.Data;
+using BeyondStorage.Source.Data;
 using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 

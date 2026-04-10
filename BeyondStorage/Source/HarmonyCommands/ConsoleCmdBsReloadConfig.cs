@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Configuration;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Configuration;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 using BeyondStorage.Source.HarmonyCommands;
 
 public class ConsoleCmdBsReloadConfig : ConsoleCmdAbstract

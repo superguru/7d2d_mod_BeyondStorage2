@@ -1,5 +1,5 @@
 ﻿using Audio;
-using BeyondStorage.Scripts.Game.Vehicle;
+using BeyondStorage.Source.Game.Vehicle;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Vehicle;

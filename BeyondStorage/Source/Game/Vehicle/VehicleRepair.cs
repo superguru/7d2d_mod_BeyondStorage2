@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
-namespace BeyondStorage.Scripts.Game.Vehicle;
+namespace BeyondStorage.Source.Game.Vehicle;
 
 public static class VehicleRepair
 {

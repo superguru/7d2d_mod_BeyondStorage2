@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
-using BeyondStorage.Scripts.Game.PowerSource;
-using BeyondStorage.Scripts.Harmony;
+using BeyondStorage.Source.Game.PowerSource;
+using BeyondStorage.Source.Harmony;
 using HarmonyLib;
 using UniLinq;
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BeyondStorage.Scripts.Infrastructure;
+namespace BeyondStorage.Source.Infrastructure;
 
 public static class ModInfo
 {

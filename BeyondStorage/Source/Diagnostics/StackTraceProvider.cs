@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BeyondStorage.Scripts.Diagnostics;
+namespace BeyondStorage.Source.Diagnostics;
 
 public static class StackTraceProvider
 {

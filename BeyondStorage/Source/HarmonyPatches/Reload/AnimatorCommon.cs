@@ -1,5 +1,5 @@
 ﻿using System;
-using BeyondStorage.Scripts.Game.Ranged;
+using BeyondStorage.Source.Game.Ranged;
 
 namespace BeyondStorage.HarmonyPatches.Reload;
 

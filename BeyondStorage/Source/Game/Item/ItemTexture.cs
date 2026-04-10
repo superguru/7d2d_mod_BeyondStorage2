@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Scripts.Infrastructure;
-using BeyondStorage.Scripts.Storage;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 using UnityEngine;
 
-namespace BeyondStorage.Scripts.Game.Item;
+namespace BeyondStorage.Source.Game.Item;
 
 /// <summary>
 /// Provides static methods for managing paint/texture block operations with storage integration.
