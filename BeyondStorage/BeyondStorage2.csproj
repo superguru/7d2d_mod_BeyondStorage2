@@ -200,6 +200,7 @@
     <Compile Include="Source\Data\UniqueItemTypes.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ModPackage\Config\loadingscreen.xml" />
     <Content Include="ModPackage\Config\Localization.txt" />
     <Content Include="ModPackage\Config\XUi\windows.xml" />
     <Content Include="ModPackage\ModInfo.xml" />
