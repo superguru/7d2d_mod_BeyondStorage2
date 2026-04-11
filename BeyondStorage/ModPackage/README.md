@@ -6,13 +6,13 @@ Use resources from all of those when you refuel, paint, repair, pick locks, craf
 
 If you can do it from your player inventory, you can now also do it from your extended inventory.
 
+All support is via [Discord at GAZ World](https://discord.gg/hAF5T4P9pE)
+<!-- [size=5][color=#ff0000][BBCode][/color] [url=https://discord.gg/hAF5T4P9pE]Support is ONLY on Discord at GAZ World[/url] [color=#ff0000][/BBCode][/color][/size] -->
+
 [quote]This README is a mix of BBCode and Markdown. You might read it more easily on [url=https://github.com/superguru/7d2d_mod_BeyondStorage2/blob/master/BeyondStorage/README.md]GitHub[/url].[/quote]
 
 This is a [7 Days to Die](https://store.steampowered.com/app/251570/7_Days_to_Die) mod.
 <!-- [color=#ff0000][BBCode][/color] [url=https://store.steampowered.com/app/251570/7_Days_to_Die]7 Days to Die on Steam[/url] [color=#ff0000][/BBCode][/color] -->
-
-All support is via [Discord at GAZ World](https://discord.gg/hAF5T4P9pE)
-<!-- [color=#ff0000][BBCode][/color] [url=https://discord.gg/hAF5T4P9pE]Discord at GAZ World[/url] [color=#ff0000][/BBCode][/color] -->
 
 See the media attached to the the [Nexus Mods Beyond Storage 2 mod page](https://www.nexusmods.com/7daystodie/mods/7809?tab=images) for some graphical illustrations of what the mod can be used for.
 <!-- [color=#ff0000][BBCode][/color] [url=https://www.nexusmods.com/7daystodie/mods/7809?tab=images]Nexus Mods Beyond Storage 2 mod page[/url][color=#ff0000][/BBCode][/color] -->
@@ -191,7 +191,7 @@ Just pick one you like and use that.
 
 [url=https://www.nexusmods.com/7daystodie/mods/2196?file_id=28586]CraftFromContainers[/url] by aedenthorn implemented this for later versions of the game, as Undead Legacy was not available for post A21 at the time. The source code is at https://github.com/aedenthorn/7D2DMods.
 
-[url=https://www.nexusmods.com/7daystodie/mods/5087]1.0 Beyond Storage[/url] was refactored and updated for 7 Days to Die v1 by unv-annihilator and extended this idea, based on the code from aedenthorn, into the addition of vehicles to pull items from. The code quality and stability of this mod high. See [url=https://github.com/unv-annihilator/7D2D_Mods/tree/main]https://github.com/unv-annihilator/7D2D_Mods/tree/main[/url] for that fork.
+[url=https://www.nexusmods.com/7daystodie/mods/5087]1.0 Beyond Storage[/url] was refactored and updated for 7 Days to Die v1 by unv-annihilator and extended this idea, based on the code from aedenthorn. This brought the addition of vehicles to pull items from. The code quality and stability of this mod high. See [url=https://github.com/unv-annihilator/7D2D_Mods/tree/main]https://github.com/unv-annihilator/7D2D_Mods/tree/main[/url] for that fork.
 
 [url=https://www.nexusmods.com/7daystodie/mods/7809]Beyond Storage 2[/url] added pulling from all conceivable sources, like drones, workstation outputs, dew collectors. Also added all inventory operations like paying for items at a trader, painting, lock picking. The mod also fixes many notification bugs from the original game, and all operations are seamless. Pushing items from any place you can pull from, in order to auto-sort items, was also added.
 
