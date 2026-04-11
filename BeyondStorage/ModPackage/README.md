@@ -117,11 +117,11 @@ If all Containers with the same kind of item are full, then you will have to cho
 
 |Command|Description|
 |:----|:----|
-|bshelp|List available commands with their descriptions|
-|bsclearcache|Invalidates cache and reloads items from storages|
-|bsreloadconfig|Reload the config as per the current config.json file (maybe you modified it in a text editor)|
-|bssetconfig|Change the value of a config property|
-|bsshowconfig|Displays the current active config settings|
+| bshelp | List available commands with their descriptions |
+| bsclearcache | Invalidates cache and reloads items from storages |
+| bsreloadconfig | Reload the config as per the current config.json file (maybe you modified it in a text editor) |
+| bssetconfig | Change the value of a config property |
+| bsshowconfig | Displays the current active config settings |
 
 
 ### ❄️Config file
@@ -130,13 +130,13 @@ The mod can also be configured by editing the `Mods/BeyondStorage2/config.json` 
 
 |Setting|Default|Description|
 |:----|:----|:----|
-|range|-1.0|Distance in metres to Pull from or Push to. Less than 0 means everything loaded by the game.|
-|pullFromDrones| true| |
-|pullFromCollectors| true| |
-|pullFromWorkstationOutputs| true| |
-|pullFromVehicleStorage| true| |
-|serverSyncConfig| true|Force clients to load the mod config settings from the server when a player connects|
-|isDebug|false|Logs additional information that might be useful for troubleshooting problems. You can generally leave this turned off.|
+| range | -1.0 | Distance in metres to Pull from or Push to. Less than 0 means everything loaded by the game. |
+| pullFromDrones | true | |
+| pullFromCollectors | true | |
+| pullFromWorkstationOutputs | true | |
+| pullFromVehicleStorage | true | |
+| serverSyncConfig | true |Force clients to load the mod config settings from the server when a player connects |
+| isDebug | false | Logs additional information that might be useful for troubleshooting problems. You can generally leave this turned off. |
 
 Any setting not listed here is either old, or otherwise is for mod development purposes. It's best to leave them alone.
 
