@@ -7,6 +7,7 @@
 Uploads/
 NexusFiles/
 Troubleshooting/
+ModPackage.WIP/
 
 # Code quality check files left from the code quality check Python scripts
 code_check_results*.txt
