@@ -130,7 +130,7 @@ The mod can also be configured by editing the `Mods/BeyondStorage2/config.json` 
 
 |Setting|Default|Description|
 |:----|:----|:----|
-|range|-1.0|Distance in metres to pull from or push to|
+|range|-1.0|Distance in metres to Pull from or Push to. Less than 0 means everything loaded by the game.|
 |pullFromDrones| true| |
 |pullFromCollectors| true| |
 |pullFromWorkstationOutputs| true| |
