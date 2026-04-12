@@ -10,6 +10,7 @@ internal class PushProcessingState
 {
     private readonly HashSet<object> _affectedTargets = [];
     private readonly HashSet<ItemStack> _affectedSourceStacks = [];
+    private readonly HashSet<int> _uniqueItems = [];
 
     /// <summary>
     /// Gets the number of distinct target containers that received items during this push operation.
@@ -20,6 +21,11 @@ internal class PushProcessingState
     /// Gets the number of distinct source item stacks that were transferred from (partially or fully).
     /// </summary>
     public int TotalStackCount => _affectedSourceStacks.Count;
+
+    /// <summary>
+    /// Gets the number of unique item types that were moved during this push operation.
+    /// </summary>
+    public int UniqueItemCount => _uniqueItems.Count;
 
     /// <summary>
     /// Gets the total number of items moved from the source during this push operation.
@@ -42,6 +48,11 @@ internal class PushProcessingState
         TotalItemCount += itemCount;
         _ = _affectedTargets.Add(target);
         _ = _affectedSourceStacks.Add(sourceStack);
+        var itemType = ItemX.ItemTypeOf(sourceStack);
+        if (itemType != UniqueItemTypes.EMPTY)
+        {
+            _ = _uniqueItems.Add(itemType);
+        }
     }
 
     /// <summary>
@@ -53,6 +64,7 @@ internal class PushProcessingState
         TotalItemCount = 0;
         _affectedTargets.Clear();
         _affectedSourceStacks.Clear();
+        _uniqueItems.Clear();
     }
 
     /// <summary>
@@ -61,6 +73,6 @@ internal class PushProcessingState
     /// <returns>A formatted string describing the operation results</returns>
     public override string ToString()
     {
-        return $"Moved {TotalItemCount} item(s) from {TotalStackCount} source stack(s) to {TargetCount} target(s)";
+        return $"Moved {TotalStackCount} stack(s) to {TargetCount} target(s), having {UniqueItemCount} item type(s) and {TotalItemCount} item(s)";
     }
 }
