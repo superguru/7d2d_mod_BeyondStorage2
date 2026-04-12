@@ -18,6 +18,7 @@ Deployment directories based on BuildTarget:
 - Release: <ProjectDir>/Uploads/_staging/<ModName>
 
 By default, only files that are newer in the source than in the target will be copied.
+Files matching ALWAYS_COPY_MASKS patterns are always copied regardless of modification time.
 
 Usage:
     python deploy_target_build.py <BuildTarget> <OutputDir> <ProjectDir>
@@ -34,12 +35,18 @@ import argparse
 import shutil
 import subprocess
 import zipfile
+import fnmatch
 from pathlib import Path
 from datetime import datetime
 
 
 # Configuration
 MOD_NAME = "BeyondStorage2"
+
+# File masks that should always be copied regardless of modification time
+ALWAYS_COPY_MASKS = [
+    "*.png"
+]
 
 
 def get_assembly_version_via_reflection(dll_path):
@@ -311,6 +318,7 @@ class DeploymentStats:
         self.files_up_to_date = 0
         self.files_failed = 0
         self.files_forced = 0
+        self.files_always_copy = 0
         self.assemblies_copied = 0
         self.assemblies_failed = 0
         self.directories_created = 0
@@ -328,6 +336,7 @@ class DeploymentStats:
         self.skipped_files = []
         self.failed_files = []
         self.forced_files = []
+        self.always_copy_files = []
         self.assembly_files = []
     
     def file_copied(self, source_file, target_file, file_size):
@@ -341,6 +350,12 @@ class DeploymentStats:
         self.files_forced += 1
         self.total_bytes_copied += file_size
         self.forced_files.append((source_file, target_file))
+    
+    def file_always_copy(self, source_file, target_file, file_size):
+        """Record a file that was copied due to always-copy mask"""
+        self.files_always_copy += 1
+        self.total_bytes_copied += file_size
+        self.always_copy_files.append((source_file, target_file))
     
     def assembly_copied(self, source_file, target_file, file_size):
         """Record a successful assembly file copy"""
@@ -397,9 +412,10 @@ class DeploymentStats:
         print("File Operations:")
         print(f"  [OK] Files copied (newer):       {self.files_copied}")
         print(f"  [>>] Files force-copied:         {self.files_forced}")
+        print(f"  [**] Files always-copied (mask): {self.files_always_copy}")
         print(f"  [==] Files skipped (up-to-date): {self.files_up_to_date}")
         print(f"  [ER] Files failed:               {self.files_failed}")
-        print(f"  [##] Total files processed:      {self.files_copied + self.files_forced + self.files_up_to_date + self.files_failed}")
+        print(f"  [##] Total files processed:      {self.files_copied + self.files_forced + self.files_always_copy + self.files_up_to_date + self.files_failed}")
         print()
         
         print("Directory Operations:")
@@ -439,18 +455,22 @@ class DeploymentStats:
             print()
         
         # Show copied files if any
-        all_copied = self.copied_files + self.forced_files
+        all_copied = self.copied_files + self.forced_files + self.always_copy_files
         if all_copied and len(all_copied) <= 20:
             print("Package files copied:")
             for source, target in self.copied_files:
                 print(f"  [OK] {os.path.basename(source)}")
             for source, target in self.forced_files:
                 print(f"  [>>] {os.path.basename(source)} (forced)")
+            for source, target in self.always_copy_files:
+                print(f"  [**] {os.path.basename(source)} (always-copy mask)")
             print()
         elif len(all_copied) > 20:
             print(f"Package files copied: {len(all_copied)} files (too many to list)")
             if self.files_forced > 0:
                 print(f"  ({self.files_forced} were force-copied)")
+            if self.files_always_copy > 0:
+                print(f"  ({self.files_always_copy} were always-copied due to mask)")
             print()
         
         # Show failed files if any
@@ -464,7 +484,7 @@ class DeploymentStats:
         # Overall status
         if self.has_errors():
             print("WARNING: Deployment completed with errors!")
-        elif (self.files_copied + self.files_forced + self.assemblies_copied) > 0 or self.zip_created:
+        elif (self.files_copied + self.files_forced + self.files_always_copy + self.assemblies_copied) > 0 or self.zip_created:
             print("SUCCESS: Deployment completed successfully!")
         elif self.files_up_to_date > 0:
             print("INFO: All files are up to date - no copying needed.")
@@ -575,7 +595,7 @@ def copy_assembly_files(output_dir, deploy_dir, build_target, stats):
 
 def should_copy_file(source_file, target_file, force_copy=False):
     """
-    Determine if a file should be copied based on modification time or force flag.
+    Determine if a file should be copied based on modification time, force flag, or always-copy masks.
     
     Args:
         source_file (str): Path to source file
@@ -583,31 +603,40 @@ def should_copy_file(source_file, target_file, force_copy=False):
         force_copy (bool): If True, always copy regardless of modification time
         
     Returns:
-        tuple: (should_copy, is_forced) where should_copy is bool and is_forced indicates if it's a forced copy
+        tuple: (should_copy, copy_reason) where should_copy is bool and copy_reason is 'forced', 'always', 'newer', or None
     """
+    # Check if file matches any always-copy mask
+    filename = os.path.basename(source_file)
+    for mask in ALWAYS_COPY_MASKS:
+        if fnmatch.fnmatch(filename, mask):
+            return True, 'always'
+    
     # If force_copy is True, always copy
     if force_copy:
-        return True, True
+        return True, 'forced'
     
     # If target doesn't exist, always copy
     if not os.path.exists(target_file):
-        return True, False
+        return True, 'newer'
     
     try:
         source_mtime = os.path.getmtime(source_file)
         target_mtime = os.path.getmtime(target_file)
         
         # Copy if source is newer than target
-        return source_mtime > target_mtime, False
+        if source_mtime > target_mtime:
+            return True, 'newer'
+        return False, None
     except OSError:
         # If we can't get modification times, err on the side of copying
-        return True, False
+        return True, 'newer'
 
 
 def copy_mod_package(source_dir, target_dir, stats, force_copy=False):
     """
     Recursively copy files and directories from source to target.
-    Only copies files that are newer in source than in target unless force_copy is True.
+    Only copies files that are newer in source than in target unless force_copy is True
+    or the file matches an always-copy mask.
     
     Args:
         source_dir (str): Source directory path (ModPackage)
@@ -636,7 +665,7 @@ def copy_mod_package(source_dir, target_dir, stats, force_copy=False):
             
             try:
                 # Check if file should be copied
-                should_copy, is_forced = should_copy_file(source_file, target_file, force_copy)
+                should_copy, copy_reason = should_copy_file(source_file, target_file, force_copy)
                 
                 if should_copy:
                     # Get file size before copying
@@ -647,10 +676,13 @@ def copy_mod_package(source_dir, target_dir, stats, force_copy=False):
                     
                     rel_source = os.path.relpath(source_file, source_dir)
                     
-                    if is_forced:
+                    if copy_reason == 'always':
+                        stats.file_always_copy(source_file, target_file, file_size)
+                        print(f"Always-copied (mask): {rel_source}")
+                    elif copy_reason == 'forced':
                         stats.file_forced(source_file, target_file, file_size)
                         print(f"Force-copied: {rel_source}")
-                    else:
+                    else:  # 'newer'
                         stats.file_copied(source_file, target_file, file_size)
                         print(f"Copied: {rel_source}")
                 else:
@@ -737,6 +769,7 @@ This script will:
 
 By default, only package files that are newer will be copied (incremental deployment).
 Assembly files are ALWAYS copied regardless of modification time or other flags.
+Files matching ALWAYS_COPY_MASKS patterns (e.g., *.png) are always copied.
 Use --force to copy all package files regardless of modification time.
 Use --clean to remove all existing files before copying.
 Use --no-pause to skip pausing on errors (default: pause on errors).
@@ -821,6 +854,8 @@ Use --no-pause to skip pausing on errors (default: pause on errors).
         print(f"OutputDir: {args.OutputDir}")
         print(f"ProjectDir: {args.ProjectDir}")
         print(f"Mode: {mode}")
+        if ALWAYS_COPY_MASKS:
+            print(f"Always-copy masks: {', '.join(ALWAYS_COPY_MASKS)}")
         print()
         
         # Validate ProjectDir
