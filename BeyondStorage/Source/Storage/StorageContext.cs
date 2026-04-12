@@ -288,6 +288,10 @@ public sealed class StorageContext
             return;
         }
 
+#if DEBUG
+        ModLogger.DebugLog($"{d_MethodName}: Showing notification - Key: '{localisationKey}', Message: '{localisedMessage}', AlertSound: '{alertSound}'");
+#endif
+
         GameManager.ShowTooltip(Player, localisedMessage, string.Empty, alertSound);
     }
     #endregion
