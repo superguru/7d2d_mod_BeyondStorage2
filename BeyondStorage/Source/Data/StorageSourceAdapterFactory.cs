@@ -15,6 +15,7 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsCollectorFunc,
             sources.GetCollectorConsumableItemsFunc,
             sources.GetCollectorPushableItemsFunc,
+            sources.GetCollectorLoadoutItemsFunc,
             sources.GetCollectorAllSlotItemsFunc,
             sources.MarkCollectorModifiedFunc,
             sources.GetCollectorNameFunc
@@ -29,6 +30,7 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsDroneEntityFunc,
             sources.GetDroneEntityConsumableItemsFunc,
             sources.GetDroneEntityPushableItemsFunc,
+            sources.GetDroneEntityLoadoutItemsFunc,
             sources.GetDroneEntityAllSlotItemsFunc,
             sources.MarkDroneEntityModifiedFunc,
             sources.GetDroneEntityNameFunc
@@ -43,6 +45,7 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsLootableFunc,
             sources.GetLootableConsumableItemsFunc,
             sources.GetLootablePushableItemsFunc,
+            sources.GetLootableLoadoutItemsFunc,
             sources.GetLootableAllSlotItemsFunc,
             sources.MarkLootableModifiedFunc,
             sources.GetLootableNameFunc
@@ -57,6 +60,7 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsPlayerLootableFunc,
             sources.GetPlayerConsumableItemsFunc,
             sources.GetPlayerPushableItemsFunc,
+            sources.GetPlayerLoadoutItemsFunc,
             sources.GetPlayerAllSlotItemsFunc,
             sources.MarkPlayerLootableModifiedFunc,
             sources.GetPlayerLootableNameFunc
@@ -71,7 +75,8 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsVehicleFunc,
             sources.GetVehicleConsumableItemsFunc,
             sources.GetVehiclePushableItemsFunc,
-            sources.GetVehicleAllSlotItemsItemsFunc,
+            sources.GetVehicleLoadoutItemsFunc,
+            sources.GetVehicleAllSlotItemsFunc,
             sources.MarkVehicleModifiedFunc,
             sources.GetVehicleNameFunc
         );
@@ -85,7 +90,8 @@ internal static class StorageSourceAdapterFactory
             sources.EqualsWorkstationFunc,
             sources.GetWorkstationConsumableItemsFunc,
             sources.GetWorkstationPushableItemsFunc,
-            sources.GetWorkstationAllSlotItemsItemsFunc,
+            sources.GetWorkstationLoadoutItemsFunc,
+            sources.GetWorkstationAllSlotItemsFunc,
             sources.MarkWorkstationModifiedFunc,
             sources.GetWorkstationNameFunc
         );

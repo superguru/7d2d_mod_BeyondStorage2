@@ -7,11 +7,24 @@ using BeyondStorage.Source.Storage;
 namespace BeyondStorage.Source.Entities;
 
 /// <summary>
-/// Handles processing and filtering of items from entity tile entities with slot lock support.
+/// Handles processing and filtering of items from entities and tile entities with slot lock support.
+/// Provides methods for retrieving items based on lock status for three operation types:
+/// Push (source items from unlocked slots), Pull (destination items), and Loadout (locked slot items).
 /// </summary>
 public static class LootableHandler
 {
-    private static readonly PackedBoolArray s_noLockedSlots = new();
+    /// <summary>
+    /// Specifies how to filter inventory items based on slot lock status.
+    /// </summary>
+    private enum InventoryFilter
+    {
+        /// <summary>Returns all items regardless of lock status</summary>
+        AllItems,
+        /// <summary>Returns only items from unlocked slots</summary>
+        UnlockedOnly,
+        /// <summary>Returns only items from locked slots</summary>
+        LockedOnly
+    }
 
     /// <summary>
     /// Gets all item stacks from an entity's bag without any filtering.
@@ -38,21 +51,38 @@ public static class LootableHandler
     public static ItemStack[] GetPushableItems(EntityAlive entity)
     {
         var items = GetAllSlotItems(entity);
-
         if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        // Check if the bag has locked slots support
         var bag = entity.bag;
         var lockedSlots = bag?.LockedSlots;
-        if (lockedSlots == null || lockedSlots.Length == 0)
+
+        return GetFilteredItems(items, InventoryFilter.UnlockedOnly, lockedSlots);
+    }
+
+    /// <summary>
+    /// Gets item stacks from locked slots in an entity's bag (loadout items).
+    /// Filters out items from unlocked slots and empty slots.
+    /// </summary>
+    /// <param name="entity">The entity to get loadout items from</param>
+    /// <returns>Array of ItemStack objects from locked, non-empty slots</returns>
+    /// <remarks>
+    /// When the entity's bag does not have locked slots, an empty array is returned.
+    /// </remarks>
+    internal static ItemStack[] GetLoadoutItems(EntityAlive entity)
+    {
+        var items = GetAllSlotItems(entity);
+        if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        return GetItemsWithSlotFiltering(items, lockedSlots, filterEmptySlots: true);
+        var bag = entity.bag;
+        var lockedSlots = bag?.LockedSlots;
+
+        return GetFilteredItems(items, InventoryFilter.LockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -61,16 +91,19 @@ public static class LootableHandler
     /// </summary>
     /// <param name="entity">The entity to get consumable items from</param>
     /// <returns>Array of ItemStack objects from non-empty slots</returns>
+    /// <remarks>
+    /// Gets all non-empty item stacks that can act as destinations for pull operations.
+    /// These items can potentially stack with/absorb incoming items from storage sources.
+    /// </remarks>
     public static ItemStack[] GetConsumableItems(EntityAlive entity)
     {
         var items = GetAllSlotItems(entity);
-
         if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        return GetItemsWithSlotFiltering(items, s_noLockedSlots, filterEmptySlots: true);
+        return GetFilteredItems(items, InventoryFilter.AllItems, lockedSlots: null);
     }
 
     /// <summary>
@@ -78,14 +111,9 @@ public static class LootableHandler
     /// </summary>
     /// <param name="lootable">The lootable tile entity to get items from</param>
     /// <returns>Array of all ItemStack objects in the lootable, or an empty array if the lootable is null or has no items</returns>
-    public static ItemStack[] GetAllSlotItemsStacks(ITileEntityLootable lootable)
+    public static ItemStack[] GetAllSlotItems(ITileEntityLootable lootable)
     {
-        if (lootable == null)
-        {
-            return [];
-        }
-
-        var items = lootable.items;
+        var items = lootable?.items;
         if (items == null || items.Length == 0)
         {
             return [];
@@ -96,31 +124,46 @@ public static class LootableHandler
 
     /// <summary>
     /// Gets item stacks from a lootable tile entity that can be pushed to storage targets.
-    /// Filters out items from locked slots (if supported) and empty slots.
+    /// Filters out items from locked slots (if slot locking is supported) and empty slots.
     /// </summary>
     /// <param name="lootable">The lootable tile entity to get pushable items from</param>
     /// <returns>Array of ItemStack objects from unlocked, non-empty slots</returns>
+    /// <remarks>
+    /// When the lootable does not support slot locking, all non-empty items are returned.
+    /// </remarks>
     public static ItemStack[] GetPushableItems(ITileEntityLootable lootable)
     {
-        var items = GetAllSlotItemsStacks(lootable);
-
+        var items = GetAllSlotItems(lootable);
         if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        if (!lootable.HasSlotLocksSupport)
+        var lockedSlots = lootable.HasSlotLocksSupport ? lootable.SlotLocks : null;
+
+        return GetFilteredItems(items, InventoryFilter.UnlockedOnly, lockedSlots);
+    }
+
+    /// <summary>
+    /// Gets item stacks from locked slots in a lootable tile entity (loadout items).
+    /// Filters out items from unlocked slots and empty slots.
+    /// </summary>
+    /// <param name="lootable">The lootable tile entity to get loadout items from</param>
+    /// <returns>Array of ItemStack objects from locked, non-empty slots</returns>
+    /// <remarks>
+    /// When the lootable does not support slot locking, an empty array is returned.
+    /// </remarks>
+    internal static ItemStack[] GetLoadoutItems(ITileEntityLootable lootable)
+    {
+        var items = GetAllSlotItems(lootable);
+        if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        var slotLocks = lootable.SlotLocks;
-        if (slotLocks == null || slotLocks.Length == 0)
-        {
-            return items;
-        }
+        var lockedSlots = lootable.HasSlotLocksSupport ? lootable.SlotLocks : null;
 
-        return GetItemsWithSlotFiltering(items, slotLocks, filterEmptySlots: true);
+        return GetFilteredItems(items, InventoryFilter.LockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -131,47 +174,62 @@ public static class LootableHandler
     /// <returns>Array of ItemStack objects from non-empty slots</returns>
     public static ItemStack[] GetConsumableItems(ITileEntityLootable lootable)
     {
-        var items = GetAllSlotItemsStacks(lootable);
-
+        var items = GetAllSlotItems(lootable);
         if (items.Length == 0)
         {
-            return items;
+            return [];
         }
 
-        return GetItemsWithSlotFiltering(items, s_noLockedSlots, filterEmptySlots: true);
+        return GetFilteredItems(items, InventoryFilter.AllItems, lockedSlots: null);
     }
 
     /// <summary>
     /// Core logic for filtering items based on locked slots and emptiness.
     /// Optimized with a single-pass loop to minimize allocations and improve performance.
+    /// Empty slots are always filtered out.
     /// </summary>
     /// <param name="items">The item array to filter</param>
-    /// <param name="lockedSlots">The locked slots array, or null/empty to skip locked slot filtering</param>
-    /// <param name="filterEmptySlots">Whether to filter out null or empty (count == 0) item stacks</param>
-    /// <returns>Array of ItemStack objects that pass the specified filters</returns>
-    private static ItemStack[] GetItemsWithSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, bool filterEmptySlots)
+    /// <param name="filter">The inventory filter to apply (AllItems, UnlockedOnly, or LockedOnly)</param>
+    /// <param name="lockedSlots">The locked slots array, or null if slot locking is not supported</param>
+    /// <returns>Array of non-empty ItemStack objects that pass the specified filter</returns>
+    /// <remarks>
+    /// - InventoryFilter.AllItems: Returns all non-empty items regardless of lock status
+    /// - InventoryFilter.UnlockedOnly: Returns only non-empty items from unlocked slots (or all if no lock data)
+    /// - InventoryFilter.LockedOnly: Returns only non-empty items from locked slots (or all if no lock data)
+    /// When lock data is unavailable, UnlockedOnly and LockedOnly behave identically to AllItems.
+    /// </remarks>
+    private static ItemStack[] GetFilteredItems(ItemStack[] items, InventoryFilter filter, PackedBoolArray lockedSlots = null)
     {
         int itemsLength = items.Length;
-
         int lockedSlotsLength = lockedSlots?.Length ?? 0;
-        bool filterLockedSlots = lockedSlotsLength > 0;
+        bool hasLockedSlots = lockedSlotsLength > 0;
 
-        // Pre-calculate result capacity to minimize reallocations
         var result = new List<ItemStack>(itemsLength);
 
-        // Single loop optimization - avoid nested loops
         for (int slotIndex = 0; slotIndex < itemsLength; slotIndex++)
         {
-            // Skip locked slots early
-            if (filterLockedSlots && (slotIndex < lockedSlotsLength && lockedSlots[slotIndex]))
+            var stack = items[slotIndex];
+
+            // Always filter out empty slots
+            if (stack == null || stack.count == 0)
             {
                 continue;
             }
 
-            var stack = items[slotIndex];
-            if (filterEmptySlots && (stack == null || stack.count == 0))
+            // Apply lock-based filtering only when lock data is available
+            if (hasLockedSlots)
             {
-                continue;
+                // Slots beyond lockedSlots array length are treated as unlocked
+                bool isLocked = (slotIndex < lockedSlotsLength) && lockedSlots[slotIndex];
+
+                if (filter == InventoryFilter.UnlockedOnly && isLocked)
+                {
+                    continue;
+                }
+                else if (filter == InventoryFilter.LockedOnly && !isLocked)
+                {
+                    continue;
+                }
             }
 
             result.Add(stack);
@@ -184,7 +242,7 @@ public static class LootableHandler
     /// Logs detailed information about slot locks for debugging purposes.
     /// </summary>
     /// <param name="context">The storage context containing configuration</param>
-    /// <param name="lootable">The entity entity to log information for</param>
+    /// <param name="lootable">The tile entity to log information for</param>
     /// <param name="tileEntity">The tile entity for position information</param>
     /// <param name="methodName">The calling method name for logging</param>
     public static void LogLootableSlotLocks(StorageContext context, ITileEntityLootable lootable, TileEntity tileEntity, string methodName)
@@ -238,6 +296,14 @@ public static class LootableHandler
 #endif
     }
 
+    /// <summary>
+    /// Gets the display name for a lootable tile entity, checking custom signs first, then falling back to localized block name.
+    /// </summary>
+    /// <param name="lootable">The lootable tile entity to get the name for</param>
+    /// <returns>The display name of the lootable, or "Unnamed Lootable" if unavailable</returns>
+    /// <remarks>
+    /// Names are cached to improve performance. Checks in order: custom sign text, localized block name, default fallback.
+    /// </remarks>
     public static string GetLootableName(ITileEntityLootable lootable)
     {
 #if DEBUG
@@ -286,7 +352,10 @@ public static class LootableHandler
         return name;
     }
 
-
+    /// <summary>
+    /// Marks a lootable tile entity as modified to trigger save and network synchronization.
+    /// </summary>
+    /// <param name="lootable">The lootable tile entity to mark as modified</param>
     public static void MarkLootableModified(ITileEntityLootable lootable)
     {
         const string d_MethodName = nameof(MarkLootableModified);
@@ -300,6 +369,10 @@ public static class LootableHandler
         lootable.SetModified();
     }
 
+    /// <summary>
+    /// Marks a player entity's inventory as modified, triggering UI updates for backpack and toolbelt.
+    /// </summary>
+    /// <param name="entity">The player entity whose inventory was modified</param>
     public static void MarkLootableModified(EntityPlayerLocal entity)
     {
         const string d_MethodName = nameof(MarkLootableModified);
@@ -314,6 +387,13 @@ public static class LootableHandler
         entity.playerUI.xui.PlayerInventory.onToolbeltItemsChanged();
     }
 
+    /// <summary>
+    /// Marks a vehicle entity's storage as modified, updating both bag and loot container.
+    /// </summary>
+    /// <param name="entity">The vehicle entity whose storage was modified</param>
+    /// <remarks>
+    /// Triggers updates for vehicle bag, loot container, and notifies any open vehicle windows.
+    /// </remarks>
     public static void MarkLootableModified(EntityVehicle entity)
     {
         const string d_MethodName = nameof(MarkLootableModified);

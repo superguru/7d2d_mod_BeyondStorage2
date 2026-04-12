@@ -15,18 +15,20 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     private readonly Type _storageSourceType;
 
     private readonly Func<T, T, bool> _equalsFunc;
-    private readonly Func<T, ItemStack[]> _getConsumableItemStacksFunc;
-    private readonly Func<T, ItemStack[]> _getPushableItemStacksFunc;
-    private readonly Func<T, ItemStack[]> _getAllSlotsItemStacksFunc;
+    private readonly Func<T, ItemStack[]> _getConsumableItemsFunc;
+    private readonly Func<T, ItemStack[]> _getPushableItemsFunc;
+    private readonly Func<T, ItemStack[]> _getLoadoutItemsFunc;
+    private readonly Func<T, ItemStack[]> _getAllSlotsItemsFunc;
     private readonly Action<T> _markModifiedAction;
     private readonly Func<T, string> _getNameFunc;
 
     public StorageSourceAdapter(
         T storageSource,
         Func<T, T, bool> equalsFunc,
-        Func<T, ItemStack[]> getConsumableItemStacksFunc,
-        Func<T, ItemStack[]> getPushableItemStacksFunc,
-        Func<T, ItemStack[]> getAllSlotsItemStacksFunc,
+        Func<T, ItemStack[]> getConsumableItemsFunc,
+        Func<T, ItemStack[]> getPushableItemsFunc,
+        Func<T, ItemStack[]> getLoadoutItemsFunc,
+        Func<T, ItemStack[]> getAllSlotsItemsFunc,
         Action<T> markModifiedAction,
         Func<T, string> getNameFunc)
     {
@@ -46,25 +48,32 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
             throw new ArgumentNullException(nameof(equalsFunc), error);
         }
 
-        if (getConsumableItemStacksFunc == null)
+        if (getConsumableItemsFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getConsumableItemStacksFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getConsumableItemsFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getConsumableItemStacksFunc), error);
+            throw new ArgumentNullException(nameof(getConsumableItemsFunc), error);
         }
 
-        if (getPushableItemStacksFunc == null)
+        if (getPushableItemsFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getPushableItemStacksFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getPushableItemsFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getPushableItemStacksFunc), error);
+            throw new ArgumentNullException(nameof(getPushableItemsFunc), error);
         }
 
-        if (getAllSlotsItemStacksFunc == null)
+        if (getLoadoutItemsFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getAllSlotsItemStacksFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getLoadoutItemsFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getAllSlotsItemStacksFunc), error);
+            throw new ArgumentNullException(nameof(getLoadoutItemsFunc), error);
+        }
+
+        if (getAllSlotsItemsFunc == null)
+        {
+            var error = $"{d_MethodName}: {nameof(getAllSlotsItemsFunc)} cannot be null";
+            ModLogger.DebugLog(error);
+            throw new ArgumentNullException(nameof(getAllSlotsItemsFunc), error);
         }
 
         if (markModifiedAction == null)
@@ -86,9 +95,10 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         _storageSourceType = storageSource.GetType();
 
         _equalsFunc = equalsFunc;
-        _getConsumableItemStacksFunc = getConsumableItemStacksFunc;
-        _getPushableItemStacksFunc = getPushableItemStacksFunc;
-        _getAllSlotsItemStacksFunc = getAllSlotsItemStacksFunc;
+        _getConsumableItemsFunc = getConsumableItemsFunc;
+        _getPushableItemsFunc = getPushableItemsFunc;
+        _getLoadoutItemsFunc = getLoadoutItemsFunc;
+        _getAllSlotsItemsFunc = getAllSlotsItemsFunc;
         _markModifiedAction = markModifiedAction;
         _getNameFunc = getNameFunc;
     }
@@ -161,12 +171,12 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
         }
         catch (NullReferenceException ex)
         {
-            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Null reference accessing items: {ex.Message}. Storage source may have been disposed.");
+            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Null reference accessing items: {ex.Message}. Storage source may have been disposed.", ex);
             return [];
         }
         catch (Exception ex)
         {
-            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}");
+            ModLogger.DebugLog($"{methodName}({sourceTypeAbbrev}) | Error getting items: {ex.Message}", ex);
             return [];
         }
     }
@@ -182,7 +192,13 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     public ItemStack[] GetConsumableItemStacks()
     {
         const string d_MethodName = nameof(GetConsumableItemStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getConsumableItemStacksFunc);
+        return GetSpecifiedItemStacks(d_MethodName, _getConsumableItemsFunc);
+    }
+
+    public ItemStack[] GetLoadoutItemStacks()
+    {
+        const string d_MethodName = nameof(GetLoadoutItemStacks);
+        return GetSpecifiedItemStacks(d_MethodName, _getLoadoutItemsFunc);
     }
 
     /// <summary>
@@ -196,7 +212,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     public ItemStack[] GetPushableItemStacks()
     {
         const string d_MethodName = nameof(GetPushableItemStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getPushableItemStacksFunc);
+        return GetSpecifiedItemStacks(d_MethodName, _getPushableItemsFunc);
     }
 
     /// <summary>
@@ -210,7 +226,7 @@ internal class StorageSourceAdapter<T> : IStorageSource where T : class
     public ItemStack[] GetAllSlotItemsStacks()
     {
         const string d_MethodName = nameof(GetAllSlotItemsStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getAllSlotsItemStacksFunc);
+        return GetSpecifiedItemStacks(d_MethodName, _getAllSlotsItemsFunc);
     }
 
     public string GetName()
