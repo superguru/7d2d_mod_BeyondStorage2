@@ -13,7 +13,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<TileEntityCollector>(
             collector,
             sources.EqualsCollectorFunc,
-            sources.GetCollectorPullableItemsFunc,
+            sources.GetCollectorConsumableItemsFunc,
             sources.GetCollectorPushableItemsFunc,
             sources.GetCollectorAllSlotItemsFunc,
             sources.MarkCollectorModifiedFunc,
@@ -27,7 +27,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityDrone>(
             drone,
             sources.EqualsDroneEntityFunc,
-            sources.GetDroneEntityPullableItemsFunc,
+            sources.GetDroneEntityConsumableItemsFunc,
             sources.GetDroneEntityPushableItemsFunc,
             sources.GetDroneEntityAllSlotItemsFunc,
             sources.MarkDroneEntityModifiedFunc,
@@ -41,7 +41,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<ITileEntityLootable>(
             lootable,
             sources.EqualsLootableFunc,
-            sources.GetLootablePullableItemsFunc,
+            sources.GetLootableConsumableItemsFunc,
             sources.GetLootablePushableItemsFunc,
             sources.GetLootableAllSlotItemsFunc,
             sources.MarkLootableModifiedFunc,
@@ -55,7 +55,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityPlayerLocal>(
             player,
             sources.EqualsPlayerLootableFunc,
-            sources.GetPlayerPullableItemsFunc,
+            sources.GetPlayerConsumableItemsFunc,
             sources.GetPlayerPushableItemsFunc,
             sources.GetPlayerAllSlotItemsFunc,
             sources.MarkPlayerLootableModifiedFunc,
@@ -69,7 +69,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityVehicle>(
             vehicle,
             sources.EqualsVehicleFunc,
-            sources.GetVehiclePullableItemsFunc,
+            sources.GetVehicleConsumableItemsFunc,
             sources.GetVehiclePushableItemsFunc,
             sources.GetVehicleAllSlotItemsItemsFunc,
             sources.MarkVehicleModifiedFunc,
@@ -83,7 +83,7 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<TileEntityWorkstation>(
             workstation,
             sources.EqualsWorkstationFunc,
-            sources.GetWorkstationPullableItemsFunc,
+            sources.GetWorkstationConsumableItemsFunc,
             sources.GetWorkstationPushableItemsFunc,
             sources.GetWorkstationAllSlotItemsItemsFunc,
             sources.MarkWorkstationModifiedFunc,

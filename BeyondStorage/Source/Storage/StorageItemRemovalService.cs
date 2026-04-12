@@ -86,7 +86,7 @@ public static class StorageItemRemovalService
 
         int originalNeeded = stillNeeded;
 
-        var itemStacks = source.GetPullableItemStacks();
+        var itemStacks = source.GetConsumableItemStacks();
         var stackLength = itemStacks.Length;
 
         for (var iStack = 0; iStack < stackLength; iStack++)

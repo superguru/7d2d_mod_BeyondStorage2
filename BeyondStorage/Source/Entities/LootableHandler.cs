@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.Storage;
-using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Source.Entities;
 
@@ -11,8 +11,13 @@ namespace BeyondStorage.Source.Entities;
 /// </summary>
 public static class LootableHandler
 {
-    private static readonly PackedBoolArray s_emptyLockedSlots = new();
+    private static readonly PackedBoolArray s_noLockedSlots = new();
 
+    /// <summary>
+    /// Gets all item stacks from an entity's bag without any filtering.
+    /// </summary>
+    /// <param name="entity">The entity to get items from</param>
+    /// <returns>Array of all ItemStack objects in the entity's bag, or an empty array if the bag is null or empty</returns>
     public static ItemStack[] GetAllSlotItems(EntityAlive entity)
     {
         var items = entity?.bag?.items;
@@ -24,6 +29,12 @@ public static class LootableHandler
         return items;
     }
 
+    /// <summary>
+    /// Gets item stacks from an entity's bag that can be pushed to storage targets.
+    /// Filters out items from locked slots and empty slots.
+    /// </summary>
+    /// <param name="entity">The entity to get pushable items from</param>
+    /// <returns>Array of ItemStack objects from unlocked, non-empty slots</returns>
     public static ItemStack[] GetPushableItems(EntityAlive entity)
     {
         var items = GetAllSlotItems(entity);
@@ -44,7 +55,13 @@ public static class LootableHandler
         return GetItemsWithSlotFiltering(items, lockedSlots, filterEmptySlots: true);
     }
 
-    public static ItemStack[] GetPullableItems(EntityAlive entity)
+    /// <summary>
+    /// Gets item stacks from an entity's bag that can be pulled from storage sources.
+    /// Filters out empty slots only (no locked slot filtering for entity bags).
+    /// </summary>
+    /// <param name="entity">The entity to get consumable items from</param>
+    /// <returns>Array of ItemStack objects from non-empty slots</returns>
+    public static ItemStack[] GetConsumableItems(EntityAlive entity)
     {
         var items = GetAllSlotItems(entity);
 
@@ -53,9 +70,14 @@ public static class LootableHandler
             return items;
         }
 
-        return GetItemsWithSlotFiltering(items, s_emptyLockedSlots, filterEmptySlots: true);
+        return GetItemsWithSlotFiltering(items, s_noLockedSlots, filterEmptySlots: true);
     }
 
+    /// <summary>
+    /// Gets all item stacks from a lootable tile entity without any filtering.
+    /// </summary>
+    /// <param name="lootable">The lootable tile entity to get items from</param>
+    /// <returns>Array of all ItemStack objects in the lootable, or an empty array if the lootable is null or has no items</returns>
     public static ItemStack[] GetAllSlotItemsStacks(ITileEntityLootable lootable)
     {
         if (lootable == null)
@@ -72,6 +94,12 @@ public static class LootableHandler
         return items;
     }
 
+    /// <summary>
+    /// Gets item stacks from a lootable tile entity that can be pushed to storage targets.
+    /// Filters out items from locked slots (if supported) and empty slots.
+    /// </summary>
+    /// <param name="lootable">The lootable tile entity to get pushable items from</param>
+    /// <returns>Array of ItemStack objects from unlocked, non-empty slots</returns>
     public static ItemStack[] GetPushableItems(ITileEntityLootable lootable)
     {
         var items = GetAllSlotItemsStacks(lootable);
@@ -96,11 +124,12 @@ public static class LootableHandler
     }
 
     /// <summary>
-    /// Gets items from a lootable, filtering out items from locked slots.
+    /// Gets item stacks from a lootable tile entity that can be pulled from storage sources.
+    /// Filters out empty slots only (no locked slot filtering for pull operations).
     /// </summary>
-    /// <param name="lootable">The entity entity to extract items from</param>
-    /// <returns>Array of ItemStack objects from unlocked slots</returns>
-    public static ItemStack[] GetPullableItems(ITileEntityLootable lootable)
+    /// <param name="lootable">The lootable tile entity to pull items from</param>
+    /// <returns>Array of ItemStack objects from non-empty slots</returns>
+    public static ItemStack[] GetConsumableItems(ITileEntityLootable lootable)
     {
         var items = GetAllSlotItemsStacks(lootable);
 
@@ -109,15 +138,17 @@ public static class LootableHandler
             return items;
         }
 
-        return GetItemsWithSlotFiltering(items, s_emptyLockedSlots, filterEmptySlots: true);
+        return GetItemsWithSlotFiltering(items, s_noLockedSlots, filterEmptySlots: true);
     }
 
     /// <summary>
-    /// Core logic for filtering items based on locked slots.
+    /// Core logic for filtering items based on locked slots and emptiness.
+    /// Optimized with a single-pass loop to minimize allocations and improve performance.
     /// </summary>
     /// <param name="items">The item array to filter</param>
-    /// <param name="lockedSlots">The locked slots array</param>
-    /// <returns>Array of ItemStack objects from unlocked slots</returns>
+    /// <param name="lockedSlots">The locked slots array, or null/empty to skip locked slot filtering</param>
+    /// <param name="filterEmptySlots">Whether to filter out null or empty (count == 0) item stacks</param>
+    /// <returns>Array of ItemStack objects that pass the specified filters</returns>
     private static ItemStack[] GetItemsWithSlotFiltering(ItemStack[] items, PackedBoolArray lockedSlots, bool filterEmptySlots)
     {
         int itemsLength = items.Length;
@@ -209,7 +240,9 @@ public static class LootableHandler
 
     public static string GetLootableName(ITileEntityLootable lootable)
     {
-        const string d_MethodName = nameof(GetLootableName);
+#if DEBUG
+        //const string d_MethodName = nameof(GetLootableName);
+#endif
 
         string name = "Unnamed Lootable";
 
