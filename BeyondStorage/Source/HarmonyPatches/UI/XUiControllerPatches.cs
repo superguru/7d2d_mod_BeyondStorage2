@@ -1,5 +1,5 @@
-﻿using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Game.UI;
+﻿using BeyondStorage.Source.Game.UI;
+using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -48,6 +48,15 @@ internal static class XUiControllerPatches
                 btnBeyondSmartPlayerInventoryPush.OnPress -= SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
 #if DEBUG
                 ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
+#endif
+            }
+
+            var btnBeyondSmartVehiclePullLoadout = UIControlHelpers.GetSmartVehiclePullLoadoutButton(__instance);
+            if (btnBeyondSmartVehiclePullLoadout != null)
+            {
+                btnBeyondSmartVehiclePullLoadout.OnPress -= SmartSortingCommon.SmartVehiclePullLoadout_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button event handler removed");
 #endif
             }
 

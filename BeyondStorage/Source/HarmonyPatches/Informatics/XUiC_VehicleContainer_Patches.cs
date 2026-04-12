@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
-using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -23,12 +23,21 @@ internal static class XUiC_VehicleContainer_Patches
 #if DEBUG
         const string d_MethodName = nameof(XUiC_VehicleContainer_Init_Postfix);
 #endif
-        var btnBeyondSmartButton = UIControlHelpers.GetSmartVehiclePushButton(__instance);
-        if (btnBeyondSmartButton != null)
+        var btnBeyondSmartPushButton = UIControlHelpers.GetSmartVehiclePushButton(__instance);
+        if (btnBeyondSmartPushButton != null)
         {
-            btnBeyondSmartButton.OnPress += SmartSortingCommon.SmartVehiclePush_EventHandler;
+            btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartVehiclePush_EventHandler;
 #if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button initialized");
+#endif
+        }
+
+        var btnBeyondSmartPullButton = UIControlHelpers.GetSmartVehiclePullLoadoutButton(__instance);
+        if (btnBeyondSmartPullButton != null)
+        {
+            btnBeyondSmartPullButton.OnPress += SmartSortingCommon.SmartVehiclePullLoadout_EventHandler;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button initialized");
 #endif
         }
     }

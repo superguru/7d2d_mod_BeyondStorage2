@@ -19,6 +19,11 @@ public class SmartSortingCommon
         SmartSortingFunctions.SmartLootWindowPush();
     }
 
+    public static void SmartVehiclePullLoadout_EventHandler(XUiController _sender, int _mouseButton)
+    {
+        SmartSortingFunctions.SmartVehiclePullLoadout();
+    }
+
     public static void SmartVehiclePush_EventHandler(XUiController _sender, int _mouseButton)
     {
         SmartSortingFunctions.SmartVehiclePush();
