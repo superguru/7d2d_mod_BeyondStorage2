@@ -204,6 +204,7 @@
     <Content Include="ModPackage\Config\Localization.txt" />
     <Content Include="ModPackage\Config\XUi\windows.xml" />
     <Content Include="ModPackage\ModInfo.xml" />
+    <Content Include="ModPackage\UIAtlases\UIAtlas\ui_symbol_beyond_smart_loot_pull_top_up.png" />
     <Content Include="ModPackage\UIAtlases\UIAtlas\ui_symbol_beyond_smart_loot_push.png" />
   </ItemGroup>
   <ItemGroup>
