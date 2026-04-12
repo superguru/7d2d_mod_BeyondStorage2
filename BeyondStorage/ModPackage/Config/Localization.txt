@@ -1,7 +1,9 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,English
 btnBeyondSmartCollectorPush_ToolTip,,,,,Pushes completed items from here to the nearest storages that already have that type of item
 btnBeyondSmartLootWindowPush_ToolTip,,,,,Pushes items from here to the nearest other storages that already have that type of item
-btnBeyondSmartPlayerInventoryPush_ToolTip,,,,,Pushes items from unlocked slots in the player's inventory to the nearest storages that already have that type of item
+btnBeyondSmartPlayerInventoryPullTopUp_ToolTip,,,,,Pull in items to top up your backpack inventory loadout (the locked slots) from nearby storages
+btnBeyondSmartPlayerInventoryPush_ToolTip,,,,,Pushes items from unlocked slots in your backpack inventory to the nearest storages that already have that type of item
+btnBeyondSmartVehiclePullTopUp_ToolTip,,,,,Pull in items to top up the vehicle's loadout (the locked slots) from nearby storages
 btnBeyondSmartVehiclePush_ToolTip,,,,,Pushes items from unlocked slots in the vehicle's inventory to the nearest storages that already have that type of item
 btnBeyondSmartWorkstationOutputPush_ToolTip,,,,,Pushes completed items from here to the nearest storages that already have that type of item
 loadingBeyondStorage,UI,Loading Screen,x,,Please go to Discord for mod support. See the README.md file or the mod web page for the details.
