@@ -8,8 +8,10 @@ namespace BeyondStorage.Source.Storage;
 /// </summary>
 internal class PushProcessingState
 {
+    private static readonly ItemStackReferenceComparer s_itemStackComparer = ItemStackReferenceComparer.Instance;
+
     private readonly HashSet<object> _affectedTargets = [];
-    private readonly HashSet<ItemStack> _affectedSourceStacks = [];
+    private readonly HashSet<ItemStack> _affectedSourceStacks = new(s_itemStackComparer);
     private readonly HashSet<int> _uniqueItems = [];
 
     /// <summary>
@@ -25,7 +27,7 @@ internal class PushProcessingState
     /// <summary>
     /// Gets the number of unique item types that were moved during this push operation.
     /// </summary>
-    public int UniqueItemCount => _uniqueItems.Count;
+    public int TotalItemTypes => _uniqueItems.Count;
 
     /// <summary>
     /// Gets the total number of items moved from the source during this push operation.
@@ -45,13 +47,14 @@ internal class PushProcessingState
             return;
         }
 
-        TotalItemCount += itemCount;
-        _ = _affectedTargets.Add(target);
-        _ = _affectedSourceStacks.Add(sourceStack);
         var itemType = ItemX.ItemTypeOf(sourceStack);
         if (itemType != UniqueItemTypes.EMPTY)
         {
             _ = _uniqueItems.Add(itemType);
+            TotalItemCount += itemCount;
+
+            _ = _affectedTargets.Add(target);
+            _ = _affectedSourceStacks.Add(sourceStack);
         }
     }
 
@@ -73,6 +76,6 @@ internal class PushProcessingState
     /// <returns>A formatted string describing the operation results</returns>
     public override string ToString()
     {
-        return $"Moved {TotalStackCount} stack(s) to {TargetCount} target(s), having {UniqueItemCount} item type(s) and {TotalItemCount} item(s)";
+        return $"Moved {TotalStackCount} stack(s) to {TargetCount} target(s), having {TotalItemTypes} item type(s) and {TotalItemCount} item(s)";
     }
 }
