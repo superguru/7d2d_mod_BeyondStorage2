@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
-using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -177,6 +177,11 @@ public class SmartSortingFunctions
 #endif
 
         context.ShowLocalPlayerNotification("msgBeyondSmartPush_Pushing", state.TotalStackCount, source.GetName(), state.TargetCount);
+
+        if (state.TotalStackCount > 0)
+        {
+            context.InvalidateCache();
+        }
 
         UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
     }
