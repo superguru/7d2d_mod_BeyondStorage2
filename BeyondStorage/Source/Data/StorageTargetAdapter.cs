@@ -49,6 +49,46 @@ internal class StorageTargetAdapter<T> where T : class
         }
     }
 
+    internal void ReclassifySlot(ItemStack slot)
+    {
+        if (slot == null)
+        {
+            return;
+        }
+
+        var itemType = ItemX.ItemTypeOf(slot);
+        if (itemType == UniqueItemTypes.EMPTY)
+        {
+            return;
+        }
+
+        if (_filledSlots.TryGetValue(itemType, out var filledList))
+        {
+            var slotIndex = filledList.IndexOfReference(slot);
+            if (slotIndex >= 0)
+            {
+                ReclassifySlot(filledList, slot, slotIndex);
+            }
+        }
+        else if (_partialSlots.TryGetValue(itemType, out var partialList))
+        {
+            var slotIndex = partialList.IndexOfReference(slot);
+            if (slotIndex >= 0)
+            {
+                ReclassifySlot(partialList, slot, slotIndex);
+            }
+        }
+        else
+        {
+            var slotIndex = _emptySlots.IndexOfReference(slot);
+            if (slotIndex >= 0)
+            {
+                _emptySlots.Remove(slot);
+                ClassifySlot(slot, orderedFirst: true);
+            }
+        }
+    }
+
     internal void ReclassifySlot(IList<ItemStack> currentList, ItemStack slot, int slotIndex)
     {
         currentList.RemoveAt(slotIndex);
@@ -80,17 +120,6 @@ internal class StorageTargetAdapter<T> where T : class
         _partialSlots.Clear();
     }
 
-    internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
-    {
-        var itemType = ItemX.ItemTypeOf(stack);
-        if (_partialSlots.TryGetValue(itemType, out var slots))
-        {
-            return slots;
-        }
-
-        return [];
-    }
-
     internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
     {
         var itemType = ItemX.ItemTypeOf(sourceSlot);
@@ -105,6 +134,39 @@ internal class StorageTargetAdapter<T> where T : class
         }
 
         return [];
+    }
+
+    internal IList<ItemStack> GetFilledSlotsFor(ItemStack stack)
+    {
+        var itemType = ItemX.ItemTypeOf(stack);
+        if (_filledSlots.TryGetValue(itemType, out var slots))
+        {
+            return slots;
+        }
+
+        return [];
+    }
+    internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
+    {
+        var itemType = ItemX.ItemTypeOf(stack);
+        if (_partialSlots.TryGetValue(itemType, out var slots))
+        {
+            return slots;
+        }
+
+        return [];
+    }
+
+    internal IList<ItemStack> GetPopulatedSlotsFor(ItemStack sourceSlot)
+    {
+        var filled = GetFilledSlotsFor(sourceSlot);
+        var partial = GetPartialSlotsFor(sourceSlot);
+
+        var result = CollectionFactory.CreateItemStackList(filled.Count + partial.Count);
+        result.AddRange(filled);
+        result.AddRange(partial);
+
+        return result;
     }
 
     internal string GetTargetName()
