@@ -306,10 +306,6 @@ public static class LootableHandler
     /// </remarks>
     public static string GetLootableName(ITileEntityLootable lootable)
     {
-#if DEBUG
-        //const string d_MethodName = nameof(GetLootableName);
-#endif
-
         string name = "Unnamed Lootable";
 
         if (lootable == null)
@@ -322,9 +318,6 @@ public static class LootableHandler
             // Check cache first
             if (EntityNameCache.TryGetName(signable, out string cachedName))
             {
-#if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: Returning cached name '{cachedName}' for signable");
-#endif
                 return cachedName;
             }
 
@@ -332,9 +325,7 @@ public static class LootableHandler
             if (authoredText != null && !string.IsNullOrEmpty(authoredText.Text))
             {
                 name = authoredText.Text;
-#if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: Found signed text '{name}' for signable");
-#endif
+
                 EntityNameCache.CacheName(signable, name);
                 return name;
             }
