@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
@@ -51,10 +51,10 @@ internal sealed class ContainerDistanceStore
         IsSorted = true;
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(TransferFilter filter)
     {
         Sort();
 
-        return Entries.Select(entry => new StorageTargetAdapter<ITileEntityLootable>(entry.Container, entry.Distance)).ToList();
+        return Entries.Select(entry => new StorageTargetAdapter<ITileEntityLootable>(entry.Container, entry.Distance, filter)).ToList();
     }
 }

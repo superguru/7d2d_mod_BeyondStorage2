@@ -117,11 +117,11 @@ public sealed class StorageContext
         }
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(TransferFilter filter)
     {
         LoadCache();
 
-        var containers = StorageQueryService.GetClosestTargetContainers(this);
+        var containers = StorageQueryService.GetClosestTargetContainers(this, filter);
         return containers;
     }
 
@@ -255,6 +255,7 @@ public sealed class StorageContext
     {
         const string d_MethodName = nameof(ShowLocalPlayerNotification);
 
+
         if (string.IsNullOrEmpty(localisationKey))
         {
 #if DEBUG
@@ -289,7 +290,7 @@ public sealed class StorageContext
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Showing notification - Key: '{localisationKey}', Message: '{localisedMessage}', AlertSound: '{alertSound}'");
+        //ModLogger.DebugLog($"{d_MethodName}: Showing notification - Key: '{localisationKey}', Message: '{localisedMessage}', AlertSound: '{alertSound}'");
 #endif
 
         GameManager.ShowTooltip(Player, localisedMessage, string.Empty, alertSound);

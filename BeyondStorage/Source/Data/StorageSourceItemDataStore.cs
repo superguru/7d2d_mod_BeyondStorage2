@@ -413,10 +413,10 @@ internal class StorageSourceItemDataStore
         return _collectionStore.ContainsStacksForFilter(filter);
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers()
+    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(TransferFilter filter)
     {
         // These are already naturally in the config.range, because of the tile entity discovery process
-        var containers = _containerStore.GetClosestTargetContainers();
+        var containers = _containerStore.GetClosestTargetContainers(filter);
         return containers;
     }
 }

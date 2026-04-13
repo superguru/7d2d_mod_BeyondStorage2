@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using BeyondStorage.Source.Data;
 using BeyondStorage.Source.Infrastructure;
 
@@ -33,9 +32,9 @@ public static class StorageQueryService
         return true;
     }
 
-    internal static IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(StorageContext context)
+    internal static IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(StorageContext context, TransferFilter filter)
     {
-        var containers = context.Sources.GetClosestTargetContainers();
+        var containers = context.Sources.GetClosestTargetContainers(filter);
         return containers;
     }
 
