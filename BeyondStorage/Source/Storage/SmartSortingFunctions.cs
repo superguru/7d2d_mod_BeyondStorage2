@@ -16,11 +16,16 @@ public class SmartSortingFunctions
     private static readonly object s_smartPushLock = new();
 
     private static IReadOnlyList<StorageTargetAdapter> GetSmartPushTargets(StorageContext context)
-        => context.GetClosestTargetContainers(ItemScope.AllItems);
+        => context.GetClosestStorageSources(StorageSourcePolicy.SmartPushSources, ItemScope.AllItems);
 
-    // Add alongside GetSmartPushTargets
     private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
-        => context.GetClosestTargetContainers(ItemScope.PushableItems);
+        => context.GetClosestStorageSources(StorageSourcePolicy.SmartLoadoutPullSources, ItemScope.PushableItems);
+
+    //private static IReadOnlyList<StorageTargetAdapter> GetSmartPushTargets(StorageContext context)
+    //        => context.GetClosestStorageSources(ItemScope.AllItems);
+
+    //private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
+    //    => context.GetClosestStorageSources(ItemScope.PushableItems);
 
     public static void SmartCollectorPush()
     {

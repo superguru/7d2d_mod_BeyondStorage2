@@ -117,12 +117,12 @@ public sealed class StorageContext
         }
     }
 
-    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestStorageSources(AllowedSourcesList allowedSourcePolicy, ItemScope filter)
     {
         LoadCache();
 
-        var containers = StorageQueryService.GetClosestTargetContainers(this, filter);
-        return containers;
+        var storages = StorageQueryService.GetClosestStorageSources(this, allowedSourcePolicy, filter);
+        return storages;
     }
 
     /// <summary>

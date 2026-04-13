@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.Storage;
 
@@ -16,19 +15,19 @@ internal sealed class TargetDistanceStore
 
     public bool IsSorted { get; private set; } = true;
     public int Count => _entries.Count;
-    public IReadOnlyList<(IStorageTargetSource Container, float Distance)> Entries => _entries;
+    public IReadOnlyList<(IStorageTargetSource Storage, float Distance)> Entries => _entries;
 
-    public void Add(IStorageTargetSource container, float distance)
+    public void Add(IStorageTargetSource storage, float distance)
     {
         const string d_MethodName = nameof(Add);
 
-        if (container == null)
+        if (storage == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: Null container supplied");
+            ModLogger.DebugLog($"{d_MethodName}: Null storage supplied");
             return;
         }
 
-        _entries.Add((container, distance));
+        _entries.Add((storage, distance));
         IsSorted = false;
     }
 
@@ -52,10 +51,20 @@ internal sealed class TargetDistanceStore
         IsSorted = true;
     }
 
-    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestStorageSources(AllowedSourcesList allowedSourcePolicy, ItemScope filter)
     {
         Sort();
 
-        return Entries.Select(entry => new StorageTargetAdapter(entry.Container, entry.Distance, filter)).ToList();
+        var result = new List<StorageTargetAdapter>(Entries.Count); // pre-sized to avoid resizes
+        for (int i = 0; i < Entries.Count; i++)
+        {
+            var entry = Entries[i];
+            if (allowedSourcePolicy.IsAllowedSource(entry.Storage.GetSourceType()))
+            {
+                result.Add(new StorageTargetAdapter(entry.Storage, entry.Distance, filter));
+            }
+        }
+
+        return result;
     }
 }

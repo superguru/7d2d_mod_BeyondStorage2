@@ -413,10 +413,10 @@ internal class StorageSourceItemDataStore
         return _collectionStore.ContainsStacksForFilter(filter);
     }
 
-    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestStorageSources(AllowedSourcesList allowedSourcePolicy, ItemScope filter)
     {
         // These are already naturally in the config.range, because of the tile entity discovery process
-        var containers = _containerStore.GetClosestTargetContainers(filter);
-        return containers;
+        var storages = _containerStore.GetClosestStorageSources(allowedSourcePolicy, filter);
+        return storages;
     }
 }
