@@ -117,7 +117,7 @@ public sealed class StorageContext
         }
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
     {
         LoadCache();
 

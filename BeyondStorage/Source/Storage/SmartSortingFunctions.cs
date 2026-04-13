@@ -174,7 +174,7 @@ public class SmartSortingFunctions
         PerformSmartPush(context, source, targets);
     }
 
-    private static void PerformSmartLoadoutPull<S, T>(StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter<S>> sources) where S : class where T : class
+    private static void PerformSmartLoadoutPull<T>(StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter> sources) where T : class
     {
         const string d_MethodName = nameof(PerformSmartLoadoutPull);
 
@@ -211,7 +211,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PerformSmartPush<S, T>(StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter<T>> targets) where S : class where T : class
+    private static void PerformSmartPush<S>(StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets) where S : class
     {
         const string d_MethodName = nameof(PerformSmartPush);
 
@@ -251,7 +251,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PullSourceItemsToLoadout<S, T>(StorageOperationState state, IReadOnlyList<StorageTargetAdapter<S>> sources, StorageSourceAdapter<T> loadout) where S : class where T : class
+    private static void PullSourceItemsToLoadout<T>(StorageOperationState state, IReadOnlyList<StorageTargetAdapter> sources, StorageSourceAdapter<T> loadout) where T : class
     {
         const string d_MethodName = nameof(PullSourceItemsToLoadout);
 
@@ -297,7 +297,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PushSourceItemsToTarget<S, T>(StorageOperationState state, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter<T>> targets, bool allowPushToEmpty) where S : class where T : class
+    private static void PushSourceItemsToTarget<S>(StorageOperationState state, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets, bool allowPushToEmpty) where S : class
     {
         const string d_MethodName = nameof(PushSourceItemsToTarget);
 
@@ -360,7 +360,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PullToLoadoutSlots<S, T>(string methodName, StorageOperationState state, StorageSourceAdapter<T> loadout, ItemStack loadoutSlot, StorageTargetAdapter<S> source, int maxStackSize, ref int loadoutSlotRequiredAmount) where S : class where T : class
+    private static void PullToLoadoutSlots<T>(string methodName, StorageOperationState state, StorageSourceAdapter<T> loadout, ItemStack loadoutSlot, StorageTargetAdapter source, int maxStackSize, ref int loadoutSlotRequiredAmount) where T : class
     {
         const int FIRST_SLOT = 0;
 
@@ -411,7 +411,7 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PushToTargetSlots<S, T>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, ItemStack sourceSlot, StorageTargetAdapter<T> target, IList<ItemStack> targetSlots, int maxStackSize, ref int sourceSlotRemaining) where S : class where T : class
+    private static void PushToTargetSlots<S>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, ItemStack sourceSlot, StorageTargetAdapter target, IList<ItemStack> targetSlots, int maxStackSize, ref int sourceSlotRemaining) where S : class
     {
         const int FIRST_SLOT = 0;
 

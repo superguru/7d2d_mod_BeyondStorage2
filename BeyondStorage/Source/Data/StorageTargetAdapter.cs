@@ -5,16 +5,16 @@ using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
-internal class StorageTargetAdapter<T> where T : class
+internal class StorageTargetAdapter
 {
-    private readonly StorageSourceAdapter<T> _source;
+    private readonly IStorageTargetSource _source;
 
     private readonly List<ItemStack> _emptySlots = [];
 
     private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
     private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
 
-    public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance, ItemScope filter)
+    public StorageTargetAdapter(IStorageTargetSource source, float distance, ItemScope filter)
     {
         _source = source;
         Distance = distance;
@@ -234,7 +234,7 @@ internal class StorageTargetAdapter<T> where T : class
         _source?.MarkModified();
     }
 
-    internal bool HasSameSource<S>(StorageSourceAdapter<S> other) where S : class
+    internal bool HasSameSource(IStorageSource other)
     {
         var result = _source.Equals(other);
 

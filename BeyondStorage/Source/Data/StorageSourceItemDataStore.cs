@@ -174,7 +174,7 @@ internal class StorageSourceItemDataStore
         return true; // Stack was successfully added
     }
 
-    public void RegisterContainerSource(StorageSourceAdapter<ITileEntityLootable> container, float distance)
+    public void RegisterContainerSource(IStorageTargetSource container, float distance)
     {
         const string d_MethodName = nameof(RegisterContainerSource);
 
@@ -413,7 +413,7 @@ internal class StorageSourceItemDataStore
         return _collectionStore.ContainsStacksForFilter(filter);
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
     {
         // These are already naturally in the config.range, because of the tile entity discovery process
         var containers = _containerStore.GetClosestTargetContainers(filter);

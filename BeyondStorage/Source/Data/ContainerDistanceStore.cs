@@ -7,17 +7,18 @@ namespace BeyondStorage.Source.Data;
 
 /// <summary>
 /// Stores (container, distance) pairs with on-demand distance sorting.
+/// Accepts any <see cref="IStorageTargetSource"/>, allowing mixed storage source types.
 /// Callers are responsible for ensuring each StorageSource is registered at most once.
 /// </summary>
 internal sealed class ContainerDistanceStore
 {
-    private readonly List<(StorageSourceAdapter<ITileEntityLootable> Container, float Distance)> _entries = [];
+    private readonly List<(IStorageTargetSource Container, float Distance)> _entries = [];
 
     public bool IsSorted { get; private set; } = true;
     public int Count => _entries.Count;
-    public IReadOnlyList<(StorageSourceAdapter<ITileEntityLootable> Container, float Distance)> Entries => _entries;
+    public IReadOnlyList<(IStorageTargetSource Container, float Distance)> Entries => _entries;
 
-    public void Add(StorageSourceAdapter<ITileEntityLootable> container, float distance)
+    public void Add(IStorageTargetSource container, float distance)
     {
         const string d_MethodName = nameof(Add);
 
@@ -51,10 +52,10 @@ internal sealed class ContainerDistanceStore
         IsSorted = true;
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
     {
         Sort();
 
-        return Entries.Select(entry => new StorageTargetAdapter<ITileEntityLootable>(entry.Container, entry.Distance, filter)).ToList();
+        return Entries.Select(entry => new StorageTargetAdapter(entry.Container, entry.Distance, filter)).ToList();
     }
 }

@@ -32,7 +32,7 @@ public static class StorageQueryService
         return true;
     }
 
-    internal static IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(StorageContext context, ItemScope filter)
+    internal static IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(StorageContext context, ItemScope filter)
     {
         var containers = context.Sources.GetClosestTargetContainers(filter);
         return containers;

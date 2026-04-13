@@ -92,7 +92,7 @@ public class StorageDataManager
         return DataStore.GetFilteredItemCount(filter);
     }
 
-    internal IReadOnlyList<StorageTargetAdapter<ITileEntityLootable>> GetClosestTargetContainers(ItemScope filter)
+    internal IReadOnlyList<StorageTargetAdapter> GetClosestTargetContainers(ItemScope filter)
     {
         var containers = DataStore.GetClosestTargetContainers(filter);
         return containers;

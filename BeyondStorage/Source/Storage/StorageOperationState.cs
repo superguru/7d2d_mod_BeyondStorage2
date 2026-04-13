@@ -57,7 +57,7 @@ internal class StorageOperationState
     /// <summary>
     /// Records that items were affected by the operation
     /// </summary>
-    internal void RecordTransfer<T>(StorageTargetAdapter<T> storage, ItemStack stack, int itemCount) where T : class
+    internal void RecordTransfer(StorageTargetAdapter storage, ItemStack stack, int itemCount)
     {
         if (storage == null || stack == null || itemCount <= 0)
         {

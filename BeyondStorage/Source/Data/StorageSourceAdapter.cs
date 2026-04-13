@@ -5,7 +5,7 @@ using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Data;
 
-internal class StorageSourceAdapter<T> : IStorageSource where T : class
+internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource where T : class
 {
     private const int HASH_MULTIPLIER = 397;
 
