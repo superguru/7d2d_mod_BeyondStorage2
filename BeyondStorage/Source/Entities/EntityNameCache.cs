@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Entities;
 
@@ -56,9 +55,6 @@ public static class EntityNameCache
     /// <exception cref="ArgumentNullException">Thrown if entity is null</exception>
     public static void CacheName(object entity, string name)
     {
-#if DEBUG
-        const string d_MethodName = nameof(CacheName);
-#endif
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         lock (s_lock)
@@ -66,17 +62,6 @@ public static class EntityNameCache
             if (s_cacheMap.TryGetValue(entity, out var node))
             {
                 // Update existing entry and move to head (most recent)
-#if DEBUG
-                var oldName = node.Value.Value;
-                if (oldName != name)
-                {
-                    ModLogger.DebugLog($"{d_MethodName}: Updating cached name for {entity.GetType().Name} from '{oldName}' to '{name}'");
-                }
-                else
-                {
-                    ModLogger.DebugLog($"{d_MethodName}: Refreshing cache entry for {entity.GetType().Name}, moving to most-recent position");
-                }
-#endif
                 node.Value.Value = name;
                 s_lruList.Remove(node);
                 s_lruList.AddFirst(node);
@@ -86,15 +71,9 @@ public static class EntityNameCache
                 // New entry - evict LRU if at capacity
                 if (s_cacheMap.Count >= MAX_CACHE_SIZE)
                 {
-#if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: Cache full ({MAX_CACHE_SIZE}), evicting least-recently-used entry");
-#endif
                     EvictLRU();
                 }
 
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Adding new cache entry for {entity.GetType().Name}: '{name}'");
-#endif
                 // Add new entry to head (most recent)
                 var newEntry = new CacheEntry(entity, name);
                 var newNode = s_lruList.AddFirst(newEntry);
@@ -112,9 +91,6 @@ public static class EntityNameCache
     /// <returns>True if the entity was found in cache, false otherwise</returns>
     public static bool TryGetName(object entity, out string name)
     {
-#if DEBUG
-        const string d_MethodName = nameof(TryGetName);
-#endif
         if (entity == null)
         {
             name = null;
@@ -130,17 +106,11 @@ public static class EntityNameCache
                 s_lruList.AddFirst(node);
 
                 name = node.Value.Value;
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Cache hit for {entity.GetType().Name}: '{name}'");
-#endif
                 return true;
             }
         }
 
         name = null;
-#if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Cache miss for {entity.GetType().Name}");
-#endif
         return false;
     }
 
@@ -153,9 +123,6 @@ public static class EntityNameCache
     /// <returns>True if the entity was found and removed, false if it wasn't cached</returns>
     public static bool RemoveName(object entity)
     {
-#if DEBUG
-        const string d_MethodName = nameof(RemoveName);
-#endif
         if (entity == null) return false;
 
         lock (s_lock)
@@ -164,14 +131,10 @@ public static class EntityNameCache
             {
                 s_lruList.Remove(node);
                 s_cacheMap.Remove(entity);
-#if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Removed cache entry for {entity.GetType().Name}");
-#endif
+
                 return true;
             }
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: No cache entry found for {entity.GetType().Name}");
-#endif
+
             return false;
         }
     }
@@ -182,15 +145,9 @@ public static class EntityNameCache
     /// </summary>
     private static void EvictLRU()
     {
-#if DEBUG
-        const string d_MethodName = nameof(EvictLRU);
-#endif
         var oldestNode = s_lruList.Last;
         if (oldestNode != null)
         {
-#if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Evicting LRU entry for {oldestNode.Value.Key?.GetType().Name ?? "null"}");
-#endif
             s_cacheMap.Remove(oldestNode.Value.Key);
             s_lruList.RemoveLast();
         }
@@ -202,10 +159,6 @@ public static class EntityNameCache
     /// </summary>
     public static void ClearCache()
     {
-#if DEBUG
-        const string d_MethodName = nameof(ClearCache);
-        ModLogger.DebugLog($"{d_MethodName}: Clearing cache (entries: {s_cacheMap.Count})");
-#endif
         lock (s_lock)
         {
             s_cacheMap.Clear();
