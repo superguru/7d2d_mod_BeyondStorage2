@@ -17,18 +17,18 @@ internal class StorageSourceItemDataStore
     private readonly FilterStacksStore _collectionStore = new();
     private readonly ContainerDistanceStore _containerStore = new();
 
-    internal AllowedSourcesSnapshot AllowedSources { get; }
+    internal AllowedSourcesList AllowedSourcesSnapshot { get; }
 
-    internal StorageSourceItemDataStore(AllowedSourcesSnapshot allowedSources)
+    internal StorageSourceItemDataStore(AllowedSourcesList allowedSourcesSnapshot)
     {
-        if (allowedSources == null)
+        if (allowedSourcesSnapshot == null)
         {
-            var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(allowedSources)} cannot be null.";
+            var error = $"{nameof(StorageSourceItemDataStore)}: {nameof(allowedSourcesSnapshot)} cannot be null.";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(allowedSources), error);
+            throw new ArgumentNullException(nameof(allowedSourcesSnapshot), error);
         }
 
-        AllowedSources = allowedSources;
+        AllowedSourcesSnapshot = allowedSourcesSnapshot;
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ internal class StorageSourceItemDataStore
     /// <returns>Read-only list of allowed source types</returns>
     internal IReadOnlyList<Type> GetAllowedSourceTypes()
     {
-        return AllowedSources.GetAllowedSourceTypes();
+        return AllowedSourcesSnapshot.GetAllowedSourceTypes();
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ internal class StorageSourceItemDataStore
     /// <returns>True if the source type is allowed</returns>
     internal bool IsAllowedSource(Type sourceType)
     {
-        return AllowedSources.IsAllowedSource(sourceType);
+        return AllowedSourcesSnapshot.IsAllowedSource(sourceType);
     }
 
     /// <summary>

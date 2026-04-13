@@ -159,7 +159,7 @@
     <Compile Include="Source\UI\UIRefreshHelper.cs" />
     <Compile Include="Source\Infrastructure\ValidationHelper.cs" />
     <Compile Include="Source\Infrastructure\WorldTools.cs" />
-    <Compile Include="Source\Storage\AllowedSourcesSnapshot.cs" />
+    <Compile Include="Source\Storage\AllowedSourcesList.cs" />
     <Compile Include="Source\Storage\ItemStackCacheManager.cs" />
     <Compile Include="Source\Data\ItemClassCache.cs" />
     <Compile Include="Source\Entities\LootableHandler.cs" />

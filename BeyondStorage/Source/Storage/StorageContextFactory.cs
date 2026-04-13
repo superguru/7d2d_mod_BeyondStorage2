@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Source.Caching;
 using BeyondStorage.Source.Configuration;
 using BeyondStorage.Source.Data;
@@ -51,7 +52,7 @@ public static class StorageContextFactory
             }
 
             var cacheManager = new ItemStackCacheManager();
-            var allowedSources = AllowedSourcesSnapshot.FromConfig(config);
+            var allowedSources = BuildAllowedSourcesSnapshot(config);
 
             var dataStore = new StorageSourceItemDataStore(allowedSources);
             var sources = new StorageDataManager(dataStore);
@@ -184,5 +185,29 @@ public static class StorageContextFactory
     public static string GetCacheStats()
     {
         return s_contextCache.GetCacheStats();
+    }
+
+    private static AllowedSourcesList BuildAllowedSourcesSnapshot(ConfigSnapshot config)
+    {
+        var types = new List<Type>();
+
+        // The order is important
+
+        if (config.PullFromDrones)
+            types.Add(typeof(EntityDrone));
+
+        if (config.PullFromCollectors)
+            types.Add(typeof(TileEntityCollector));
+
+        if (config.PullFromWorkstationOutputs)
+            types.Add(typeof(TileEntityWorkstation));
+
+        // Lootables: Always allowed
+        types.Add(typeof(ITileEntityLootable));
+
+        if (config.PullFromVehicleStorage)
+            types.Add(typeof(EntityVehicle));
+
+        return new AllowedSourcesList(types);
     }
 }
