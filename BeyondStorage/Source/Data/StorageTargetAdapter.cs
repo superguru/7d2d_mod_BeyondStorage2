@@ -14,7 +14,7 @@ internal class StorageTargetAdapter<T> where T : class
     private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
     private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
 
-    public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance, TransferFilter filter)
+    public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance, ItemScope filter)
     {
         _source = source;
         Distance = distance;
@@ -24,7 +24,7 @@ internal class StorageTargetAdapter<T> where T : class
     }
 
     public float Distance { get; }
-    public TransferFilter Filter { get; }
+    public ItemScope Filter { get; }
 
     private void BuildDescriptorMaps()
     {
@@ -40,10 +40,10 @@ internal class StorageTargetAdapter<T> where T : class
     {
         switch (Filter)
         {
-            case TransferFilter.AllItems:
+            case ItemScope.AllItems:
                 return _source.GetAllSlotItemsStacks();
 
-            case TransferFilter.PushableItems:
+            case ItemScope.PushableItems:
 #if DEBUG
                 ModLogger.DebugLog($"Getting pushable items for source '{_source.GetName()}'");
 #endif
@@ -54,7 +54,7 @@ internal class StorageTargetAdapter<T> where T : class
 #if DEBUG
                     const string d_MethodName = nameof(GetFilteredTransferItems);
 
-                    var message = $"{d_MethodName}: Unexpected TransferFilter value '{Filter}' ({(int)Filter}), returning empty array";
+                    var message = $"{d_MethodName}: Unexpected ItemScope value '{Filter}' ({(int)Filter}), returning empty array";
                     ModLogger.DebugLog(StackTraceProvider.AppendStackTrace(message));
 #endif
 

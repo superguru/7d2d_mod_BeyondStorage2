@@ -152,7 +152,7 @@
     <Compile Include="Source\Storage\EntityItemDiscovery.cs" />
     <Compile Include="Source\Storage\EntityProcessingState.cs" />
     <Compile Include="Source\Storage\SmartSortingFunctions.cs" />
-    <Compile Include="Source\Storage\TransferFilter.cs" />
+    <Compile Include="Source\Storage\ItemScope.cs" />
     <Compile Include="Source\Storage\StorageOperationState.cs" />
     <Compile Include="Source\Storage\TileEntityProcessingState.cs" />
     <Compile Include="Source\Entities\EntityNameCache.cs" />

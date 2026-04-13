@@ -1,6 +1,6 @@
 ﻿namespace BeyondStorage.Source.Storage;
 
-public enum TransferFilter
+public enum ItemScope
 {
     AllItems,
     PushableItems,

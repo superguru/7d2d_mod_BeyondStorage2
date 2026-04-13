@@ -33,7 +33,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
@@ -74,7 +74,7 @@ public class SmartSortingFunctions
         ModLogger.DebugLog($"{d_MethodName}: Performing smart push from player created storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
@@ -86,7 +86,7 @@ public class SmartSortingFunctions
         ModLogger.DebugLog($"{d_MethodName}: Performing smart push from drone storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
@@ -102,14 +102,14 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
 
-    public static void SmartVehiclePullLoadout()
+    public static void SmartVehicleLoadoutPull()
     {
-        const string d_MethodName = nameof(SmartVehiclePullLoadout);
+        const string d_MethodName = nameof(SmartVehicleLoadoutPull);
         if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
         {
             ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
@@ -122,7 +122,7 @@ public class SmartSortingFunctions
             return;
         }
         var loadout = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
-        var sources = context.GetClosestTargetContainers(TransferFilter.PushableItems);
+        var sources = context.GetClosestTargetContainers(ItemScope.PushableItems);
 
         PerformSmartLoadoutPull(context, loadout, sources);
     }
@@ -145,7 +145,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
@@ -169,7 +169,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
-        var targets = context.GetClosestTargetContainers(TransferFilter.AllItems);
+        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
 
         PerformSmartPush(context, source, targets);
     }
