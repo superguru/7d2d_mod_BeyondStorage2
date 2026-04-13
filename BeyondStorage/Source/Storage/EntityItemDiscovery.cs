@@ -219,7 +219,7 @@ internal static class EntityItemDiscovery
 #if DEBUG
         if (validStacksRegistered > 0)
         {
-            ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
+            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
         }
 #endif
         return validStacksRegistered;
