@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
@@ -11,31 +14,60 @@ internal class StorageTargetAdapter<T> where T : class
     private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
     private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
 
-    public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance)
+    public StorageTargetAdapter(StorageSourceAdapter<T> source, float distance, TransferFilter filter)
     {
         _source = source;
         Distance = distance;
+        Filter = filter;
 
         BuildDescriptorMaps();
     }
 
     public float Distance { get; }
+    public TransferFilter Filter { get; }
 
     private void BuildDescriptorMaps()
     {
         Clear();
-
-        var items = _source.GetAllSlotItemsStacks();
+        ItemStack[] items = GetFilteredTransferItems();
         for (int i = 0; i < items.Length; i++)
         {
             ClassifySlot(items[i], orderedFirst: false);
         }
     }
 
+    private ItemStack[] GetFilteredTransferItems()
+    {
+        switch (Filter)
+        {
+            case TransferFilter.AllItems:
+                return _source.GetAllSlotItemsStacks();
+
+            case TransferFilter.PushableItems:
+#if DEBUG
+                ModLogger.DebugLog($"Getting pushable items for source '{_source.GetName()}'");
+#endif
+                return _source.GetPushableItemStacks();
+
+            default:
+                {
+#if DEBUG
+                    const string d_MethodName = nameof(GetFilteredTransferItems);
+
+                    var message = $"{d_MethodName}: Unexpected TransferFilter value '{Filter}' ({(int)Filter}), returning empty array";
+                    ModLogger.DebugLog(StackTraceProvider.AppendStackTrace(message));
+#endif
+
+                    // Don't cause any more problems, just fail gracefully
+                    return [];
+                }
+        }
+    }
+
     private void ClassifySlot(ItemStack slot, bool orderedFirst = false)
     {
         var itemType = ItemX.ItemTypeOf(slot);
-        if (itemType == UniqueItemTypes.EMPTY || slot?.count <= 0)
+        if (itemType == UniqueItemTypes.EMPTY || ItemX.IsEmpty(slot))
         {
             _emptySlots.Add(slot);
         }
@@ -51,45 +83,57 @@ internal class StorageTargetAdapter<T> where T : class
 
     internal void ReclassifySlot(ItemStack slot)
     {
+        const string d_MethodName = nameof(ReclassifySlot);
+
         if (slot == null)
         {
+            ModLogger.DebugLog($"{d_MethodName}: Attempted to reclassify a null slot, ignoring");
             return;
         }
 
         var itemType = ItemX.ItemTypeOf(slot);
         if (itemType == UniqueItemTypes.EMPTY)
         {
+            ModLogger.DebugLog($"{d_MethodName}: Slot has empty item type, cannot determine source list");
             return;
         }
 
+        // Check filled slots first
         if (_filledSlots.TryGetValue(itemType, out var filledList))
         {
             var slotIndex = filledList.IndexOfReference(slot);
             if (slotIndex >= 0)
             {
                 ReclassifySlot(filledList, slot, slotIndex);
+                return;
             }
         }
-        else if (_partialSlots.TryGetValue(itemType, out var partialList))
+
+        // Check partial slots independently (not else if!)
+        if (_partialSlots.TryGetValue(itemType, out var partialList))
         {
             var slotIndex = partialList.IndexOfReference(slot);
             if (slotIndex >= 0)
             {
                 ReclassifySlot(partialList, slot, slotIndex);
+                return;
             }
         }
-        else
+
+        // Check empty slots
+        var emptySlotIndex = _emptySlots.IndexOfReference(slot);
+        if (emptySlotIndex >= 0)
         {
-            var slotIndex = _emptySlots.IndexOfReference(slot);
-            if (slotIndex >= 0)
-            {
-                _emptySlots.Remove(slot);
-                ClassifySlot(slot, orderedFirst: true);
-            }
+            _emptySlots.RemoveAt(emptySlotIndex);
+            ClassifySlot(slot, orderedFirst: true);
+            return;
         }
+
+        // Only log if not found anywhere
+        ModLogger.DebugLog($"{d_MethodName}: Slot not found in any list for item type {ItemX.NameOf(itemType)}");
     }
 
-    internal void ReclassifySlot(IList<ItemStack> currentList, ItemStack slot, int slotIndex)
+    private void ReclassifySlot(IList<ItemStack> currentList, ItemStack slot, int slotIndex)
     {
         currentList.RemoveAt(slotIndex);
         ClassifySlot(slot, orderedFirst: true);
@@ -122,13 +166,19 @@ internal class StorageTargetAdapter<T> where T : class
 
     internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
     {
+        const string d_MethodName = nameof(GetEmptySlotsFor);
+
         var itemType = ItemX.ItemTypeOf(sourceSlot);
         if (itemType == UniqueItemTypes.EMPTY)
         {
+            ModLogger.DebugLog($"{d_MethodName}: Source slot has empty item type, returning empty list");
             return [];
         }
 
-        if (_filledSlots.ContainsKey(itemType) || _partialSlots.ContainsKey(itemType))
+        bool hasFilledSlots = _filledSlots.TryGetValue(itemType, out var filledList) && filledList.Count > 0;
+        bool hasPartialSlots = _partialSlots.TryGetValue(itemType, out var partialList) && partialList.Count > 0;
+
+        if (hasFilledSlots || hasPartialSlots)
         {
             return _emptySlots;
         }
@@ -169,7 +219,7 @@ internal class StorageTargetAdapter<T> where T : class
         return result;
     }
 
-    internal string GetTargetName()
+    internal string GetName()
     {
         if (_source == null)
         {
