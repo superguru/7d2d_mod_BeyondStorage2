@@ -117,16 +117,6 @@ internal class StorageTargetAdapter<T> where T : class
         return _source.GetName();
     }
 
-    internal ItemStack[] GetAllSlotItemStacks()
-    {
-        if (_source == null)
-        {
-            return [];
-        }
-
-        return _source.GetAllSlotItemsStacks();
-    }
-
     public void MarkModified()
     {
         _source?.MarkModified();
