@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -400,16 +399,12 @@ public static class WindowStateManager
         var vehicle = vehicleWindow?.CurrentVehicleEntity;
         if (vehicle != null)
         {
-#if DEBUG
-            ModLogger.DebugLog($"Marking open vehicle entity as modified: {vehicle}");
-#endif
             vehicleWindow.IsDirty = true;
             vehicleWindow.SetAllChildrenDirty();
 
             var containerWindow = vehicleWindow.containerWindow;
             if (containerWindow != null)
             {
-                ModLogger.DebugLog($"Also marking vehicle container window as modified: {containerWindow}");
                 containerWindow.IsDirty = true;
                 containerWindow.SetAllChildrenDirty();
 
