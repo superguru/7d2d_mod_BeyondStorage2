@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Source.Data;
 
 namespace BeyondStorage.Source.Storage;
@@ -8,11 +9,30 @@ namespace BeyondStorage.Source.Storage;
 /// </summary>
 internal class StorageOperationState
 {
-    private static readonly ItemStackReferenceComparer s_itemStackComparer = ItemStackReferenceComparer.Instance;
 
     private readonly HashSet<object> _affectedStorages = [];
-    private readonly HashSet<ItemStack> _affectedStacks = new(s_itemStackComparer);
+    private readonly HashSet<object> _affectedStacks = [];
     private readonly HashSet<int> _uniqueItems = [];
+
+    /// <summary>
+    /// Gets the name of the master storage involved in this operation.
+    /// </summary>
+    public string MasterStorageName { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StorageOperationState"/> class.
+    /// </summary>
+    /// <param name="masterStorageName">The name of the master storage (cannot be null or empty)</param>
+    /// <exception cref="ArgumentException">Thrown when masterStorageName is null or empty</exception>
+    public StorageOperationState(string masterStorageName)
+    {
+        if (string.IsNullOrEmpty(masterStorageName))
+        {
+            throw new ArgumentException("Master storage name cannot be null or empty", nameof(masterStorageName));
+        }
+
+        MasterStorageName = masterStorageName;
+    }
 
     /// <summary>
     /// Gets the number of distinct storages affected during this operation.
@@ -45,7 +65,7 @@ internal class StorageOperationState
         }
 
         var itemType = ItemX.ItemTypeOf(stack);
-        if (itemType != UniqueItemTypes.EMPTY)
+        if (ItemX.IsEmpty(stack))
         {
             _ = _uniqueItems.Add(itemType);
             _ = _affectedStorages.Add(storage);
@@ -66,6 +86,6 @@ internal class StorageOperationState
 
     public override string ToString()
     {
-        return $"Sorage operation affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)";
+        return $"Storage operation on '{MasterStorageName}' affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)";
     }
 }
