@@ -21,12 +21,6 @@ public class SmartSortingFunctions
     private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
         => context.GetClosestStorageSources(StorageSourcePolicy.SmartLoadoutPullSources, ItemScope.PushableItems);
 
-    //private static IReadOnlyList<StorageTargetAdapter> GetSmartPushTargets(StorageContext context)
-    //        => context.GetClosestStorageSources(ItemScope.AllItems);
-
-    //private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
-    //    => context.GetClosestStorageSources(ItemScope.PushableItems);
-
     public static void SmartCollectorPush()
     {
         const string d_MethodName = nameof(SmartCollectorPush);
