@@ -208,7 +208,7 @@ internal static class EntityItemDiscovery
     private static int ProcessDroneItems(EntityDrone drone, EntityProcessingState state)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessDroneItems);
+        //const string d_MethodName = nameof(ProcessDroneItems);
 #endif
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
