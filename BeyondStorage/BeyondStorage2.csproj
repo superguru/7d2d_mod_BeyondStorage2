@@ -57,6 +57,7 @@
     <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
     <Compile Include="Source\Data\CollectionHelper.cs" />
     <Compile Include="Source\Data\ContainerDistanceStore.cs" />
+    <Compile Include="Source\Data\ListExtensions.cs" />
     <Compile Include="Source\Data\StorageSourceAdapterFactory.cs" />
     <Compile Include="Source\Data\StorageTargetAdapter.cs" />
     <Compile Include="Source\Entities\EntityHandler.cs" />
