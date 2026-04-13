@@ -165,6 +165,9 @@ internal static class EntityItemDiscovery
 
     private static bool ShouldProcessDrone(EntityDrone drone, EntityProcessingState state)
     {
+#if DEBUG
+        const string d_MethodName = nameof(ShouldProcessDrone);
+#endif
         // Check ownership
         if (!state.World.IsOwnedbyLocalUser(drone))
         {
@@ -177,9 +180,12 @@ internal static class EntityItemDiscovery
             return false;
         }
 
-        // HAS to be done first, otherwise we might try to access a network synced drone
-        if (drone.isInteractionLocked || drone.isOwnerSyncPending)
+        // HAS to be done right after sanity checks, otherwise we might try to access a network synced drone
+        if (drone.isOwnerSyncPending)
         {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Drone {drone} is currently locked={drone.isInteractionLocked} or pending sync={drone.isOwnerSyncPending}, skipping.");
+#endif
             return false;
         }
 
@@ -191,7 +197,7 @@ internal static class EntityItemDiscovery
         if (!drone.IsUserAllowed(state.World.InternalLocalUserIdentifier))
         {
 #if DEBUG
-            ModLogger.DebugLog($"{nameof(ProcessDroneEntity)}: Drone {drone} is not accessible by the local user, skipping.");
+            ModLogger.DebugLog($"{d_MethodName}: Drone {drone} is not accessible by the local user, skipping.");
 #endif
             return false;
         }
