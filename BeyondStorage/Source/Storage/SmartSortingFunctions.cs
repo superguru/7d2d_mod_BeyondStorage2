@@ -15,6 +15,13 @@ public class SmartSortingFunctions
     private static readonly object s_smartPullLock = new();
     private static readonly object s_smartPushLock = new();
 
+    private static IReadOnlyList<StorageTargetAdapter> GetSmartPushTargets(StorageContext context)
+        => context.GetClosestTargetContainers(ItemScope.AllItems);
+
+    // Add alongside GetSmartPushTargets
+    private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
+        => context.GetClosestTargetContainers(ItemScope.PushableItems);
+
     public static void SmartCollectorPush()
     {
         const string d_MethodName = nameof(SmartCollectorPush);
@@ -33,7 +40,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -74,7 +81,7 @@ public class SmartSortingFunctions
         ModLogger.DebugLog($"{d_MethodName}: Performing smart push from player created storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -86,7 +93,7 @@ public class SmartSortingFunctions
         ModLogger.DebugLog($"{d_MethodName}: Performing smart push from drone storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -102,7 +109,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -122,7 +129,7 @@ public class SmartSortingFunctions
             return;
         }
         var loadout = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
-        var sources = context.GetClosestTargetContainers(ItemScope.PushableItems);
+        var sources = GetSmartLoadoutPullSources(context);
 
         PerformSmartLoadoutPull(context, loadout, sources);
     }
@@ -145,7 +152,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -169,7 +176,7 @@ public class SmartSortingFunctions
         }
 
         var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
-        var targets = context.GetClosestTargetContainers(ItemScope.AllItems);
+        var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(context, source, targets);
     }
@@ -450,7 +457,7 @@ public class SmartSortingFunctions
         // Create a local tracking variable for the source slot's remaining amount
         int sourceSlotRemaining = ItemX.CurrentStackSizeOf(sourceSlot);
 
-        // Limit transfer by the loadout slot's required amount
+        // Limit transfer to the loadout slot's required amount
         int intendedTransfer = Math.Min(sourceSlotRemaining, loadoutSlotRequiredAmount);
         if (intendedTransfer <= 0)
         {
