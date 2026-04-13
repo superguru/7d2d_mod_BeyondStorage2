@@ -14,9 +14,9 @@ namespace BeyondStorage.Source.Entities;
 public static class LootableHandler
 {
     /// <summary>
-    /// Specifies how to filter inventory items based on slot lock status.
+    /// Specifies how to filter storage items based on slot lock status.
     /// </summary>
-    private enum InventoryFilter
+    private enum StorageFilter
     {
         /// <summary>Returns all items regardless of lock status</summary>
         AllItems,
@@ -59,7 +59,7 @@ public static class LootableHandler
         var bag = entity.bag;
         var lockedSlots = bag?.LockedSlots;
 
-        return GetFilteredItems(items, InventoryFilter.UnlockedOnly, lockedSlots);
+        return GetFilteredItems(items, StorageFilter.UnlockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public static class LootableHandler
         var bag = entity.bag;
         var lockedSlots = bag?.LockedSlots;
 
-        return GetFilteredItems(items, InventoryFilter.LockedOnly, lockedSlots);
+        return GetFilteredItems(items, StorageFilter.LockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public static class LootableHandler
             return [];
         }
 
-        return GetFilteredItems(items, InventoryFilter.AllItems, lockedSlots: null);
+        return GetFilteredItems(items, StorageFilter.AllItems, lockedSlots: null);
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public static class LootableHandler
 
         var lockedSlots = lootable.HasSlotLocksSupport ? lootable.SlotLocks : null;
 
-        return GetFilteredItems(items, InventoryFilter.UnlockedOnly, lockedSlots);
+        return GetFilteredItems(items, StorageFilter.UnlockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public static class LootableHandler
 
         var lockedSlots = lootable.HasSlotLocksSupport ? lootable.SlotLocks : null;
 
-        return GetFilteredItems(items, InventoryFilter.LockedOnly, lockedSlots);
+        return GetFilteredItems(items, StorageFilter.LockedOnly, lockedSlots);
     }
 
     /// <summary>
@@ -180,7 +180,7 @@ public static class LootableHandler
             return [];
         }
 
-        return GetFilteredItems(items, InventoryFilter.AllItems, lockedSlots: null);
+        return GetFilteredItems(items, StorageFilter.AllItems, lockedSlots: null);
     }
 
     /// <summary>
@@ -193,12 +193,12 @@ public static class LootableHandler
     /// <param name="lockedSlots">The locked slots array, or null if slot locking is not supported</param>
     /// <returns>Array of non-empty ItemStack objects that pass the specified filter</returns>
     /// <remarks>
-    /// - InventoryFilter.AllItems: Returns all non-empty items regardless of lock status
-    /// - InventoryFilter.UnlockedOnly: Returns only non-empty items from unlocked slots (or all if no lock data)
-    /// - InventoryFilter.LockedOnly: Returns only non-empty items from locked slots (or all if no lock data)
+    /// - StorageFilter.AllItems: Returns all non-empty items regardless of lock status
+    /// - StorageFilter.UnlockedOnly: Returns only non-empty items from unlocked slots (or all if no lock data)
+    /// - StorageFilter.LockedOnly: Returns only non-empty items from locked slots (or all if no lock data)
     /// When lock data is unavailable, UnlockedOnly and LockedOnly behave identically to AllItems.
     /// </remarks>
-    private static ItemStack[] GetFilteredItems(ItemStack[] items, InventoryFilter filter, PackedBoolArray lockedSlots = null)
+    private static ItemStack[] GetFilteredItems(ItemStack[] items, StorageFilter filter, PackedBoolArray lockedSlots = null)
     {
         int itemsLength = items.Length;
         int lockedSlotsLength = lockedSlots?.Length ?? 0;
@@ -222,11 +222,11 @@ public static class LootableHandler
                 // Slots beyond lockedSlots array length are treated as unlocked
                 bool isLocked = (slotIndex < lockedSlotsLength) && lockedSlots[slotIndex];
 
-                if (filter == InventoryFilter.UnlockedOnly && isLocked)
+                if (filter == StorageFilter.UnlockedOnly && isLocked)
                 {
                     continue;
                 }
-                else if (filter == InventoryFilter.LockedOnly && !isLocked)
+                else if (filter == StorageFilter.LockedOnly && !isLocked)
                 {
                     continue;
                 }
