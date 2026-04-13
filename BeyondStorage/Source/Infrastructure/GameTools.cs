@@ -15,7 +15,6 @@ public static class GameTools
             return localisationKey; // Return the key as fallback, not empty string
         }
 
-        ModLogger.DebugLog($"{methodName}: Attempting to localise '{localisationKey}'");
         string localisedMessageFmt = Localization.Get(localisationKey, _caseInsensitive: true);
 
         // Fallback to key if localization not found
