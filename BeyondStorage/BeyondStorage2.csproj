@@ -56,7 +56,7 @@
     <Compile Include="Source\Configuration\ConfigDisplayHelper.cs" />
     <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
     <Compile Include="Source\Data\CollectionHelper.cs" />
-    <Compile Include="Source\Data\ContainerDistanceStore.cs" />
+    <Compile Include="Source\Data\TargetDistanceStore.cs" />
     <Compile Include="Source\Data\IStorageTargetSource.cs" />
     <Compile Include="Source\Data\ListExtensions.cs" />
     <Compile Include="Source\Data\StorageSourceAdapterFactory.cs" />

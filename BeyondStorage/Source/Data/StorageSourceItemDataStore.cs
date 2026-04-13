@@ -15,7 +15,7 @@ internal class StorageSourceItemDataStore
 #pragma warning restore IDE0028 // Simplify collection initialization
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
     private readonly FilterStacksStore _collectionStore = new();
-    private readonly ContainerDistanceStore _containerStore = new();
+    private readonly TargetDistanceStore _containerStore = new();
 
     internal AllowedSourcesList AllowedSourcesSnapshot { get; }
 

@@ -10,7 +10,7 @@ namespace BeyondStorage.Source.Data;
 /// Accepts any <see cref="IStorageTargetSource"/>, allowing mixed storage source types.
 /// Callers are responsible for ensuring each StorageSource is registered at most once.
 /// </summary>
-internal sealed class ContainerDistanceStore
+internal sealed class TargetDistanceStore
 {
     private readonly List<(IStorageTargetSource Container, float Distance)> _entries = [];
 
