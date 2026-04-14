@@ -34,10 +34,10 @@ public class StorageDataManager
     public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = (col) => CollectorHandler.GetCollectorName(col);
 
     public readonly Func<TileEntityWorkstation, TileEntityWorkstation, bool> EqualsWorkstationFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationConsumableItemsFunc = (workstation) => workstation.output;
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationPushableItemsFunc = (workstation) => workstation.output;
+    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationConsumableItemsFunc = (workstation) => WorkstationHandler.GetConsumableItems(workstation);
+    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationPushableItemsFunc = (workstation) => WorkstationHandler.GetPushableItems(workstation);
     public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationLoadoutItemsFunc = (workstation) => []; // No loadout capability for now
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationAllSlotItemsFunc = (workstation) => workstation.output;
+    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationAllSlotItemsFunc = (workstation) => WorkstationHandler.GetAllSlotItems(workstation);
     public Action<TileEntityWorkstation> MarkWorkstationModifiedFunc = (workstation) => WorkstationHandler.MarkWorkstationModified(workstation);
     public readonly Func<TileEntityWorkstation, string> GetWorkstationNameFunc = (workstation) => WorkstationHandler.GetWorkstationName(workstation);
 
