@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -20,11 +21,17 @@ internal class StorageOperationState
     public string MasterStorageName { get; }
 
     /// <summary>
+    /// Gets the type of transfer operation being performed.
+    /// </summary>
+    public SmartTransferOperation Operation { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="StorageOperationState"/> class.
     /// </summary>
     /// <param name="masterStorageName">The name of the master storage (cannot be null or empty)</param>
+    /// <param name="operation">The type of transfer operation being performed</param>
     /// <exception cref="ArgumentException">Thrown when masterStorageName is null or empty</exception>
-    public StorageOperationState(string masterStorageName)
+    public StorageOperationState(string masterStorageName, SmartTransferOperation operation)
     {
         if (string.IsNullOrEmpty(masterStorageName))
         {
@@ -32,6 +39,7 @@ internal class StorageOperationState
         }
 
         MasterStorageName = masterStorageName;
+        Operation = operation;
     }
 
     /// <summary>
@@ -54,25 +62,72 @@ internal class StorageOperationState
     /// </summary>
     public int ItemCount { get; set; } = 0;
 
+    private bool ShouldRecordTransfer(int initialStackSize, int currentStackSize, int maxStackSize)
+    {
+        switch (Operation)
+        {
+            case SmartTransferOperation.Push:
+                /* | Stack Before | Stack After | */
+
+                // | Full         | Partial     |
+                var fromFullToPartial = ((initialStackSize == maxStackSize) && (currentStackSize < maxStackSize));
+
+                // | Full         | Empty       |
+                var fromFullToEmpty = ((initialStackSize == maxStackSize) && (currentStackSize == 0));
+
+                // | Partial      | Empty       |
+                var fromPartialToEmpty = ((initialStackSize < maxStackSize) && (currentStackSize == 0));
+
+                return fromFullToPartial || fromFullToEmpty || fromPartialToEmpty;
+
+            case SmartTransferOperation.TopUp:
+                /* | Stack Before | Stack After | */
+
+                // | Partial | Full |
+                var fromPartialToFull = ((initialStackSize < maxStackSize) && (currentStackSize == maxStackSize));
+
+                // | Partial | Partial |
+                var fromPartialToPartial = ((initialStackSize < currentStackSize) && (currentStackSize < maxStackSize));
+
+                return fromPartialToFull || fromPartialToPartial;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Records that items were affected by the operation
     /// </summary>
-    internal void RecordTransfer(StorageTargetAdapter storage, ItemStack stack, int itemCount)
+    internal void RecordTransfer(StorageTargetAdapter storage, ItemStack stack, int initialStackSize, int currentStackSize, int maxStackSize, int transferCount)
     {
-        if (storage == null || stack == null || itemCount <= 0)
+        const string d_MethodName = nameof(RecordTransfer);
+
+        if (storage == null || stack == null || maxStackSize <= 0 || transferCount <= 0)
+        {
+            return;
+        }
+
+        var shouldRecord = ShouldRecordTransfer(initialStackSize, currentStackSize, maxStackSize);
+        if (!shouldRecord)
         {
             return;
         }
 
         var itemType = ItemX.ItemTypeOf(stack);
-        if (ItemX.IsEmpty(stack))
+        if (itemType != UniqueItemTypes.EMPTY)
         {
             _ = _uniqueItems.Add(itemType);
-            _ = _affectedStorages.Add(storage);
-            _ = _affectedStacks.Add(stack);
-
-            ItemCount += itemCount;
         }
+#if DEBUG
+        else
+        {
+            ModLogger.DebugLog($"{d_MethodName}: transfer of untyped stack in storage '{storage.GetName()}' for master storage '{MasterStorageName}'");
+        }
+#endif
+        _ = _affectedStorages.Add(storage);
+        _ = _affectedStacks.Add(stack);
+
+        ItemCount += transferCount;
     }
 
     internal void Reset()
