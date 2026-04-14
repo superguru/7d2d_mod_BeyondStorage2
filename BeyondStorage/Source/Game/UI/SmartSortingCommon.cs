@@ -9,12 +9,22 @@ public class SmartSortingCommon
         SmartSortingFunctions.SmartCollectorPush();
     }
 
+    public static void SmartPlayerInventoryPullLoadout_EventHandler(XUiController _sender, int _mouseButton)
+    {
+        SmartSortingFunctions.SmartPlayerInventoryLoadoutPull();
+    }
+
     public static void SmartPlayerInventoryPush_EventHandler(XUiController _sender, int _mouseButton)
     {
         SmartSortingFunctions.SmartPlayerInventoryPush();
     }
 
-    internal static void SmartLootWindowPush_EventHandler(XUiController _sender, int _mouseButton)
+    public static void SmartDroneInventoryPullLoadout_EventHandler(XUiController _sender, int _mouseButton)
+    {
+        SmartSortingFunctions.SmartDroneInventoryLoadoutPull();
+    }
+
+    public static void SmartLootWindowPush_EventHandler(XUiController _sender, int _mouseButton)
     {
         SmartSortingFunctions.SmartLootWindowPush();
     }
@@ -29,7 +39,7 @@ public class SmartSortingCommon
         SmartSortingFunctions.SmartVehiclePush();
     }
 
-    internal static void SmartWorkstationOutputPush_EventHandler(XUiController _sender, int _mouseButton)
+    public static void SmartWorkstationOutputPush_EventHandler(XUiController _sender, int _mouseButton)
     {
         SmartSortingFunctions.SmartWorkstationOutputPush();
     }
