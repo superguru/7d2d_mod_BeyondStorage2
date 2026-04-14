@@ -33,8 +33,9 @@ public static class StorageItemRemovalService
         }
 
         var itemName = itemValue?.ItemClass?.GetItemName();
+#if DEBUG
         ModLogger.DebugLog($"{d_MethodName}: trying to remove {stillNeeded} {itemName}");
-
+#endif
         int originalNeeded = stillNeeded;
         var itemFilter = UniqueItemTypes.FromItemValue(itemValue);
         bool itemCanStack = ItemPropertiesCache.GetCanStack(itemValue);
@@ -58,7 +59,7 @@ public static class StorageItemRemovalService
             var sourcesByType = context?.Sources?.DataStore?.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType?.Count;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
+            //ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
 #endif
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {

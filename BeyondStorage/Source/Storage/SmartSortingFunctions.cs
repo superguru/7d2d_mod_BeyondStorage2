@@ -41,7 +41,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartLootWindowPush()
@@ -62,39 +62,78 @@ public class SmartSortingFunctions
         }
 
         var drone = WindowStateManager.GetDroneForOpenStorageContainer();
-        if (drone == null)
-        {
-            SmartPushFromPlayerCreatedStorage(context, lootable);
-        }
-        else
+        if (drone != null)
         {
             SmartPushFromDroneStorage(context, drone);
         }
-
+        else
+        {
+            SmartPushFromPlayerCreatedStorage(context, lootable);
+        }
     }
 
     private static void SmartPushFromPlayerCreatedStorage(StorageContext context, ITileEntityLootable lootable)
     {
-#if DEBUG
         const string d_MethodName = nameof(SmartPushFromPlayerCreatedStorage);
-        ModLogger.DebugLog($"{d_MethodName}: Performing smart push from player created storage");
+
+#if DEBUG
+        //ModLogger.DebugLog($"{d_MethodName}: Performing smart push from player created storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
+    }
+
+    public static void SmartDroneInventoryLoadoutPull()
+    {
+        const string d_MethodName = nameof(SmartDroneInventoryLoadoutPull);
+
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
+            return;
+        }
+        var drone = WindowStateManager.GetDroneForOpenStorageContainer();
+        if (drone == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: No open drone storage found, returning");
+            return;
+        }
+
+        var loadout = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
+        var sources = GetSmartLoadoutPullSources(context);
+
+        PerformSmartLoadoutPull(d_MethodName, context, loadout, sources);
     }
 
     private static void SmartPushFromDroneStorage(StorageContext context, EntityDrone drone)
     {
-#if DEBUG
         const string d_MethodName = nameof(SmartPushFromDroneStorage);
-        ModLogger.DebugLog($"{d_MethodName}: Performing smart push from drone storage");
+
+#if DEBUG
+        //ModLogger.DebugLog($"{d_MethodName}: Performing smart push from drone storage");
 #endif
         var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
+    }
+
+    public static void SmartPlayerInventoryLoadoutPull()
+    {
+        const string d_MethodName = nameof(SmartPlayerInventoryLoadoutPull);
+
+        if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
+            return;
+        }
+
+        var loadout = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
+        var sources = GetSmartLoadoutPullSources(context);
+
+        PerformSmartLoadoutPull(d_MethodName, context, loadout, sources);
     }
 
     public static void SmartPlayerInventoryPush()
@@ -110,27 +149,32 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartVehicleLoadoutPull()
     {
         const string d_MethodName = nameof(SmartVehicleLoadoutPull);
+
+        ModLogger.DebugLog($"{d_MethodName}: Starting smart loadout pull for vehicle2");
+
         if (!ValidationHelper.ValidateStorageContext(d_MethodName, out StorageContext context))
         {
             ModLogger.DebugLog($"{d_MethodName}: Validation failed, returning");
             return;
         }
+
         var vehicle = WindowStateManager.GetOpenVehicleTileEntity();
         if (vehicle == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: No open vehicle found, returning");
+            ModLogger.DebugLog($"{d_MethodName}: No open vehicle2 found, returning");
             return;
         }
+
         var loadout = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
         var sources = GetSmartLoadoutPullSources(context);
 
-        PerformSmartLoadoutPull(context, loadout, sources);
+        PerformSmartLoadoutPull(d_MethodName, context, loadout, sources);
     }
 
     public static void SmartVehiclePush()
@@ -146,14 +190,14 @@ public class SmartSortingFunctions
         var vehicle = WindowStateManager.GetOpenVehicleTileEntity();
         if (vehicle == null)
         {
-            ModLogger.DebugLog($"{d_MethodName}: No open vehicle found, returning");
+            ModLogger.DebugLog($"{d_MethodName}: No open vehicle2 found, returning");
             return;
         }
 
         var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
 
@@ -177,34 +221,32 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(context, source, targets);
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
-    private static void PerformSmartLoadoutPull<T>(StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter> sources) where T : class
+    private static void PerformSmartLoadoutPull<T>(string methodName, StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter> sources) where T : class
     {
-        const string d_MethodName = nameof(PerformSmartLoadoutPull);
-
         lock (s_smartPullLock)
         {
             if (loadout == null)
             {
-                ModLogger.DebugLog($"{d_MethodName}: Loadout is null, returning");
+                ModLogger.DebugLog($"{methodName}: Loadout is null, returning");
                 return;
             }
 
             if (sources == null || sources.Count == 0)
             {
-                ModLogger.DebugLog($"{d_MethodName}: No source storages found, returning");
+                ModLogger.DebugLog($"{methodName}: No source storages found, returning");
                 return;
             }
 
-            var state = new StorageOperationState(loadout.GetName());
+            var state = new StorageOperationState(loadout.GetName(), SmartTransferOperation.TopUp);
 
             // Fill up any existing partial locked slots
-            PullSourceItemsToLoadout(state, sources, loadout);
+            PullSourceItemsToLoadout(methodName, state, sources, loadout);
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {state}");
+            ModLogger.DebugLog($"{methodName}: {state}");
 #endif
 
             if (state.StackCount > 0)
@@ -213,38 +255,36 @@ public class SmartSortingFunctions
                 context.InvalidateCache();
             }
 
-            UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
+            UIRefreshHelper.ValidateAndRefreshUI(context, methodName);
         }
     }
 
-    private static void PerformSmartPush<S>(StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets) where S : class
+    private static void PerformSmartPush<S>(string methodName, StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets) where S : class
     {
-        const string d_MethodName = nameof(PerformSmartPush);
-
         lock (s_smartPushLock)
         {
             if (source == null)
             {
-                ModLogger.DebugLog($"{d_MethodName}: Source is null, returning");
+                ModLogger.DebugLog($"{methodName}: Source is null, returning");
                 return;
             }
 
             if (targets == null || targets.Count == 0)
             {
-                ModLogger.DebugLog($"{d_MethodName}: No target storages found, returning");
+                ModLogger.DebugLog($"{methodName}: No target storages found, returning");
                 return;
             }
 
-            var state = new StorageOperationState(source.GetName());
+            var state = new StorageOperationState(source.GetName(), SmartTransferOperation.Push);
 
             // First fill up existing partial slots as at the start of the operation
-            PushSourceItemsToTarget(state, source, targets, allowPushToEmpty: false);
+            PushSourceItemsToTarget(methodName, state, source, targets, allowPushToEmpty: false);
 
             // Then fill up any empty slots, and any new partial slots that are created when partially filling those empty slots
-            PushSourceItemsToTarget(state, source, targets, allowPushToEmpty: true);
+            PushSourceItemsToTarget(methodName, state, source, targets, allowPushToEmpty: true);
 
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: {state}");
+            ModLogger.DebugLog($"{methodName}: {state}");
 #endif
 
             if (state.StackCount > 0)
@@ -253,22 +293,21 @@ public class SmartSortingFunctions
                 context.InvalidateCache();
             }
 
-            UIRefreshHelper.ValidateAndRefreshUI(context, d_MethodName);
+            UIRefreshHelper.ValidateAndRefreshUI(context, methodName);
         }
     }
 
-    private static void PullSourceItemsToLoadout<T>(StorageOperationState state, IReadOnlyList<StorageTargetAdapter> sources, StorageSourceAdapter<T> loadout) where T : class
+    private static void PullSourceItemsToLoadout<T>(string methodName, StorageOperationState state, IReadOnlyList<StorageTargetAdapter> sources, StorageSourceAdapter<T> loadout) where T : class
     {
-        const string d_MethodName = nameof(PullSourceItemsToLoadout);
-
         var loadoutSlots = loadout.GetLoadoutItemStacks();
+        bool loadoutModified = false;
 
         for (int i = 0; i < loadoutSlots.Length; i++)
         {
             var loadoutSlot = loadoutSlots[i];
             if (ItemX.IsEmpty(loadoutSlot))
             {
-                ModLogger.DebugLog($"{d_MethodName}: Loadout slot {i} is empty, skipping");
+                ModLogger.DebugLog($"{methodName}: Loadout slot {i} is empty, skipping");
                 continue;
             }
 
@@ -276,7 +315,7 @@ public class SmartSortingFunctions
             if (maxStackSize <= 0)
             {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Loadout slot {i} in {state.MasterStorageName} has invalid max stack size {maxStackSize}, skipping");
+                ModLogger.DebugLog($"{methodName}: Loadout slot {i} in {state.MasterStorageName} has invalid max stack size {maxStackSize}, skipping");
 #endif
                 continue;
             }
@@ -298,15 +337,27 @@ public class SmartSortingFunctions
                     continue;
                 }
 
-                PullToLoadoutSlots(d_MethodName, state, loadout, loadoutSlot, source, maxStackSize, ref loadoutSlotRequiredAmount);
+                int requiredBefore = loadoutSlotRequiredAmount;
+
+                PullToLoadoutSlots(methodName, state, loadout, loadoutSlot, source, maxStackSize, ref loadoutSlotRequiredAmount);
+
+                if (loadoutSlotRequiredAmount < requiredBefore)
+                {
+                    loadoutModified = true;
+                }
             }
+        }
+
+        // Deferred from PullToLoadoutSlots — called once after all sources are processed
+        // to prevent game bag rebuilds from invalidating loadoutSlot references mid-loop
+        if (loadoutModified)
+        {
+            loadout.MarkModified();
         }
     }
 
-    private static void PushSourceItemsToTarget<S>(StorageOperationState state, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets, bool allowPushToEmpty) where S : class
+    private static void PushSourceItemsToTarget<S>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets, bool allowPushToEmpty) where S : class
     {
-        const string d_MethodName = nameof(PushSourceItemsToTarget);
-
         var sourceSlots = source.GetPushableItemStacks();
 
         for (int i = 0; i < sourceSlots.Length; i++)
@@ -321,7 +372,7 @@ public class SmartSortingFunctions
             if (maxStackSize <= 0)
             {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Source slot {i} in {state.MasterStorageName} has invalid max stack size {maxStackSize}, skipping");
+                ModLogger.DebugLog($"{methodName}: Source slot {i} in {state.MasterStorageName} has invalid max stack size {maxStackSize}, skipping");
 #endif
                 continue;
             }
@@ -350,15 +401,15 @@ public class SmartSortingFunctions
 
                 while ((sourceSlotRemaining > 0) && (partialSlots.Count > 0 || emptySlots.Count > 0))
                 {
-                    PushToTargetSlots(d_MethodName, state, source, sourceSlot, target, partialSlots, maxStackSize, ref sourceSlotRemaining);
+                    PushToTargetSlots(methodName, state, source, sourceSlot, target, partialSlots, maxStackSize, ref sourceSlotRemaining);
 #if DEBUG
-                    ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after transfer to partial slot {targetStorageName}");
+                    ModLogger.DebugLog($"{methodName}: {sourceSlotRemaining} items remaining after transfer to partial slot {targetStorageName}");
 #endif
                     if (sourceSlotRemaining > 0 && allowPushToEmpty)
                     {
-                        PushToTargetSlots(d_MethodName, state, source, sourceSlot, target, emptySlots, maxStackSize, ref sourceSlotRemaining);
+                        PushToTargetSlots(methodName, state, source, sourceSlot, target, emptySlots, maxStackSize, ref sourceSlotRemaining);
 #if DEBUG
-                        ModLogger.DebugLog($"{d_MethodName}: {sourceSlotRemaining} items remaining after transfer to empty slot {targetStorageName}");
+                        ModLogger.DebugLog($"{methodName}: {sourceSlotRemaining} items remaining after transfer to empty slot {targetStorageName}");
 #endif
                     }
                 }
@@ -370,7 +421,8 @@ public class SmartSortingFunctions
     {
         const int FIRST_SLOT = 0;
 
-        int transferredToLoadout = 0;
+        int transferCount = 0;
+        int initialStackSize = maxStackSize - loadoutSlotRequiredAmount;
 
         // Keep fetching fresh source slots until loadout slot is full or no more items available
         while (loadoutSlotRequiredAmount > 0)
@@ -388,9 +440,6 @@ public class SmartSortingFunctions
 
             if (ItemX.IsEmpty(sourceSlot))
             {
-#if DEBUG
-                ModLogger.DebugLog($"{methodName}: Skipping empty source slot");
-#endif
                 // Reclassify empty slot so it doesn't appear in next iteration
                 source.ReclassifySlot(sourceSlot);
                 continue;
@@ -398,7 +447,7 @@ public class SmartSortingFunctions
 
             var transferAmount = TransferLoadoutSlotItems(methodName, state, loadoutSlot, sourceSlot, maxStackSize, ref loadoutSlotRequiredAmount);
 
-            transferredToLoadout += transferAmount;
+            transferCount += transferAmount;
 
             // Reclassify source slot after transfer (might be partial now, or empty)
             if (transferAmount > 0)
@@ -408,12 +457,14 @@ public class SmartSortingFunctions
         }
 
         // Mark both storage containers as modified if any transfer occurred
-        if (transferredToLoadout > 0)
+        if (transferCount > 0)
         {
-            source.MarkModified();
-            loadout.MarkModified();
+            int currentStackSize = maxStackSize - loadoutSlotRequiredAmount;
 
-            state.RecordTransfer(source, loadoutSlot, transferredToLoadout);
+            source.MarkModified();
+            // loadout.MarkModified() deferred to caller — see PullSourceItemsToLoadout
+
+            state.RecordTransfer(source, loadoutSlot, initialStackSize, currentStackSize, maxStackSize, transferCount);
         }
     }
 
@@ -421,7 +472,8 @@ public class SmartSortingFunctions
     {
         const int FIRST_SLOT = 0;
 
-        int transferredToTarget = 0;
+        int transferCount = 0;
+        int initialStackSize = sourceSlotRemaining;
 
         while (targetSlots.Count > FIRST_SLOT && sourceSlotRemaining > 0)
         {
@@ -429,7 +481,7 @@ public class SmartSortingFunctions
 
             var transferAmount = TransferTargetSlotItems(methodName, state, sourceSlot, targetSlot, maxStackSize, ref sourceSlotRemaining);
 
-            transferredToTarget += transferAmount;
+            transferCount += transferAmount;
 
             if (transferAmount > 0)
             {
@@ -437,12 +489,14 @@ public class SmartSortingFunctions
             }
         }
 
-        if (transferredToTarget > 0)
+        if (transferCount > 0)
         {
+            int currentStackSize = sourceSlotRemaining;
+
             source.MarkModified();
             target.MarkModified();
 
-            state.RecordTransfer(target, sourceSlot, transferredToTarget);
+            state.RecordTransfer(target, sourceSlot, initialStackSize, currentStackSize, maxStackSize, transferCount);
         }
     }
 

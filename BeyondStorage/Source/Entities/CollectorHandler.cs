@@ -56,7 +56,7 @@ public static class CollectorHandler
     public static void MarkCollectorModified(TileEntityCollector collector)
     {
         const string d_MethodName = nameof(MarkCollectorModified);
-        ModLogger.DebugLog($"{d_MethodName}: Marking Collector '{collector?.GetType().Name}' as modified");
+        //ModLogger.DebugLog($"{d_MethodName}: Marking Collector '{collector?.GetType().Name}' as modified");
 
         if (collector == null)
         {
@@ -83,10 +83,10 @@ public static class CollectorHandler
         var s = "";
 
         s = string.Join(",", collector.FillValues.Select(f => f.ToString()));
-        ModLogger.DebugLog($"{d_MethodName}: Fill values after item removal: {s}");
+        //ModLogger.DebugLog($"{d_MethodName}: Fill values after item removal: {s}");
 
         s = string.Join(",", collector.Items.Select(stack => stack.count.ToString()));
-        ModLogger.DebugLog($"{d_MethodName}: Slot counts after item removal: {s}");
+        //ModLogger.DebugLog($"{d_MethodName}: Slot counts after item removal: {s}");
 
         /* Scenario: 
          * - Collector has these items counts in the slots 1, 2, 0; slot 0 is partially filled, slot 1 is full, slot 2 is producing
