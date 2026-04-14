@@ -62,7 +62,7 @@ internal class StorageOperationState
     /// </summary>
     public int ItemCount { get; set; } = 0;
 
-    private bool ShouldRecordTransfer(int initialStackSize, int currentStackSize, int maxStackSize)
+    private bool ShouldRegisterStack(int initialStackSize, int currentStackSize, int maxStackSize)
     {
         switch (Operation)
         {
@@ -107,10 +107,11 @@ internal class StorageOperationState
             return;
         }
 
-        var shouldRecord = ShouldRecordTransfer(initialStackSize, currentStackSize, maxStackSize);
-        if (!shouldRecord)
+        var shouldRegisterStack = ShouldRegisterStack(initialStackSize, currentStackSize, maxStackSize);
+        if (shouldRegisterStack)
         {
-            return;
+            _ = _affectedStorages.Add(storage);
+            _ = _affectedStacks.Add(stack);
         }
 
         var itemType = ItemX.ItemTypeOf(stack);
@@ -124,8 +125,6 @@ internal class StorageOperationState
             ModLogger.DebugLog($"{d_MethodName}: transfer of untyped stack in storage '{storage.GetName()}' for master storage '{MasterStorageName}'");
         }
 #endif
-        _ = _affectedStorages.Add(storage);
-        _ = _affectedStacks.Add(stack);
 
         ItemCount += transferCount;
     }
