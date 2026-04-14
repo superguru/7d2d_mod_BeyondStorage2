@@ -56,12 +56,16 @@
     <Compile Include="Source\Configuration\ConfigDisplayHelper.cs" />
     <Compile Include="Source\Configuration\ConfigReloadHelper.cs" />
     <Compile Include="Source\Data\CollectionHelper.cs" />
+    <Compile Include="Source\Data\SlotMaps.cs" />
     <Compile Include="Source\Data\TargetDistanceStore.cs" />
     <Compile Include="Source\Data\IStorageTargetSource.cs" />
     <Compile Include="Source\Data\ListExtensions.cs" />
     <Compile Include="Source\Data\StorageSourceAdapterFactory.cs" />
     <Compile Include="Source\Data\StorageTargetAdapter.cs" />
+    <Compile Include="Source\Diagnostics\DebugTools.cs" />
     <Compile Include="Source\Entities\EntityHandler.cs" />
+    <Compile Include="Source\Storage\SmartTransferOperation.cs" />
+    <Compile Include="Source\Storage\StorageFilter.cs" />
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
     <Compile Include="Source\Game\UI\UIControlHelpers.cs" />
     <Compile Include="Source\Game\UI\WindowStateManager.cs" />

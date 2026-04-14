@@ -17,6 +17,8 @@ public static class UIControlHelpers
     public const string SMART_WORKSTATION_OUTPUT_PUSH_BUTTON_ID = "btnBeyondSmartWorkstationOutputPush";
 
     /// === Pull ===
+    public const string SMART_DRONE_INVENTORY_PULL_LOADOUT_BUTTON_ID = "btnBeyondSmartDronePullLoadout";
+    public const string SMART_PLAYER_INVENTORY_PULL_LOADOUT_BUTTON_ID = "btnBeyondSmartPlayerInventoryPullLoadout";
     public const string SMART_VEHICLE_PULL_LOADOUT_BUTTON_ID = "btnBeyondSmartVehiclePullLoadout";
 
     private static XUiController GetSmartButtonByID(XUiController instance, string buttonId)
@@ -41,10 +43,23 @@ public static class UIControlHelpers
         var btnBeyondSmartCollectorPush = GetSmartButtonByID(instance, SMART_COLLECTOR_PUSH_BUTTON_ID);
         return btnBeyondSmartCollectorPush;
     }
+
+    public static XUiController GetSmartDroneInventoryPullLoadoutButton(XUiController instance)
+    {
+        var btnBeyondSmartDronePullLoadout = GetSmartButtonByID(instance, SMART_DRONE_INVENTORY_PULL_LOADOUT_BUTTON_ID);
+        return btnBeyondSmartDronePullLoadout;
+    }
+
     public static XUiController GetSmartLootWindowPushButton(XUiController instance)
     {
         var btnBeyondSmartLootWindowPush = GetSmartButtonByID(instance, SMART_LOOT_WINDOW_PUSH_BUTTON_ID);
         return btnBeyondSmartLootWindowPush;
+    }
+
+    public static XUiController GetSmartPlayerInventoryPullLoadoutButton(XUiController instance)
+    {
+        var btnBeyondSmartPlayerInventoryPullLoadout = GetSmartButtonByID(instance, SMART_PLAYER_INVENTORY_PULL_LOADOUT_BUTTON_ID);
+        return btnBeyondSmartPlayerInventoryPullLoadout;
     }
 
     public static XUiController GetSmartPlayerInventoryPushButton(XUiController instance)

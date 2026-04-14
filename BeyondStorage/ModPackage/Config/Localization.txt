@@ -1,5 +1,6 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,English
 btnBeyondSmartCollectorPush_ToolTip,,,,,Pushes completed items from here to the nearest storages that already have that type of item
+btnBeyondSmartDronePullLoadout_ToolTip,,,,,Pull in items to top up the drone's loadout (the locked slots) from nearby storages
 btnBeyondSmartLootWindowPush_ToolTip,,,,,Pushes items from here to the nearest other storages that already have that type of item
 btnBeyondSmartPlayerInventoryPullLoadout_ToolTip,,,,,Pull in items to top up your backpack inventory loadout (the locked slots) from nearby storages
 btnBeyondSmartPlayerInventoryPush_ToolTip,,,,,Pushes items from unlocked slots in your backpack inventory to the nearest storages that already have that type of item

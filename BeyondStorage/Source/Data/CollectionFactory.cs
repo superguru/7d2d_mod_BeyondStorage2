@@ -4,8 +4,8 @@ namespace BeyondStorage.Source.Data;
 
 public static class CollectionFactory
 {
-    private const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
-    private const int DEFAULT_STORAGESOURCE_LIST_CAPACITY = 32;
+    public const int DEFAULT_ITEMSTACK_LIST_CAPACITY = 128;
+    public const int DEFAULT_STORAGESOURCE_LIST_CAPACITY = 32;
 
     public static List<ItemStack> EmptyItemStackList { get; } = [];
 

@@ -33,12 +33,30 @@ internal static class XUiControllerPatches
 #endif
             }
 
+            var btnBeyondSmartDronePullLoadout = UIControlHelpers.GetSmartDroneInventoryPullLoadoutButton(__instance);
+            if (btnBeyondSmartDronePullLoadout != null)
+            {
+                btnBeyondSmartDronePullLoadout.OnPress -= SmartSortingCommon.SmartDroneInventoryPullLoadout_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button event handler removed");
+#endif
+            }
+
             var btnBeyondSmartLootWindowPush = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
             if (btnBeyondSmartLootWindowPush != null)
             {
                 btnBeyondSmartLootWindowPush.OnPress -= SmartSortingCommon.SmartLootWindowPush_EventHandler;
 #if DEBUG
                 ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button event handler removed");
+#endif
+            }
+
+            var btnBeyondSmartPlayerInventoryPullLoadout = UIControlHelpers.GetSmartPlayerInventoryPullLoadoutButton(__instance);
+            if (btnBeyondSmartPlayerInventoryPullLoadout != null)
+            {
+                btnBeyondSmartPlayerInventoryPullLoadout.OnPress -= SmartSortingCommon.SmartPlayerInventoryPullLoadout_EventHandler;
+#if DEBUG
+                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory pull loadout button event handler removed");
 #endif
             }
 

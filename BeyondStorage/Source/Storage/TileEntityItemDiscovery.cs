@@ -108,7 +108,7 @@ internal static class TileEntityItemDiscovery
 
         if (state.Config.PullFromWorkstationOutputs && tileEntity is TileEntityWorkstation workstation)
         {
-            ProcessWorkstationEntity(workstation, state);
+            ProcessWorkstationEntity(workstation, distance, state);
             return;
         }
 
@@ -167,7 +167,7 @@ internal static class TileEntityItemDiscovery
 
     #region Workstation Processing
 
-    private static void ProcessWorkstationEntity(TileEntityWorkstation workstation, TileEntityProcessingState state)
+    private static void ProcessWorkstationEntity(TileEntityWorkstation workstation, float distance, TileEntityProcessingState state)
     {
         state.WorkstationsProcessed++;
 
@@ -177,6 +177,7 @@ internal static class TileEntityItemDiscovery
         }
 
         ProcessWorkstationItems(workstation, state);
+        ProcessWorkstationStorage(workstation, distance, state);
     }
 
     private static bool ShouldProcessWorkstation(TileEntityWorkstation workstation)
@@ -207,6 +208,15 @@ internal static class TileEntityItemDiscovery
         }
 #endif
         return validStacksRegistered;
+    }
+
+    private static void ProcessWorkstationStorage(TileEntityWorkstation workstation, float distance, TileEntityProcessingState state)
+    {
+        var context = state.Context;
+        var sourceAdapter = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
+
+        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
+        state.ValidWorkstationsFound++;
     }
 
     #endregion
@@ -262,7 +272,7 @@ internal static class TileEntityItemDiscovery
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
 
-        context.Sources.DataStore.RegisterContainerSource(sourceAdapter, distance);
+        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
         state.ValidContainersFound++;
     }
 

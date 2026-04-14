@@ -5,19 +5,19 @@ using BeyondStorage.Source.Storage;
 namespace BeyondStorage.Source.Data;
 
 /// <summary>
-/// Stores (container, distance) pairs with on-demand distance sorting.
+/// Stores (storage, distance) pairs with on-demand distance sorting.
 /// Accepts any <see cref="IStorageTargetSource"/>, allowing mixed storage source types.
+/// Slot maps are pre-built at registration and cloned per operation at query time.
 /// Callers are responsible for ensuring each StorageSource is registered at most once.
 /// </summary>
 internal sealed class TargetDistanceStore
 {
-    private readonly List<(IStorageTargetSource Container, float Distance)> _entries = [];
+    private readonly List<(IStorageTargetSource Storage, float Distance, SlotMaps AllItems, SlotMaps Pushable)> _entries = [];
 
     public bool IsSorted { get; private set; } = true;
     public int Count => _entries.Count;
-    public IReadOnlyList<(IStorageTargetSource Storage, float Distance)> Entries => _entries;
 
-    public void Add(IStorageTargetSource storage, float distance)
+    public void Add(IStorageTargetSource storage, float distance, SlotMaps allItemsMaps, SlotMaps pushableMaps)
     {
         const string d_MethodName = nameof(Add);
 
@@ -27,7 +27,7 @@ internal sealed class TargetDistanceStore
             return;
         }
 
-        _entries.Add((storage, distance));
+        _entries.Add((storage, distance, allItemsMaps, pushableMaps));
         IsSorted = false;
     }
 
@@ -55,14 +55,18 @@ internal sealed class TargetDistanceStore
     {
         Sort();
 
-        var result = new List<StorageTargetAdapter>(Entries.Count); // pre-sized to avoid resizes
-        for (int i = 0; i < Entries.Count; i++)
+        var result = new List<StorageTargetAdapter>(_entries.Count);
+        for (int i = 0; i < _entries.Count; i++)
         {
-            var entry = Entries[i];
-            if (allowedSourcePolicy.IsAllowedSource(entry.Storage.GetSourceType()))
+            var entry = _entries[i];
+            if (!allowedSourcePolicy.IsAllowedSource(entry.Storage.GetSourceType()))
             {
-                result.Add(new StorageTargetAdapter(entry.Storage, entry.Distance, filter));
+                continue;
             }
+
+            // Clone gives each operation its own mutable copy for ReclassifySlot
+            var maps = filter == ItemScope.AllItems ? entry.AllItems.Clone() : entry.Pushable.Clone();
+            result.Add(new StorageTargetAdapter(entry.Storage, entry.Distance, maps));
         }
 
         return result;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
@@ -298,6 +299,65 @@ public static class ItemX
     /// <returns>"PLAYER" for player inventory slots, "STORAGE" for container slots</returns>
     internal static string GetInventoryName(bool isCurrentSlotPlayerInventory) =>
         isCurrentSlotPlayerInventory ? "PLAYER" : "STORAGE";
+
+    #endregion
+
+    #region Item Filtering
+
+    /// <summary>
+    /// Core logic for filtering items based on locked slots and emptiness.
+    /// Optimized with a single-pass loop to minimize allocations and improve performance.
+    /// Empty slots are always filtered out.
+    /// </summary>
+    /// <param name="items">The item array to filter</param>
+    /// <param name="filter">The inventory filter to apply (AllItems, UnlockedOnly, or LockedOnly)</param>
+    /// <param name="lockedSlots">The locked slots array, or null if slot locking is not supported</param>
+    /// <returns>Array of non-empty ItemStack objects that pass the specified filter</returns>
+    /// <remarks>
+    /// - SmartTransferOperation.AllItems: Returns all non-empty items regardless of lock status
+    /// - SmartTransferOperation.UnlockedOnly: Returns only non-empty items from unlocked slots (or all if no lock data)
+    /// - SmartTransferOperation.LockedOnly: Returns only non-empty items from locked slots (or all if no lock data)
+    /// When lock data is unavailable, UnlockedOnly and LockedOnly behave identically to AllItems.
+    /// </remarks>
+    public static ItemStack[] GetFilteredItems(ItemStack[] items, StorageFilter filter, PackedBoolArray lockedSlots = null)
+    {
+        int itemsLength = items.Length;
+        int lockedSlotsLength = lockedSlots?.Length ?? 0;
+        bool hasLockedSlots = lockedSlotsLength > 0;
+
+        var result = new List<ItemStack>(itemsLength);
+
+        for (int slotIndex = 0; slotIndex < itemsLength; slotIndex++)
+        {
+            var stack = items[slotIndex];
+
+            // Always filter out empty slots
+            if (stack == null || stack.count == 0)
+            {
+                continue;
+            }
+
+            // Apply lock-based filtering only when lock data is available
+            if (hasLockedSlots)
+            {
+                // Slots beyond lockedSlots array length are treated as unlocked
+                bool isLocked = (slotIndex < lockedSlotsLength) && lockedSlots[slotIndex];
+
+                if (filter == StorageFilter.UnlockedOnly && isLocked)
+                {
+                    continue;
+                }
+                else if (filter == StorageFilter.LockedOnly && !isLocked)
+                {
+                    continue;
+                }
+            }
+
+            result.Add(stack);
+        }
+
+        return [.. result];
+    }
 
     #endregion
 }

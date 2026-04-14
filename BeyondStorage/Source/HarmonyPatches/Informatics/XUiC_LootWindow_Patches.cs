@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
-using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -23,10 +23,19 @@ internal static class XUiC_LootWindow_Patches
 #if DEBUG
         const string d_MethodName = nameof(XUiC_LootWindow_Init_Postfix);
 #endif
-        var btnBeyondSmartButton = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
-        if (btnBeyondSmartButton != null)
+        var btnBeyondSmartDronePullLoadout = UIControlHelpers.GetSmartDroneInventoryPullLoadoutButton(__instance);
+        if (btnBeyondSmartDronePullLoadout != null)
         {
-            btnBeyondSmartButton.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button initialized");
+#endif
+            btnBeyondSmartDronePullLoadout.OnPress += SmartSortingCommon.SmartDroneInventoryPullLoadout_EventHandler;
+        }
+
+        var btnBeyondSmartPushButton = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
+        if (btnBeyondSmartPushButton != null)
+        {
+            btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
 #if DEBUG
             ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button initialized");
 #endif
@@ -179,6 +188,11 @@ internal static class XUiC_LootWindow_Patches
     {
         switch (_bindingName)
         {
+            case "bs_is_drone_window_open":
+                _value = WindowStateManager.IsDroneWindowOpen() ? "true" : "false";
+                __result = true;
+                return false; // Skip original method
+
             case "bs_is_player_storage_open":
                 _value = WindowStateManager.IsStorageContainerOpen() ? "true" : "false";
                 __result = true;

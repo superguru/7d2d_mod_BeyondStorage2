@@ -1,10 +1,45 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Entities;
 
 public static class WorkstationHandler
 {
     public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;
+
+    public static ItemStack[] GetAllSlotItems(TileEntityWorkstation workstation)
+    {
+        var items = workstation?.output;
+        if (items == null || items.Length == 0)
+        {
+            return [];
+        }
+
+        return items;
+    }
+
+    public static ItemStack[] GetConsumableItems(TileEntityWorkstation workstation)
+    {
+        var items = GetAllSlotItems(workstation);
+        if (items.Length == 0)
+        {
+            return [];
+        }
+
+        return ItemX.GetFilteredItems(items, StorageFilter.AllItems, lockedSlots: null);
+    }
+
+    public static ItemStack[] GetPushableItems(TileEntityWorkstation workstation)
+    {
+        var items = GetAllSlotItems(workstation);
+        if (items.Length == 0)
+        {
+            return [];
+        }
+
+        return ItemX.GetFilteredItems(items, StorageFilter.UnlockedOnly, lockedSlots: null);
+    }
 
     public static string GetWorkstationName(TileEntityWorkstation workstation)
     {

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Diagnostics;
 using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
@@ -9,62 +7,24 @@ internal class StorageTargetAdapter
 {
     private readonly IStorageTargetSource _source;
 
-    private readonly List<ItemStack> _emptySlots = [];
+    private readonly List<ItemStack> _emptySlots;
 
-    private readonly Dictionary<int, List<ItemStack>> _filledSlots = [];
-    private readonly Dictionary<int, List<ItemStack>> _partialSlots = [];
+    private readonly Dictionary<int, List<ItemStack>> _filledSlots;
+    private readonly Dictionary<int, List<ItemStack>> _partialSlots;
 
-    public StorageTargetAdapter(IStorageTargetSource source, float distance, ItemScope filter)
+    public StorageTargetAdapter(IStorageTargetSource source, float distance, SlotMaps maps)
     {
         _source = source;
         Distance = distance;
-        Filter = filter;
 
-        BuildDescriptorMaps();
+        _filledSlots = maps._filled;
+        _partialSlots = maps._partial;
+        _emptySlots = maps._empty;
     }
 
     public float Distance { get; }
-    public ItemScope Filter { get; }
 
-    private void BuildDescriptorMaps()
-    {
-        Clear();
-        ItemStack[] items = GetFilteredTransferItems();
-        for (int i = 0; i < items.Length; i++)
-        {
-            ClassifySlot(items[i], orderedFirst: false);
-        }
-    }
-
-    private ItemStack[] GetFilteredTransferItems()
-    {
-        switch (Filter)
-        {
-            case ItemScope.AllItems:
-                return _source.GetAllSlotItemsStacks();
-
-            case ItemScope.PushableItems:
-#if DEBUG
-                ModLogger.DebugLog($"Getting pushable items for source '{_source.GetName()}'");
-#endif
-                return _source.GetPushableItemStacks();
-
-            default:
-                {
-#if DEBUG
-                    const string d_MethodName = nameof(GetFilteredTransferItems);
-
-                    var message = $"{d_MethodName}: Unexpected ItemScope value '{Filter}' ({(int)Filter}), returning empty array";
-                    ModLogger.DebugLog(StackTraceProvider.AppendStackTrace(message));
-#endif
-
-                    // Don't cause any more problems, just fail gracefully
-                    return [];
-                }
-        }
-    }
-
-    private void ClassifySlot(ItemStack slot, bool orderedFirst = false)
+    private void ClassifySlot(ItemStack slot)
     {
         var itemType = ItemX.ItemTypeOf(slot);
         if (itemType == UniqueItemTypes.EMPTY || ItemX.IsEmpty(slot))
@@ -73,11 +33,11 @@ internal class StorageTargetAdapter
         }
         else if (ItemX.IsFull(slot))
         {
-            RegisterSlot(_filledSlots, itemType, slot, orderedFirst);
+            RegisterSlot(_filledSlots, itemType, slot);
         }
         else
         {
-            RegisterSlot(_partialSlots, itemType, slot, orderedFirst);
+            RegisterSlot(_partialSlots, itemType, slot);
         }
     }
 
@@ -125,7 +85,7 @@ internal class StorageTargetAdapter
         if (emptySlotIndex >= 0)
         {
             _emptySlots.RemoveAt(emptySlotIndex);
-            ClassifySlot(slot, orderedFirst: true);
+            ClassifySlot(slot);
             return;
         }
 
@@ -136,10 +96,10 @@ internal class StorageTargetAdapter
     private void ReclassifySlot(IList<ItemStack> currentList, ItemStack slot, int slotIndex)
     {
         currentList.RemoveAt(slotIndex);
-        ClassifySlot(slot, orderedFirst: true);
+        ClassifySlot(slot);
     }
 
-    private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot, bool orderedFirst = false)
+    private void RegisterSlot(Dictionary<int, List<ItemStack>> registry, int itemType, ItemStack slot)
     {
         if (!registry.TryGetValue(itemType, out var slots))
         {
@@ -147,21 +107,7 @@ internal class StorageTargetAdapter
             registry[itemType] = slots;
         }
 
-        if (orderedFirst)
-        {
-            slots.Insert(0, slot);
-        }
-        else
-        {
-            slots.Add(slot);
-        }
-    }
-
-    private void Clear()
-    {
-        _filledSlots.Clear();
-        _emptySlots.Clear();
-        _partialSlots.Clear();
+        slots.Insert(0, slot);
     }
 
     internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
@@ -196,6 +142,7 @@ internal class StorageTargetAdapter
 
         return [];
     }
+
     internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
     {
         var itemType = ItemX.ItemTypeOf(stack);
