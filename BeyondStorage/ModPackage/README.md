@@ -6,8 +6,10 @@ Use resources from all of those when you refuel, paint, repair, pick locks, craf
 
 If you can do it from your player inventory, you can now also do it from your extended inventory.
 
-All support is via [Discord at GAZ World](https://discord.gg/hAF5T4P9pE)
-<!-- [size=5][color=#ff0000][BBCode][/color] [url=https://discord.gg/hAF5T4P9pE]Support is ONLY on Discord at GAZ World[/url] [color=#ff0000][/BBCode][/color][/size] -->
+Please go to <span style="color:#4c5fd7;">**#beyond-storage2**</span> on the <span style="color:#f46f30;">**Discord server**</span> for mod support. See the README.md file or the mod web page for the details.
+
+All support is via **[Discord at GAZ World](https://discord.gg/hAF5T4P9pE)** in the <span style="color:#4c5fd7;">**#beyond-storage2**</span> channel.
+<!-- [size=4][color=#ff0000][BBCode][/color] [url=https://discord.gg/hAF5T4P9pE]Support is ONLY on Discord at GAZ World[/url] [color=#ff0000][/BBCode][/color][/size] -->
 
 [quote]This README is a mix of BBCode and Markdown. You might read it more easily on [url=https://github.com/superguru/7d2d_mod_BeyondStorage2/blob/master/BeyondStorage/README.md]GitHub[/url].[/quote]
 
@@ -70,7 +72,7 @@ Did you delete something you shouldn't have? [Stop deleting the Harmony Folder]
 <!-- [color=#ff0000][BBCode][/color] [url=https://7daystodiemods.com/stop-deleting-the-harmony-folder]Stop deleting the Harmony folder[/url] [color=#ff0000][/BBCode][/color] -->
 
 Fix many errors by [verifying the integrity of your game installation](https://help.steampowered.com/en/faqs/view/0C48-FCBD-DA71-93EB)
-<!-- [color=#ff0000][BBCode][/color] [url=]https://help.steampowered.com/en/faqs/view/0C48-FCBD-DA71-93EBVerify the integrity of your game installation[/url] [color=#ff0000][/BBCode][/color] -->
+<!-- [color=#ff0000][BBCode][/color] [url=https://help.steampowered.com/en/faqs/view/0C48-FCBD-DA71-93EB]Verify the integrity of your game installation[/url] [color=#ff0000][/BBCode][/color] -->
 
 Install the same version on **CLIENT AND SERVER** if you are hosting or participating in a multi-player game.
 
@@ -86,9 +88,9 @@ Basic troubleshooting for mods
 
 ## 📻Features and configuration
 
-### ➡️Pull
+### ➡️Consumption aka Pull
 
-Everything you can pull from your inventory can now also be pulled from, in order of preference:
+Everything you can Consume from your inventory can now also be Consumed from, in order of precedence:
 1. Player Backpack (as per base game)
 2. Player Toolbelt (as per base game)
 3. Drones
@@ -97,19 +99,41 @@ Everything you can pull from your inventory can now also be pulled from, in orde
 6. Containers: Storage Crates, Items you crafted like Desk Safes, Refrigerators, anything the player has crafted that can also contain things
 7. Vehicles: Bicycle, Motorcycle, 4x4 Truck, Gyrocopter. This includes most modded vehicles too.
 
-Locked slots: Behaviour is the same as per the base game, meaning locking slots won't stop items being pulled from that slot.
+What is considered Consuming?
+- Repairing
+- Painting
+- Upgrading
+- Paying at a Trader or Vending Machine
+- Making things in your Backpack, Forge, Workbench, Chemistry Station, etc.
+- Cooking things in your Campfire
+- Lock picking
+- Refueling
 
-_**Note:** In versions of the mod prior to 2.6.3, a locked slot - except for the Player Backpack - would not be eligible for pulling._
+🚦**Locked slots:** Behaviour is the same as per the base game, meaning locking slots won't stop items being pulled for consumption (recipes, painting, etc.) from that slot.
 
-### ⬅️Push
+💡However, a locked slot will stop items in that slot from being moved in a bulk inventory transfer, just like in the base game.
 
-All sources listed in the Pull section, aside for the Toolbelt, will have a Push button added to the appropriate window.
+_**Note:** In versions of the mod prior to 2.6.3, a locked slot - except for the Player Backpack - would not be eligible for pulling for consumption (recipes, painting, etc.)._
+
+### ⬅️Smart Push
+
+All sources listed in the Pull section, aside from the Toolbelt, has a Smart Push button added to the appropriate window.
 
 This will push items from the source window into nearby Containers that already contain that item.
 
 It will fill up existing slots and then create new ones as needed.
 
 If all Containers with the same kind of item are full, then you will have to choose another container yourself for the overflow.
+
+💡This functionality only pushes to loot Containers the player crafted, like Wooden/Iron/Steel Crates, etc. Any Desk Safes, Refrigerators, Lockers, etc. you crafted are also Containers.
+
+### ⬅️Smart Pull aka Loadout Top Up
+
+You can use the Smart Pull button on Vehicles, Drones, Players to top up whatever items are in the locked slots of that inventory from nearby storages.
+
+Items that are un non-locked slots are not affected by this.
+
+💡You can Top Up your Loadout from Containers and Workstations only.
 
 ## Console and Config
 
@@ -142,7 +166,7 @@ Any setting not listed here is either old, or otherwise is for mod development p
 
 The mod will automatically convert older properties and values, removing invalid ones as needed, when it loads.
 
-#### Notes:
+#### 📝Notes:
 1. In the config file, true means On and false means Off
 2. Previous versions of the mod had other config options. Their usage was self-explanatory from their names.
 3. Install the same version on **CLIENT AND SERVER** if you are hosting or participating in a multi-player game.
