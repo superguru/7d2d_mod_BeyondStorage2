@@ -281,6 +281,14 @@ public static class WindowStateManager
 
     #region Drone Detection
 
+    public static bool IsDroneWindowOpen()
+    {
+        lock (s_lootLockObject)
+        {
+            return s_isStorageLootWindowOpen && (s_droneForWindow != null);
+        }
+    }
+
     /// <summary>
     /// Determines if the specified tile entity represents a drone loot window.
     /// </summary>
