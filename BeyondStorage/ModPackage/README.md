@@ -1,6 +1,6 @@
 # Beyond Storage 2
 
-Expand your inventory to your vehicles, drones, storage crates, workstations, dew collectors, and craftable containers like safes. 
+Expand your inventory to your vehicles, drones, storage crates, workstations, collectors, and even craftable containers like refrigerators.
 
 Use resources from all of those when you refuel, paint, repair, pick locks, craft, upgrade, and pay traders or vending machines.
 
