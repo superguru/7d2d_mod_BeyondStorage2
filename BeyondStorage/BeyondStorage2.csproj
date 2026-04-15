@@ -45,9 +45,12 @@
     </Exec>
     <Error Condition="'$(CodeQualityChecksExitCode)' != '0'" Text="Code quality checks failed with exit code $(CodeQualityChecksExitCode). Build halted due to errors." />
   </Target>
+  <PropertyGroup>
+    <DeployScriptScriptFullDir>$(MSBuildProjectDirectory)\..\..\GAZ Mod Deploy</DeployScriptScriptFullDir>
+  </PropertyGroup>
   <Target Name="DeployMod" AfterTargets="Build">
     <Message Text="Executing mod deployment task" Importance="High" />
-    <Exec Command="python &quot;utils\deploy_target_build.py&quot; &quot;$(Configuration)&quot; &quot;$(OutputPath)\&quot; &quot;$(ProjectDir)\&quot;" ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
+    <Exec Command="python &quot;$(DeployScriptScriptFullDir)\deploy_target_build.py&quot; &quot;$(AssemblyName)&quot; &quot;$(Configuration)&quot; &quot;$(OutputPath)\&quot; &quot;$(ProjectDir)\&quot;" ContinueOnError="true" WorkingDirectory="$(ProjectDir)">
       <Output TaskParameter="ExitCode" PropertyName="DeployModExitCode" />
     </Exec>
     <Error Condition="'$(DeployModExitCode)' != '0'" Text="Deployment failed with exit code $(DeployModExitCode)" />
@@ -233,7 +236,7 @@
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-    </Reference>
+    </Reference> 
     <Reference Include="Microsoft.CodeAnalysis, Version=4.14.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.4.14.0\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
