@@ -20,4 +20,21 @@ public static class ListExtensions
 
         return -1;
     }
+
+    public static int LastIndexOfReference<T>(this List<T> list, T target) where T : class
+    {
+        if (list == null || target == null)
+        {
+            return -1;
+        }
+
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            if (ReferenceEquals(list[i], target))
+                return i;
+        }
+
+        return -1;
+    }
+
 }
