@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -100,8 +99,6 @@ internal class StorageOperationState
     /// </summary>
     internal void RecordTransfer(StorageTargetAdapter storage, ItemStack stack, int initialStackSize, int currentStackSize, int maxStackSize, int transferCount)
     {
-        const string d_MethodName = nameof(RecordTransfer);
-
         if (storage == null || stack == null || maxStackSize <= 0 || transferCount <= 0)
         {
             return;
@@ -119,12 +116,6 @@ internal class StorageOperationState
         {
             _ = _uniqueItems.Add(itemType);
         }
-#if DEBUG
-        else
-        {
-            ModLogger.DebugLog($"{d_MethodName}: transfer of untyped stack in storage '{storage.GetName()}' for master storage '{MasterStorageName}'");
-        }
-#endif
 
         ItemCount += transferCount;
     }
