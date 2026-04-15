@@ -15,7 +15,7 @@ The current source repository is located at https://github.com/superguru/7d2d_mo
 * In v2.4.0, add smart sort functionality to backpack window
 * In v2.3.5, make it more server admin friendly, add more console commands, less debug logging, change config properties at runtime
 * In v2.3.0, remove old performance related config options, such as EnableXYZ, and rename onlyStorageCrates option to pullFromPlayerCraftedNonCrates, to make it clearer that player crafted wall safes, etc. can be excluded
-* In v2.2.7, add lockpicking and payments from storage sources
+* In v2.2.7, add lock picking and payments from storage sources
 * In v2.2.5, add console command `bsconfig` to display the current configuration
 * In v2.2.4, add live recipe tracking updates when anything becomes available, like a workstation crafted item, a cooked item, a dew collector completion, etc.
 * In v2.2.3, add ability to keep track of available ammo from all pullable sources
@@ -53,11 +53,15 @@ Please refer to the mod description on Nexus Mods for details of the configurati
 ## License
 This mod is licensed under the MIT License. See the LICENSE file in the root of the repository for details.
 
-## History
+## ⌛History
 
-Originally created by aedenthorn as 'CraftFromContainers' for 7 Days to Die. Source code is at https://github.com/aedenthorn/7D2DMods.
+[url=https://www.snowbeegaming.com/undead-legacy]Undead Legacy[/url] by Subquake was almost certainly the first mod to introduce the "remote broadcasting" of items for crafting, as if you had a gigantic inventory that included your storage crates.
 
-It has been refactored and updated for 7 Days to Die v1 by unv-annihilator. See https://github.com/unv-annihilator/7D2D_Mods/tree/main for that fork.
+[url=https://www.nexusmods.com/7daystodie/mods/2196?file_id=28586]CraftFromContainers[/url] by aedenthorn implemented this for later versions of the game, as Undead Legacy was not available for post A21 at the time. The source code is at https://github.com/aedenthorn/7D2DMods.
+
+[url=https://www.nexusmods.com/7daystodie/mods/5087]1.0 Beyond Storage[/url] was refactored and updated for 7 Days to Die v1 by unv-annihilator and extended this idea, based on the code from aedenthorn. This brought the addition of vehicles to pull items from. The code quality and stability of this mod high. See [url=https://github.com/unv-annihilator/7D2D_Mods/tree/main]https://github.com/unv-annihilator/7D2D_Mods/tree/main[/url] for that fork.
+
+[url=https://www.nexusmods.com/7daystodie/mods/7809]Beyond Storage 2[/url] added pulling from all conceivable sources, like drones, workstation outputs, dew collectors. Also added all inventory operations like paying for items at a trader, painting, lock picking. The mod also fixes many notification bugs from the original game, and all operations are seamless. Pushing items from any place you can pull from, in order to auto-sort items, was also added.
 
 ## Credits
 - [Undead Legacy](https://www.snowbeegaming.com/undead-legacy) by Subquake for inspiring us all
