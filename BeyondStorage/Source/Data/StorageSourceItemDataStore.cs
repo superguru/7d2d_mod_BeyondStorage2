@@ -193,7 +193,8 @@ internal class StorageSourceItemDataStore
 
     private static SlotMaps BuildSlotMaps(ItemStack[] items)
     {
-        var maps = new SlotMaps();
+        var itemLength = items.Length;
+        var maps = new SlotMaps(itemLength);
 
         for (int i = 0; i < items.Length; i++)
         {

@@ -14,9 +14,9 @@ internal sealed class SlotMaps
     internal readonly Dictionary<int, List<ItemStack>> _partial;
     internal readonly List<ItemStack> _empty;
 
-    internal SlotMaps() : this(DEFAULT_CAPACITY, DEFAULT_CAPACITY, DEFAULT_CAPACITY)
-    {
-    }
+    internal SlotMaps() : this(DEFAULT_CAPACITY) { }
+
+    internal SlotMaps(int sameCapacity) : this(sameCapacity, sameCapacity, sameCapacity) { }
 
     internal SlotMaps(int filledCapacity, int partialCapacity, int emptyCapacity)
     {
