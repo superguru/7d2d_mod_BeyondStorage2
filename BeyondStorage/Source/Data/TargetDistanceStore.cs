@@ -15,7 +15,6 @@ internal sealed class TargetDistanceStore
     private readonly List<(IStorageTargetSource Storage, float Distance, SlotMaps AllItems, SlotMaps Pushable)> _entries = [];
 
     public bool IsSorted { get; private set; } = true;
-    public int Count => _entries.Count;
 
     public void Add(IStorageTargetSource storage, float distance, SlotMaps allItemsMaps, SlotMaps pushableMaps)
     {
