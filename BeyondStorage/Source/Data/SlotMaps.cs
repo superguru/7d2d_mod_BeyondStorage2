@@ -8,9 +8,40 @@ namespace BeyondStorage.Source.Data;
 /// </summary>
 internal sealed class SlotMaps
 {
-    internal readonly Dictionary<int, List<ItemStack>> _filled = [];
-    internal readonly Dictionary<int, List<ItemStack>> _partial = [];
-    internal readonly List<ItemStack> _empty = new(CollectionFactory.DEFAULT_ITEMSTACK_LIST_CAPACITY);
+    internal const int DEFAULT_CAPACITY = CollectionFactory.DEFAULT_ITEMSTACK_LIST_CAPACITY;
+
+    internal readonly Dictionary<int, List<ItemStack>> _filled;
+    internal readonly Dictionary<int, List<ItemStack>> _partial;
+    internal readonly List<ItemStack> _empty;
+
+    internal SlotMaps() : this(DEFAULT_CAPACITY, DEFAULT_CAPACITY, DEFAULT_CAPACITY)
+    {
+    }
+
+    internal SlotMaps(int filledCapacity, int partialCapacity, int emptyCapacity)
+    {
+        if (filledCapacity <= 0)
+        {
+            filledCapacity = DEFAULT_CAPACITY;
+        }
+
+        if (partialCapacity <= 0)
+        {
+            partialCapacity = DEFAULT_CAPACITY;
+        }
+
+        if (emptyCapacity <= 0)
+        {
+            emptyCapacity = DEFAULT_CAPACITY;
+        }
+
+#pragma warning disable IDE0028 // Simplify collection initialization
+        // This method of initialization directly allocates the correct capacity, which is a speed optimisation strategy
+        _filled = new Dictionary<int, List<ItemStack>>(filledCapacity);
+        _partial = new Dictionary<int, List<ItemStack>>(partialCapacity);
+        _empty = new List<ItemStack>(emptyCapacity);
+#pragma warning restore IDE0028 // Simplify collection initialization
+    }
 
     /// <summary>
     /// Creates a per-operation copy. The cloned maps share ItemStack references
@@ -19,16 +50,20 @@ internal sealed class SlotMaps
     /// </summary>
     internal SlotMaps Clone()
     {
-        var clone = new SlotMaps();
+        var clone = new SlotMaps(_filled.Count, _partial.Count, _empty.Count);
 
         foreach (var kvp in _filled)
         {
-            clone._filled[kvp.Key] = [.. kvp.Value];
+#pragma warning disable IDE0028 // Simplify collection initialization
+            clone._filled[kvp.Key] = new List<ItemStack>(kvp.Value);
+#pragma warning restore IDE0028 // Simplify collection initialization
         }
 
         foreach (var kvp in _partial)
         {
-            clone._partial[kvp.Key] = [.. kvp.Value];
+#pragma warning disable IDE0028 // Simplify collection initialization
+            clone._partial[kvp.Key] = new List<ItemStack>(kvp.Value);
+#pragma warning restore IDE0028 // Simplify collection initialization
         }
 
         clone._empty.AddRange(_empty);
