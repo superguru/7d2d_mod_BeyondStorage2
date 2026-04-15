@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Diagnostics;
 using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
@@ -246,9 +244,7 @@ public class SmartSortingFunctions
             // Fill up any existing partial locked slots
             PullSourceItemsToLoadout(methodName, state, sources, loadout);
 
-#if DEBUG
             ModLogger.DebugLog($"{methodName}: {state}");
-#endif
 
             if (state.StackCount > 0)
             {
@@ -284,9 +280,7 @@ public class SmartSortingFunctions
             // Then fill up any empty slots, and any new partial slots that are created when partially filling those empty slots
             PushSourceItemsToTarget(methodName, state, source, targets, allowPushToEmpty: true);
 
-#if DEBUG
             ModLogger.DebugLog($"{methodName}: {state}");
-#endif
 
             if (state.StackCount > 0)
             {
