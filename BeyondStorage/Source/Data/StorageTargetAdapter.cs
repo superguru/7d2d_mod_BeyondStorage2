@@ -69,7 +69,7 @@ internal class StorageTargetAdapter
             }
         }
 
-        // Check partial slots independently (not else if!)
+        // Check partial slots independently
         if (_partialSlots.TryGetValue(itemType, out var partialList))
         {
             var slotIndex = partialList.IndexOfReference(slot);
@@ -80,7 +80,7 @@ internal class StorageTargetAdapter
             }
         }
 
-        // Check empty slots
+        // Check empty slots starting from 0. This is the index probably returned by a prior call to GetNextEmptyStackFor
         var emptySlotIndex = _emptySlots.IndexOfReference(slot);
         if (emptySlotIndex >= 0)
         {
@@ -110,60 +110,64 @@ internal class StorageTargetAdapter
         slots.Insert(0, slot);
     }
 
-    internal IList<ItemStack> GetEmptySlotsFor(ItemStack sourceSlot)
+    internal ItemStack GetNextEmptyStackFor(int itemType)
     {
-        const string d_MethodName = nameof(GetEmptySlotsFor);
-
-        var itemType = ItemX.ItemTypeOf(sourceSlot);
-        if (itemType == UniqueItemTypes.EMPTY)
+        if (_emptySlots.Count == 0)
         {
-            ModLogger.DebugLog($"{d_MethodName}: Source slot has empty item type, returning empty list");
-            return [];
+            return null;
         }
 
-        bool hasFilledSlots = _filledSlots.TryGetValue(itemType, out var filledList) && filledList.Count > 0;
-        bool hasPartialSlots = _partialSlots.TryGetValue(itemType, out var partialList) && partialList.Count > 0;
-
-        if (hasFilledSlots || hasPartialSlots)
+        // Only eligible to fill an empty slot if the storage already holds this item type
+        if ((_filledSlots.TryGetValue(itemType, out var filledList) && filledList.Count > 0)
+            || (_partialSlots.TryGetValue(itemType, out var partialList) && partialList.Count > 0))
         {
-            return _emptySlots;
+            // This will be the "first available" slot in the storage, starting from top to bottom, left to right
+            return _emptySlots[0];
         }
 
-        return [];
+        return null;
     }
 
-    internal IList<ItemStack> GetFilledSlotsFor(ItemStack stack)
+    internal ItemStack GetNextFilledStackFor(int itemType)
     {
-        var itemType = ItemX.ItemTypeOf(stack);
-        if (_filledSlots.TryGetValue(itemType, out var slots))
+        if (_filledSlots.TryGetValue(itemType, out var slots) && slots.Count > 0)
         {
-            return slots;
+            return slots[0];
         }
 
-        return [];
+        return null;
     }
 
-    internal IList<ItemStack> GetPartialSlotsFor(ItemStack stack)
+    internal ItemStack GetNextPartialStackFor(int itemType)
     {
-        var itemType = ItemX.ItemTypeOf(stack);
-        if (_partialSlots.TryGetValue(itemType, out var slots))
+        if (_partialSlots.TryGetValue(itemType, out var slots) && slots.Count > 0)
         {
-            return slots;
+            return slots[0];
         }
 
-        return [];
+        return null;
     }
 
-    internal IList<ItemStack> GetPopulatedSlotsFor(ItemStack sourceSlot)
+    internal ItemStack GetNextPopulatedStackFor(int itemType)
     {
-        var filled = GetFilledSlotsFor(sourceSlot);
-        var partial = GetPartialSlotsFor(sourceSlot);
+        // Prefer partial stacks over filled stacks:
+        // - partial stacks are valid for Pull (as a source) and Push (as a destination)
+        // - filled stacks are only valid for Pull (as a source), like for loadout top ups
+        // ==>> so either empty the partial stacks first, or fill the partial stacks first, depending on the operation type
 
-        var result = CollectionFactory.CreateItemStackList(filled.Count + partial.Count);
-        result.AddRange(filled);
-        result.AddRange(partial);
+        var nextPartial = GetNextPartialStackFor(itemType);
+        if (nextPartial != null)
+        {
+            return nextPartial;
+        }
 
-        return result;
+        var nextFilled = GetNextFilledStackFor(itemType);
+        if (nextFilled != null)
+        {
+            return nextFilled;
+        }
+
+        return null;
     }
 
     internal string GetName()
@@ -187,4 +191,12 @@ internal class StorageTargetAdapter
 
         return result;
     }
+
+#if DEBUG
+    internal ItemStack[] GetAllSourceItemsStacks()
+    {
+        var items = _source?.GetAllSlotItemsStacks() ?? [];
+        return items;
+    }
+#endif
 }

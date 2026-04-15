@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Diagnostics;
 using BeyondStorage.Source.Game.UI;
 using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
@@ -200,7 +202,6 @@ public class SmartSortingFunctions
         PerformSmartPush(d_MethodName, context, source, targets);
     }
 
-
     public static void SmartWorkstationOutputPush()
     {
         const string d_MethodName = nameof(SmartWorkstationOutputPush);
@@ -300,7 +301,7 @@ public class SmartSortingFunctions
     private static void PullSourceItemsToLoadout<T>(string methodName, StorageOperationState state, IReadOnlyList<StorageTargetAdapter> sources, StorageSourceAdapter<T> loadout) where T : class
     {
         var loadoutSlots = loadout.GetLoadoutItemStacks();
-        bool loadoutModified = false;
+        var modifiedSources = new HashSet<StorageTargetAdapter>();
 
         for (int i = 0; i < loadoutSlots.Length; i++)
         {
@@ -317,6 +318,14 @@ public class SmartSortingFunctions
 #if DEBUG
                 ModLogger.DebugLog($"{methodName}: Loadout slot {i} in {state.MasterStorageName} has invalid max stack size {maxStackSize}, skipping");
 #endif
+                continue;
+            }
+
+            int itemType = ItemX.ItemTypeOf(loadoutSlot);
+            if (itemType == UniqueItemTypes.EMPTY)
+            {
+                // This is probably redundant since an empty slot should have been caught by the IsEmpty check above, but we'll log it just in case
+                ModLogger.DebugLog($"{methodName}: Loadout slot {i} has invalid item type {itemType}, skipping");
                 continue;
             }
 
@@ -337,20 +346,44 @@ public class SmartSortingFunctions
                     continue;
                 }
 
-                int requiredBefore = loadoutSlotRequiredAmount;
+#if DEBUG
+                //TODO: Remove this debug code the code works reliably
+                var sourceName = source.GetName();
+                bool isBuildCrate = string.Equals(sourceName, "Build", StringComparison.InvariantCultureIgnoreCase);
+                ModLogger.DebugLog($"{methodName}: Pulling itemType={itemType} to loadout slots [BEFORE]: {sourceName}");
 
-                PullToLoadoutSlots(methodName, state, loadout, loadoutSlot, source, maxStackSize, ref loadoutSlotRequiredAmount);
-
-                if (loadoutSlotRequiredAmount < requiredBefore)
+                if (isBuildCrate)
                 {
-                    loadoutModified = true;
+                    DebugTools.LogLootContainerContents($"{methodName}: Contents of Build crate before pulling itemType={itemType} to loadout slots", source.GetAllSourceItemsStacks());
                 }
+#endif
+
+                if (PullToLoadoutSlots(methodName, state, loadout, loadoutSlot, source, itemType, maxStackSize, ref loadoutSlotRequiredAmount))
+                {
+                    modifiedSources.Add(source);
+                }
+
+#if DEBUG
+                //TODO: Remove this debug code the code works reliably
+                ModLogger.DebugLog($"{methodName}: Pulling itemType={itemType} to loadout slots [After]: {sourceName}");
+
+                if (isBuildCrate)
+                {
+                    DebugTools.LogLootContainerContents($"{methodName}: Contents of Build crate after pulling itemType={itemType} to loadout slots", source.GetAllSourceItemsStacks());
+                }
+#endif
+
             }
         }
 
-        // Deferred from PullToLoadoutSlots — called once after all sources are processed
+        // Both MarkModified calls are deferred until after all iterations are complete,
         // to prevent game bag rebuilds from invalidating loadoutSlot references mid-loop
-        if (loadoutModified)
+        foreach (var modifiedSource in modifiedSources)
+        {
+            modifiedSource.MarkModified();
+        }
+
+        if (modifiedSources.Count > 0)
         {
             loadout.MarkModified();
         }
@@ -377,6 +410,7 @@ public class SmartSortingFunctions
                 continue;
             }
 
+            int itemType = ItemX.ItemTypeOf(sourceSlot);
             int sourceSlotRemaining = ItemX.CurrentStackSizeOf(sourceSlot);
 
             for (int k = 0; k < targets.Count; k++)
@@ -392,92 +426,144 @@ public class SmartSortingFunctions
                     // Don't transfer back to the same source storage
                     continue;
                 }
-#if DEBUG
-                string targetStorageName = target.GetName();
-#endif
 
-                var partialSlots = target.GetPartialSlotsFor(sourceSlot);
-                var emptySlots = allowPushToEmpty ? target.GetEmptySlotsFor(sourceSlot) : (IList<ItemStack>)[];
-
-                while ((sourceSlotRemaining > 0) && (partialSlots.Count > 0 || emptySlots.Count > 0))
-                {
-                    PushToTargetSlots(methodName, state, source, sourceSlot, target, partialSlots, maxStackSize, ref sourceSlotRemaining);
-#if DEBUG
-                    ModLogger.DebugLog($"{methodName}: {sourceSlotRemaining} items remaining after transfer to partial slot {targetStorageName}");
-#endif
-                    if (sourceSlotRemaining > 0 && allowPushToEmpty)
-                    {
-                        PushToTargetSlots(methodName, state, source, sourceSlot, target, emptySlots, maxStackSize, ref sourceSlotRemaining);
-#if DEBUG
-                        ModLogger.DebugLog($"{methodName}: {sourceSlotRemaining} items remaining after transfer to empty slot {targetStorageName}");
-#endif
-                    }
-                }
+                PushToTarget(methodName, state, source, sourceSlot, target, itemType, allowPushToEmpty, maxStackSize, ref sourceSlotRemaining);
             }
         }
     }
 
-    private static void PullToLoadoutSlots<T>(string methodName, StorageOperationState state, StorageSourceAdapter<T> loadout, ItemStack loadoutSlot, StorageTargetAdapter source, int maxStackSize, ref int loadoutSlotRequiredAmount) where T : class
+    private static bool PullToLoadoutSlots<T>(string methodName, StorageOperationState state, StorageSourceAdapter<T> loadout, ItemStack loadoutSlot, StorageTargetAdapter source, int itemType, int maxStackSize, ref int loadoutSlotRequiredAmount) where T : class
     {
-        const int FIRST_SLOT = 0;
-
         int transferCount = 0;
         int initialStackSize = maxStackSize - loadoutSlotRequiredAmount;
 
-        // Keep fetching fresh source slots until loadout slot is full or no more items available
+#if DEBUG
+        //TODO: Remove this debug code the code works reliably
+        int loopCount = 0;
+#endif
+
         while (loadoutSlotRequiredAmount > 0)
         {
-            // Re-fetch the populated slots on each iteration since reclassification changes internal state
-            var sourceSlots = source?.GetPopulatedSlotsFor(loadoutSlot) ?? [];
+#if DEBUG
+            loopCount++;
+#endif
 
-            if (sourceSlots.Count <= FIRST_SLOT)
+            var sourceSlot = source.GetNextPopulatedStackFor(itemType);
+            if (sourceSlot == null)
             {
                 // No more source slots available for this loadout slot
                 break;
             }
 
-            var sourceSlot = sourceSlots[FIRST_SLOT];
+#if DEBUG
+            var ii = source.GetAllSourceItemsStacks();
+            var kk = ii.ToList().LastIndexOfReference(sourceSlot);
+            ModLogger.DebugLog($"{methodName}: Loop {loopCount}: Found source slot {ItemX.Info(sourceSlot)}, global slot index of {kk}");
+#endif
 
-            if (ItemX.IsEmpty(sourceSlot))
+            int sourceSlotActualCount = ItemX.CurrentStackSizeOf(sourceSlot);
+
+            // Limit transfer to only what the loadout slot still needs
+            int cappedTransferLimit = Math.Min(sourceSlotActualCount, loadoutSlotRequiredAmount);
+            if (cappedTransferLimit <= 0)
             {
-                // Reclassify empty slot so it doesn't appear in next iteration
-                source.ReclassifySlot(sourceSlot);
-                continue;
+                // Source slot is depleted despite being in the populated map — avoid infinite loop
+                break;
             }
 
-            var transferAmount = TransferLoadoutSlotItems(methodName, state, loadoutSlot, sourceSlot, maxStackSize, ref loadoutSlotRequiredAmount);
+#if DEBUG
+            //TODO: Remove this debug code the code works reliably
+            var sourceName = source.GetName();
+            bool isBuildCrate = string.Equals(sourceName, "Build", StringComparison.InvariantCultureIgnoreCase);
+            ModLogger.DebugLog($"{methodName}: Loop {loopCount}: Xferring itemType={itemType} to loadout slots [BEFORE]: {sourceName}");
+
+            if (isBuildCrate)
+            {
+                DebugTools.LogLootContainerContents($"{methodName}: Loop {loopCount}: Contents of Build crate before Xferring itemType={itemType}, loadoutSlotRequiredAmount={loadoutSlotRequiredAmount} to loadout slots", source.GetAllSourceItemsStacks());
+            }
+
+            ModLogger.DebugLog($"{methodName}: Loop {loopCount}: BEFORE transfer from source slot {ItemX.Info(sourceSlot)} to loadout slot {ItemX.Info(loadoutSlot)}, cappedTransferLimit={cappedTransferLimit}, loadoutSlotRequiredAmount={loadoutSlotRequiredAmount}, sourceSlotActualCount={sourceSlotActualCount}, maxStackSize={maxStackSize}");
+#endif
+
+            // Pass the capped limit so TransferTargetSlotItems doesn't transfer more than the loadout slot needs
+            int tempRemaining = cappedTransferLimit;
+            var xLoopCount =
+#if DEBUG
+                $"{loopCount}";
+#else
+                "N / A";
+#endif
+
+            var transferAmount = TransferTargetSlotItems($"{methodName}(xferloop={xLoopCount})", state, sourceSlot, loadoutSlot, maxStackSize, ref tempRemaining);
+
+            // Correct sourceSlot.count: TransferTargetSlotItems set it relative to cappedTransferLimit,
+            // not the actual original count — without this fix, excess items are silently destroyed
+            sourceSlot.count = sourceSlotActualCount - transferAmount;
+
+            loadoutSlotRequiredAmount -= transferAmount;
+
+#if DEBUG
+            //TODO: Remove this debug code the code works reliably
+            ModLogger.DebugLog($"{methodName}: Loop {loopCount}: Xferring itemType={itemType} to loadout slots [AFTER, transferAmount={transferAmount}]: {sourceName}");
+            ModLogger.DebugLog($"{methodName}: Loop {loopCount}: AFTER transfer from source slot {ItemX.Info(sourceSlot)} to loadout slot {ItemX.Info(loadoutSlot)}, cappedTransferLimit={cappedTransferLimit}, loadoutSlotRequiredAmount={loadoutSlotRequiredAmount}, sourceSlotActualCount={sourceSlotActualCount}, transferAmount={transferAmount}, maxStackSize={maxStackSize}");
+
+            if (isBuildCrate)
+            {
+                DebugTools.LogLootContainerContents($"{methodName}: Loop {loopCount}: Contents of Build crate after Xferring itemType={itemType} to loadout slots, transferAmount={transferAmount}", source.GetAllSourceItemsStacks());
+            }
+#endif
 
             transferCount += transferAmount;
 
-            // Reclassify source slot after transfer (might be partial now, or empty)
             if (transferAmount > 0)
             {
+                // Reclassify source slot after transfer (might be partial now, or empty)
                 source.ReclassifySlot(sourceSlot);
+            }
+            else
+            {
+                // No items transferred; source slot may be depleted — avoid infinite loop
+                break;
             }
         }
 
-        // Mark both storage containers as modified if any transfer occurred
         if (transferCount > 0)
         {
             int currentStackSize = maxStackSize - loadoutSlotRequiredAmount;
 
-            source.MarkModified();
-            // loadout.MarkModified() deferred to caller — see PullSourceItemsToLoadout
+            // source.MarkModified() and loadout.MarkModified() are deferred to caller — see PullSourceItemsToLoadout
 
             state.RecordTransfer(source, loadoutSlot, initialStackSize, currentStackSize, maxStackSize, transferCount);
+
+            return true;
         }
+
+        return false;
     }
 
-    private static void PushToTargetSlots<S>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, ItemStack sourceSlot, StorageTargetAdapter target, IList<ItemStack> targetSlots, int maxStackSize, ref int sourceSlotRemaining) where S : class
+    private static void PushToTarget<S>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, ItemStack sourceSlot, StorageTargetAdapter target, int itemType, bool allowPushToEmpty, int maxStackSize, ref int sourceSlotRemaining) where S : class
     {
-        const int FIRST_SLOT = 0;
-
         int transferCount = 0;
         int initialStackSize = sourceSlotRemaining;
 
-        while (targetSlots.Count > FIRST_SLOT && sourceSlotRemaining > 0)
+        while (sourceSlotRemaining > 0)
         {
-            var targetSlot = targetSlots[FIRST_SLOT];
+            // Prefer partial slots; fall back to empty only if allowed
+            var targetSlot = target.GetNextPartialStackFor(itemType);
+
+            if (targetSlot == null)
+            {
+                if (!allowPushToEmpty)
+                {
+                    break;
+                }
+
+                targetSlot = target.GetNextEmptyStackFor(itemType);
+                if (targetSlot == null)
+                {
+                    break;
+                }
+            }
 
             var transferAmount = TransferTargetSlotItems(methodName, state, sourceSlot, targetSlot, maxStackSize, ref sourceSlotRemaining);
 
@@ -487,7 +573,16 @@ public class SmartSortingFunctions
             {
                 target.ReclassifySlot(targetSlot);
             }
+            else
+            {
+                // No items transferred; slot may already be full — avoid infinite loop
+                break;
+            }
         }
+
+#if DEBUG
+        ModLogger.DebugLog($"{methodName}: {sourceSlotRemaining} items remaining after push to {target.GetName()}");
+#endif
 
         if (transferCount > 0)
         {
@@ -520,11 +615,21 @@ public class SmartSortingFunctions
         // Use a temporary variable that TransferTargetSlotItems can modify
         int tempSourceRemaining = intendedTransfer;
 
+#if DEBUG
+        //TODO: Remove this debug code the code works reliably
+        ModLogger.DebugLog($"{methodName}: BEFORE transfer from source slot {ItemX.Info(sourceSlot)} to loadout slot {ItemX.Info(loadoutSlot)}, tempSourceRemaining={tempSourceRemaining}, loadoutSlotRequiredAmount={loadoutSlotRequiredAmount}, sourceSlotRemaining={sourceSlotRemaining}, intendedTransfer={intendedTransfer}, maxStackSize={maxStackSize}");
+#endif
+
         // Reuse the existing transfer logic by treating loadout slot as target slot
         int actualTransferAmount = TransferTargetSlotItems(methodName, state, sourceSlot, loadoutSlot, maxStackSize, ref tempSourceRemaining);
 
         // Update the loadout slot required amount with actual transfer
         loadoutSlotRequiredAmount -= actualTransferAmount;
+
+#if DEBUG
+        //TODO: Remove this debug code the code works reliably
+        ModLogger.DebugLog($"{methodName}: AFTER transfer from source slot {ItemX.Info(sourceSlot)} to loadout slot {ItemX.Info(loadoutSlot)}, tempSourceRemaining={tempSourceRemaining}, loadoutSlotRequiredAmount={loadoutSlotRequiredAmount}, sourceSlotRemaining={sourceSlotRemaining}, intendedTransfer={intendedTransfer}, maxStackSize={maxStackSize}");
+#endif
 
         return actualTransferAmount;
     }
