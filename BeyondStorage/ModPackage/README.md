@@ -219,6 +219,10 @@ Just pick one you like and use that.
 
 [url=https://www.nexusmods.com/7daystodie/mods/7809]Beyond Storage 2[/url] added pulling from all conceivable sources, like drones, workstation outputs, dew collectors. Also added all inventory operations like paying for items at a trader, painting, lock picking. The mod also fixes many notification bugs from the original game, and all operations are seamless. Pushing items from any place you can pull from, in order to auto-sort items, was also added.
 
+## Why use this mod?
+
 I would recommend Beyond Storage 2 over other "craft from container" type mods, due to speed, stability, functionality, and code quality.
+
+The UI and game functionality integration is exceptional, and the mod is very stable and ⚡lightning⚡ fast.
 
 *** PACKAGED `README.md` EOF ***
