@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <doc>
 
-  <insertBefore xpath="/doc/tips/tip[20]">
+  <insertBefore xpath="/doc/tips/tip[(last() + 1) div 2]">
     <tip key="loadingBeyondStorage"/>
   </insertBefore>
 
