@@ -33,7 +33,7 @@ public static class GameTools
         try
         {
 #if DEBUG
-            ModLogger.DebugLog($"{methodName}: Formatting localised message with {formatArgs.Length} argument(s)");
+            //ModLogger.DebugLog($"{methodName}: Formatting localised message with {formatArgs.Length} argument(s)");
 #endif
             string localisedMessage = string.Format(localisedMessageFmt, formatArgs);
             return localisedMessage;
