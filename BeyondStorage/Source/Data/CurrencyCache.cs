@@ -3,7 +3,8 @@ using System.Linq;
 using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Data;
-internal class CurrencyCache
+
+internal static class CurrencyCache
 {
     private static readonly Dictionary<int, string> s_currencyCache = [];
     private static ItemStack s_emptyCurrencyStack = null;
