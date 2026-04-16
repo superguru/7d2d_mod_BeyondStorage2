@@ -17,9 +17,7 @@ internal class StorageTargetAdapter
         _source = source;
         Distance = distance;
 
-        _filledSlots = maps._filled;
-        _partialSlots = maps._partial;
-        _emptySlots = maps._empty;
+        maps.GetSlotDataLists(out _filledSlots, out _partialSlots, out _emptySlots);
     }
 
     public float Distance { get; }
