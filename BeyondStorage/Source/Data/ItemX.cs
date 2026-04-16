@@ -125,6 +125,11 @@ public static class ItemX
         return ItemClassCache.LookupMaxStackSize(stack);
     }
 
+    public static int GetAverageMaxStackSizeOf(ItemStack[] stacks)
+    {
+        return ItemClassCache.GetAverageMaxStackSize();
+    }
+
     public static int CurrentStackSizeOf(ItemStack stack)
     {
         return stack?.count ?? 0;

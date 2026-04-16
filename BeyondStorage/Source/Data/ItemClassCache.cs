@@ -8,6 +8,8 @@ public static class ItemClassCache
     private static readonly Dictionary<int, string> s_itemTypeNames = [];
     private static readonly Dictionary<int, int> s_itemMaxStackSizes = [];
 
+    private static int s_totalMaxStackSize = 0;
+
     public static string LookupItemName(int itemType)
     {
         const string d_MethodName = nameof(LookupItemName);
@@ -91,14 +93,20 @@ public static class ItemClassCache
             return 0;  // Don't cache constants
         }
 
-        if (s_itemMaxStackSizes.TryGetValue(itemType, out var stackSize))
+        if (s_itemMaxStackSizes.TryGetValue(itemType, out var maxStackSize))
         {
-            return stackSize;
+            return maxStackSize;
         }
 
-        stackSize = ResolveMaxStackSize(itemType);
-        s_itemMaxStackSizes[itemType] = stackSize;
-        return stackSize;
+        maxStackSize = ResolveMaxStackSize(itemType);
+        s_itemMaxStackSizes[itemType] = maxStackSize;
+
+        if (maxStackSize > 0)
+        {
+            s_totalMaxStackSize = maxStackSize;
+        }
+
+        return maxStackSize;
     }
 
     /// <summary>
@@ -120,5 +128,12 @@ public static class ItemClassCache
     public static int LookupMaxStackSize(ItemStack itemStack)
     {
         return LookupMaxStackSize(itemStack?.itemValue);
+    }
+
+    public static int GetAverageMaxStackSize()
+    {
+        int totalStacks = s_itemMaxStackSizes.Count;
+
+        return totalStacks > 0 ? s_totalMaxStackSize / totalStacks : CollectionFactory.DEFAULT_ITEMSTACK_LIST_CAPACITY;
     }
 }
