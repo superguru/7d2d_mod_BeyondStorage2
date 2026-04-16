@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using BeyondStorage.Source.Diagnostics;
 using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
 
 namespace BeyondStorage.Source.Data;
 
@@ -228,21 +227,6 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
     {
         const string d_MethodName = nameof(GetAllSlotItemsStacks);
         return GetSpecifiedItemStacks(d_MethodName, _getAllSlotsItemsFunc);
-    }
-
-    public bool IsItemScopeMatch(ItemStack stack, ItemScope scope)
-    {
-        switch (scope)
-        {
-            case ItemScope.AllItems:
-                return true;
-
-            case ItemScope.PushableItems:
-                //TODO: implement lock checking for pushable items when storage supports slot locking
-                return false;
-        }
-
-        return false;
     }
 
     public string GetName()
