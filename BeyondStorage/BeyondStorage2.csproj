@@ -67,6 +67,7 @@
     <Compile Include="Source\Data\StorageTargetAdapter.cs" />
     <Compile Include="Source\Diagnostics\DebugTools.cs" />
     <Compile Include="Source\Entities\EntityHandler.cs" />
+    <Compile Include="Source\HarmonyPatches\Informatics\Stack_Slot_Lock_Maintanance_Patch.cs" />
     <Compile Include="Source\Storage\SmartTransferOperation.cs" />
     <Compile Include="Source\Storage\StorageFilter.cs" />
     <Compile Include="Source\Game\UI\SmartSortingCommon.cs" />
