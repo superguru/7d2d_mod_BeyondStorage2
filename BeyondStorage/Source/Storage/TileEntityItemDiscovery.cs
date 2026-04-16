@@ -143,7 +143,7 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static int ProcessCollectorItems(TileEntityCollector collector, TileEntityProcessingState state)
+    private static void ProcessCollectorItems(TileEntityCollector collector, TileEntityProcessingState state)
     {
 #if DEBUG
         //const string d_MethodName = nameof(ProcessCollectorItems);
@@ -160,7 +160,6 @@ internal static class TileEntityItemDiscovery
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {collector}");
         }
 #endif
-        return validStacksRegistered;
     }
 
     #endregion
@@ -176,8 +175,7 @@ internal static class TileEntityItemDiscovery
             return;
         }
 
-        ProcessWorkstationItems(workstation, state);
-        ProcessWorkstationStorage(workstation, distance, state);
+        ProcessWorkstation(workstation, distance, state);
     }
 
     private static bool ShouldProcessWorkstation(TileEntityWorkstation workstation)
@@ -190,15 +188,17 @@ internal static class TileEntityItemDiscovery
         return true;
     }
 
-    private static int ProcessWorkstationItems(TileEntityWorkstation workstation, TileEntityProcessingState state)
+    private static void ProcessWorkstation(TileEntityWorkstation workstation, float distance, TileEntityProcessingState state)
     {
 #if DEBUG
-        //const string d_MethodName = nameof(ProcessWorkstationItems);
+        //const string d_MethodName = nameof(ProcessWorkstation);
 #endif
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
 
         context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
+
         state.ValidWorkstationsFound++;
 
 #if DEBUG
@@ -207,16 +207,6 @@ internal static class TileEntityItemDiscovery
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {workstation}");
         }
 #endif
-        return validStacksRegistered;
-    }
-
-    private static void ProcessWorkstationStorage(TileEntityWorkstation workstation, float distance, TileEntityProcessingState state)
-    {
-        var context = state.Context;
-        var sourceAdapter = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
-
-        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
-        state.ValidWorkstationsFound++;
     }
 
     #endregion
@@ -232,8 +222,7 @@ internal static class TileEntityItemDiscovery
             return;
         }
 
-        ProcessLootableItems(lootable, tileEntity, state);
-        ProcessLootableStorage(lootable, distance, state);
+        ProcessLootable(lootable, tileEntity, distance, state);
     }
 
     private static bool ShouldProcessLootable(ITileEntityLootable lootable)
@@ -241,12 +230,11 @@ internal static class TileEntityItemDiscovery
         return lootable.bPlayerStorage;
     }
 
-    private static int ProcessLootableItems(ITileEntityLootable lootable, TileEntity tileEntity, TileEntityProcessingState state)
+    private static void ProcessLootable(ITileEntityLootable lootable, TileEntity tileEntity, float distance, TileEntityProcessingState state)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ProcessLootableItems);
+        const string d_MethodName = nameof(ProcessLootable);
 #endif
-
         var context = state.Context;
 
 #if DEBUG
@@ -256,7 +244,10 @@ internal static class TileEntityItemDiscovery
         var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
 
         context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
+
         state.ValidLootablesFound++;
+        state.ValidContainersFound++;
 
 #if DEBUG
         if (validStacksRegistered > 0)
@@ -264,16 +255,6 @@ internal static class TileEntityItemDiscovery
             //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {tileEntity}");
         }
 #endif
-        return validStacksRegistered;
-    }
-
-    private static void ProcessLootableStorage(ITileEntityLootable lootable, float distance, TileEntityProcessingState state)
-    {
-        var context = state.Context;
-        var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
-
-        context.Sources.DataStore.RegisterStorageSource(sourceAdapter, distance);
-        state.ValidContainersFound++;
     }
 
     #endregion
