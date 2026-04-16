@@ -210,7 +210,7 @@ internal class StorageSourceItemDataStore
             var registry = ItemX.IsFull(slot) ? maps._filled : maps._partial;
             if (!registry.TryGetValue(itemType, out var slots))
             {
-                slots = CollectionFactory.CreateItemStackList();
+                slots = CollectionFactory.CreateItemStackList(itemLength);
                 registry[itemType] = slots;
             }
 
