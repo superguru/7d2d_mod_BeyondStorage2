@@ -118,6 +118,36 @@ internal class StorageSourceItemDataStore
         }
     }
 
+    public void RegisterStorageSource(IStorageTargetSource storage, float distance)
+    {
+        const string d_MethodName = nameof(RegisterStorageSource);
+
+        if (storage == null)
+        {
+            ModLogger.DebugLog($"{d_MethodName}: Null storage supplied");
+            return;
+        }
+
+        // Classify once at registration; maps are cloned per operation at query time
+        var allItemsMap = BuildSlotMap(storage.GetAllSlotItemsStacks());
+        var pushableMap = BuildSlotMap(storage.GetPushableItemStacks());
+
+        _containerStore.Add(storage, distance, allItemsMap, pushableMap);
+    }
+
+    private static SlotMaps BuildSlotMap(ItemStack[] items)
+    {
+        var itemsLength = items.Length;
+        var maps = new SlotMaps(Math.Max(ItemX.GetAverageMaxStackSizeOf(items), itemsLength));
+
+        for (int i = 0; i < itemsLength; i++)
+        {
+            maps.RegisterSlot(items[i]);
+        }
+
+        return maps;
+    }
+
     private bool RegisterStack(IStorageSource source, ItemStack stack)
     {
         const string d_MethodName = nameof(RegisterStack);
@@ -172,52 +202,6 @@ internal class StorageSourceItemDataStore
         _collectionStore.AddStackForItemType(stack);
 
         return true; // Stack was successfully added
-    }
-
-    public void RegisterStorageSource(IStorageTargetSource storage, float distance)
-    {
-        const string d_MethodName = nameof(RegisterStorageSource);
-
-        if (storage == null)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Null storage supplied");
-            return;
-        }
-
-        // Classify once at registration; maps are cloned per operation at query time
-        var allItemsMaps = BuildSlotMaps(storage.GetAllSlotItemsStacks());
-        var pushableMaps = BuildSlotMaps(storage.GetPushableItemStacks());
-
-        _containerStore.Add(storage, distance, allItemsMaps, pushableMaps);
-    }
-
-    private static SlotMaps BuildSlotMaps(ItemStack[] items)
-    {
-        var itemLength = items.Length;
-        var maps = new SlotMaps(itemLength);
-
-        for (int i = 0; i < items.Length; i++)
-        {
-            var slot = items[i];
-            var itemType = ItemX.ItemTypeOf(slot);
-
-            if (itemType == UniqueItemTypes.EMPTY || ItemX.IsEmpty(slot))
-            {
-                maps._empty.Add(slot);
-                continue;
-            }
-
-            var registry = ItemX.IsFull(slot) ? maps._filled : maps._partial;
-            if (!registry.TryGetValue(itemType, out var slots))
-            {
-                slots = CollectionFactory.CreateItemStackList(itemLength);
-                registry[itemType] = slots;
-            }
-
-            slots.Add(slot);
-        }
-
-        return maps;
     }
 
     public IReadOnlyList<IStorageSource> GetSourcesByType<T>() where T : class, IStorageSource
