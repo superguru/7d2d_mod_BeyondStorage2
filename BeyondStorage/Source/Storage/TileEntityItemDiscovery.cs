@@ -233,7 +233,7 @@ internal static class TileEntityItemDiscovery
         }
 
         ProcessLootableItems(lootable, tileEntity, state);
-        ProcessLootableContainer(lootable, distance, state);
+        ProcessLootableStorage(lootable, distance, state);
     }
 
     private static bool ShouldProcessLootable(ITileEntityLootable lootable)
@@ -267,7 +267,7 @@ internal static class TileEntityItemDiscovery
         return validStacksRegistered;
     }
 
-    private static void ProcessLootableContainer(ITileEntityLootable lootable, float distance, TileEntityProcessingState state)
+    private static void ProcessLootableStorage(ITileEntityLootable lootable, float distance, TileEntityProcessingState state)
     {
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
