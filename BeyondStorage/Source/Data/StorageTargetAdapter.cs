@@ -61,7 +61,7 @@ internal class StorageTargetAdapter
         // Check filled slots first
         if (_filledSlots.TryGetValue(itemType, out var filledList))
         {
-            var slotIndex = filledList.IndexOfReference(slot);
+            var slotIndex = filledList.LastIndexOfReference(slot);
             if (slotIndex >= 0)
             {
                 ReclassifySlot(filledList, slot, slotIndex);
@@ -72,7 +72,7 @@ internal class StorageTargetAdapter
         // Check partial slots independently
         if (_partialSlots.TryGetValue(itemType, out var partialList))
         {
-            var slotIndex = partialList.IndexOfReference(slot);
+            var slotIndex = partialList.LastIndexOfReference(slot);
             if (slotIndex >= 0)
             {
                 ReclassifySlot(partialList, slot, slotIndex);
@@ -80,8 +80,8 @@ internal class StorageTargetAdapter
             }
         }
 
-        // Check empty slots starting from 0. This is the index probably returned by a prior call to GetNextEmptyStackFor
-        var emptySlotIndex = _emptySlots.IndexOfReference(slot);
+        // Check empty slots from the tail — the slot returned by GetNextEmptyStackFor is always at Count-1
+        var emptySlotIndex = _emptySlots.LastIndexOfReference(slot);
         if (emptySlotIndex >= 0)
         {
             _emptySlots.RemoveAt(emptySlotIndex);
@@ -107,7 +107,7 @@ internal class StorageTargetAdapter
             registry[itemType] = slots;
         }
 
-        slots.Insert(0, slot);
+        slots.Add(slot);
     }
 
     internal ItemStack GetNextEmptyStackFor(int itemType)
@@ -122,7 +122,7 @@ internal class StorageTargetAdapter
             || (_partialSlots.TryGetValue(itemType, out var partialList) && partialList.Count > 0))
         {
             // This will be the "first available" slot in the storage, starting from top to bottom, left to right
-            return _emptySlots[0];
+            return _emptySlots[_emptySlots.Count - 1];
         }
 
         return null;
@@ -130,9 +130,13 @@ internal class StorageTargetAdapter
 
     internal ItemStack GetNextFilledStackFor(int itemType)
     {
-        if (_filledSlots.TryGetValue(itemType, out var slots) && slots.Count > 0)
+        if (_filledSlots.TryGetValue(itemType, out var slots))
         {
-            return slots[0];
+            var count = slots.Count;
+            if (count > 0)
+            {
+                return slots[count - 1];
+            }
         }
 
         return null;
@@ -140,9 +144,13 @@ internal class StorageTargetAdapter
 
     internal ItemStack GetNextPartialStackFor(int itemType)
     {
-        if (_partialSlots.TryGetValue(itemType, out var slots) && slots.Count > 0)
+        if (_partialSlots.TryGetValue(itemType, out var slots))
         {
-            return slots[0];
+            var count = slots.Count;
+            if (count > 0)
+            {
+                return slots[count - 1];
+            }
         }
 
         return null;
