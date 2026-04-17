@@ -324,7 +324,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Docs\superior-design-plan.md" />
     <None Include="ModPackage\config.json" />
     <None Include="ModPackage\README.md" />
     <None Include="packages.config" />

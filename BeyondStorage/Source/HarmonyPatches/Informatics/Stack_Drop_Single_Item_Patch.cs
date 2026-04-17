@@ -67,8 +67,6 @@ internal static class Stack_Drop_Single_Item_Patch
 #endif
     private static void Handle_DropSingle_Event_Prefix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_DropSingle_Event_Prefix);
-
         SingleDropEvent(__instance);
     }
 
@@ -79,8 +77,6 @@ internal static class Stack_Drop_Single_Item_Patch
 #endif
     private static bool Handle_DropOne_Prefix(XUiC_ItemStack __instance)
     {
-        const string d_MethodName = nameof(Handle_DropOne_Prefix);
-
         SingleDropEvent(__instance);
 
         return true; // Still continue with the original method

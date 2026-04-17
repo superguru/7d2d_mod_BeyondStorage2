@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -109,11 +107,7 @@ internal class StorageOperationState
         var shouldRegisterStack = ShouldRegisterStack(initialStackSize, currentStackSize, maxStackSize);
         if (shouldRegisterStack)
         {
-            var countBefore = _affectedStacks.Count;
-            var result = _affectedStacks.Add(stack);
-            var countAfter = _affectedStacks.Count;
-
-            ModLogger.DebugLog($"Registering stack for storage: {ItemX.Info(stack)} (count before: {countBefore}, count after: {countAfter}), added:{result}");
+            _ = _affectedStacks.Add(stack);
         }
 
         var itemType = ItemX.ItemTypeOf(stack);
@@ -140,13 +134,6 @@ internal class StorageOperationState
 
     public override string ToString()
     {
-        var operationName = Operation.ToString();
-        var affectedStacks = string.Join(", ", _affectedStacks.Select(x => ItemX.Info(x as ItemStack) + "\n"));
-
-        return $"Storage operation on '{MasterStorageName}' affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)"
-            + ":\n" +
-            $"{operationName}: operationName" +
-            $"affectedStacks:\n{affectedStacks}"
-            ;
+        return $"Storage operation on '{MasterStorageName}' affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)";
     }
 }
