@@ -9,5 +9,5 @@ btnBeyondSmartVehiclePush_ToolTip,,,,,Pushes items from unlocked slots in the ve
 btnBeyondSmartWorkstationOutputPush_ToolTip,,,,,Pushes completed items from here to the nearest storages that already have that type of item
 loadingBeyondStorage,UI,Loading Screen,x,,Please go to [4c5fd7]#beyond-storage2[-] on the [f46f30]Discord server[-] for mod support. See the README.md file or the mod web page for the details.
 loadingBeyondStorage_title,UI,Loading Screen,x,,Beyond Storage mod support
-msgBeyondSmartPullLoadout_Result,,,,,Topped up {0} stack(s) in the {1} loadout
+msgBeyondSmartPullLoadout_Result,,,,,You carefully topped up {0} stack(s) in the {1} loadout
 msgBeyondSmartPush_Result,,,,,Through hard work you moved {0} stack(s) from {1} to {2} storage(s)
