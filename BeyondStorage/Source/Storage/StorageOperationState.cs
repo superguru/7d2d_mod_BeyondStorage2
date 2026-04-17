@@ -10,8 +10,10 @@ namespace BeyondStorage.Source.Storage;
 internal class StorageOperationState
 {
 
-    private readonly HashSet<object> _affectedStorages = [];
-    private readonly HashSet<object> _affectedStacks = [];
+    private readonly HashSet<StorageTargetAdapter> _affectedStorages = [];
+#pragma warning disable IDE0028 // Simplify collection initialization
+    private readonly HashSet<ItemStack> _affectedStacks = new(ItemStackReferenceComparer.Instance);
+#pragma warning restore IDE0028 // Simplify collection initialization
     private readonly HashSet<int> _uniqueItems = [];
 
     /// <summary>
