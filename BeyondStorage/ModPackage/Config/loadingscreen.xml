@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <doc>
 
-  <insertBefore xpath="/doc/tips/tip[(last() + 1) div 2]">
+  <append xpath="/doc/tips">
     <tip key="loadingBeyondStorage"/>
-  </insertBefore>
+  </append>
 
 </doc>
