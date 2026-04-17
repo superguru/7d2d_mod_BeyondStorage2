@@ -26,14 +26,6 @@ I'm just some guy trying to be the change we all want to see in the world...of g
 I might be streaming, check [Twitch](https://www.twitch.tv/gazorper_stream)
 <!-- [color=#ff0000][BBCode][/color] [color=#00ffff][size=3][b]Twitch[/b][/size][/color] at [url=https://www.twitch.tv/gazorper_stream]https://www.twitch.tv/gazorper_stream[/url][color=#ff0000][/BBCode][/color] -->
 
-## 💾What to download
-
-- Use the main download for the latest version of 7 Days to Die v2.6 (all builds)
-- Use v2.5.2 for 7 Days v2.5 (Old Files section)
-- Use v2.3.5 for 7 Days v2.3 and v2.4  (Old Files section)
-- Use v2.2.7 for 7 Days v2.2 (Old Files section)
-- Use v2.1.4 for 7 Days v2.0 or v2.1 (Old Files section)
-
 -----------------------------------------
 If you like what I'm doing, or what I've done, you can [support me on Ko-fi](https://ko-fi.com/gazorper).
 <!-- [color=#ff0000][BBCode][/color] [url=https://ko-fi.com/gazorper]Support me on Ko-fi[/url] [color=#ff0000][/BBCode][/color] -->
@@ -45,7 +37,16 @@ If you like what I'm doing, or what I've done, you can [support me on Ko-fi](htt
 
 -----------------------------------------
 
+## 💾What to download
+
+- Use the main download for the latest version of 7 Days to Die v2.6 (all builds)
+- Use v2.5.2 for 7 Days v2.5 (Old Files section)
+- Use v2.3.5 for 7 Days v2.3 and v2.4  (Old Files section)
+- Use v2.2.7 for 7 Days v2.2 (Old Files section)
+- Use v2.1.4 for 7 Days v2.0 or v2.1 (Old Files section)
+ 
 ## ⚙️Installation
+
 - Use a Mod Manager to install the mod, or unzip the contents of this mod into your 7 Days to Die Mods folder
 - The compiled and packaged mod is available from https://www.nexusmods.com/7daystodie/mods/7809
 
@@ -202,8 +203,9 @@ I run these mods, among others, and so the development and testing of this mod m
 
 ### ❌Not considered compatible:
 
-[list][*]v2.5.x of the mod is compatible [url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] (also most other versions of this mod and Farm Life should work ok)[/*]
-[*]Since Farm Life edition for 2.6 of the game, this mod no longer considered compatible, but YMMV[/*][/list]
+[list][*]🤷🏼v2.5.x of the mod is compatible [url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] (also most other versions of this mod and Farm Life should work ok)[/*]
+[*]❌Since Farm Life edition for 2.6 of the game, this mod no longer considered compatible, but YMMV[/*]
+[*]❌[url=https://www.nexusmods.com/7daystodie/mods/8289]Advanced UI[/url][/*][/list]
 
 In addition, don't use any remote crafting type of mods at the same time. They are generally not compatible with each other. 
 
@@ -223,6 +225,6 @@ Just pick one you like and use that.
 
 I would recommend Beyond Storage 2 over other "craft from container" type mods, due to speed, stability, functionality, and code quality.
 
-The UI and game functionality integration is exceptional, and the mod is very stable and ⚡lightning⚡ fast.
+The UI and game functionality integration is exceptional, and the mod is very stable and ⚡⚡⚡lightning⚡⚡⚡ fast.
 
 *** PACKAGED `README.md` EOF ***
