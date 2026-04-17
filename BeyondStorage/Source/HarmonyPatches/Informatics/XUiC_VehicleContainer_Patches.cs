@@ -21,14 +21,14 @@ internal static class XUiC_VehicleContainer_Patches
     private static void XUiC_VehicleContainer_Init_Postfix(XUiC_VehicleContainer __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_VehicleContainer_Init_Postfix);
+        //const string d_MethodName = nameof(XUiC_VehicleContainer_Init_Postfix);
 #endif
         var btnBeyondSmartPushButton = UIControlHelpers.GetSmartVehiclePushButton(__instance);
         if (btnBeyondSmartPushButton != null)
         {
             btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartVehiclePush_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button initialized");
 #endif
         }
 
@@ -37,7 +37,7 @@ internal static class XUiC_VehicleContainer_Patches
         {
             btnBeyondSmartPullButton.OnPress += SmartSortingCommon.SmartVehiclePullLoadout_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button initialized");
 #endif
         }
     }

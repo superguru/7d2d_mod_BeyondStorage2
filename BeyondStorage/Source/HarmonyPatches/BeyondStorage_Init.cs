@@ -104,6 +104,8 @@ public class BeyondStorageMod : IModApi
 
             // General cache related suppression
             nameof(StorageContextFactory.InvalidateContext),
+            nameof(SmartSortingFunctions.SmartPlayerInventoryLoadoutPull),
+            nameof(SmartSortingFunctions.SmartPlayerInventoryPush),
         ]);
     }
 }

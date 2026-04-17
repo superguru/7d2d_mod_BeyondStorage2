@@ -20,7 +20,6 @@ public sealed class ConfigSnapshot
 
     // ========== Housekeeping =========
     public bool IsDebug { get; }
-    public bool IsDebugLogSettingsAccess { get; }
 
     private ConfigSnapshot()
     {
@@ -36,7 +35,6 @@ public sealed class ConfigSnapshot
 
         // ========== Housekeeping =========
         IsDebug = ModConfig.IsDebug();
-        IsDebugLogSettingsAccess = ModConfig.IsDebugLogSettingsAccess();
     }
 
     public static ConfigSnapshot Current => new();

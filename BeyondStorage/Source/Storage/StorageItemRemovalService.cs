@@ -59,7 +59,7 @@ public static class StorageItemRemovalService
             var sourcesByType = context?.Sources?.DataStore?.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType?.Count;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
+            //ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
 #endif
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {

@@ -52,11 +52,6 @@ public class BsConfig
     public bool isDebug = false;
 
     /// <summary>
-    /// If set true will log settings access (only works if isDebug is true and DEBUG is defined)
-    /// </summary>
-    public bool isDebugLogSettingsAccess = false;
-
-    /// <summary>
     /// Optional metadata description field for configuration documentation purposes
     /// </summary>
     public string metaDescription = string.Empty;

@@ -1,5 +1,4 @@
 ﻿using BeyondStorage.Source.Game.UI;
-using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -18,14 +17,14 @@ internal static class XUiCBackpackWindowPatches
     private static void XUiC_BackpackWindow_Init_Postfix(XUiC_BackpackWindow __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_BackpackWindow_Init_Postfix);
+        //const string d_MethodName = nameof(XUiC_BackpackWindow_Init_Postfix);
 #endif
         var btnBeyondSmartPullButton = UIControlHelpers.GetSmartPlayerInventoryPullLoadoutButton(__instance);
         if (btnBeyondSmartPullButton != null)
         {
             btnBeyondSmartPullButton.OnPress += SmartSortingCommon.SmartPlayerInventoryPullLoadout_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart player inventory pull loadout button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart player inventory pull loadout button initialized");
 #endif
         }
 
@@ -34,7 +33,7 @@ internal static class XUiCBackpackWindowPatches
         {
             btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button initialized");
 #endif
         }
     }

@@ -1,5 +1,4 @@
-﻿using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Game.UI;
+﻿using BeyondStorage.Source.Game.UI;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.UI;
@@ -18,14 +17,14 @@ internal static class XUiCWorkstationOutputWindowPatches
     private static void XUiC_WorkstationOutputWindow_Init_Postfix(XUiC_WorkstationOutputWindow __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_WorkstationOutputWindow_Init_Postfix);
+        //const string d_MethodName = nameof(XUiC_WorkstationOutputWindow_Init_Postfix);
 #endif
         var btnBeyondSmartButton = UIControlHelpers.GetSmartWorkstationOutputPushButton(__instance);
         if (btnBeyondSmartButton != null)
         {
             btnBeyondSmartButton.OnPress += SmartSortingCommon.SmartWorkstationOutputPush_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart workstation output push button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart workstation output push button initialized");
 #endif
         }
     }

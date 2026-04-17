@@ -538,7 +538,7 @@ public class SmartSortingFunctions
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{methodName}: Transferring {transferAmount} of {ItemX.NameOf(sourceSlot)} (storage: {state.MasterStorageName})");
+        //ModLogger.DebugLog($"{methodName}: Transferring {transferAmount} of {ItemX.NameOf(sourceSlot)} (storage: {state.MasterStorageName})");
 #endif
 
         // Track target count BEFORE transfer

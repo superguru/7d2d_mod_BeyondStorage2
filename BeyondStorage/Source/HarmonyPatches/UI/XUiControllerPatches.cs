@@ -29,7 +29,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartCollectorPush.OnPress -= SmartSortingCommon.SmartCollectorPush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart collector push button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart collector push button event handler removed");
 #endif
             }
 
@@ -38,7 +38,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartDronePullLoadout.OnPress -= SmartSortingCommon.SmartDroneInventoryPullLoadout_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button event handler removed");
 #endif
             }
 
@@ -47,7 +47,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartLootWindowPush.OnPress -= SmartSortingCommon.SmartLootWindowPush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button event handler removed");
 #endif
             }
 
@@ -56,7 +56,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartPlayerInventoryPullLoadout.OnPress -= SmartSortingCommon.SmartPlayerInventoryPullLoadout_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory pull loadout button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart player inventory pull loadout button event handler removed");
 #endif
             }
 
@@ -65,7 +65,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartPlayerInventoryPush.OnPress -= SmartSortingCommon.SmartPlayerInventoryPush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart player inventory push button event handler removed");
 #endif
             }
 
@@ -74,7 +74,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartVehiclePullLoadout.OnPress -= SmartSortingCommon.SmartVehiclePullLoadout_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart vehicle pull loadout button event handler removed");
 #endif
             }
 
@@ -83,7 +83,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartVehiclePush.OnPress -= SmartSortingCommon.SmartVehiclePush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart vehicle push button event handler removed");
 #endif
             }
 
@@ -92,7 +92,7 @@ internal static class XUiControllerPatches
             {
                 btnBeyondSmartWorkstationOutputPush.OnPress -= SmartSortingCommon.SmartWorkstationOutputPush_EventHandler;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: Smart workstation output push button event handler removed");
+                //ModLogger.DebugLog($"{d_MethodName}: Smart workstation output push button event handler removed");
 #endif
             }
         }

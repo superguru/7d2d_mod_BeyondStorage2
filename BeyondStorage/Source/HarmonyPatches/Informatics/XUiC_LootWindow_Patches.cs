@@ -21,13 +21,13 @@ internal static class XUiC_LootWindow_Patches
     private static void XUiC_LootWindow_Init_Postfix(XUiC_LootWindow __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_LootWindow_Init_Postfix);
+        //const string d_MethodName = nameof(XUiC_LootWindow_Init_Postfix);
 #endif
         var btnBeyondSmartDronePullLoadout = UIControlHelpers.GetSmartDroneInventoryPullLoadoutButton(__instance);
         if (btnBeyondSmartDronePullLoadout != null)
         {
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart drone pull loadout button initialized");
 #endif
             btnBeyondSmartDronePullLoadout.OnPress += SmartSortingCommon.SmartDroneInventoryPullLoadout_EventHandler;
         }
@@ -37,7 +37,7 @@ internal static class XUiC_LootWindow_Patches
         {
             btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
 #if DEBUG
-            ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button initialized");
+            //ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button initialized");
 #endif
         }
     }
