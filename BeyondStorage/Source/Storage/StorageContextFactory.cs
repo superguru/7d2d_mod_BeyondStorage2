@@ -193,7 +193,7 @@ public static class StorageContextFactory
     /// </summary>
     public static void InvalidateContext()
     {
-        s_contextCache.InvalidateCache();
+        s_contextCache.InvalidateCache(nameof(InvalidateContext));
     }
 
     private static AllowedSourcesList BuildAllowedSourcesSnapshot(ConfigSnapshot config)

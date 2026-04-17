@@ -101,6 +101,9 @@ public class BeyondStorageMod : IModApi
 
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
             $"{nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
+
+            // General cache related suppression
+            nameof(StorageContextFactory.InvalidateContext),
         ]);
     }
 }

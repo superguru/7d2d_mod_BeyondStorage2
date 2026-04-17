@@ -193,13 +193,16 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
     /// <summary>
     /// Forces cache invalidation. Next call to GetOrCreate will create a fresh item.
     /// </summary>
-    public void InvalidateCache()
+    public void InvalidateCache(string methodName = null)
     {
+        const string d_MethodName = nameof(InvalidateCache);
+        string methodNameToUse = string.IsNullOrEmpty(methodName) ? d_MethodName : methodName;
+
         lock (_cacheLock)
         {
             _cachedItem = null;
 
-            if (LogCacheUsage)
+            if (LogCacheUsage && !ShouldSuppressLogging(methodName))
             {
                 ModLogger.DebugLog($"{CacheTypeName} cache invalidated");
             }
