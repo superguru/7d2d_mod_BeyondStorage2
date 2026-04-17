@@ -86,6 +86,7 @@ public class BeyondStorageMod : IModApi
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
             nameof(ItemCommon.ItemCommon_GetTotalAvailableItemCount),
             nameof(ItemCommon.ItemRemoveRemaining),
+            nameof(ItemRepair.ItemRepairRefreshGetItemCount),
 
             nameof(ItemCraft.EntryBinding_AddPullableSourceStorageItemCount),
             nameof(ItemCraft.ItemCraft_AddPullableSourceStorageStacks),
@@ -98,6 +99,7 @@ public class BeyondStorageMod : IModApi
             nameof(PurchasingCommon.GetRemovableCountWithStorage),
 
             nameof(Ranged.GetAmmoCount),
+            nameof(Ranged.RemoveAmmoForReload),
 
             $"{nameof(WorkstationRecipe.BackgroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
             $"{nameof(WorkstationRecipe.ForegroundWorkstation_CraftCompleted)}.{nameof(WorkstationRecipe.Update_OpenWorkstations)}",
@@ -106,6 +108,9 @@ public class BeyondStorageMod : IModApi
             nameof(StorageContextFactory.InvalidateContext),
             nameof(SmartSortingFunctions.SmartPlayerInventoryLoadoutPull),
             nameof(SmartSortingFunctions.SmartPlayerInventoryPush),
+            nameof(SmartSortingFunctions.SmartVehicleLoadoutPull),
+            nameof(SmartSortingFunctions.SmartVehiclePush),
+            nameof(SmartSortingFunctions.SmartWorkstationOutputPush),
         ]);
     }
 }

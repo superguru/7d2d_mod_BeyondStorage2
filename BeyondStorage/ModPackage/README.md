@@ -203,7 +203,7 @@ I run these mods, among others, and so the development and testing of this mod m
 
 ### ❌Not considered compatible:
 
-[list][*]🤷🏼v2.5.x of the mod is compatible [url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] (also most other versions of this mod and Farm Life should work ok)[/*]
+[list][*]🤷🏼[url=https://www.nexusmods.com/7daystodie/mods/2108]War3zuk FarmLife v2.5 B32 Stable[/url] and v2.5.x of the mod is compatible (also most other versions of this mod and Farm Life should work ok)[/*]
 [*]❌Since Farm Life edition for 2.6 of the game, this mod no longer considered compatible, but YMMV[/*]
 [*]❌[url=https://www.nexusmods.com/7daystodie/mods/8289]Advanced UI[/url][/*][/list]
 
