@@ -33,7 +33,9 @@ internal static class Stack_Drag_Drop_Patch
 #endif
 
         // Capture slot state snapshot
+#pragma warning disable IDE0017 // Simplify object initialization
         var preSnapshot = new SlotSnapshot(__instance);
+#pragma warning restore IDE0017 // Simplify object initialization
         preSnapshot.OriginalCallCount = callCount;
 
         // Early validation - check if slot has content

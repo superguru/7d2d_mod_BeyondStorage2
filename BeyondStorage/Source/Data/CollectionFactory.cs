@@ -16,7 +16,9 @@ public static class CollectionFactory
 
     public static List<ItemStack> CreateItemStackList(int capacity)
     {
+#pragma warning disable IDE0028 // Simplify collection initialization
         return capacity <= 0 ? EmptyItemStackList : new List<ItemStack>(capacity);
+#pragma warning restore IDE0028 // Simplify collection initialization
     }
 
     public static List<ItemStack> CreateItemStackList()
@@ -26,6 +28,8 @@ public static class CollectionFactory
 
     public static List<IStorageSource> CreateStorageSourceList()
     {
+#pragma warning disable IDE0028 // Simplify collection initialization
         return new List<IStorageSource>(DEFAULT_STORAGESOURCE_LIST_CAPACITY);
+#pragma warning restore IDE0028 // Simplify collection initialization
     }
 }

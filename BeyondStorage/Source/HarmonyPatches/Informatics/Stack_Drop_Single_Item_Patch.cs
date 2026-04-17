@@ -21,7 +21,9 @@ internal static class Stack_Drop_Single_Item_Patch
         }
 
         // Capture slot state snapshot
+#pragma warning disable IDE0017 // Simplify object initialization
         var preSnapshot = new SlotSnapshot(__instance);
+#pragma warning restore IDE0017 // Simplify object initialization
         preSnapshot.OriginalCallCount = callCount;
         bool lastClicked = __instance.lastClicked;
 

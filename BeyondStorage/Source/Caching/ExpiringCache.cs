@@ -25,7 +25,9 @@ public sealed class ExpiringCache<T>(double cacheDurationSeconds, string cacheTy
     /// Static lookup set for method names that should suppress cache usage logging.
     /// Using HashSet for O(1) lookup performance.
     /// </summary>
+#pragma warning disable IDE0028 // Simplify collection initialization
     private static readonly HashSet<string> s_suppressLoggingMethodNames = new(StringComparer.OrdinalIgnoreCase);
+#pragma warning restore IDE0028 // Simplify collection initialization
     private static readonly object s_suppressLoggingLock = new();
 
     /// <summary>
