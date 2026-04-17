@@ -72,18 +72,14 @@ public static class ConfigVersioning
             var migratedConfig = new BsConfig
             {
                 version = CurrentVersion,
-
                 range = legacyConfig.range,
-
                 pullFromDrones = legacyConfig.pullFromDrones,
                 pullFromCollectors = legacyConfig.pullFromDewCollectors,
                 pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
                 pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
-
                 serverSyncConfig = legacyConfig.serverSyncConfig,
-
-                isDebug = legacyConfig.isDebug,
-                isDebugLogSettingsAccess = legacyConfig.isDebugLogSettingsAccess
+                isDebug = legacyConfig.isDebug
+                // isDebugLogSettingsAccess removed in 2.6.7
             };
 
             ModLogger.Info($"{d_MethodName}: Successfully migrated legacy config");
@@ -113,16 +109,14 @@ public static class ConfigVersioning
 
         ModLogger.Info($"{d_MethodName}: Migrating config from version {config.version} to {CurrentVersion}");
 
-        // Parse versions for comparison
         if (!TryParseVersion(config.version, out var fromVersion) ||
             !TryParseVersion(CurrentVersion, out var toVersion))
         {
             ModLogger.Warning($"{d_MethodName}: Unable to parse versions, using config as-is");
-            config.version = CurrentVersion; // Update version field
+            config.version = CurrentVersion;
             return config;
         }
 
-        // Apply migrations in sequence
         var migratedConfig = config;
 
         // Migration to version 2.3.5: Disable debug mode on servers
@@ -137,7 +131,12 @@ public static class ConfigVersioning
             migratedConfig = MigrateTo263(migratedConfig);
         }
 
-        // Always update to current version
+        // Migration to version 2.6.7: Remove isDebugLogSettingsAccess setting
+        if (fromVersion < new Version("2.6.7"))
+        {
+            migratedConfig = MigrateTo267(migratedConfig);
+        }
+
         migratedConfig.version = CurrentVersion;
 
         ModLogger.Info($"{d_MethodName}: Successfully migrated config to version {CurrentVersion}");
@@ -169,18 +168,10 @@ public static class ConfigVersioning
         const string d_MethodName = nameof(MigrateTo235);
         ModLogger.Info($"{d_MethodName}: Applying migration to version 2.3.5");
 
-        // Check if we're running on a server and debug mode is enabled
         if (config.isDebug && WorldTools.IsServer())
         {
             ModLogger.Info($"{d_MethodName}: Server environment detected - disabling debug mode for performance optimization");
             config.isDebug = false;
-
-            // Also disable debug logging settings access since it depends on debug mode
-            if (config.isDebugLogSettingsAccess)
-            {
-                config.isDebugLogSettingsAccess = false;
-                ModLogger.Info($"{d_MethodName}: Also disabled debug settings access logging");
-            }
         }
         else if (config.isDebug)
         {
@@ -211,6 +202,19 @@ public static class ConfigVersioning
     }
 
     /// <summary>
+    /// Migrates config to version 2.6.7
+    /// Changes: Removes the isDebugLogSettingsAccess setting — settings access logging
+    /// is no longer configurable and will not be logged regardless of previous value.
+    /// </summary>
+    private static BsConfig MigrateTo267(BsConfig config)
+    {
+        const string d_MethodName = nameof(MigrateTo267);
+        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.6.7");
+        ModLogger.Info($"{d_MethodName}: 'isDebugLogSettingsAccess' has been removed");
+        return config;
+    }
+
+    /// <summary>
     /// Pre-processes raw config JSON to apply field renames before deserialization.
     /// Must be called before deserializing into BsConfig to preserve renamed field values.
     /// </summary>
@@ -234,11 +238,17 @@ public static class ConfigVersioning
                 jsonObject.Remove("pullFromDewCollectors");
             }
 
+            // Pre-2.6.7: remove isDebugLogSettingsAccess
+            if (version < new Version("2.6.7") && jsonObject.ContainsKey("isDebugLogSettingsAccess"))
+            {
+                jsonObject.Remove("isDebugLogSettingsAccess");
+            }
+
             return jsonObject.ToString(Formatting.None);
         }
         catch (JsonException)
         {
-            return configJson; // Return original if JSON is malformed; SafeDeserializeConfig will handle the error
+            return configJson;
         }
     }
 
@@ -262,6 +272,6 @@ public static class ConfigVersioning
         public bool enableForVehicleRepair = true;
         public bool serverSyncConfig = true;
         public bool isDebug = false;
-        public bool isDebugLogSettingsAccess = false;
+        // isDebugLogSettingsAccess intentionally omitted — removed in 2.6.7
     }
 }

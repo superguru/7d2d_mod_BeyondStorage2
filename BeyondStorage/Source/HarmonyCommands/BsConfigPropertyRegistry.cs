@@ -55,13 +55,6 @@ internal static class BsConfigPropertyRegistry
 
         RegisterProperty("isDebug", "bool", "Enable additional logging",
             (config, value) => config.isDebug = ParseBool(value));
-
-#if DEBUG
-        RegisterProperty("isDebugLogSettingsAccess", "bool", "Log settings access (requires isDebug=true)",
-            (config, value) => config.isDebugLogSettingsAccess = ParseBool(value));
-#else
-        RegisterProperty("isDebugLogSettingsAccess", "bool", "Log settings access (DEBUG build only)", null);
-#endif
     }
 
     /// <summary>
@@ -137,7 +130,6 @@ internal static class BsConfigPropertyRegistry
             "pullFromWorkstationOutputs" => config.pullFromWorkstationOutputs.ToString(),
             "pullFromVehicleStorage" => config.pullFromVehicleStorage.ToString(),
             "isDebug" => config.isDebug.ToString(),
-            "isDebugLogSettingsAccess" => config.isDebugLogSettingsAccess.ToString(),
             _ => "Unknown"
         };
     }

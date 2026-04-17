@@ -6,7 +6,6 @@ using BeyondStorage.Source.Multiplayer;
 using Newtonsoft.Json;
 
 #if DEBUG
-using System.Reflection;
 #endif
 
 namespace BeyondStorage.Source.Configuration;
@@ -201,7 +200,7 @@ public static class ModConfig
         CreateConfigBackup(path, "legacy");
 
         var loadedConfig = ConfigVersioning.MigrateLegacyConfig(configJson);
-        
+
         // Set ClientConfig before saving so SaveConfig has something to serialize
         ClientConfig = loadedConfig;
         SaveConfigAfterMigration(path);
@@ -228,7 +227,7 @@ public static class ModConfig
         {
             CreateConfigBackup(path, loadedConfig.version);
             loadedConfig = ConfigVersioning.MigrateVersionedConfig(loadedConfig);
-            
+
             // Set ClientConfig before saving so SaveConfig has something to serialize
             ClientConfig = loadedConfig;
             SaveConfigAfterMigration(path);
@@ -465,40 +464,13 @@ public static class ModConfig
         // If singleplayer use client config, otherwise we're a client on a server
         return !SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer;
     }
-
-    private static void LogSettingsAccess(string name, bool serverValue, bool clientValue)
-    {
-        if (IsDebugLogSettingsAccess())
-        {
-            ModLogger.DebugLog(
-                $"Setting ({name}): " +
-                $"server {serverValue}; " +
-                $"client {clientValue}; " +
-                $"usingServer: {UsingServerConfig()}; " +
-                $"hasServerConfig: {ServerUtils.HasServerConfig};");
-        }
-    }
-    private static void LogSettingsAccess(string name, float serverValue, float clientValue)
-    {
-        if (IsDebugLogSettingsAccess())
-        {
-            ModLogger.DebugLog(
-                $"Setting ({name}): " +
-                $"server {serverValue}; " +
-                $"client {clientValue}; " +
-                $"usingServer: {UsingServerConfig()}; " +
-                $"hasServerConfig: {ServerUtils.HasServerConfig};");
-        }
-    }
 #endif
 
     public static float Range()
     {
         float serverValue = ServerConfig.range;
         float clientValue = ClientConfig.range;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
+
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
@@ -506,9 +478,7 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromDrones;
         bool clientValue = ClientConfig.pullFromDrones;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
+
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
@@ -516,9 +486,7 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromCollectors;
         bool clientValue = ClientConfig.pullFromCollectors;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
+
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
@@ -526,9 +494,7 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromWorkstationOutputs;
         bool clientValue = ClientConfig.pullFromWorkstationOutputs;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
+
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
@@ -536,20 +502,13 @@ public static class ModConfig
     {
         bool serverValue = ServerConfig.pullFromVehicleStorage;
         bool clientValue = ClientConfig.pullFromVehicleStorage;
-#if DEBUG
-        LogSettingsAccess(MethodBase.GetCurrentMethod().Name, serverValue, clientValue);
-#endif
+
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
     public static bool IsDebug()
     {
         return IsConfigLoaded && ClientConfig.isDebug;
-    }
-
-    public static bool IsDebugLogSettingsAccess()
-    {
-        return IsConfigLoaded && ClientConfig.isDebug && ClientConfig.isDebugLogSettingsAccess;
     }
 
     public static bool ServerSyncConfig()
@@ -762,7 +721,6 @@ public static class ModConfig
             pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
             serverSyncConfig = legacyConfig.serverSyncConfig,
             isDebug = legacyConfig.isDebug,
-            isDebugLogSettingsAccess = legacyConfig.isDebugLogSettingsAccess,
             metaDescription = legacyConfig.metaDescription
         };
 
