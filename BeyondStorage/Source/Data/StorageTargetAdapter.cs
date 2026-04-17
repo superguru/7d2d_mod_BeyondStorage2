@@ -5,14 +5,14 @@ namespace BeyondStorage.Source.Data;
 
 internal class StorageTargetAdapter
 {
-    private readonly IStorageTargetSource _source;
+    private readonly IStorageTarget _source;
 
     private readonly List<ItemStack> _emptySlots;
 
     private readonly Dictionary<int, List<ItemStack>> _filledSlots;
     private readonly Dictionary<int, List<ItemStack>> _partialSlots;
 
-    public StorageTargetAdapter(IStorageTargetSource source, float distance, SlotMaps maps)
+    public StorageTargetAdapter(IStorageTarget source, float distance, SlotMaps maps)
     {
         _source = source;
         Distance = distance;
@@ -197,12 +197,4 @@ internal class StorageTargetAdapter
 
         return result;
     }
-
-#if DEBUG
-    internal ItemStack[] GetAllSourceItemsStacks()
-    {
-        var items = _source?.GetAllSlotItemsStacks() ?? [];
-        return items;
-    }
-#endif
 }

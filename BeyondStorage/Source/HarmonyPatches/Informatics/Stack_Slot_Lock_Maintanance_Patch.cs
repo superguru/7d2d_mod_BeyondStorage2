@@ -1,19 +1,20 @@
-﻿using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.Storage;
+using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
 
-//[HarmonyPatch(typeof(XUiC_ItemStack))]
+[HarmonyPatch(typeof(XUiC_ItemStack))]
 internal static class Stack_Slot_Lock_Maintanance_Patch
 {
     private static long s_callCounter = 0;
     private static readonly object s_lockObject = new();
 
-    //    [HarmonyPrefix]
-    //    [HarmonyPatch(nameof(XUiC_ItemStack.UserLockedSlot), MethodType.Setter)]
-    //#if DEBUG
-    //    [HarmonyDebug]
-    //#endif
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(XUiC_ItemStack.UserLockedSlot), MethodType.Setter)]
+#if DEBUG
+    [HarmonyDebug]
+#endif
     private static void Handle_UserLockedSlot_Setter_Prefix(XUiC_ItemStack __instance, bool value)
     {
         const string d_MethodName = nameof(Handle_UserLockedSlot_Setter_Prefix);
@@ -41,7 +42,8 @@ internal static class Stack_Slot_Lock_Maintanance_Patch
             return;
         }
 
-        var slotNumber = __instance.SlotNumber;
-        ModLogger.DebugLog($"{d_MethodName}: UserLockedSlot({slotNumber}, {value}) setter called for {ItemX.Info(stack)}, call count: {s_callCounter}");
+        // A locked slot change affects which slots are pushable — invalidate the cached context
+        // so the next operation rebuilds slot maps with the updated lock state
+        StorageContextFactory.InvalidateContext();
     }
 }

@@ -294,7 +294,10 @@ public class SmartSortingFunctions
 
     private static void PullSourceItemsToLoadout<T>(string methodName, StorageOperationState state, IReadOnlyList<StorageTargetAdapter> sources, StorageSourceAdapter<T> loadout) where T : class
     {
-        var loadoutSlots = loadout.GetLoadoutItemStacks();
+        // Loadout slots = locked, non-empty slots — derived from raw slot data.
+        // Returns references to the original ItemStack objects so count mutations apply to live storage.
+        var loadoutSlotData = loadout.GetSlotData();
+        var loadoutSlots = ItemX.GetFilteredItems(loadoutSlotData.AllSlots, StorageFilter.LockedOnly, loadoutSlotData.LockedSlots);
         var modifiedSources = new HashSet<StorageTargetAdapter>();
 
         for (int i = 0; i < loadoutSlots.Length; i++)
@@ -362,7 +365,11 @@ public class SmartSortingFunctions
 
     private static void PushSourceItemsToTarget<S>(string methodName, StorageOperationState state, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets, bool allowPushToEmpty) where S : class
     {
-        var sourceSlots = source.GetPushableItemStacks();
+        // Pushable slots = unlocked, non-empty slots — re-read each pass so slots emptied in the
+        // partial-fill pass are naturally excluded from the empty-fill pass without extra filtering.
+        // Returns references to the original ItemStack objects so count mutations apply to live storage.
+        var sourceSlotData = source.GetSlotData();
+        var sourceSlots = ItemX.GetFilteredItems(sourceSlotData.AllSlots, StorageFilter.UnlockedOnly, sourceSlotData.LockedSlots);
 
         for (int i = 0; i < sourceSlots.Length; i++)
         {
@@ -432,8 +439,6 @@ public class SmartSortingFunctions
 
             var transferAmount = TransferTargetSlotItems(methodName, state, sourceSlot, loadoutSlot, maxStackSize, ref tempRemaining);
 
-            // Correct sourceSlot.count: TransferTargetSlotItems set it relative to cappedTransferLimit,
-            // not the actual original count — without this fix, excess items are silently destroyed
             sourceSlot.count = sourceSlotActualCount - transferAmount;
 
             loadoutSlotRequiredAmount -= transferAmount;

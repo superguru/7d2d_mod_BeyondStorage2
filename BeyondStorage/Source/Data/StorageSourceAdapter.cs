@@ -5,7 +5,7 @@ using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Data;
 
-internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource where T : class
+internal class StorageSourceAdapter<T> : IStorageSource, IStorageTarget where T : class
 {
     private const int HASH_MULTIPLIER = 397;
 
@@ -15,20 +15,16 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
     private readonly Type _storageSourceType;
 
     private readonly Func<T, T, bool> _equalsFunc;
-    private readonly Func<T, ItemStack[]> _getConsumableItemsFunc;
-    private readonly Func<T, ItemStack[]> _getPushableItemsFunc;
-    private readonly Func<T, ItemStack[]> _getLoadoutItemsFunc;
-    private readonly Func<T, ItemStack[]> _getAllSlotsItemsFunc;
+    private readonly Func<T, ItemStack[]> _getAllItemsFunc;
+    private readonly Func<T, PackedBoolArray> _getLockedSlotsFunc;
     private readonly Action<T> _markModifiedAction;
     private readonly Func<T, string> _getNameFunc;
 
     public StorageSourceAdapter(
         T storageSource,
         Func<T, T, bool> equalsFunc,
-        Func<T, ItemStack[]> getConsumableItemsFunc,
-        Func<T, ItemStack[]> getPushableItemsFunc,
-        Func<T, ItemStack[]> getLoadoutItemsFunc,
-        Func<T, ItemStack[]> getAllSlotsItemsFunc,
+        Func<T, ItemStack[]> getAllItemsFunc,
+        Func<T, PackedBoolArray> getLockedSlotsFunc,
         Action<T> markModifiedAction,
         Func<T, string> getNameFunc)
     {
@@ -48,32 +44,18 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
             throw new ArgumentNullException(nameof(equalsFunc), error);
         }
 
-        if (getConsumableItemsFunc == null)
+        if (getAllItemsFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getConsumableItemsFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getAllItemsFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getConsumableItemsFunc), error);
+            throw new ArgumentNullException(nameof(getAllItemsFunc), error);
         }
 
-        if (getPushableItemsFunc == null)
+        if (getLockedSlotsFunc == null)
         {
-            var error = $"{d_MethodName}: {nameof(getPushableItemsFunc)} cannot be null";
+            var error = $"{d_MethodName}: {nameof(getLockedSlotsFunc)} cannot be null";
             ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getPushableItemsFunc), error);
-        }
-
-        if (getLoadoutItemsFunc == null)
-        {
-            var error = $"{d_MethodName}: {nameof(getLoadoutItemsFunc)} cannot be null";
-            ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getLoadoutItemsFunc), error);
-        }
-
-        if (getAllSlotsItemsFunc == null)
-        {
-            var error = $"{d_MethodName}: {nameof(getAllSlotsItemsFunc)} cannot be null";
-            ModLogger.DebugLog(error);
-            throw new ArgumentNullException(nameof(getAllSlotsItemsFunc), error);
+            throw new ArgumentNullException(nameof(getLockedSlotsFunc), error);
         }
 
         if (markModifiedAction == null)
@@ -91,14 +73,10 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
         }
 
         StorageSource = storageSource;
-
         _storageSourceType = storageSource.GetType();
-
         _equalsFunc = equalsFunc;
-        _getConsumableItemsFunc = getConsumableItemsFunc;
-        _getPushableItemsFunc = getPushableItemsFunc;
-        _getLoadoutItemsFunc = getLoadoutItemsFunc;
-        _getAllSlotsItemsFunc = getAllSlotsItemsFunc;
+        _getAllItemsFunc = getAllItemsFunc;
+        _getLockedSlotsFunc = getLockedSlotsFunc;
         _markModifiedAction = markModifiedAction;
         _getNameFunc = getNameFunc;
     }
@@ -140,7 +118,7 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
 
     /// <summary>
     /// Helper method that safely invokes an item stack retrieval function with comprehensive error handling and logging.
-    /// Provides consistent error handling across all item stack retrieval operations (pullable, pushable, and all slots).
+    /// Provides consistent error handling across all item stack retrieval operations.
     /// </summary>
     /// <param name="methodName">The name of the calling method, used for logging and diagnostics</param>
     /// <param name="getItemStacksFunc">The function to invoke to retrieve item stacks from the storage source</param>
@@ -182,51 +160,45 @@ internal class StorageSourceAdapter<T> : IStorageSource, IStorageTargetSource wh
     }
 
     /// <summary>
-    /// Gets item stacks from the storage source that are available for consumption when repairing, upgrading, painting, etc.
-    /// Filters out empty slots. Does not apply locked slot filtering for pull operations.
-    /// </summary>
-    /// <returns>
-    /// Array of ItemStack objects from non-empty slots that can be consumed by this storage source.
-    /// Returns an empty array if an error occurs or if the source has no consumable items.
-    /// </returns>
-    public ItemStack[] GetConsumableItemStacks()
-    {
-        const string d_MethodName = nameof(GetConsumableItemStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getConsumableItemsFunc);
-    }
-
-    public ItemStack[] GetLoadoutItemStacks()
-    {
-        const string d_MethodName = nameof(GetLoadoutItemStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getLoadoutItemsFunc);
-    }
-
-    /// <summary>
-    /// Gets item stacks from the storage source that are available to be pushed to other storage targets.
-    /// Filters out items from locked slots (if the storage supports slot locking) and empty slots.
-    /// </summary>
-    /// <returns>
-    /// Array of ItemStack objects from unlocked, non-empty slots that can be pushed to other storage targets.
-    /// Returns an empty array if an error occurs or if the source has no pushable items.
-    /// </returns>
-    public ItemStack[] GetPushableItemStacks()
-    {
-        const string d_MethodName = nameof(GetPushableItemStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getPushableItemsFunc);
-    }
-
-    /// <summary>
-    /// Gets all item stacks from all slots in the storage source without any filtering.
-    /// Includes both empty and non-empty slots, as well as locked and unlocked slots.
+    /// Returns all slots without any filtering, including empty slots.
+    /// Classification of consumable, pushable, and empty stacks is the responsibility
+    /// of <see cref="StorageSourceItemDataStore"/>, not the source.
     /// </summary>
     /// <returns>
     /// Array of all ItemStack objects in the storage source, including empty slots.
     /// Returns an empty array if an error occurs or if the source has no slots.
     /// </returns>
-    public ItemStack[] GetAllSlotItemsStacks()
+    public ItemStack[] GetAllItemStacks()
     {
-        const string d_MethodName = nameof(GetAllSlotItemsStacks);
-        return GetSpecifiedItemStacks(d_MethodName, _getAllSlotsItemsFunc);
+        const string d_MethodName = nameof(GetAllItemStacks);
+        return GetSpecifiedItemStacks(d_MethodName, _getAllItemsFunc);
+    }
+
+    /// <summary>
+    /// Returns raw slot data in a single read for registration as a push/pull target.
+    /// The data store uses <see cref="SourceSlotData.AllSlots"/> and
+    /// <see cref="SourceSlotData.LockedSlots"/> to classify slots without any pre-filtering
+    /// by the source.
+    /// </summary>
+    public SourceSlotData GetSlotData()
+    {
+        const string d_MethodName = nameof(GetSlotData);
+        var sourceTypeAbbrev = TypeNames.GetAbbrev(_storageSourceType);
+
+        var allSlots = GetSpecifiedItemStacks(d_MethodName, _getAllItemsFunc);
+
+        PackedBoolArray lockedSlots = null;
+        try
+        {
+            // Null is a valid return value — it means the source has no slot lock support
+            lockedSlots = _getLockedSlotsFunc(StorageSource);
+        }
+        catch (Exception ex)
+        {
+            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}) | Error getting locked slots: {ex.Message}. Treating all slots as unlocked.");
+        }
+
+        return new SourceSlotData(allSlots, lockedSlots);
     }
 
     public string GetName()

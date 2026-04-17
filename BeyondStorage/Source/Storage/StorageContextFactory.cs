@@ -187,6 +187,15 @@ public static class StorageContextFactory
         return s_contextCache.GetCacheStats();
     }
 
+    /// <summary>
+    /// Invalidates the cached context. The next call to <see cref="Create"/> will build a fresh instance.
+    /// Use when external state that affects the context has changed mid-session, such as a slot lock toggle.
+    /// </summary>
+    public static void InvalidateContext()
+    {
+        s_contextCache.InvalidateCache();
+    }
+
     private static AllowedSourcesList BuildAllowedSourcesSnapshot(ConfigSnapshot config)
     {
         var types = new List<Type>();

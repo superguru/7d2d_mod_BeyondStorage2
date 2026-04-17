@@ -1,6 +1,4 @@
-﻿using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
+﻿using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Entities;
 
@@ -8,6 +6,11 @@ public static class WorkstationHandler
 {
     public const int DEFAULT_WORKSTATION_LIST_CAPACITY = 32;
 
+    /// <summary>
+    /// Gets all item stacks from the workstation's output slots without any filtering.
+    /// </summary>
+    /// <param name="workstation">The workstation to get items from</param>
+    /// <returns>Array of all ItemStack objects in the output slots, or an empty array if null or empty</returns>
     public static ItemStack[] GetAllSlotItems(TileEntityWorkstation workstation)
     {
         var items = workstation?.output;
@@ -19,33 +22,11 @@ public static class WorkstationHandler
         return items;
     }
 
-    public static ItemStack[] GetConsumableItems(TileEntityWorkstation workstation)
-    {
-        var items = GetAllSlotItems(workstation);
-        if (items.Length == 0)
-        {
-            return [];
-        }
-
-        return ItemX.GetFilteredItems(items, StorageFilter.AllItems, lockedSlots: null);
-    }
-
-    public static ItemStack[] GetPushableItems(TileEntityWorkstation workstation)
-    {
-        var items = GetAllSlotItems(workstation);
-        if (items.Length == 0)
-        {
-            return [];
-        }
-
-        return ItemX.GetFilteredItems(items, StorageFilter.UnlockedOnly, lockedSlots: null);
-    }
-
     public static string GetWorkstationName(TileEntityWorkstation workstation)
     {
 #if DEBUG
         const string d_MethodName = nameof(GetWorkstationName);
-#endif  
+#endif
         string name = "Unknown Workstation";
 
         if (workstation == null)
@@ -78,9 +59,9 @@ public static class WorkstationHandler
     /// <summary>
     /// Marks a workstation as modified when items are removed from its output, such as when pulling items from the workstation.
     /// </summary>
-    public static void MarkWorkstationModified(TileEntityWorkstation workstation)
+    public static void MarkWorkstationStorageModified(TileEntityWorkstation workstation)
     {
-        const string d_MethodName = nameof(MarkWorkstationModified);
+        const string d_MethodName = nameof(MarkWorkstationStorageModified);
         //ModLogger.DebugLog($"{d_MethodName}: Marking Workstation '{workstation?.GetType().Name}' as modified");
 
         if (workstation == null)

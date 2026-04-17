@@ -8,62 +8,57 @@ namespace BeyondStorage.Source.Storage;
 
 /// <summary>
 /// Holds and manages collections of storage sources and their associated ItemStacks.
-/// The source collections (DewCollectors, Lootables, etc.) contain the actual storage entities,
-/// while the item collections (DewCollectorItems, LootableItems, etc.) contain cached ItemStacks
-/// extracted from those sources for performance optimization.
+/// Each source type exposes two funcs: one that returns all raw slots (no filtering),
+/// and one that returns the packed lock state (null for sources without slot lock support).
+/// Classification of consumable, pushable, and empty slots is the responsibility of
+/// <see cref="StorageSourceItemDataStore"/>, not the funcs defined here.
 /// </summary>
 public class StorageDataManager
 {
     internal readonly StorageSourceItemDataStore _dataStore;
     internal StorageSourceItemDataStore DataStore => _dataStore;
 
+    // ── Drone ────────────────────────────────────────────────────────────────
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneEntityFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityConsumableItemsFunc = (dr) => LootableHandler.GetConsumableItems(dr.lootContainer);
-    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityPushableItemsFunc = (dr) => LootableHandler.GetPushableItems(dr.lootContainer);
-    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityLoadoutItemsFunc = (dr) => LootableHandler.GetLoadoutItems(dr.lootContainer);
-    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityAllSlotItemsFunc = (dr) => LootableHandler.GetAllSlotItems(dr.lootContainer);
-    public readonly Action<EntityDrone> MarkDroneEntityModifiedFunc = (dr) => LootableHandler.MarkLootableModified(dr.lootContainer);
-    public readonly Func<EntityDrone, string> GetDroneEntityNameFunc = (dr) => EntityHandler.GetEntityName(dr);
+    public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityAllItemsFunc = drone => LootableHandler.GetAllSlotItems(drone.lootContainer);
+    public readonly Func<EntityDrone, PackedBoolArray> GetDroneEntityLockedSlotsFunc = (drone) => drone.bag?.LockedSlots;
+    public readonly Action<EntityDrone> MarkDroneEntityModifiedFunc = drone => LootableHandler.MarkLootableModified(drone.lootContainer);
+    public readonly Func<EntityDrone, string> GetDroneEntityNameFunc = drone => EntityHandler.GetEntityName(drone);
 
+    // ── Collector ────────────────────────────────────────────────────────────
     public readonly Func<TileEntityCollector, TileEntityCollector, bool> EqualsCollectorFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorConsumableItemsFunc = (col) => col.Items;
-    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorPushableItemsFunc = (col) => col.Items;
-    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorLoadoutItemsFunc = (col) => []; // No loadout capability for now
-    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorAllSlotItemsFunc = (col) => col.Items;
-    public readonly Action<TileEntityCollector> MarkCollectorModifiedFunc = (col) => CollectorHandler.MarkCollectorModified(col);
-    public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = (col) => CollectorHandler.GetCollectorName(col);
+    public readonly Func<TileEntityCollector, ItemStack[]> GetCollectorAllItemsFunc = col => col.Items;
+    public readonly Func<TileEntityCollector, PackedBoolArray> GetCollectorLockedSlotsFunc = _ => null; // Collectors have no slot lock support
+    public readonly Action<TileEntityCollector> MarkCollectorModifiedFunc = col => CollectorHandler.MarkCollectorStorageModified(col);
+    public readonly Func<TileEntityCollector, string> GetCollectorNameFunc = col => CollectorHandler.GetCollectorName(col);
 
+    // ── Workstation ──────────────────────────────────────────────────────────
     public readonly Func<TileEntityWorkstation, TileEntityWorkstation, bool> EqualsWorkstationFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationConsumableItemsFunc = (workstation) => WorkstationHandler.GetConsumableItems(workstation);
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationPushableItemsFunc = (workstation) => WorkstationHandler.GetPushableItems(workstation);
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationLoadoutItemsFunc = (workstation) => []; // No loadout capability for now
-    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationAllSlotItemsFunc = (workstation) => WorkstationHandler.GetAllSlotItems(workstation);
-    public Action<TileEntityWorkstation> MarkWorkstationModifiedFunc = (workstation) => WorkstationHandler.MarkWorkstationModified(workstation);
-    public readonly Func<TileEntityWorkstation, string> GetWorkstationNameFunc = (workstation) => WorkstationHandler.GetWorkstationName(workstation);
+    public readonly Func<TileEntityWorkstation, ItemStack[]> GetWorkstationAllItemsFunc = workstation => WorkstationHandler.GetAllSlotItems(workstation);
+    public readonly Func<TileEntityWorkstation, PackedBoolArray> GetWorkstationLockedSlotsFunc = _ => null; // Workstations have no slot lock support
+    public Action<TileEntityWorkstation> MarkWorkstationModifiedFunc = workstation => WorkstationHandler.MarkWorkstationStorageModified(workstation);
+    public readonly Func<TileEntityWorkstation, string> GetWorkstationNameFunc = workstation => WorkstationHandler.GetWorkstationName(workstation);
 
+    // ── Lootable ─────────────────────────────────────────────────────────────
     public readonly Func<ITileEntityLootable, ITileEntityLootable, bool> EqualsLootableFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootableConsumableItemsFunc = (lootable) => LootableHandler.GetConsumableItems(lootable);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootablePushableItemsFunc = (lootable) => LootableHandler.GetPushableItems(lootable);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootableLoadoutItemsFunc = (lootable) => LootableHandler.GetLoadoutItems(lootable);
-    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootableAllSlotItemsFunc = (lootable) => LootableHandler.GetAllSlotItems(lootable);
-    public Action<ITileEntityLootable> MarkLootableModifiedFunc = (lootable) => LootableHandler.MarkLootableModified(lootable);
-    public readonly Func<ITileEntityLootable, string> GetLootableNameFunc = (lootable) => LootableHandler.GetLootableName(lootable);
+    public readonly Func<ITileEntityLootable, ItemStack[]> GetLootableAllItemsFunc = lootable => LootableHandler.GetAllSlotItems(lootable);
+    public readonly Func<ITileEntityLootable, PackedBoolArray> GetLootableLockedSlotsFunc = lootable => LootableHandler.GetLootableLockedSlots(lootable);
+    public Action<ITileEntityLootable> MarkLootableModifiedFunc = lootable => LootableHandler.MarkLootableModified(lootable);
+    public readonly Func<ITileEntityLootable, string> GetLootableNameFunc = lootable => LootableHandler.GetLootableName(lootable);
 
+    // ── Vehicle ──────────────────────────────────────────────────────────────
     public readonly Func<EntityVehicle, EntityVehicle, bool> EqualsVehicleFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityVehicle, ItemStack[]> GetVehicleConsumableItemsFunc = vehicle => LootableHandler.GetConsumableItems(vehicle);
-    public readonly Func<EntityVehicle, ItemStack[]> GetVehiclePushableItemsFunc = vehicle => LootableHandler.GetPushableItems(vehicle);
-    public readonly Func<EntityVehicle, ItemStack[]> GetVehicleLoadoutItemsFunc = vehicle => LootableHandler.GetLoadoutItems(vehicle);
-    public readonly Func<EntityVehicle, ItemStack[]> GetVehicleAllSlotItemsFunc = vehicle => LootableHandler.GetAllSlotItems(vehicle);
-    public Action<EntityVehicle> MarkVehicleModifiedFunc = vehicle => LootableHandler.MarkLootableModified(vehicle);
-    public readonly Func<EntityVehicle, string> GetVehicleNameFunc = (vehicle) => EntityHandler.GetEntityName(vehicle);
+    public readonly Func<EntityVehicle, ItemStack[]> GetVehicleAllItemsFunc = vehicle => EntityHandler.GetAllSlotItems(vehicle);
+    public readonly Func<EntityVehicle, PackedBoolArray> GetVehicleLockedSlotsFunc = vehicle => vehicle.bag?.LockedSlots;
+    public Action<EntityVehicle> MarkVehicleModifiedFunc = vehicle => EntityHandler.MarkVehicleStorageModified(vehicle);
+    public readonly Func<EntityVehicle, string> GetVehicleNameFunc = vehicle => EntityHandler.GetEntityName(vehicle);
 
+    // ── Player ───────────────────────────────────────────────────────────────
     public readonly Func<EntityPlayerLocal, EntityPlayerLocal, bool> EqualsPlayerLootableFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerConsumableItemsFunc = player => LootableHandler.GetConsumableItems(player);
-    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerPushableItemsFunc = player => LootableHandler.GetPushableItems(player);
-    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerLoadoutItemsFunc = player => LootableHandler.GetLoadoutItems(player);
-    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerAllSlotItemsFunc = player => LootableHandler.GetAllSlotItems(player);
-    public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => LootableHandler.MarkLootableModified(player);
-    public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = (player) => EntityHandler.GetPlayerName(player);
+    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerAllItemsFunc = player => EntityHandler.GetAllSlotItems(player);
+    public readonly Func<EntityPlayerLocal, PackedBoolArray> GetPlayerLockedSlotsFunc = player => player.bag?.LockedSlots;
+    public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => EntityHandler.MarkPlayerInventoryModified(player);
+    public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = player => EntityHandler.GetPlayerName(player);
 
     internal StorageDataManager(StorageSourceItemDataStore dataStore)
     {

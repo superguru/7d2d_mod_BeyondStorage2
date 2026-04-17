@@ -167,14 +167,6 @@ public sealed class UniqueItemTypes : IEquatable<UniqueItemTypes>
         }
     }
 
-    public static bool IsPopulatedStack(ItemStack stack)
-    {
-        var isValidStack = IsValidStack(stack);
-        var isValidItemValue = isValidStack && IsValidItemValue(stack.itemValue);
-
-        return isValidItemValue;
-    }
-
     public bool Contains(ItemStack stack)
     {
         if (!IsValidStack(stack))

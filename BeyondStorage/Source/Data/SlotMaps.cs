@@ -43,20 +43,16 @@ internal sealed class SlotMaps
 
         foreach (var kvp in _filled)
         {
-#pragma warning disable IDE0028 // Simplify collection initialization
             // This method of initialization directly allocates the correct capacity, which is a speed optimisation strategy
             var filledList = new List<ItemStack>(kvp.Value);
-#pragma warning restore IDE0028 // Simplify collection initialization
             filledList.Reverse();
             clone._filled[kvp.Key] = filledList;
         }
 
         foreach (var kvp in _partial)
         {
-#pragma warning disable IDE0028 // Simplify collection initialization
             // This method of initialization directly allocates the correct capacity, which is a speed optimisation strategy
             var partialList = new List<ItemStack>(kvp.Value);
-#pragma warning restore IDE0028 // Simplify collection initialization
             partialList.Reverse();
             clone._partial[kvp.Key] = partialList;
         }

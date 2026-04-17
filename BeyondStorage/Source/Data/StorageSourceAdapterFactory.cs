@@ -13,10 +13,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<TileEntityCollector>(
             collector,
             sources.EqualsCollectorFunc,
-            sources.GetCollectorConsumableItemsFunc,
-            sources.GetCollectorPushableItemsFunc,
-            sources.GetCollectorLoadoutItemsFunc,
-            sources.GetCollectorAllSlotItemsFunc,
+            sources.GetCollectorAllItemsFunc,
+            sources.GetCollectorLockedSlotsFunc,
             sources.MarkCollectorModifiedFunc,
             sources.GetCollectorNameFunc
         );
@@ -28,10 +26,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityDrone>(
             drone,
             sources.EqualsDroneEntityFunc,
-            sources.GetDroneEntityConsumableItemsFunc,
-            sources.GetDroneEntityPushableItemsFunc,
-            sources.GetDroneEntityLoadoutItemsFunc,
-            sources.GetDroneEntityAllSlotItemsFunc,
+            sources.GetDroneEntityAllItemsFunc,
+            sources.GetDroneEntityLockedSlotsFunc,
             sources.MarkDroneEntityModifiedFunc,
             sources.GetDroneEntityNameFunc
         );
@@ -43,10 +39,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<ITileEntityLootable>(
             lootable,
             sources.EqualsLootableFunc,
-            sources.GetLootableConsumableItemsFunc,
-            sources.GetLootablePushableItemsFunc,
-            sources.GetLootableLoadoutItemsFunc,
-            sources.GetLootableAllSlotItemsFunc,
+            sources.GetLootableAllItemsFunc,
+            sources.GetLootableLockedSlotsFunc,
             sources.MarkLootableModifiedFunc,
             sources.GetLootableNameFunc
         );
@@ -58,10 +52,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityPlayerLocal>(
             player,
             sources.EqualsPlayerLootableFunc,
-            sources.GetPlayerConsumableItemsFunc,
-            sources.GetPlayerPushableItemsFunc,
-            sources.GetPlayerLoadoutItemsFunc,
-            sources.GetPlayerAllSlotItemsFunc,
+            sources.GetPlayerAllItemsFunc,
+            sources.GetPlayerLockedSlotsFunc,
             sources.MarkPlayerLootableModifiedFunc,
             sources.GetPlayerLootableNameFunc
         );
@@ -73,10 +65,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<EntityVehicle>(
             vehicle,
             sources.EqualsVehicleFunc,
-            sources.GetVehicleConsumableItemsFunc,
-            sources.GetVehiclePushableItemsFunc,
-            sources.GetVehicleLoadoutItemsFunc,
-            sources.GetVehicleAllSlotItemsFunc,
+            sources.GetVehicleAllItemsFunc,
+            sources.GetVehicleLockedSlotsFunc,
             sources.MarkVehicleModifiedFunc,
             sources.GetVehicleNameFunc
         );
@@ -88,10 +78,8 @@ internal static class StorageSourceAdapterFactory
         return new StorageSourceAdapter<TileEntityWorkstation>(
             workstation,
             sources.EqualsWorkstationFunc,
-            sources.GetWorkstationConsumableItemsFunc,
-            sources.GetWorkstationPushableItemsFunc,
-            sources.GetWorkstationLoadoutItemsFunc,
-            sources.GetWorkstationAllSlotItemsFunc,
+            sources.GetWorkstationAllItemsFunc,
+            sources.GetWorkstationLockedSlotsFunc,
             sources.MarkWorkstationModifiedFunc,
             sources.GetWorkstationNameFunc
         );

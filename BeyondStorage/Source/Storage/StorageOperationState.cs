@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BeyondStorage.Source.Data;
+using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -86,7 +88,7 @@ internal class StorageOperationState
                 var fromPartialToFull = ((initialStackSize < maxStackSize) && (currentStackSize == maxStackSize));
 
                 // | Partial | Partial |
-                var fromPartialToPartial = ((initialStackSize < currentStackSize) && (currentStackSize < maxStackSize));
+                var fromPartialToPartial = ((initialStackSize < currentStackSize) && (currentStackSize < maxStackSize) && (initialStackSize > 0));
 
                 return fromPartialToFull || fromPartialToPartial;
         }
@@ -107,8 +109,11 @@ internal class StorageOperationState
         var shouldRegisterStack = ShouldRegisterStack(initialStackSize, currentStackSize, maxStackSize);
         if (shouldRegisterStack)
         {
-            _ = _affectedStorages.Add(storage);
-            _ = _affectedStacks.Add(stack);
+            var countBefore = _affectedStacks.Count;
+            var result = _affectedStacks.Add(stack);
+            var countAfter = _affectedStacks.Count;
+
+            ModLogger.DebugLog($"Registering stack for storage: {ItemX.Info(stack)} (count before: {countBefore}, count after: {countAfter}), added:{result}");
         }
 
         var itemType = ItemX.ItemTypeOf(stack);
@@ -117,7 +122,11 @@ internal class StorageOperationState
             _ = _uniqueItems.Add(itemType);
         }
 
-        ItemCount += transferCount;
+        if (transferCount > 0)
+        {
+            _ = _affectedStorages.Add(storage);
+            ItemCount += transferCount;
+        }
     }
 
     internal void Reset()
@@ -131,6 +140,13 @@ internal class StorageOperationState
 
     public override string ToString()
     {
-        return $"Storage operation on '{MasterStorageName}' affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)";
+        var operationName = Operation.ToString();
+        var affectedStacks = string.Join(", ", _affectedStacks.Select(x => ItemX.Info(x as ItemStack) + "\n"));
+
+        return $"Storage operation on '{MasterStorageName}' affected {StackCount} stack(s) across {StorageCount} storage(s), having {ItemTypeCount} item type(s) and {ItemCount} item(s)"
+            + ":\n" +
+            $"{operationName}: operationName" +
+            $"affectedStacks:\n{affectedStacks}"
+            ;
     }
 }

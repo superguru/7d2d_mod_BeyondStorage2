@@ -11,7 +11,7 @@ internal static class Stack_Drop_Single_Item_Patch
     private static long s_callCounter = 0;
     private static readonly object s_lockObject = new();
 
-    private static void SingleDropEvent(string methodName, XUiC_ItemStack __instance)
+    private static void SingleDropEvent(XUiC_ItemStack __instance)
     {
         // Increment call counter immediately at the start to ensure logging consistency
         long callCount;
@@ -69,7 +69,7 @@ internal static class Stack_Drop_Single_Item_Patch
     {
         const string d_MethodName = nameof(Handle_DropSingle_Event_Prefix);
 
-        SingleDropEvent(d_MethodName, __instance);
+        SingleDropEvent(__instance);
     }
 
     [HarmonyPrefix]
@@ -81,7 +81,7 @@ internal static class Stack_Drop_Single_Item_Patch
     {
         const string d_MethodName = nameof(Handle_DropOne_Prefix);
 
-        SingleDropEvent(d_MethodName, __instance);
+        SingleDropEvent(__instance);
 
         return true; // Still continue with the original method
     }

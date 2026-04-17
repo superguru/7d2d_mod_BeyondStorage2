@@ -59,7 +59,7 @@ public static class StorageItemRemovalService
             var sourcesByType = context?.Sources?.DataStore?.GetSourcesByType(sourceType);
             var sourceCount = sourcesByType?.Count;
 #if DEBUG
-            //ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
+            ModLogger.DebugLog($"{d_MethodName}: Processing {sourceCount} of {fullSourceTypeName}, stillNeeded {stillNeeded}");
 #endif
             for (var iSource = 0; iSource < sourceCount; iSource++)
             {
@@ -74,21 +74,23 @@ public static class StorageItemRemovalService
                     continue;
                 }
 
-                RemoveFromSource(d_MethodName, source, nameInfo, itemName, itemFilter, itemCanStack, ref stillNeeded, ignoreModdedItems, gameTrackedRemovedItems);
+                RemoveFromSource(d_MethodName, context, source, nameInfo, itemName, itemFilter, itemCanStack, ref stillNeeded, ignoreModdedItems, gameTrackedRemovedItems);
             }
         }
 
         return originalNeeded - stillNeeded;
     }
 
-    private static void RemoveFromSource(string methodName, IStorageSource source, TypeNames.TypeNameInfo nameInfo, string itemName,
+    private static void RemoveFromSource(string methodName, StorageContext context, IStorageSource source, TypeNames.TypeNameInfo nameInfo, string itemName,
         UniqueItemTypes filter, bool itemCanStack, ref int stillNeeded, bool ignoreModdedItems, IList<ItemStack> gameTrackedRemovedItems)
     {
-
         int originalNeeded = stillNeeded;
 
-        var itemStacks = source.GetConsumableItemStacks();
-        var stackLength = itemStacks.Length;
+        // Use the pre-classified consumable stacks from the data store — these are live references
+        // to the original ItemStack objects, so count mutations apply directly to the underlying storage.
+        // Empty slots that have been depleted since registration are handled by the count <= 0 guard below.
+        var itemStacks = context.Sources.DataStore.GetItemStacksBySource(source);
+        var stackLength = itemStacks.Count;
 
         for (var iStack = 0; iStack < stackLength; iStack++)
         {

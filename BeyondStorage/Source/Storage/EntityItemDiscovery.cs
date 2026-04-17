@@ -76,29 +76,27 @@ internal static class EntityItemDiscovery
 
         state.EntitiesProcessed++;
 
-        // Early range check to avoid unnecessary processing
-        if (!state.World.IsWithinRange(entity.position, configRange))
+        if (!state.World.IsWithinRange(entity.position, configRange, out float distance))
         {
             return;
         }
 
-        // Process based on entity type using pattern matching
         if (pullFromVehicles && entity is EntityVehicle vehicle)
         {
-            ProcessVehicleEntity(vehicle, state);
+            ProcessVehicleEntity(vehicle, distance, state);
             return;
         }
 
         if (pullFromDrones && entity is EntityDrone drone)
         {
-            ProcessDroneEntity(drone, state);
+            ProcessDroneEntity(drone, distance, state);
             return;
         }
     }
 
     #region Vehicle Processing
 
-    private static void ProcessVehicleEntity(EntityVehicle vehicle, EntityProcessingState state)
+    private static void ProcessVehicleEntity(EntityVehicle vehicle, float distance, EntityProcessingState state)
     {
         state.VehiclesProcessed++;
 
@@ -107,7 +105,7 @@ internal static class EntityItemDiscovery
             return;
         }
 
-        ProcessVehicleItems(vehicle, state);
+        ProcessVehicleItems(vehicle, distance, state);
     }
 
     private static bool ShouldProcessVehicle(EntityVehicle vehicle, EntityProcessingState state)
@@ -127,7 +125,7 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static int ProcessVehicleItems(EntityVehicle vehicle, EntityProcessingState state)
+    private static int ProcessVehicleItems(EntityVehicle vehicle, float distance, EntityProcessingState state)
     {
 #if DEBUG
         //const string d_MethodName = nameof(ProcessVehicleItems);
@@ -135,23 +133,22 @@ internal static class EntityItemDiscovery
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
 
-        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, distance, out int consumableStacksRegistered);
         state.ValidVehiclesFound++;
-
 #if DEBUG
-        if (validStacksRegistered > 0)
+        if (consumableStacksRegistered > 0)
         {
-            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {vehicle}");
+            //ModLogger.DebugLog($"{d_MethodName}: {consumableStacksRegistered} item stacks pulled from {vehicle}");
         }
 #endif
-        return validStacksRegistered;
+        return consumableStacksRegistered;
     }
 
     #endregion
 
     #region Drone Processing
 
-    private static void ProcessDroneEntity(EntityDrone drone, EntityProcessingState state)
+    private static void ProcessDroneEntity(EntityDrone drone, float distance, EntityProcessingState state)
     {
         state.DronesProcessed++;
 
@@ -160,7 +157,7 @@ internal static class EntityItemDiscovery
             return;
         }
 
-        ProcessDroneItems(drone, state);
+        ProcessDroneItems(drone, distance, state);
     }
 
     private static bool ShouldProcessDrone(EntityDrone drone, EntityProcessingState state)
@@ -205,7 +202,7 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static int ProcessDroneItems(EntityDrone drone, EntityProcessingState state)
+    private static int ProcessDroneItems(EntityDrone drone, float distance, EntityProcessingState state)
     {
 #if DEBUG
         //const string d_MethodName = nameof(ProcessDroneItems);
@@ -213,16 +210,16 @@ internal static class EntityItemDiscovery
         var context = state.Context;
         var sourceAdapter = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
 
-        context.Sources.DataStore.RegisterSource(sourceAdapter, out int validStacksRegistered);
+        context.Sources.DataStore.RegisterSource(sourceAdapter, distance, out int consumableStacksRegistered);
         state.ValidDronesFound++;
 
 #if DEBUG
-        if (validStacksRegistered > 0)
+        if (consumableStacksRegistered > 0)
         {
-            //ModLogger.DebugLog($"{d_MethodName}: {validStacksRegistered} item stacks pulled from {drone}");
+            //ModLogger.DebugLog($"{d_MethodName}: {consumableStacksRegistered} item stacks pulled from {drone}");
         }
 #endif
-        return validStacksRegistered;
+        return consumableStacksRegistered;
     }
 
     #endregion

@@ -6,17 +6,17 @@ namespace BeyondStorage.Source.Data;
 
 /// <summary>
 /// Stores (storage, distance) pairs with on-demand distance sorting.
-/// Accepts any <see cref="IStorageTargetSource"/>, allowing mixed storage source types.
+/// Accepts any <see cref="IStorageTarget"/>, allowing mixed storage source types.
 /// Slot maps are pre-built at registration and cloned per operation at query time.
 /// Callers are responsible for ensuring each StorageSource is registered at most once.
 /// </summary>
 internal sealed class TargetDistanceStore
 {
-    private readonly List<(IStorageTargetSource Storage, float Distance, SlotMaps AllItems, SlotMaps Pushable)> _entries = [];
+    private readonly List<(IStorageTarget Storage, float Distance, SlotMaps AllItems, SlotMaps Pushable)> _entries = [];
 
     public bool IsSorted { get; private set; } = true;
 
-    public void Add(IStorageTargetSource storage, float distance, SlotMaps allItemsMaps, SlotMaps pushableMaps)
+    public void Add(IStorageTarget storage, float distance, SlotMaps allItemsMaps, SlotMaps pushableMaps)
     {
         const string d_MethodName = nameof(Add);
 

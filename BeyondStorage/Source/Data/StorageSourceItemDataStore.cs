@@ -15,7 +15,7 @@ internal class StorageSourceItemDataStore
 #pragma warning restore IDE0028 // Simplify collection initialization
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
     private readonly FilterStacksStore _collectionStore = new();
-    private readonly TargetDistanceStore _containerStore = new();
+    private readonly TargetDistanceStore _distanceStore = new();
 
     internal AllowedSourcesList AllowedSourcesSnapshot { get; }
 
@@ -59,98 +59,136 @@ internal class StorageSourceItemDataStore
         _sourcesByItemStack.Clear();
         _sourcesByType.Clear();
         _collectionStore.Clear();
-        _containerStore.Clear();
+        _distanceStore.Clear();
     }
 
     /// <summary>
-    /// Registers a storage source and its item stacks with the data store.
-    /// Always registers ALL valid stacks and prebuilds filter lists for both Unfiltered and specific item types.
+    /// Registers a storage source with the data store.
+    /// Validates the source, classifies its consumable stacks, and if the source also
+    /// implements <see cref="IStorageTarget"/>, registers it as a push target.
     /// </summary>
     /// <param name="source">The storage source to register</param>
-    /// <param name="validStacksRegistered">The number of valid item stacks that were successfully registered</param>
-    public void RegisterSource(IStorageSource source, out int validStacksRegistered)
+    /// <param name="distance">Distance from the player, used for push target sorting</param>
+    /// <param name="consumableStacksRegistered">Number of non-empty stacks successfully registered for pull operations</param>
+    public void RegisterSource(IStorageSource source, float distance, out int consumableStacksRegistered)
+    {
+        consumableStacksRegistered = 0;
+
+        if (!ValidateSource(source))
+        {
+            return;
+        }
+
+        int countBefore = _sourcesByItemStack.Count;
+
+        if (source is IStorageTarget target)
+        {
+            // Single read of the underlying storage — single pass classifies consumable stacks
+            // and builds both slot maps simultaneously
+            var slotData = target.GetSlotData();
+            RegisterTargetableSource(source, target, distance, slotData);
+        }
+        else
+        {
+            // Pull-only source (e.g. collector, vehicle, drone) — implements IStorageSource but not IStorageTarget.
+            // These sources are never push targets, so no slot maps are needed.
+            // A separate GetAllItemStacks() call is required here because there is no slotData
+            // from which to reuse AllSlots — unlike the IStorageTarget path above which shares
+            // a single read between consumable classification and slot map building.
+            RegisterConsumableStacks(source, source.GetAllItemStacks());
+        }
+
+        consumableStacksRegistered = _sourcesByItemStack.Count - countBefore;
+    }
+
+    /// <summary>
+    /// Registers a source that is also a push target in a single pass through <see cref="SourceSlotData.AllSlots"/>.
+    /// Consumable stack classification, all-items slot map, and pushable slot map are all built
+    /// from the same iteration — no array is visited more than once.
+    /// Slot maps are cloned per operation at query time, so classification only happens once at registration.
+    /// </summary>
+    private void RegisterTargetableSource(IStorageSource source, IStorageTarget target, float distance, SourceSlotData slotData)
+    {
+        var items = slotData.AllSlots;
+        var lockedSlots = slotData.LockedSlots;
+        var itemsLength = items.Length;
+        var lockedLength = lockedSlots?.Length ?? 0;
+        var hasLocks = lockedLength > 0;
+
+        // itemsLength is a safe upper bound for distinct item type count
+        var allItemsMap = new SlotMaps(itemsLength);
+        var pushableMap = new SlotMaps(itemsLength);
+
+        for (int i = 0; i < itemsLength; i++)
+        {
+            var stack = items[i];
+
+            // 1. Classify consumable (non-empty) and register for pull operations
+            if (ItemX.IsPopulated(stack))
+            {
+                RegisterConsumableStack(source, stack);
+            }
+
+            // 2. All-items map — every slot regardless of lock or fill state
+            allItemsMap.RegisterSlot(stack);
+
+            // 3. Pushable map — locked slots excluded from push targets
+            if (!hasLocks || i >= lockedLength || !lockedSlots[i])
+            {
+                pushableMap.RegisterSlot(stack);
+            }
+        }
+
+        _distanceStore.Add(target, distance, allItemsMap, pushableMap);
+    }
+
+    /// <summary>
+    /// Returns true if the source is non-null and its type is allowed by the current configuration.
+    /// </summary>
+    private bool ValidateSource(IStorageSource source)
     {
         const string d_MethodName = nameof(RegisterSource);
-        validStacksRegistered = 0;
 
         if (source == null)
         {
             ModLogger.DebugLog($"{d_MethodName}(NULL): Null storage source supplied");
-            return;
+            return false;
         }
 
         var sourceType = source.GetSourceType();
-        var sourceTypeAbbrev = TypeNames.GetAbbrev(sourceType);
-
-        var isAllowedSource = IsAllowedSource(sourceType);
-        if (!isAllowedSource)
+        if (!IsAllowedSource(sourceType))
         {
+            var sourceTypeAbbrev = TypeNames.GetAbbrev(sourceType);
             ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}): Source type {sourceType.Name} not allowed, skipping");
-            return;
+            return false;
         }
 
-        ItemStack[] stacks = source.GetConsumableItemStacks();
-        if (stacks == null)
-        {
-            ModLogger.DebugLog($"{d_MethodName}({sourceTypeAbbrev}): Null stacks supplied for source {source}");
-            return;
-        }
+        return true;
+    }
 
-        int invalidStacks = 0;
-
-        // Always register ALL valid stacks and prebuild both filter lists
+    /// <summary>
+    /// Iterates <paramref name="stacks"/>, registering each non-empty slot as a consumable stack.
+    /// Classification — non-empty = consumable — is applied here, not in the source.
+    /// </summary>
+    private void RegisterConsumableStacks(IStorageSource source, ItemStack[] stacks)
+    {
         for (int i = 0; i < stacks.Length; i++)
         {
             var stack = stacks[i];
-
-            var isPopulatedStack = UniqueItemTypes.IsPopulatedStack(stack);
-            if (!isPopulatedStack)
+            if (ItemX.IsPopulated(stack))
             {
-                invalidStacks++;
-                continue;
-            }
-
-            // Register valid stacks and prebuild filter lists
-            if (RegisterStack(source, stack))
-            {
-                validStacksRegistered++;
+                RegisterConsumableStack(source, stack);
             }
         }
     }
 
-    public void RegisterStorageSource(IStorageTargetSource storage, float distance)
+    /// <summary>
+    /// Registers a single validated consumable stack against its source.
+    /// Logs and silently skips duplicate registrations.
+    /// </summary>
+    private void RegisterConsumableStack(IStorageSource source, ItemStack stack)
     {
-        const string d_MethodName = nameof(RegisterStorageSource);
-
-        if (storage == null)
-        {
-            ModLogger.DebugLog($"{d_MethodName}: Null storage supplied");
-            return;
-        }
-
-        // Classify once at registration; maps are cloned per operation at query time
-        var allItemsMap = BuildSlotMap(storage.GetAllSlotItemsStacks());
-        var pushableMap = BuildSlotMap(storage.GetPushableItemStacks());
-
-        _containerStore.Add(storage, distance, allItemsMap, pushableMap);
-    }
-
-    private static SlotMaps BuildSlotMap(ItemStack[] items)
-    {
-        var itemsLength = items.Length;
-        var maps = new SlotMaps(Math.Max(ItemX.GetAverageMaxStackSizeOf(items), itemsLength));
-
-        for (int i = 0; i < itemsLength; i++)
-        {
-            maps.RegisterSlot(items[i]);
-        }
-
-        return maps;
-    }
-
-    private bool RegisterStack(IStorageSource source, ItemStack stack)
-    {
-        const string d_MethodName = nameof(RegisterStack);
+        const string d_MethodName = nameof(RegisterConsumableStack);
 
         // All stack validation is done in the caller, so we assume stack is valid here
 
@@ -170,7 +208,7 @@ internal class StorageSourceItemDataStore
                 ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with a different source");
             }
 
-            return false; // Stack was not added (duplicate)
+            return;
         }
 
         // Associate the stack with the source
@@ -200,8 +238,6 @@ internal class StorageSourceItemDataStore
 
         // 2. Add to specific item type filter (contains only items of this type)
         _collectionStore.AddStackForItemType(stack);
-
-        return true; // Stack was successfully added
     }
 
     public IReadOnlyList<IStorageSource> GetSourcesByType<T>() where T : class, IStorageSource
@@ -433,7 +469,61 @@ internal class StorageSourceItemDataStore
     internal IReadOnlyList<StorageTargetAdapter> GetClosestStorageSources(AllowedSourcesList allowedSourcePolicy, ItemScope filter)
     {
         // These are already naturally in the config.range, because of the tile entity discovery process
-        var storages = _containerStore.GetClosestStorageSources(allowedSourcePolicy, filter);
+        var storages = _distanceStore.GetClosestStorageSources(allowedSourcePolicy, filter);
         return storages;
+    }
+
+    /// <summary>
+    /// Builds slot maps from <paramref name="slotData"/> and registers the target in the distance store.
+    /// Slot maps are cloned per operation at query time, so classification only happens once here at registration.
+    /// </summary>
+    private void RegisterPushTarget(IStorageTarget target, float distance, SourceSlotData slotData)
+    {
+        var allItemsMap = BuildSlotMap(slotData.AllSlots);
+        var pushableMap = BuildPushableSlotMap(slotData.AllSlots, slotData.LockedSlots);
+        _distanceStore.Add(target, distance, allItemsMap, pushableMap);
+    }
+
+    /// <summary>
+    /// Builds a slot map from all slots including empty and locked ones.
+    /// Used for the all-items target map which tracks the full slot state of the storage.
+    /// </summary>
+    private static SlotMaps BuildSlotMap(ItemStack[] items)
+    {
+        var itemsLength = items.Length;
+        var maps = new SlotMaps(Math.Max(ItemX.GetAverageMaxStackSizeOf(items), itemsLength));
+
+        for (int i = 0; i < itemsLength; i++)
+        {
+            maps.RegisterSlot(items[i]);
+        }
+
+        return maps;
+    }
+
+    /// <summary>
+    /// Builds a slot map containing only unlocked slots.
+    /// Locked slot indices are skipped; all other slots including empty ones are registered
+    /// so the target adapter can track available space correctly.
+    /// </summary>
+    private static SlotMaps BuildPushableSlotMap(ItemStack[] items, PackedBoolArray lockedSlots)
+    {
+        var itemsLength = items.Length;
+        var lockedLength = lockedSlots?.Length ?? 0;
+        var hasLocks = lockedLength > 0;
+        var maps = new SlotMaps(Math.Max(ItemX.GetAverageMaxStackSizeOf(items), itemsLength));
+
+        for (int i = 0; i < itemsLength; i++)
+        {
+            // Skip locked slots — they are excluded from push targets
+            if (hasLocks && i < lockedLength && lockedSlots[i])
+            {
+                continue;
+            }
+
+            maps.RegisterSlot(items[i]);
+        }
+
+        return maps;
     }
 }

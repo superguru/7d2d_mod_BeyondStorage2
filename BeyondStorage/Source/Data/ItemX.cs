@@ -149,6 +149,11 @@ public static class ItemX
         return (maxSize > 0) && (currentSize >= maxSize);
     }
 
+    public static bool IsPopulated(ItemStack stack)
+    {
+        return !IsEmpty(stack);
+    }
+
     public static int ItemTypeOf(ItemStack stack)
     {
         return stack?.itemValue?.type ?? UniqueItemTypes.EMPTY;

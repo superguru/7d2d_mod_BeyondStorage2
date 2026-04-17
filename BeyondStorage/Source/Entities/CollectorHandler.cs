@@ -53,9 +53,9 @@ public static class CollectorHandler
     /// <summary>
     /// Marks a collector as modified after items are removed from it
     /// </summary>
-    public static void MarkCollectorModified(TileEntityCollector collector)
+    public static void MarkCollectorStorageModified(TileEntityCollector collector)
     {
-        const string d_MethodName = nameof(MarkCollectorModified);
+        const string d_MethodName = nameof(MarkCollectorStorageModified);
         //ModLogger.DebugLog($"{d_MethodName}: Marking Collector '{collector?.GetType().Name}' as modified");
 
         if (collector == null)
