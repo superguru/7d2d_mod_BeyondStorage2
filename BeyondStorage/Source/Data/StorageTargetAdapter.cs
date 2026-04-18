@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Data;
 
-internal class StorageTargetAdapter
+internal class StorageTargetAdapter : IEquatable<StorageTargetAdapter>
 {
     private readonly IStorageTarget _source;
 
@@ -21,6 +22,31 @@ internal class StorageTargetAdapter
     }
 
     public float Distance { get; }
+
+    public bool Equals(StorageTargetAdapter other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return _source.Equals(other._source);
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as StorageTargetAdapter);
+    }
+
+    public override int GetHashCode()
+    {
+        return _source?.GetHashCode() ?? 0;
+    }
 
     private void ClassifySlot(ItemStack slot)
     {
