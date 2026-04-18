@@ -7,7 +7,7 @@ namespace BeyondStorage.Source.Data;
 
 internal class StorageSourceAdapter<T> : IStorageSource, IStorageTarget where T : class
 {
-    private const int HASH_MULTIPLIER = 397;
+    private const int HASH_MULTIPLIER = 419;
 
     // Replace the private readonly field and explicit property with an auto-property
     public T StorageSource { get; }
