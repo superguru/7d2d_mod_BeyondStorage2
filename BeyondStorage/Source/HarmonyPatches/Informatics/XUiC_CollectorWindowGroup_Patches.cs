@@ -1,5 +1,5 @@
-﻿using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Game.UI;
+﻿using BeyondStorage.Source.Game.UI;
+using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Informatics;
@@ -25,7 +25,7 @@ internal static class XUiC_CollectorWindowGroup_Patches
         WindowStateManager.OnCollectorWindowOpened(__instance);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Collector Window Opened");
+        //ModLogger.DebugLog($"{d_MethodName}: Collector Window Opened");
 #endif
     }
 
@@ -37,13 +37,13 @@ internal static class XUiC_CollectorWindowGroup_Patches
     private static void XUiC_CollectorWindowGroup_OnClose_Postfix(XUiC_DewCollectorWindowGroup __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(XUiC_CollectorWindowGroup_OnClose_Postfix);
+        //const string d_MethodName = nameof(XUiC_CollectorWindowGroup_OnClose_Postfix);
 #endif
 
         WindowStateManager.OnCollectorWindowClosed(__instance);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Collector Window Closed");
+        //ModLogger.DebugLog($"{d_MethodName}: Collector Window Closed");
 #endif
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
 using HarmonyLib;
 
@@ -21,7 +20,7 @@ internal static class Stack_Shift_Patch
     private static void Handle_StackShift_Event_Prefix(XUiC_ItemStack __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(Handle_StackShift_Event_Prefix);
+        //const string d_MethodName = nameof(Handle_StackShift_Event_Prefix);
 #endif        
         // Capture slot state snapshot
         var preSnapshot = new SlotSnapshot(__instance);
@@ -37,7 +36,7 @@ internal static class Stack_Shift_Patch
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected shift operation, pre {preSnapshot}");
+        //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected shift operation, pre {preSnapshot}");
 #endif
 
         // Only refresh UI for storage inventory operations
@@ -55,7 +54,7 @@ internal static class Stack_Shift_Patch
     private static void Handle_StackShift_Event_Postfix(XUiC_ItemStack __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(Handle_StackShift_Event_Postfix);
+        //const string d_MethodName = nameof(Handle_StackShift_Event_Postfix);
 #endif
         // Capture post-execution snapshot
         var postSnapshot = new SlotSnapshot(__instance);
@@ -72,7 +71,7 @@ internal static class Stack_Shift_Patch
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot?.ToString() ?? "No_Pre_Snap"} ➡️ {postSnapshot}");
+        //ModLogger.DebugLog($"{d_MethodName}: END call #{callCount} for {preSnapshot?.ToString() ?? "No_Pre_Snap"} ➡️ {postSnapshot}");
 #endif
 
         // Handle Shift+Click logic (move stack between inventories)

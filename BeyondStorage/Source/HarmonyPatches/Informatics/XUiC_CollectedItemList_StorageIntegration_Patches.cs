@@ -16,6 +16,7 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
     private static bool Intercept_AddItemStack_Prefix(XUiC_CollectedItemList __instance, ItemStack _is, bool _bAddOnlyIfNotExisting)
     {
 #if DEBUG
+        //const string d_MethodName = nameof(Intercept_AddItemStack_Prefix);
 #endif
         var itemInfo = ItemX.Info(_is);
 

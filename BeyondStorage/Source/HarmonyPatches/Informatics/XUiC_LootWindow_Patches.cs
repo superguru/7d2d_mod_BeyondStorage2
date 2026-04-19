@@ -144,7 +144,7 @@ internal static class XUiC_LootWindow_Patches
             {
                 isStorage = true;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
+                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
 #endif
             }
         }

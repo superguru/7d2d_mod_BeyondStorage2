@@ -65,7 +65,7 @@ internal static class XUiC_VehicleContainer_Patches
         s_previousLockedSlots = _csc.LockedSlots;
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Saved LockedSlots state: {(s_previousLockedSlots != null ? $"Count={s_previousLockedSlots.Length}" : "null")}");
+        //ModLogger.DebugLog($"{d_MethodName}: Saved LockedSlots state: {(s_previousLockedSlots != null ? $"Count={s_previousLockedSlots.Length}" : "null")}");
 #endif
     }
 
