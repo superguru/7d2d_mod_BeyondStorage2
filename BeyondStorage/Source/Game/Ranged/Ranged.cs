@@ -39,7 +39,7 @@ public static class Ranged
         var ammoRequired = isPerMag ? 1 : maxMagSize - currentAmmo;
         var ammoRemovedFromStorage = context.RemoveRemaining(itemValue, ammoRequired);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: {itemName} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
+        //ModLogger.DebugLog($"{d_MethodName}: {itemName} isPerMag {isPerMag}; maxMagSize {maxMagSize}; currentAmmo {currentAmmo}; ammoRemovedFromStorage {ammoRemovedFromStorage};");
 #endif
         return isPerMag ? maxMagSize * ammoRemovedFromStorage : ammoRemovedFromStorage;
     }

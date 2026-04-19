@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.UI;
 using HarmonyLib;
 
@@ -89,7 +88,7 @@ internal static class Stack_Drag_Drop_Patch
     {
         long callCount = s_callCounter;
 #if DEBUG
-        const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Postfix);
+        //const string d_MethodName = nameof(Handle_Pickup_DropStack_Event_Postfix);
         //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} STARTED - analyzing swap operation results");
 #endif
         // Capture post-execution snapshot
@@ -116,7 +115,7 @@ internal static class Stack_Drag_Drop_Patch
             if (postSnapshot.IsStorageInventory && (operation == SwapAction.SwapSameItem || operation == SwapAction.SwapDifferentItems || preSnapshot.PredictedOperation == SwapAction.PickupFromSource))
             {
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory swap operation, pre {preSnapshot} predicted_op {preSnapshot.PredictedOperation}, post {postSnapshot} operation {operation}");
+                //ModLogger.DebugLog($"{d_MethodName}: call #{callCount} - detected storage inventory swap operation, pre {preSnapshot} predicted_op {preSnapshot.PredictedOperation}, post {postSnapshot} operation {operation}");
 #endif
                 // Need to refresh UI if this is a storage inventory. The game already does this for player inventory.
                 UIRefreshHelper.LogAndRefreshUI(StackOps.ItemStack_Drop_Operation, __instance, callCount);

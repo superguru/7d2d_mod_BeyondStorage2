@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BeyondStorage.Source.Caching;
 using BeyondStorage.Source.Data;
 using BeyondStorage.Source.Diagnostics;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Storage;
 
@@ -34,7 +33,7 @@ public static class StorageItemRemovalService
 
         var itemName = itemValue?.ItemClass?.GetItemName();
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: trying to remove {stillNeeded} {itemName}");
+        //ModLogger.DebugLog($"{d_MethodName}: trying to remove {stillNeeded} {itemName}");
 #endif
         int originalNeeded = stillNeeded;
         var itemFilter = UniqueItemTypes.FromItemValue(itemValue);
@@ -154,7 +153,7 @@ public static class StorageItemRemovalService
 #if DEBUG
         if (stillNeeded < 0)
         {
-            ModLogger.DebugLog($"{methodName}: stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
+            //ModLogger.DebugLog($"{methodName}: stillNeeded after {nameInfo.Abbrev} should not be negative, but is {stillNeeded}");
             stillNeeded = 0;
         }
 #endif

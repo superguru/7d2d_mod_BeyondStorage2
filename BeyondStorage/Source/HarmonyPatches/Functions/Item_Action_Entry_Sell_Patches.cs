@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using BeyondStorage.Source.Harmony;
-using BeyondStorage.Source.Infrastructure;
 using HarmonyLib;
 
 namespace BeyondStorage.HarmonyPatches.Functions;
@@ -20,7 +19,7 @@ internal static class Item_Action_Entry_Sell_Patches
     private static void ItemActionEntrySell_OnActivated_Prefix(ItemActionEntrySell __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ItemActionEntrySell_OnActivated_Prefix);
+        //const string d_MethodName = nameof(ItemActionEntrySell_OnActivated_Prefix);
 #endif
         // Thread-safe update of call counter and history
         lock (s_lockObject)
@@ -28,7 +27,7 @@ internal static class Item_Action_Entry_Sell_Patches
             s_isMidSale = true;
         }
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Entering mid-sale state");
+        //ModLogger.DebugLog($"{d_MethodName}: Entering mid-sale state");
 #endif
     }
 
@@ -40,7 +39,7 @@ internal static class Item_Action_Entry_Sell_Patches
     private static void ItemActionEntrySell_OnActivated_Postfix(ItemActionEntrySell __instance)
     {
 #if DEBUG
-        const string d_MethodName = nameof(ItemActionEntrySell_OnActivated_Postfix);
+        //const string d_MethodName = nameof(ItemActionEntrySell_OnActivated_Postfix);
 #endif
         // Thread-safe update of call counter and history
         lock (s_lockObject)
@@ -48,7 +47,7 @@ internal static class Item_Action_Entry_Sell_Patches
             s_isMidSale = false;
         }
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Exiting mid-sale state");
+        //ModLogger.DebugLog($"{d_MethodName}: Exiting mid-sale state");
 #endif
     }
 

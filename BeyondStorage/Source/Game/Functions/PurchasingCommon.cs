@@ -20,6 +20,9 @@ public class PurchasingCommon
     /// <returns>True if the swap is possible, false otherwise</returns>
     public static bool CanSwapItems(XUiM_PlayerInventory inventory, ItemStack removedStack, ItemStack addedStack, int slotNumber)
     {
+#if DEBUG
+        //const string d_MethodName = nameof(CanSwapItems);
+#endif
         // Null checks
         if (removedStack?.itemValue?.ItemClass == null || addedStack?.itemValue?.ItemClass == null)
         {
@@ -31,7 +34,7 @@ public class PurchasingCommon
         if (canRemove < removedStack.count)
         {
 #if DEBUG
-            ModLogger.DebugLog($"CanSwapItems: Insufficient items to remove. Need={removedStack.count}, Available={canRemove}, Item={removedStack.itemValue.ItemClass.Name}");
+            //ModLogger.DebugLog($"{d_MethodName}: Insufficient items to remove. Need={removedStack.count}, Available={canRemove}, Item={removedStack.itemValue.ItemClass.Name}");
 #endif
             return false;
         }
@@ -45,13 +48,13 @@ public class PurchasingCommon
         if (totalAvailableSpace < addedStack.count)
         {
 #if DEBUG
-            ModLogger.DebugLog($"CanSwapItems: Insufficient space for items. Need={addedStack.count}, Available={totalAvailableSpace} (Current={currentAvailableSpace}, Freed={spaceFreedByRemoval}), Item={addedStack.itemValue.ItemClass.Name}");
+            //ModLogger.DebugLog($"{d_MethodName}: Insufficient space for items. Need={addedStack.count}, Available={totalAvailableSpace} (Current={currentAvailableSpace}, Freed={spaceFreedByRemoval}), Item={addedStack.itemValue.ItemClass.Name}");
 #endif
             return false;
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"CanSwapItems: SUCCESS - Remove {removedStack.count}x{removedStack.itemValue.ItemClass.Name}, Add {addedStack.count}x{addedStack.itemValue.ItemClass.Name}");
+        //ModLogger.DebugLog($"{d_MethodName}: SUCCESS - Remove {removedStack.count}x{removedStack.itemValue.ItemClass.Name}, Add {addedStack.count}x{addedStack.itemValue.ItemClass.Name}");
 #endif
         return true;
     }
@@ -90,7 +93,7 @@ public class PurchasingCommon
         }
 
 #if DEBUG
-        ModLogger.DebugLog($"{methodName}: Item={itemValue.ItemClass.Name}, Original={originalSpace}, Storage={storageSpace}, Final={enhancedSpace}, Limited={limitToOneStack}");
+        //ModLogger.DebugLog($"{methodName}: Item={itemValue.ItemClass.Name}, Original={originalSpace}, Storage={storageSpace}, Final={enhancedSpace}, Limited={limitToOneStack}");
 #endif
 
         return enhancedSpace;
@@ -106,6 +109,9 @@ public class PurchasingCommon
     /// <returns>Total removable count including storage</returns>
     public static int GetRemovableCountWithStorage(XUiM_PlayerInventory inventory, ItemStack removedStack, int slotNumber)
     {
+#if DEBUG
+        //const string d_MethodName = nameof(GetRemovableCountWithStorage);
+#endif
         // Start with player inventory count
         int removableCount = GetRemovableCount(inventory, removedStack, slotNumber);
 
@@ -116,7 +122,7 @@ public class PurchasingCommon
             removableCount += storageCount;
 
 #if DEBUG
-            ModLogger.DebugLog($"GetRemovableCountWithStorage: Item={removedStack.itemValue.ItemClass.Name}, Player={removableCount - storageCount}, Storage={storageCount}, Total={removableCount}");
+            //ModLogger.DebugLog($"{d_MethodName}: Item={removedStack.itemValue.ItemClass.Name}, Player={removableCount - storageCount}, Storage={storageCount}, Total={removableCount}");
 #endif
         }
 
@@ -132,6 +138,9 @@ public class PurchasingCommon
     /// <returns>Available space count including storage</returns>
     public static int GetAvailableSpaceWithStorage(XUiM_PlayerInventory inventory, ItemValue itemValue)
     {
+#if DEBUG
+        //const string d_MethodName = nameof(GetAvailableSpaceWithStorage);
+#endif
         // Start with player inventory space
         int availableSpace = GetAvailableSpace(inventory, itemValue);
 
@@ -142,7 +151,7 @@ public class PurchasingCommon
             availableSpace += storageSpace;
 
 #if DEBUG
-            ModLogger.DebugLog($"GetAvailableSpaceWithStorage: Item={itemValue.ItemClass.Name}, Player={availableSpace - storageSpace}, Storage={storageSpace}, Total={availableSpace}");
+            //ModLogger.DebugLog($"{d_MethodName}: Item={itemValue.ItemClass.Name}, Player={availableSpace - storageSpace}, Storage={storageSpace}, Total={availableSpace}");
 #endif
         }
 

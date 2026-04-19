@@ -14,6 +14,7 @@ public static class ItemRepair
     public static int ItemRepairOnActivatedGetItemCount(ItemValue itemValue, int currentCount)
     {
         const string d_MethodName = nameof(ItemRepairOnActivatedGetItemCount);
+
         int DEFAULT_RETURN_VALUE = currentCount;
 
         if (!ValidationHelper.ValidateItemAndContext(itemValue, d_MethodName, out StorageContext context, out ItemClass itemClass, out string itemName))
@@ -23,7 +24,7 @@ public static class ItemRepair
 
         var currentValue = currentCount * itemClass.RepairAmount.Value;
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; currentCount {currentCount}; currentValue {currentValue}");
+        //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; currentCount {currentCount}; currentValue {currentValue}");
 #endif
         if (currentValue > 0)
         {
@@ -34,7 +35,7 @@ public static class ItemRepair
         var newCount = currentCount + storageCount;
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}; newCount {newCount}");
+        //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}; newCount {newCount}");
 #endif
         return newCount;
     }
@@ -65,7 +66,7 @@ public static class ItemRepair
 
         var storageCount = context.GetItemCount(itemValue);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}");
+        //ModLogger.DebugLog($"{d_MethodName}: item {itemName}; storageCount {storageCount}");
 #endif
         return storageCount;
     }
