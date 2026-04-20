@@ -47,7 +47,7 @@ public static class ModConfig
         MigrateConfigLocation();
 
         var path = GetConfigFilePath();
-        ModLogger.DebugLog($"Loading config from {path}");
+        ModLogger.Info($"Loading config from {path}");
 
         if (File.Exists(path))
         {
