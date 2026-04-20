@@ -82,7 +82,10 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualiseLootContainerStacks();
+        }
     }
 
     public static void SmartDroneInventoryLoadoutPull()
@@ -117,7 +120,10 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualiseDroneContainerStacks();
+        }
     }
 
     public static void SmartPlayerInventoryLoadoutPull()
@@ -149,6 +155,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
         var targets = GetSmartPushTargets(context);
 
+        ModLogger.DebugLog($"{d_MethodName}: player inventory window open = {WindowStateManager.IsStorageContainerOpen()}");
         PerformSmartPush(d_MethodName, context, source, targets);
     }
 
@@ -197,7 +204,10 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualiseVehicleContainerStacks();
+        }
     }
 
     public static void SmartWorkstationOutputPush()
@@ -256,20 +266,20 @@ public class SmartSortingFunctions
         }
     }
 
-    private static void PerformSmartPush<S>(string methodName, StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets) where S : class
+    private static bool PerformSmartPush<S>(string methodName, StorageContext context, StorageSourceAdapter<S> source, IReadOnlyList<StorageTargetAdapter> targets) where S : class
     {
         lock (s_smartPushLock)
         {
             if (source == null)
             {
                 ModLogger.DebugLog($"{methodName}: Source is null, returning");
-                return;
+                return false;
             }
 
             if (targets == null || targets.Count == 0)
             {
                 ModLogger.DebugLog($"{methodName}: No target storages found, returning");
-                return;
+                return false;
             }
 
             var state = new StorageOperationState(source.GetName(), SmartTransferOperation.Push);
@@ -282,13 +292,15 @@ public class SmartSortingFunctions
 
             ModLogger.DebugLog($"{methodName}: {state}");
 
-            if (state.StackCount > 0)
+            var anyPushed = state.StackCount > 0;
+            if (anyPushed)
             {
                 context.ShowLocalPlayerNotification(MSG_SMART_PUSH_RESULT, state.StackCount, state.MasterStorageName, state.StorageCount);
                 context.InvalidateCache();
             }
 
             UIRefreshHelper.ValidateAndRefreshUI(context, methodName);
+            return anyPushed;
         }
     }
 

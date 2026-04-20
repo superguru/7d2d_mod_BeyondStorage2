@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -399,6 +400,94 @@ public static class WindowStateManager
     {
         var vehicleWindow = GetActiveVehicleStorageWindow();
         return vehicleWindow?.CurrentVehicleEntity;
+    }
+
+    private static int ForceActualiseAllItemStacks(XUiC_ItemStack[] itemStackControllers)
+    {
+        var itemStackControllerCount = itemStackControllers?.Length ?? 0;
+        for (int i = 0; i < itemStackControllerCount; i++)
+        {
+            XUiC_ItemStack itemStack = (XUiC_ItemStack)itemStackControllers[i];
+            itemStack.ForceSetItemStack(itemStack.ItemStack);
+        }
+
+        return itemStackControllerCount;
+    }
+
+    internal static void ActualiseDroneContainerStacks()
+    {
+        if (!IsDroneWindowOpen())
+        {
+            return;
+        }
+
+        var droneWindow = GetActiveStorageContainerWindow();
+        if (droneWindow != null)
+        {
+            lock (s_lootLockObject)
+            {
+                droneWindow.IsDirty = true;
+                droneWindow.SetAllChildrenDirty();
+
+                var lootContainer = droneWindow.lootContainer;
+                if (lootContainer != null)
+                {
+                    lootContainer.SetAllChildrenDirty(true);
+
+                    var itemStackControllers = lootContainer.GetItemStackControllers();
+                    int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+                    ModLogger.DebugLog($"Marked {itemStackControllerCount} drone container stacks dirty: {lootContainer}");
+#endif
+                }
+            }
+        }
+    }
+
+    internal static void ActualiseLootContainerStacks()
+    {
+        if (!IsStorageContainerOpen())
+        {
+            return;
+        }
+
+        var lootWindow = GetActiveStorageContainerWindow();
+        if (lootWindow != null)
+        {
+            lock (s_lootLockObject)
+            {
+                lootWindow.IsDirty = true;
+                lootWindow.SetAllChildrenDirty();
+
+                var lootContainer = lootWindow.lootContainer;
+                if (lootContainer != null)
+                {
+                    lootContainer.SetAllChildrenDirty(true);
+
+                    var itemStackControllers = lootContainer.GetItemStackControllers();
+                    int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+                    ModLogger.DebugLog($"Marked {itemStackControllerCount} loot container stacks dirty: {lootContainer}");
+#endif
+                }
+            }
+        }
+    }
+
+    internal static void ActualiseVehicleContainerStacks()
+    {
+        var vehicleWindow = GetActiveVehicleStorageWindow();
+        if (vehicleWindow != null)
+        {
+            lock (s_vehicleLockObject)
+            {
+                var itemStackControllers = vehicleWindow.containerWindow?.GetItemStackControllers();
+                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+                ModLogger.DebugLog($"Marked {itemStackControllerCount} vehicle container stacks dirty: {vehicleWindow}");
+#endif
+            }
+        }
     }
 
     internal static void SetOpenVehicleEntityModified()
