@@ -56,7 +56,7 @@ internal static class XUiCBackpackWindowPatches
 
         WindowStateManager.OnBackpackWindowOpened(__instance);
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Backpack window opened");
+        //ModLogger.DebugLog($"{d_MethodName}: Backpack window opened");
 #endif
     }
 
@@ -73,7 +73,7 @@ internal static class XUiCBackpackWindowPatches
         WindowStateManager.OnBackpackWindowClosed(__instance);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: Backpack window closed");
+        //ModLogger.DebugLog($"{d_MethodName}: Backpack window closed");
 #endif
     }
 }

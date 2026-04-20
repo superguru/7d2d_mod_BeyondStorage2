@@ -144,7 +144,7 @@ internal static class XUiC_LootWindow_Patches
             {
                 isStorage = true;
 #if DEBUG
-                ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
+                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
 #endif
             }
         }
@@ -158,7 +158,7 @@ internal static class XUiC_LootWindow_Patches
         WindowStateManager.OnStorageWindowOpened(__instance, isStorage, drone);
 
 #if DEBUG
-        ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
+        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
 #endif
     }
 
