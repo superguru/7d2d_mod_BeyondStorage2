@@ -144,7 +144,7 @@ internal static class XUiC_LootWindow_Patches
             {
                 isStorage = true;
 #if DEBUG
-                //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
+                ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
 #endif
             }
         }
@@ -155,10 +155,10 @@ internal static class XUiC_LootWindow_Patches
             isStorage = tileEntity.bPlayerStorage;
         }
 
-        WindowStateManager.OnStorageContainerWindowOpened(__instance, isStorage, drone);
+        WindowStateManager.OnStorageWindowOpened(__instance, isStorage, drone);
 
 #if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
+        ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
 #endif
     }
 
@@ -169,7 +169,7 @@ internal static class XUiC_LootWindow_Patches
 #endif
     private static void XUiC_LootWindow_OnClose_Postfix(XUiC_LootWindow __instance)
     {
-        WindowStateManager.OnStorageContainerWindowClosed(__instance);
+        WindowStateManager.OnStorageWindowClosed(__instance);
 
         // Clear the saved locked slots state when the window closes
         s_previousLockedSlots = null;

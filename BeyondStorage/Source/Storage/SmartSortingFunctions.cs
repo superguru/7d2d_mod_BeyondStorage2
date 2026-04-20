@@ -159,7 +159,10 @@ public class SmartSortingFunctions
         var targets = GetSmartPushTargets(context);
 
         ModLogger.DebugLog($"{d_MethodName}: player inventory window open = {WindowStateManager.IsStorageContainerOpen()}");
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualisePlayerInventoryStacks();
+        }
     }
 
     public static void SmartVehicleLoadoutPull()
