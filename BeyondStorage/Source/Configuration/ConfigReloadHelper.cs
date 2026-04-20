@@ -16,7 +16,7 @@ public static class ConfigReloadHelper
     {
         try
         {
-            ModConfig.LoadConfig(BeyondStorageMod.Context);
+            ModConfig.LoadConfig();
         }
         catch (Exception ex)
         {

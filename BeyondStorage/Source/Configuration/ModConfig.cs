@@ -5,9 +5,6 @@ using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.Multiplayer;
 using Newtonsoft.Json;
 
-#if DEBUG
-#endif
-
 namespace BeyondStorage.Source.Configuration;
 
 public static class ModConfig
@@ -42,8 +39,11 @@ public static class ModConfig
         return Path.Combine(ModPathManager.GetLegacyConfigPath(), ConfigFileName);
     }
 
-    public static void LoadConfig(BeyondStorageMod context)
+    public static void LoadConfig()
     {
+        // Reset loaded state so reload calls correctly track state
+        IsConfigLoaded = false;
+
         MigrateConfigLocation();
 
         var path = GetConfigFilePath();
@@ -448,24 +448,6 @@ public static class ModConfig
         return false; // No changes made
     }
 
-#if DEBUG
-    private static bool UsingServerConfig()
-    {
-        // if we don't have a server config don't try and use it
-        if (!ServerUtils.HasServerConfig)
-        {
-            return false;
-        }
-        // If server skip as the config we're using is the server config
-        if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
-        {
-            return false;
-        }
-        // If singleplayer use client config, otherwise we're a client on a server
-        return !SingletonMonoBehaviour<ConnectionManager>.Instance.IsSinglePlayer;
-    }
-#endif
-
     public static float Range()
     {
         float serverValue = ServerConfig.range;
@@ -637,9 +619,20 @@ public static class ModConfig
     {
         try
         {
-            var legacyConfigJson = File.ReadAllText(legacyConfigFile);
-            var legacyConfig = SafeDeserializeConfig(legacyConfigJson);
+            if (!ValidateConfigFileSize(legacyConfigFile))
+            {
+                ModLogger.Warning("Legacy config file is too large to migrate safely, using simple file move.");
+                return null;
+            }
 
+            var legacyConfigJson = ReadConfigFile(legacyConfigFile);
+            if (legacyConfigJson == null)
+            {
+                ModLogger.Warning("Failed to load legacy config for migration, using simple file move");
+                return null;
+            }
+
+            var legacyConfig = SafeDeserializeConfig(legacyConfigJson);
             if (legacyConfig == null)
             {
                 ModLogger.Warning("Failed to load legacy config for migration, using simple file move");
@@ -668,7 +661,18 @@ public static class ModConfig
 
         try
         {
-            var newConfigJson = File.ReadAllText(newConfigFile);
+            if (!ValidateConfigFileSize(newConfigFile))
+            {
+                ModLogger.Warning("Existing config at new location is too large to read safely during migration.");
+                return null;
+            }
+
+            var newConfigJson = ReadConfigFile(newConfigFile);
+            if (newConfigJson == null)
+            {
+                return null;
+            }
+
             return SafeDeserializeConfig(newConfigJson);
         }
         catch (Exception ex)
@@ -679,14 +683,15 @@ public static class ModConfig
     }
 
     /// <summary>
-    /// Saves merged config to the new location
+    /// Saves merged config to the new location with size validation
     /// </summary>
     /// <param name="mergedConfig">Config to save</param>
     /// <param name="newConfigFile">Path to save the config</param>
     private static void SaveMergedConfig(BsConfig mergedConfig, string newConfigFile)
     {
-        var mergedConfigJson = JsonConvert.SerializeObject(mergedConfig, Formatting.Indented);
-        File.WriteAllText(newConfigFile, mergedConfigJson);
+        // Temporarily set ClientConfig so SaveConfig can serialize it
+        ClientConfig = mergedConfig;
+        SaveConfig(newConfigFile);
     }
 
     /// <summary>
@@ -724,59 +729,9 @@ public static class ModConfig
             metaDescription = legacyConfig.metaDescription
         };
 
-        // Apply special migration overrides here
-        ApplyMigrationOverrides(mergedConfig, legacyConfig, newConfig);
-
-        // If no legacy value exists but new config has a value, use new config value
-        // (This handles cases where new properties were added)
-        if (newConfig != null)
-        {
-            // Example of fallback logic for new properties that might not exist in legacy
-            // Add specific property checks here as needed for future properties
-
-            // For now, legacy takes complete priority unless overridden above
-            // Future properties can be handled with null checks and fallbacks
-        }
+        // For now, legacy takes complete priority
+        // Future properties can be handled with null checks and fallbacks against newConfig
 
         return mergedConfig;
-    }
-
-    /// <summary>
-    /// Applies special override rules during config migration for version-specific changes
-    /// </summary>
-    /// <param name="mergedConfig">The config being built</param>
-    /// <param name="legacyConfig">Original legacy config</param>
-    /// <param name="newConfig">New location config (can be null)</param>
-    private static void ApplyMigrationOverrides(BsConfig mergedConfig, BsConfig legacyConfig, BsConfig newConfig)
-    {
-        // Add version-specific override logic here
-        // Example:
-        // if (ShouldOverrideForVersion("2.4.0"))
-        // {
-        //     mergedConfig.someNewSetting = defaultValue;
-        //     ModLogger.Info("Applied migration override for someNewSetting");
-        // }
-
-        // Example: Reset debug settings for security in certain versions
-        // if (ShouldOverrideForVersion("2.5.0"))
-        // {
-        //     if (legacyConfig.isDebug)
-        //     {
-        //         mergedConfig.isDebug = false;
-        //         ModLogger.Info("Reset debug mode during migration for security");
-        //     }
-        // }
-    }
-
-    /// <summary>
-    /// Helper method to determine if a specific override should be applied based on version
-    /// </summary>
-    /// <param name="targetVersion">Version to check for override rules</param>
-    /// <returns>True if override should be applied</returns>
-    private static bool ShouldOverrideForVersion(string targetVersion)
-    {
-        // Implement version comparison logic as needed
-        // This is a placeholder for when you need version-specific overrides
-        return false;
     }
 }

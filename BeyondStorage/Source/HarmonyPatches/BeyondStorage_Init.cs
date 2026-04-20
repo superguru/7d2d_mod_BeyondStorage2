@@ -35,7 +35,7 @@ public class BeyondStorageMod : IModApi
     {
         s_context = this;
         s_mod_assembly_path = modInstance.Path;
-        ModConfig.LoadConfig(s_context);
+        ModConfig.LoadConfig();
         s_modInstance = modInstance;
         var harmony = new Harmony(GetType().ToString());
 #if DEBUG
