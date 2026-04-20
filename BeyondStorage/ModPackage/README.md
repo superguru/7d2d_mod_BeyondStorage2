@@ -227,4 +227,4 @@ I would recommend Beyond Storage 2 over other "craft from container" type mods, 
 
 The UI and game functionality integration is exceptional, and the mod is very stable and ⚡⚡⚡lightning⚡⚡⚡ fast.
 
-*** PACKAGED `README.md` EOF ***
+*** PACKAGED / MOD FRONT PAGE `README.md` EOF ***
