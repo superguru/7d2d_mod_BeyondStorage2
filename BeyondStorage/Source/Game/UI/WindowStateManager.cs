@@ -149,17 +149,18 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualiseVehicleContainerStacks()
     {
-        var vehicleWindow = GetActiveVehicleStorageWindow();
-        if (vehicleWindow != null)
+        lock (s_vehicleLockObject)
         {
-            lock (s_vehicleLockObject)
+            if (!s_isVehicleStorageWindowOpen || s_vehicleWindowInstance == null)
             {
-                var itemStackControllers = vehicleWindow.containerWindow?.GetItemStackControllers();
-                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllerCount} vehicle container stacks dirty: {vehicleWindow}");
-#endif
+                return;
             }
+
+            var itemStackControllers = s_vehicleWindowInstance.containerWindow?.GetItemStackControllers();
+            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} vehicle container stacks dirty: {s_vehicleWindowInstance}");
+#endif
         }
     }
 
@@ -271,30 +272,26 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualiseLootContainerStacks()
     {
-        if (!IsStorageContainerOpen())
+        lock (s_lootLockObject)
         {
-            return;
-        }
-
-        var lootWindow = GetActiveStorageContainerWindow();
-        if (lootWindow != null)
-        {
-            lock (s_lootLockObject)
+            if (!s_isStorageLootWindowOpen || s_lootWindowInstance == null)
             {
-                lootWindow.IsDirty = true;
-                lootWindow.SetAllChildrenDirty();
+                return;
+            }
 
-                var lootContainer = lootWindow.lootContainer;
-                if (lootContainer != null)
-                {
-                    lootContainer.SetAllChildrenDirty(true);
+            s_lootWindowInstance.IsDirty = true;
+            s_lootWindowInstance.SetAllChildrenDirty();
 
-                    var itemStackControllers = lootContainer.GetItemStackControllers();
-                    int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+            var lootContainer = s_lootWindowInstance.lootContainer;
+            if (lootContainer != null)
+            {
+                lootContainer.SetAllChildrenDirty(true);
+
+                var itemStackControllers = lootContainer.GetItemStackControllers();
+                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
 #if DEBUG
-                    ModLogger.DebugLog($"Marked {itemStackControllerCount} loot container stacks dirty: {lootContainer}");
+                ModLogger.DebugLog($"Marked {itemStackControllerCount} loot container stacks dirty: {lootContainer}");
 #endif
-                }
             }
         }
     }
@@ -369,17 +366,18 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualisePlayerInventoryStacks()
     {
-        var backpackWindow = GetActiveBackpackWindow();
-        if (backpackWindow != null)
+        lock (s_lootLockObject)
         {
-            lock (s_lootLockObject)
+            if (s_backpackWindowInstance == null)
             {
-                var itemStackControllers = backpackWindow.backpackGrid?.GetItemStackControllers();
-                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllerCount} backpack container stacks dirty: {backpackWindow}");
-#endif
+                return;
             }
+
+            var itemStackControllers = s_backpackWindowInstance.backpackGrid?.GetItemStackControllers();
+            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} backpack container stacks dirty: {s_backpackWindowInstance}");
+#endif
         }
     }
 
@@ -454,30 +452,26 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualiseDroneContainerStacks()
     {
-        if (!IsDroneWindowOpen())
+        lock (s_lootLockObject)
         {
-            return;
-        }
-
-        var droneWindow = GetActiveStorageContainerWindow();
-        if (droneWindow != null)
-        {
-            lock (s_lootLockObject)
+            if (!s_isStorageLootWindowOpen || s_droneForWindow == null || s_lootWindowInstance == null)
             {
-                droneWindow.IsDirty = true;
-                droneWindow.SetAllChildrenDirty();
+                return;
+            }
 
-                var lootContainer = droneWindow.lootContainer;
-                if (lootContainer != null)
-                {
-                    lootContainer.SetAllChildrenDirty(true);
+            s_lootWindowInstance.IsDirty = true;
+            s_lootWindowInstance.SetAllChildrenDirty();
 
-                    var itemStackControllers = lootContainer.GetItemStackControllers();
-                    int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+            var lootContainer = s_lootWindowInstance.lootContainer;
+            if (lootContainer != null)
+            {
+                lootContainer.SetAllChildrenDirty(true);
+
+                var itemStackControllers = lootContainer.GetItemStackControllers();
+                int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
 #if DEBUG
-                    ModLogger.DebugLog($"Marked {itemStackControllerCount} drone container stacks dirty: {lootContainer}");
+                ModLogger.DebugLog($"Marked {itemStackControllersUpdated} drone container stacks dirty: {lootContainer}");
 #endif
-                }
             }
         }
     }
@@ -580,17 +574,18 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualiseWorkstationOutputContainerStacks()
     {
-        var workstationWindow = GetActiveWorkstationWindow();
-        if (workstationWindow != null)
+        lock (s_workstationLockObject)
         {
-            lock (s_workstationLockObject)
+            if (!s_isWorkstationWindowOpen || s_workstationWindowInstance == null)
             {
-                var itemStackControllers = workstationWindow.outputWindow?.GetItemStackControllers();
-                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllerCount} workstation output container stacks dirty: {workstationWindow}");
-#endif
+                return;
             }
+
+            var itemStackControllers = s_workstationWindowInstance.outputWindow?.GetItemStackControllers();
+            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} workstation output container stacks dirty: {s_workstationWindowInstance}");
+#endif
         }
     }
 
@@ -679,17 +674,18 @@ public static class WindowStateManager
     /// </summary>
     internal static void ActualiseCollectorContainerStacks()
     {
-        var collectorWindow = GetActiveCollectorWindow();
-        if (collectorWindow != null)
+        lock (s_collectorLockObject)
         {
-            lock (s_collectorLockObject)
+            if (!s_isCollectorWindowOpen || s_collectorWindowInstance == null)
             {
-                var itemStackControllers = collectorWindow.collectorStacks;
-                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllerCount} collector container stacks dirty: {collectorWindow}");
-#endif
+                return;
             }
+
+            var itemStackControllers = s_collectorWindowInstance.collectorStacks;
+            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} collector container stacks dirty: {s_collectorWindowInstance}");
+#endif
         }
     }
 
