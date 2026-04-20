@@ -149,7 +149,7 @@ internal static class XUiC_LootWindow_Patches
             }
         }
 
-        // Last try: Cehck for player storage, for example player crafted desk safes, refrigirators, lockers, etc.
+        // Last try: Check for player storage, for example player crafted desk safes, refrigirators, lockers, etc.
         if (!isStorage)
         {
             isStorage = tileEntity.bPlayerStorage;
