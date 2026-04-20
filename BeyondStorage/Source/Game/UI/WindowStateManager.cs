@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -144,26 +143,6 @@ public static class WindowStateManager
         }
     }
 
-    /// <summary>
-    /// Forces all item stacks in the currently open vehicle storage container to refresh their display
-    /// </summary>
-    internal static void ActualiseVehicleContainerStacks()
-    {
-        lock (s_vehicleLockObject)
-        {
-            if (!s_isVehicleStorageWindowOpen || s_vehicleWindowInstance == null)
-            {
-                return;
-            }
-
-            var itemStackControllers = s_vehicleWindowInstance.containerWindow?.GetItemStackControllers();
-            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} vehicle container stacks dirty: {s_vehicleWindowInstance}");
-#endif
-        }
-    }
-
     #endregion
 
     #region Storage Container (Loot) Window
@@ -267,35 +246,6 @@ public static class WindowStateManager
         }
     }
 
-    /// <summary>
-    /// Forces all item stacks in the currently open storage container to refresh their display
-    /// </summary>
-    internal static void ActualiseLootContainerStacks()
-    {
-        lock (s_lootLockObject)
-        {
-            if (!s_isStorageLootWindowOpen || s_lootWindowInstance == null)
-            {
-                return;
-            }
-
-            s_lootWindowInstance.IsDirty = true;
-            s_lootWindowInstance.SetAllChildrenDirty();
-
-            var lootContainer = s_lootWindowInstance.lootContainer;
-            if (lootContainer != null)
-            {
-                lootContainer.SetAllChildrenDirty(true);
-
-                var itemStackControllers = lootContainer.GetItemStackControllers();
-                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllerCount} loot container stacks dirty: {lootContainer}");
-#endif
-            }
-        }
-    }
-
     #endregion
 
     #region Backpack Window
@@ -358,26 +308,6 @@ public static class WindowStateManager
             {
                 Log.Warning($"[WindowStateManager] Attempted to close backpack window that doesn't match tracked instance. Tracked: {s_backpackWindowInstance?.GetType().Name}, Closing: {backpackWindow?.GetType().Name}");
             }
-        }
-    }
-
-    /// <summary>
-    /// Forces all item stacks in the player's backpack to refresh their display
-    /// </summary>
-    internal static void ActualisePlayerInventoryStacks()
-    {
-        lock (s_lootLockObject)
-        {
-            if (s_backpackWindowInstance == null)
-            {
-                return;
-            }
-
-            var itemStackControllers = s_backpackWindowInstance.backpackGrid?.GetItemStackControllers();
-            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} backpack container stacks dirty: {s_backpackWindowInstance}");
-#endif
         }
     }
 
@@ -445,35 +375,6 @@ public static class WindowStateManager
 
         matchReason = $"No match found for {tileEntity}";
         return false;
-    }
-
-    /// <summary>
-    /// Forces all item stacks in the currently open drone storage container to refresh their display
-    /// </summary>
-    internal static void ActualiseDroneContainerStacks()
-    {
-        lock (s_lootLockObject)
-        {
-            if (!s_isStorageLootWindowOpen || s_droneForWindow == null || s_lootWindowInstance == null)
-            {
-                return;
-            }
-
-            s_lootWindowInstance.IsDirty = true;
-            s_lootWindowInstance.SetAllChildrenDirty();
-
-            var lootContainer = s_lootWindowInstance.lootContainer;
-            if (lootContainer != null)
-            {
-                lootContainer.SetAllChildrenDirty(true);
-
-                var itemStackControllers = lootContainer.GetItemStackControllers();
-                int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-                ModLogger.DebugLog($"Marked {itemStackControllersUpdated} drone container stacks dirty: {lootContainer}");
-#endif
-            }
-        }
     }
 
     #endregion
@@ -569,26 +470,6 @@ public static class WindowStateManager
         return workstationWindow?.WorkstationData?.TileEntity;
     }
 
-    /// <summary>
-    /// Forces all item stacks in the currently open workstation output container to refresh their display
-    /// </summary>
-    internal static void ActualiseWorkstationOutputContainerStacks()
-    {
-        lock (s_workstationLockObject)
-        {
-            if (!s_isWorkstationWindowOpen || s_workstationWindowInstance == null)
-            {
-                return;
-            }
-
-            var itemStackControllers = s_workstationWindowInstance.outputWindow?.GetItemStackControllers();
-            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} workstation output container stacks dirty: {s_workstationWindowInstance}");
-#endif
-        }
-    }
-
     #endregion
 
     #region Collector Window
@@ -667,47 +548,6 @@ public static class WindowStateManager
     {
         var collectorWindow = GetActiveCollectorWindow();
         return collectorWindow?.te;
-    }
-
-    /// <summary>
-    /// Forces all item stacks in the currently open dew collector container to refresh their display
-    /// </summary>
-    internal static void ActualiseCollectorContainerStacks()
-    {
-        lock (s_collectorLockObject)
-        {
-            if (!s_isCollectorWindowOpen || s_collectorWindowInstance == null)
-            {
-                return;
-            }
-
-            var itemStackControllers = s_collectorWindowInstance.collectorStacks;
-            int itemStackControllersUpdated = ForceActualiseAllItemStacks(itemStackControllers);
-#if DEBUG
-            ModLogger.DebugLog($"Marked {itemStackControllersUpdated} collector container stacks dirty: {s_collectorWindowInstance}");
-#endif
-        }
-    }
-
-    #endregion
-
-    #region Helpers
-
-    /// <summary>
-    /// Forces each item stack controller to re-apply its current item stack, refreshing the UI display.
-    /// </summary>
-    /// <param name="itemStackControllers">The array of item stack controllers to refresh. May be null.</param>
-    /// <returns>The number of item stack controllers that were processed</returns>
-    private static int ForceActualiseAllItemStacks(XUiC_ItemStack[] itemStackControllers)
-    {
-        var itemStackControllerCount = itemStackControllers?.Length ?? 0;
-        for (int i = 0; i < itemStackControllerCount; i++)
-        {
-            XUiC_ItemStack itemStack = (XUiC_ItemStack)itemStackControllers[i];
-            itemStack.ForceSetItemStack(itemStack.ItemStack);
-        }
-
-        return itemStackControllerCount;
     }
 
     #endregion

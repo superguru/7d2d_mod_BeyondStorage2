@@ -41,10 +41,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
         var targets = GetSmartPushTargets(context);
 
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualiseCollectorContainerStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartLootWindowPush()
@@ -85,10 +82,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateLootableStorageSourceAdapter(context, lootable);
         var targets = GetSmartPushTargets(context);
 
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualiseLootContainerStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartDroneInventoryLoadoutPull()
@@ -123,10 +117,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateDroneStorageSourceAdapter(context, drone);
         var targets = GetSmartPushTargets(context);
 
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualiseDroneContainerStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartPlayerInventoryLoadoutPull()
@@ -158,11 +149,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
         var targets = GetSmartPushTargets(context);
 
-        ModLogger.DebugLog($"{d_MethodName}: player inventory window open = {WindowStateManager.IsStorageContainerOpen()}");
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualisePlayerInventoryStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartVehicleLoadoutPull()
@@ -210,10 +197,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateVehicleStorageSourceAdapter(context, vehicle);
         var targets = GetSmartPushTargets(context);
 
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualiseVehicleContainerStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     public static void SmartWorkstationOutputPush()
@@ -236,10 +220,7 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
         var targets = GetSmartPushTargets(context);
 
-        if (PerformSmartPush(d_MethodName, context, source, targets))
-        {
-            WindowStateManager.ActualiseWorkstationOutputContainerStacks();
-        }
+        PerformSmartPush(d_MethodName, context, source, targets);
     }
 
     private static void PerformSmartLoadoutPull<T>(string methodName, StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter> sources) where T : class
@@ -582,6 +563,11 @@ public class SmartSortingFunctions
         // Update tracking variables with ACTUAL amount
         sourceSlotRemaining -= actualTransferAmount;
         sourceSlot.count = sourceSlotRemaining;
+
+        if (sourceSlotRemaining == 0)
+        {
+            sourceSlot.Clear();
+        }
 
         return actualTransferAmount;
     }
