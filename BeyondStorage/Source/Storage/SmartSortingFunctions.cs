@@ -41,7 +41,10 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateCollectorStorageSourceAdapter(context, collector);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualiseCollectorContainerStacks();
+        }
     }
 
     public static void SmartLootWindowPush()
@@ -230,7 +233,10 @@ public class SmartSortingFunctions
         var source = StorageSourceAdapterFactory.CreateWorkstationStorageSourceAdapter(context, workstation);
         var targets = GetSmartPushTargets(context);
 
-        PerformSmartPush(d_MethodName, context, source, targets);
+        if (PerformSmartPush(d_MethodName, context, source, targets))
+        {
+            WindowStateManager.ActualiseWorkstationOutputContainerStacks();
+        }
     }
 
     private static void PerformSmartLoadoutPull<T>(string methodName, StorageContext context, StorageSourceAdapter<T> loadout, IReadOnlyList<StorageTargetAdapter> sources) where T : class

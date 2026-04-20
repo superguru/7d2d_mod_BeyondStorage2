@@ -414,6 +414,22 @@ public static class WindowStateManager
         return itemStackControllerCount;
     }
 
+    internal static void ActualiseCollectorContainerStacks()
+    {
+        var collectorWindow = GetActiveCollectorWindow();
+        if (collectorWindow != null)
+        {
+            lock (s_collectorLockObject)
+            {
+                var itemStackControllers = collectorWindow.collectorStacks;
+                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+                ModLogger.DebugLog($"Marked {itemStackControllerCount} collector container stacks dirty: {collectorWindow}");
+#endif
+            }
+        }
+    }
+
     internal static void ActualiseDroneContainerStacks()
     {
         if (!IsDroneWindowOpen())
@@ -485,6 +501,22 @@ public static class WindowStateManager
                 int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
 #if DEBUG
                 ModLogger.DebugLog($"Marked {itemStackControllerCount} vehicle container stacks dirty: {vehicleWindow}");
+#endif
+            }
+        }
+    }
+
+    internal static void ActualiseWorkstationOutputContainerStacks()
+    {
+        var workstationWindow = GetActiveWorkstationWindow();
+        if (workstationWindow != null)
+        {
+            lock (s_workstationLockObject)
+            {
+                var itemStackControllers = workstationWindow.outputWindow?.GetItemStackControllers();
+                int itemStackControllerCount = ForceActualiseAllItemStacks(itemStackControllers);
+#if DEBUG
+                ModLogger.DebugLog($"Marked {itemStackControllerCount} workstation output container stacks dirty: {workstationWindow}");
 #endif
             }
         }
