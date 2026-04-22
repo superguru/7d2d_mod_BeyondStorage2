@@ -456,34 +456,18 @@ public static class ModConfig
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromDrones()
+    public static bool ConsumeFromDrones()
     {
-        bool serverValue = ServerConfig.pullFromDrones;
-        bool clientValue = ClientConfig.pullFromDrones;
+        bool serverValue = ServerConfig.consumeFromDrones;
+        bool clientValue = ClientConfig.consumeFromDrones;
 
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
-    public static bool PullFromCollectors()
+    public static bool ConsumeFromVehicles()
     {
-        bool serverValue = ServerConfig.pullFromCollectors;
-        bool clientValue = ClientConfig.pullFromCollectors;
-
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool PullFromWorkstationOutputs()
-    {
-        bool serverValue = ServerConfig.pullFromWorkstationOutputs;
-        bool clientValue = ClientConfig.pullFromWorkstationOutputs;
-
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
-    }
-
-    public static bool PullFromVehicleStorage()
-    {
-        bool serverValue = ServerConfig.pullFromVehicleStorage;
-        bool clientValue = ClientConfig.pullFromVehicleStorage;
+        bool serverValue = ServerConfig.consumeFromVehicles;
+        bool clientValue = ClientConfig.consumeFromVehicles;
 
         return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
@@ -715,22 +699,16 @@ public static class ModConfig
     /// <returns>Merged configuration</returns>
     private static BsConfig MergeConfigs(BsConfig legacyConfig, BsConfig newConfig)
     {
-        // Start with legacy config as base
         var mergedConfig = new BsConfig
         {
             version = ConfigVersioning.CurrentVersion,
             range = legacyConfig.range,
-            pullFromDrones = legacyConfig.pullFromDrones,
-            pullFromCollectors = legacyConfig.pullFromCollectors,
-            pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
-            pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
+            consumeFromDrones = legacyConfig.consumeFromDrones,
+            consumeFromVehicles = legacyConfig.consumeFromVehicles,
             serverSyncConfig = legacyConfig.serverSyncConfig,
             isDebug = legacyConfig.isDebug,
             metaDescription = legacyConfig.metaDescription
         };
-
-        // For now, legacy takes complete priority
-        // Future properties can be handled with null checks and fallbacks against newConfig
 
         return mergedConfig;
     }

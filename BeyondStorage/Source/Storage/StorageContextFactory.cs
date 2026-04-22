@@ -202,20 +202,22 @@ public static class StorageContextFactory
 
         // The order is important
 
-        if (config.PullFromDrones)
+        if (config.ConsumeFromDrones)
+        {
             types.Add(typeof(EntityDrone));
+        }
 
-        if (config.PullFromCollectors)
-            types.Add(typeof(TileEntityCollector));
-
-        if (config.PullFromWorkstationOutputs)
-            types.Add(typeof(TileEntityWorkstation));
+        // Always allowed as of v2.6.9
+        types.Add(typeof(TileEntityCollector));
+        types.Add(typeof(TileEntityWorkstation));
 
         // Lootables: Always allowed
         types.Add(typeof(ITileEntityLootable));
 
-        if (config.PullFromVehicleStorage)
+        if (config.ConsumeFromVehicles)
+        {
             types.Add(typeof(EntityVehicle));
+        }
 
         return new AllowedSourcesList(types);
     }

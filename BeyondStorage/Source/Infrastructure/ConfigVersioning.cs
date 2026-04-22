@@ -73,10 +73,10 @@ public static class ConfigVersioning
             {
                 version = CurrentVersion,
                 range = legacyConfig.range,
-                pullFromDrones = legacyConfig.pullFromDrones,
-                pullFromCollectors = legacyConfig.pullFromDewCollectors,
-                pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
-                pullFromVehicleStorage = legacyConfig.pullFromVehicleStorage,
+                consumeFromDrones = legacyConfig.pullFromDrones,
+                // pullFromCollectors removed in 2.6.9
+                // pullFromWorkstationOutputs removed in 2.6.9
+                consumeFromVehicles = legacyConfig.pullFromVehicleStorage,
                 serverSyncConfig = legacyConfig.serverSyncConfig,
                 isDebug = legacyConfig.isDebug
                 // isDebugLogSettingsAccess removed in 2.6.7
@@ -135,6 +135,12 @@ public static class ConfigVersioning
         if (fromVersion < new Version("2.6.7"))
         {
             migratedConfig = MigrateTo267(migratedConfig);
+        }
+
+        // Migration to version 2.6.9: Remove pullFromCollectors and pullFromWorkstationOutputs settings
+        if (fromVersion < new Version("2.6.9"))
+        {
+            migratedConfig = MigrateTo269(migratedConfig);
         }
 
         migratedConfig.version = CurrentVersion;
@@ -215,6 +221,19 @@ public static class ConfigVersioning
     }
 
     /// <summary>
+    /// Migrates config to version 2.6.9
+    /// Changes: Removes pullFromCollectors and pullFromWorkstationOutputs — both are now always enabled.
+    /// </summary>
+    private static BsConfig MigrateTo269(BsConfig config)
+    {
+        const string d_MethodName = nameof(MigrateTo269);
+        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.6.9");
+        ModLogger.Info($"{d_MethodName}: 'pullFromCollectors' has been removed — collectors are now always included");
+        ModLogger.Info($"{d_MethodName}: 'pullFromWorkstationOutputs' has been removed — workstation outputs are now always included");
+        return config;
+    }
+
+    /// <summary>
     /// Pre-processes raw config JSON to apply field renames before deserialization.
     /// Must be called before deserializing into BsConfig to preserve renamed field values.
     /// </summary>
@@ -242,6 +261,13 @@ public static class ConfigVersioning
             if (version < new Version("2.6.7") && jsonObject.ContainsKey("isDebugLogSettingsAccess"))
             {
                 jsonObject.Remove("isDebugLogSettingsAccess");
+            }
+
+            // Pre-2.6.9: remove pullFromCollectors and pullFromWorkstationOutputs
+            if (version < new Version("2.6.9"))
+            {
+                jsonObject.Remove("pullFromCollectors");
+                jsonObject.Remove("pullFromWorkstationOutputs");
             }
 
             return jsonObject.ToString(Formatting.None);

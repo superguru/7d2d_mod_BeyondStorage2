@@ -22,7 +22,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
     private static string CurrentNetConfigVersion => ConfigVersioning.CurrentVersion;
 
     // IMPORTANT: Update number if more options being sent
-    private const ushort BoolCount = 13;  // 13 as of v2.2.0, which introduces pullFromDrones and enableForBlockTexture
+    // Update comment and value — 2 bools remaining as of v2.6.9
+    private const ushort BoolCount = 2;
 
     public override NetPackageDirection PackageDirection => NetPackageDirection.ToClient;
 
@@ -40,10 +41,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
 
         // do not change the order of these
         binaryWriter.Write(ModConfig.ClientConfig.range);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromDrones);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromCollectors);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromWorkstationOutputs);
-        binaryWriter.Write(ModConfig.ClientConfig.pullFromVehicleStorage);
+        binaryWriter.Write(ModConfig.ClientConfig.consumeFromDrones);
+        binaryWriter.Write(ModConfig.ClientConfig.consumeFromVehicles);
     }
 
     private bool ReadBool(PooledBinaryReader reader)
@@ -121,10 +120,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
         // update server config (or set if it's first time)
         // do not change the order of these
         ModConfig.ServerConfig.range = reader.ReadSingle();
-        ModConfig.ServerConfig.pullFromDrones = ReadBool(reader);
-        ModConfig.ServerConfig.pullFromCollectors = ReadBool(reader);
-        ModConfig.ServerConfig.pullFromWorkstationOutputs = ReadBool(reader);
-        ModConfig.ServerConfig.pullFromVehicleStorage = ReadBool(reader);
+        ModConfig.ServerConfig.consumeFromDrones = ReadBool(reader);
+        ModConfig.ServerConfig.consumeFromVehicles = ReadBool(reader);
 
         // Apply config versioning and migration to server config
         ModConfig.ServerConfig.version = CurrentNetConfigVersion;
@@ -147,10 +144,8 @@ public class NetPackageBeyondStorageConfig : NetPackage
 #if DEBUG
         ModLogger.DebugLog($"ModConfig.ServerConfig.version {ModConfig.ServerConfig.version}");
         ModLogger.DebugLog($"ModConfig.ServerConfig.range {ModConfig.ServerConfig.range}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromDrones {ModConfig.ServerConfig.pullFromDrones}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromCollectors {ModConfig.ServerConfig.pullFromCollectors}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromWorkstationOutputs {ModConfig.ServerConfig.pullFromWorkstationOutputs}");
-        ModLogger.DebugLog($"ModConfig.ServerConfig.pullFromVehicleStorage {ModConfig.ServerConfig.pullFromVehicleStorage}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.consumeFromDrones {ModConfig.ServerConfig.consumeFromDrones}");
+        ModLogger.DebugLog($"ModConfig.ServerConfig.consumeFromVehicles {ModConfig.ServerConfig.consumeFromVehicles}");
 #endif
     }
 

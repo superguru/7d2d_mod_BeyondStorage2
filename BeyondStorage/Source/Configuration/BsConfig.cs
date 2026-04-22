@@ -22,22 +22,12 @@ public class BsConfig
     /// <summary>
     /// If set to true it will try and pull items from nearby drones
     /// </summary>
-    public bool pullFromDrones = true;
-
-    /// <summary>
-    /// If set to true it will try and pull items from nearby collectors (e.g. dew collectors, apiaries)
-    /// </summary>
-    public bool pullFromCollectors = true;
-
-    /// <summary>
-    /// If set to true it will try and pull items from nearby workstation output stacks
-    /// </summary>
-    public bool pullFromWorkstationOutputs = true;
+    public bool consumeFromDrones = true;
 
     /// <summary>
     /// If set to true it will try and pull items from nearby vehicle storages
     /// </summary>
-    public bool pullFromVehicleStorage = true;
+    public bool consumeFromVehicles = true;
 
     // ========== Multiplayer =========
     /// <summary>

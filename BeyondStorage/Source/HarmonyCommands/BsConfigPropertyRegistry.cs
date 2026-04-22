@@ -41,17 +41,11 @@ internal static class BsConfigPropertyRegistry
         RegisterProperty("range", "float", "How far to Consume from (-1 is infinite range)",
             (config, value) => config.range = ParseFloat(value));
 
-        RegisterProperty("pullFromDrones", "bool", "Pull items from nearby drones",
-            (config, value) => config.pullFromDrones = ParseBool(value));
+        RegisterProperty("consumeFromDrones", "bool", "Consume items from nearby drones",
+            (config, value) => config.consumeFromDrones = ParseBool(value));
 
-        RegisterProperty("pullFromCollectors", "bool", "Pull items from nearby collectors (e.g. dew collectors, apiaries)",
-            (config, value) => config.pullFromCollectors = ParseBool(value));
-
-        RegisterProperty("pullFromWorkstationOutputs", "bool", "Pull items from nearby workstation output stacks",
-            (config, value) => config.pullFromWorkstationOutputs = ParseBool(value));
-
-        RegisterProperty("pullFromVehicleStorage", "bool", "Pull items from nearby vehicle storages",
-            (config, value) => config.pullFromVehicleStorage = ParseBool(value));
+        RegisterProperty("consumeFromVehicles", "bool", "Consume items from nearby vehicles",
+            (config, value) => config.consumeFromVehicles = ParseBool(value));
 
         RegisterProperty("isDebug", "bool", "Enable additional logging",
             (config, value) => config.isDebug = ParseBool(value));
@@ -125,10 +119,8 @@ internal static class BsConfigPropertyRegistry
         return propertyName switch
         {
             "range" => config.range.ToString(CultureInfo.InvariantCulture),
-            "pullFromDrones" => config.pullFromDrones.ToString(),
-            "pullFromCollectors" => config.pullFromCollectors.ToString(),
-            "pullFromWorkstationOutputs" => config.pullFromWorkstationOutputs.ToString(),
-            "pullFromVehicleStorage" => config.pullFromVehicleStorage.ToString(),
+            "consumeFromDrones" => config.consumeFromDrones.ToString(),
+            "consumeFromVehicles" => config.consumeFromVehicles.ToString(),
             "isDebug" => config.isDebug.ToString(),
             _ => "Unknown"
         };

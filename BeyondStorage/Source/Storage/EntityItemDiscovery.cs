@@ -23,13 +23,13 @@ internal static class EntityItemDiscovery
         var entities = GameManager.Instance.World.Entities.list;
 
         // Cache configuration values
-        var pullFromVehicles = processingState.Config.PullFromVehicleStorage;
-        var pullFromDrones = processingState.Config.PullFromDrones;
+        var consumeFromVehicles = processingState.Config.ConsumeFromVehicles;
+        var consumeFromDrones = processingState.Config.ConsumeFromDrones;
         var configRange = processingState.Config.Range;
 
         foreach (var entity in entities)
         {
-            ProcessEntity(entity, processingState, pullFromVehicles, pullFromDrones, configRange);
+            ProcessEntity(entity, processingState, consumeFromVehicles, consumeFromDrones, configRange);
         }
 
 #if DEBUG

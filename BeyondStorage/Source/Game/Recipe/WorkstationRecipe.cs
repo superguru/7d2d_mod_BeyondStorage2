@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Source.Game.UI;
+using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.Storage;
 using BeyondStorage.Source.UI;
-using BeyondStorage.Source.Game.UI;
 
 namespace BeyondStorage.Source.Game.Recipe;
 
@@ -80,10 +80,8 @@ public static class WorkstationRecipe
             return;
         }
 
-        if (!ValidationHelper.ValidateStorageContextWithFeature(methodName, config => config.PullFromWorkstationOutputs, out StorageContext context))
+        if (!ValidationHelper.ValidateStorageContext(methodName, out StorageContext context))
         {
-            // If we don't pull from outputs, we don't need to update the workstation windows,
-            // because nothing that was crafted will be available or affect the UI.
             return;
         }
 
