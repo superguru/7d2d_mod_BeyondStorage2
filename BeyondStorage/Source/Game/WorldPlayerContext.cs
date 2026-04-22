@@ -133,16 +133,6 @@ public sealed class WorldPlayerContext
     }
 
     /// <summary>
-    /// Checks if the given drone entity is owned by the local player.
-    /// </summary>
-    /// <param name="entity">The drone entity to check</param>
-    /// <returns>True if the entity is null or owned by the local player</returns>
-    public bool IsOwnedByLocalUser(EntityDrone entity)
-    {
-        return entity == null || entity.IsOwner(InternalLocalUserIdentifier);
-    }
-
-    /// <summary>
     /// Gets the age of this context instance in seconds.
     /// </summary>
     public double AgeInSeconds => (System.DateTime.Now - CreatedAt).TotalSeconds;

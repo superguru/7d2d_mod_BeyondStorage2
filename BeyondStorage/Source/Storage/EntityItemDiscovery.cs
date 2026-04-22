@@ -113,6 +113,12 @@ internal static class EntityItemDiscovery
             return false;
         }
 
+        // Check if the local player is the owner of the vehicle
+        if (!vehicle.LocalPlayerIsOwner())
+        {
+            return false;
+        }
+
         // Check if vehicle is locked for local player
         if (vehicle.IsLockedForLocalPlayer(state.World.Player))
         {
@@ -163,7 +169,7 @@ internal static class EntityItemDiscovery
         const string d_MethodName = nameof(ShouldProcessDrone);
 #endif
         // Check ownership
-        if (!state.World.IsOwnedByLocalUser(drone))
+        if (!drone.LocalPlayerIsOwner())
         {
             return false;
         }
