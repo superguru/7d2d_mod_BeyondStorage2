@@ -25,11 +25,10 @@ internal static class EntityItemDiscovery
         // Cache configuration values
         var pullFromVehicles = processingState.Config.PullFromVehicleStorage;
         var pullFromDrones = processingState.Config.PullFromDrones;
-        var configRange = processingState.Config.Range;
 
         foreach (var entity in entities)
         {
-            ProcessEntity(entity, processingState, pullFromVehicles, pullFromDrones, configRange);
+            ProcessEntity(entity, processingState, pullFromVehicles, pullFromDrones);
         }
 
 #if DEBUG
@@ -66,7 +65,7 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static void ProcessEntity(Entity entity, EntityProcessingState state, bool pullFromVehicles, bool pullFromDrones, float configRange)
+    private static void ProcessEntity(Entity entity, EntityProcessingState state, bool pullFromVehicles, bool pullFromDrones)
     {
         if (entity == null)
         {
@@ -76,10 +75,8 @@ internal static class EntityItemDiscovery
 
         state.EntitiesProcessed++;
 
-        if (!state.World.IsWithinRange(entity.position, configRange, out float distance))
-        {
-            return;
-        }
+
+        float distance = state.World.DistanceToPlayer(entity.position);
 
         if (pullFromVehicles && entity is EntityVehicle vehicle)
         {
@@ -166,7 +163,7 @@ internal static class EntityItemDiscovery
         const string d_MethodName = nameof(ShouldProcessDrone);
 #endif
         // Check ownership
-        if (!state.World.IsOwnedbyLocalUser(drone))
+        if (!state.World.IsOwnedByLocalUser(drone))
         {
             return false;
         }

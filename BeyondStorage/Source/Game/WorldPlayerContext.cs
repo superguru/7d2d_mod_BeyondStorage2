@@ -12,8 +12,8 @@ namespace BeyondStorage.Source.Game;
 /// </summary>
 public sealed class WorldPlayerContext
 {
-    private const double DEFAULT_CACHE_DURATION = 2.0f;
-    private static readonly ExpiringCache<WorldPlayerContext> s_cache = new(DEFAULT_CACHE_DURATION, nameof(WorldPlayerContext));
+    private const double DEFAULT_CACHE_DURATION = 2.0;
+    private static readonly ExpiringCache<WorldPlayerContext> s_cache = new(DEFAULT_CACHE_DURATION, nameof(WorldPlayerContext)) { LogCacheUsage = false };
 
     public World World { get; }
     public EntityPlayerLocal Player { get; }
@@ -32,13 +32,12 @@ public sealed class WorldPlayerContext
         InternalLocalUserIdentifier = PlatformManager.InternalLocalUserIdentifier;
         PlayerEntityId = player.entityId;
         CreatedAt = System.DateTime.Now;
-        s_cache.LogCacheUsage = false;
     }
 
     /// <summary>
-    /// Creates a new WorldPlayerContext if all required components are available.
-    /// Uses caching to avoid expensive operations when called frequently.
-    /// Returns null if any component is unavailable.
+    /// Returns a cached or freshly created WorldPlayerContext.
+    /// A new context is only created when the cache is empty, expired, or a refresh is forced.
+    /// Returns null if any required component is unavailable.
     /// </summary>
     /// <param name="methodName">The calling method name for logging purposes</param>
     /// <param name="forceRefresh">If true, bypasses cache and creates fresh context</param>
@@ -124,30 +123,6 @@ public sealed class WorldPlayerContext
     }
 
     /// <summary>
-    /// Checks if a position is within the specified range of the player.
-    /// </summary>
-    /// <param name="worldPosition">The world position to check</param>
-    /// <param name="range">The maximum range (0 or negative means no range limit)</param>
-    /// <returns>True if within range or range is unlimited</returns>
-    public bool IsWithinRange(Vector3 worldPosition, float range)
-    {
-        return IsWithinRange(worldPosition, range, out _);
-    }
-
-    /// <summary>
-    /// Checks if a position is within the specified range of the player.
-    /// </summary>
-    /// <param name="worldPosition">The world position to check</param>
-    /// <param name="range">The maximum range (0 or negative means no range limit)</param>
-    /// <param name="distance">The distance to the world position from the player</param>
-    /// <returns>True if within range or range is unlimited</returns>
-    public bool IsWithinRange(Vector3 worldPosition, float range, out float distance)
-    {
-        distance = DistanceToPlayer(worldPosition);
-        return range <= 0 || distance < range;
-    }
-
-    /// <summary>
     /// Checks if the player is allowed to access a lockable tile entity.
     /// </summary>
     /// <param name="lockable">The lockable tile entity to check</param>
@@ -157,7 +132,12 @@ public sealed class WorldPlayerContext
         return lockable == null || !lockable.IsLocked() || lockable.IsUserAllowed(InternalLocalUserIdentifier);
     }
 
-    public bool IsOwnedbyLocalUser(EntityDrone entity)
+    /// <summary>
+    /// Checks if the given drone entity is owned by the local player.
+    /// </summary>
+    /// <param name="entity">The drone entity to check</param>
+    /// <returns>True if the entity is null or owned by the local player</returns>
+    public bool IsOwnedByLocalUser(EntityDrone entity)
     {
         return entity == null || entity.IsOwner(InternalLocalUserIdentifier);
     }

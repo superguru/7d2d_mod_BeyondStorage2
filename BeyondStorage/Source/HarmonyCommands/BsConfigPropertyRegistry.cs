@@ -38,9 +38,6 @@ internal static class BsConfigPropertyRegistry
     private static void RegisterConfigurationProperties()
     {
         // Register all available properties
-        RegisterProperty("range", "float", "How far to pull from (-1 is infinite range)",
-            (config, value) => config.range = ParseFloat(value));
-
         RegisterProperty("pullFromDrones", "bool", "Pull items from nearby drones",
             (config, value) => config.pullFromDrones = ParseBool(value));
 
@@ -124,7 +121,6 @@ internal static class BsConfigPropertyRegistry
         var config = ModConfig.ClientConfig;
         return propertyName switch
         {
-            "range" => config.range.ToString(CultureInfo.InvariantCulture),
             "pullFromDrones" => config.pullFromDrones.ToString(),
             "pullFromCollectors" => config.pullFromCollectors.ToString(),
             "pullFromWorkstationOutputs" => config.pullFromWorkstationOutputs.ToString(),
@@ -142,24 +138,6 @@ internal static class BsConfigPropertyRegistry
     /// <returns>True if the change is valid, false otherwise</returns>
     public static bool ValidatePropertyChange(string propertyName, string value)
     {
-        // Specific validation rules
-        if (propertyName == "range")
-        {
-            try
-            {
-                var floatValue = ParseFloat(value);
-                if (floatValue <= 0.0f && floatValue != -1.0f)
-                {
-                    ModLogger.Info("Error: Range must be -1 (infinite) or a positive number.");
-                    return false;
-                }
-            }
-            catch (ArgumentException)
-            {
-                return false; // Let the caller handle the parsing error
-            }
-        }
-
         return true;
     }
 

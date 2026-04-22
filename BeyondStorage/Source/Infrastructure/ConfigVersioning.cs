@@ -69,10 +69,10 @@ public static class ConfigVersioning
             var legacyConfig = JsonConvert.DeserializeObject<LegacyBsConfig>(legacyConfigJson);
 
             // Create new versioned config with migrated values
+            // range intentionally omitted — removed in 2.6.9
             var migratedConfig = new BsConfig
             {
                 version = CurrentVersion,
-                range = legacyConfig.range,
                 pullFromDrones = legacyConfig.pullFromDrones,
                 pullFromCollectors = legacyConfig.pullFromDewCollectors,
                 pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,
@@ -135,6 +135,12 @@ public static class ConfigVersioning
         if (fromVersion < new Version("2.6.7"))
         {
             migratedConfig = MigrateTo267(migratedConfig);
+        }
+
+        // Migration to version 2.6.9: Remove range setting
+        if (fromVersion < new Version("2.6.9"))
+        {
+            migratedConfig = MigrateTo269(migratedConfig);
         }
 
         migratedConfig.version = CurrentVersion;
@@ -215,6 +221,18 @@ public static class ConfigVersioning
     }
 
     /// <summary>
+    /// Migrates config to version 2.6.9
+    /// Changes: Removes the range setting — range is now always unlimited (infinite).
+    /// </summary>
+    private static BsConfig MigrateTo269(BsConfig config)
+    {
+        const string d_MethodName = nameof(MigrateTo269);
+        ModLogger.Info($"{d_MethodName}: Applying migration to version 2.6.9");
+        ModLogger.Info($"{d_MethodName}: 'range' has been removed — pull range is now always unlimited");
+        return config;
+    }
+
+    /// <summary>
     /// Pre-processes raw config JSON to apply field renames before deserialization.
     /// Must be called before deserializing into BsConfig to preserve renamed field values.
     /// </summary>
@@ -244,6 +262,12 @@ public static class ConfigVersioning
                 jsonObject.Remove("isDebugLogSettingsAccess");
             }
 
+            // Pre-2.6.9: remove range
+            if (version < new Version("2.6.9") && jsonObject.ContainsKey("range"))
+            {
+                jsonObject.Remove("range");
+            }
+
             return jsonObject.ToString(Formatting.None);
         }
         catch (JsonException)
@@ -257,7 +281,7 @@ public static class ConfigVersioning
     /// </summary>
     private class LegacyBsConfig
     {
-        public float range = -1.0f;
+        // range intentionally omitted — removed in 2.6.9
         public bool pullFromDrones = true;
         public bool pullFromDewCollectors = true;
         public bool pullFromWorkstationOutputs = true;

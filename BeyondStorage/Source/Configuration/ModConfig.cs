@@ -399,7 +399,6 @@ public static class ModConfig
         bool configChanged = false;
 
         // Track if any validation methods make changes
-        configChanged |= ValidateRangeOption();
         configChanged |= ValidateVersion();
 
         // Save config if any changes were made during validation
@@ -419,21 +418,6 @@ public static class ModConfig
     }
 
     /// <summary>
-    /// Validates and corrects the range option.
-    /// </summary>
-    /// <returns>True if the config was modified, false otherwise</returns>
-    private static bool ValidateRangeOption()
-    {
-        if (ClientConfig.range <= 0.0f && ClientConfig.range != -1.0f)
-        {
-            ModLogger.Warning($"Invalid range value {ClientConfig.range} in config, resetting to -1.0 (maximum range).");
-            ClientConfig.range = -1.0f;
-            return true; // Config was modified
-        }
-        return false; // No changes made
-    }
-
-    /// <summary>
     /// Validates and corrects the version field.
     /// </summary>
     /// <returns>True if the config was modified, false otherwise</returns>
@@ -446,14 +430,6 @@ public static class ModConfig
             return true; // Config was modified
         }
         return false; // No changes made
-    }
-
-    public static float Range()
-    {
-        float serverValue = ServerConfig.range;
-        float clientValue = ClientConfig.range;
-
-        return ServerUtils.HasServerConfig ? serverValue : clientValue;
     }
 
     public static bool PullFromDrones()
@@ -719,7 +695,6 @@ public static class ModConfig
         var mergedConfig = new BsConfig
         {
             version = ConfigVersioning.CurrentVersion,
-            range = legacyConfig.range,
             pullFromDrones = legacyConfig.pullFromDrones,
             pullFromCollectors = legacyConfig.pullFromCollectors,
             pullFromWorkstationOutputs = legacyConfig.pullFromWorkstationOutputs,

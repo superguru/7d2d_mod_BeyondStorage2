@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Data;
+
 internal class UniqueItemTypeCache
 {
     private readonly Dictionary<int, UniqueItemTypes> _filterCache = [];
@@ -13,14 +13,17 @@ internal class UniqueItemTypeCache
 
     public UniqueItemTypes GetOrCreateFilter(ItemStack stack)
     {
-        const string d_MethodName = nameof(GetOrCreateFilter);
-
+#if DEBUG
+        //const string d_MethodName = nameof(GetOrCreateFilter);
+#endif
         // We do not cache WILDCARD, EMPTY, or any invalid item types
         var itemType = stack?.itemValue?.type ?? 0;
         if (itemType <= UniqueItemTypes.EMPTY)
         {
-            var error = $"{d_MethodName}: {nameof(stack)} is null or has an invalid item type.";
-            ModLogger.DebugLog(error);
+#if DEBUG
+            //var error = $"{d_MethodName}: {nameof(stack)} is null or has an invalid item type.";
+            //ModLogger.DebugLog(error);
+#endif
             return UniqueItemTypes.Unfiltered; // Return wildcard for invalid cases
         }
 
@@ -30,12 +33,16 @@ internal class UniqueItemTypeCache
 
     public UniqueItemTypes GetOrCreateFilter(int itemType)
     {
-        const string d_MethodName = nameof(GetOrCreateFilter);
+#if DEBUG
+        //const string d_MethodName = nameof(GetOrCreateFilter);
+#endif
 
         if (itemType <= 0)
         {
-            var error = $"{d_MethodName}: {nameof(itemType)} must be greater than zero, but received {itemType}";
-            ModLogger.DebugLog(error);
+#if DEBUG
+            //var error = $"{d_MethodName}: {nameof(itemType)} must be greater than zero, but received {itemType}";
+            //ModLogger.DebugLog(error);
+#endif
             return UniqueItemTypes.Unfiltered; // Return wildcard for invalid cases
         }
 

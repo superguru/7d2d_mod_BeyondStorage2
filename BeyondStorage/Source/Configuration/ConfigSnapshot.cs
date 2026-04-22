@@ -9,7 +9,6 @@ namespace BeyondStorage.Source.Configuration;
 public sealed class ConfigSnapshot
 {
     // ========== Source selection / eligibility =========
-    public float Range { get; }
     public bool PullFromDrones { get; }
     public bool PullFromCollectors { get; }
     public bool PullFromWorkstationOutputs { get; }
@@ -24,7 +23,6 @@ public sealed class ConfigSnapshot
     private ConfigSnapshot()
     {
         // ========== Source selection / eligibility =========
-        Range = ModConfig.Range();
         PullFromDrones = ModConfig.PullFromDrones();
         PullFromCollectors = ModConfig.PullFromCollectors();
         PullFromWorkstationOutputs = ModConfig.PullFromWorkstationOutputs();
