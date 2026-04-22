@@ -18,6 +18,9 @@ public class SmartSortingFunctions
     private static IReadOnlyList<StorageTargetAdapter> GetSmartPushTargets(StorageContext context)
         => context.GetClosestStorageSources(StorageSourcePolicy.SmartPushSources, ItemScope.AllItems);
 
+    private static IReadOnlyList<StorageTargetAdapter> GetSmartOnMissionPushTargets(StorageContext context)
+        => context.GetClosestStorageSources(StorageSourcePolicy.SmartOnMissionPushSources, ItemScope.AllItems);
+
     private static IReadOnlyList<StorageTargetAdapter> GetSmartLoadoutPullSources(StorageContext context)
         => context.GetClosestStorageSources(StorageSourcePolicy.SmartLoadoutPullSources, ItemScope.PushableItems);
 
@@ -268,8 +271,17 @@ public class SmartSortingFunctions
 
             if (targets == null || targets.Count == 0)
             {
-                ModLogger.DebugLog($"{methodName}: No target storages found, returning");
-                return false;
+                ModLogger.DebugLog($"{methodName}: No target storages found, trying to find if On Mission");
+
+                targets = GetSmartOnMissionPushTargets(context);
+
+                if (targets == null || targets.Count == 0)
+                {
+                    ModLogger.DebugLog($"{methodName}: No on mission target storages found, returning");
+                    return false;
+                }
+
+                ModLogger.DebugLog($"{methodName}: Found {targets.Count} on mission target storages, proceeding with smart push");
             }
 
             var state = new StorageOperationState(source.GetName(), SmartTransferOperation.Push);
