@@ -32,10 +32,10 @@ internal static class XUiC_LootWindow_Patches
             btnBeyondSmartDronePullLoadout.OnPress += SmartSortingCommon.SmartDroneInventoryPullLoadout_EventHandler;
         }
 
-        var btnBeyondSmartPushButton = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
-        if (btnBeyondSmartPushButton != null)
+        var btnBeyondSmartLootWindowPush = UIControlHelpers.GetSmartLootWindowPushButton(__instance);
+        if (btnBeyondSmartLootWindowPush != null)
         {
-            btnBeyondSmartPushButton.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
+            btnBeyondSmartLootWindowPush.OnPress += SmartSortingCommon.SmartLootWindowPush_EventHandler;
 #if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: Smart loot window push button initialized");
 #endif
@@ -112,7 +112,7 @@ internal static class XUiC_LootWindow_Patches
         const string d_MethodName = nameof(XUiC_LootWindow_OnOpen_Postfix);
 
         // Check for duplicate window open (should not happen)
-        if (WindowStateManager.IsStorageContainerOpen())
+        if (WindowStateManager.IsPlayerStorageOpen())
         {
             ModLogger.DebugLog($"{d_MethodName}: LootWindow is already open for storage. This should not happen!");
         }
@@ -126,39 +126,39 @@ internal static class XUiC_LootWindow_Patches
             return;
         }
 
-        bool isStorage = false;
+        bool isPlayerStorage = false;
 
         // Check for TEFeatureStorage using comprehensive feature detection
         if (tileEntity.TryGetSelfOrFeature(out TEFeatureStorage storage) && storage != null)
         {
-            isStorage = true;
+            isPlayerStorage = true;
 #if DEBUG
             //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for storage: {storage}");
 #endif
         }
 
         EntityDrone drone = null;
-        if (!isStorage)
+        if (!isPlayerStorage)
         {
             if (WindowStateManager.IsDroneWindow(tileEntity, out drone, out string matchedTypeName, out string reason))
             {
-                isStorage = true;
+                isPlayerStorage = true;
 #if DEBUG
                 //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened for Drone. Reason: {reason}");
 #endif
             }
         }
 
-        // Last try: Check for player storage, for example player crafted desk safes, refrigirators, lockers, etc.
-        if (!isStorage)
+        // Check for player owned/created storage, for example player crafted desk safes, refrigerators, lockers, etc.
+        if (!isPlayerStorage)
         {
-            isStorage = tileEntity.bPlayerStorage;
+            isPlayerStorage = tileEntity.bPlayerStorage;
         }
 
-        WindowStateManager.OnStorageWindowOpened(__instance, isStorage, drone);
+        WindowStateManager.OnStorageWindowOpened(__instance, isPlayerStorage, drone);
 
 #if DEBUG
-        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isStorage: {isStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
+        //ModLogger.DebugLog($"{d_MethodName}: LootWindow opened isPlayerStorage: {isPlayerStorage}, te: {tileEntity}, bPlayerStorage: {tileEntity.bPlayerStorage}, lootListName: {tileEntity.lootListName}");
 #endif
     }
 
@@ -194,7 +194,7 @@ internal static class XUiC_LootWindow_Patches
                 return false; // Skip original method
 
             case "bs_is_player_storage_open":
-                _value = WindowStateManager.IsStorageContainerOpen() ? "true" : "false";
+                _value = WindowStateManager.IsPlayerStorageOpen() ? "true" : "false";
                 __result = true;
                 return false; // Skip original method
         }

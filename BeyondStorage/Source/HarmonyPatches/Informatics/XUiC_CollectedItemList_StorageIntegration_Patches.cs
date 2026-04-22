@@ -70,7 +70,7 @@ internal static class XUiC_CollectedItemList_StorageIntegration_Patches
         }
 
         // c:CRATE_OPEN
-        if (WindowStateManager.IsStorageContainerOpen())
+        if (WindowStateManager.IsPlayerStorageOpen())
         {
             // If a storage container is open, we don't want to show notifications
             // This prevents cluttering the UI with notifications while interacting with storage

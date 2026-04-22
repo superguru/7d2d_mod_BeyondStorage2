@@ -54,6 +54,14 @@ public class SmartSortingFunctions
             return;
         }
 
+        // Drone storage is opened via the loot window — handle it before the generic lootable path
+        var drone = WindowStateManager.GetDroneForOpenStorageContainer();
+        if (drone != null)
+        {
+            SmartPushFromDroneStorage(context, drone);
+            return;
+        }
+
         var lootable = WindowStateManager.GetOpenWindowLootable();
         if (lootable == null)
         {
@@ -61,15 +69,7 @@ public class SmartSortingFunctions
             return;
         }
 
-        var drone = WindowStateManager.GetDroneForOpenStorageContainer();
-        if (drone != null)
-        {
-            SmartPushFromDroneStorage(context, drone);
-        }
-        else
-        {
-            SmartPushFromPlayerCreatedStorage(context, lootable);
-        }
+        SmartPushFromPlayerCreatedStorage(context, lootable);
     }
 
     private static void SmartPushFromPlayerCreatedStorage(StorageContext context, ITileEntityLootable lootable)
