@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using BeyondStorage.Source.Infrastructure;
 
 namespace BeyondStorage.Source.Game.UI;
 
@@ -289,7 +288,7 @@ public static class WindowStateManager
             !IsLootContainerWindowOpen();
 
 #if DEBUG
-        ModLogger.DebugLog($"IsPlayerBackpackOpenOnly: {result} (Drone: {IsDroneWindowOpen()}, Vehicle: {IsVehicleStorageWindowOpen()}, Workstation: {IsWorkstationWindowOpen()}, Collector: {IsCollectorWindowOpen()}, PlayerStorage: {IsPlayerStorageOpen()}, LootContainer: {IsLootContainerWindowOpen()})");
+        //ModLogger.DebugLog($"IsPlayerBackpackOpenOnly: {result} (Drone: {IsDroneWindowOpen()}, Vehicle: {IsVehicleStorageWindowOpen()}, Workstation: {IsWorkstationWindowOpen()}, Collector: {IsCollectorWindowOpen()}, PlayerStorage: {IsPlayerStorageOpen()}, LootContainer: {IsLootContainerWindowOpen()})");
 #endif
 
         return result.ToString();
