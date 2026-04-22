@@ -15,6 +15,11 @@ public class BsConfig
 
     // ========== Source selection / eligibility =========
     /// <summary>
+    /// How far to pull from (-1 is infinite range, only limited by chunks loaded)
+    /// </summary>
+    public float range = -1.0f;
+
+    /// <summary>
     /// If set to true it will try and pull items from nearby drones
     /// </summary>
     public bool pullFromDrones = true;

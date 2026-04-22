@@ -25,10 +25,11 @@ internal static class EntityItemDiscovery
         // Cache configuration values
         var pullFromVehicles = processingState.Config.PullFromVehicleStorage;
         var pullFromDrones = processingState.Config.PullFromDrones;
+        var configRange = processingState.Config.Range;
 
         foreach (var entity in entities)
         {
-            ProcessEntity(entity, processingState, pullFromVehicles, pullFromDrones);
+            ProcessEntity(entity, processingState, pullFromVehicles, pullFromDrones, configRange);
         }
 
 #if DEBUG
@@ -65,7 +66,7 @@ internal static class EntityItemDiscovery
         return true;
     }
 
-    private static void ProcessEntity(Entity entity, EntityProcessingState state, bool pullFromVehicles, bool pullFromDrones)
+    private static void ProcessEntity(Entity entity, EntityProcessingState state, bool pullFromVehicles, bool pullFromDrones, float configRange)
     {
         if (entity == null)
         {
@@ -75,8 +76,10 @@ internal static class EntityItemDiscovery
 
         state.EntitiesProcessed++;
 
-
-        float distance = state.World.DistanceToPlayer(entity.position);
+        if (!state.World.IsWithinRange(entity.position, configRange, out float distance))
+        {
+            return;
+        }
 
         if (pullFromVehicles && entity is EntityVehicle vehicle)
         {

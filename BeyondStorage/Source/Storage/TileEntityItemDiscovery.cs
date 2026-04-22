@@ -71,6 +71,12 @@ internal static class TileEntityItemDiscovery
 
         var tileEntityWorldPos = tileEntity.ToWorldPos();
 
+        // Early range check to avoid unnecessary processing
+        if (!state.World.IsWithinRange(tileEntityWorldPos, state.Config.Range, out distance))
+        {
+            return false;
+        }
+
         // Check locks early
         if (state.HasLockedEntities)
         {
@@ -86,8 +92,6 @@ internal static class TileEntityItemDiscovery
         {
             return state.World.CanAccessLockable(tileLockable);
         }
-
-        distance = state.World.DistanceToPlayer(tileEntityWorldPos);
 
         return true;
     }
