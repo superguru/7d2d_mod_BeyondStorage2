@@ -198,6 +198,7 @@ internal class StorageSourceItemDataStore
             var sourceTypeName = TypeNames.GetName(source.GetSourceType());
             var itemName = stack?.itemValue?.ItemClass?.Name ?? "Unknown";
 
+#if DEBUG
             // Log the duplicate registration attempt
             if (existingStorageSource.Equals(source))
             {
@@ -207,6 +208,7 @@ internal class StorageSourceItemDataStore
             {
                 ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with a different source");
             }
+#endif
 
             return;
         }
@@ -379,21 +381,6 @@ internal class StorageSourceItemDataStore
         }
 
         return result;
-    }
-
-    internal bool GetSourceByItemStack(ItemStack stack, out IStorageSource source)
-    {
-        return _sourcesByItemStack.TryGetValue(stack, out source);
-    }
-
-    internal IReadOnlyCollection<IStorageSource> GetAllSources()
-    {
-        return _itemStacksBySource.Keys;
-    }
-
-    internal IReadOnlyCollection<Type> GetAllSourceTypes()
-    {
-        return _sourcesByType.Keys;
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ public class StorageDataManager
     // ── Drone ────────────────────────────────────────────────────────────────
     public readonly Func<EntityDrone, EntityDrone, bool> EqualsDroneEntityFunc = (a, b) => ReferenceEquals(a, b);
     public readonly Func<EntityDrone, ItemStack[]> GetDroneEntityAllItemsFunc = drone => LootableHandler.GetAllSlotItems(drone.lootContainer);
-    public readonly Func<EntityDrone, PackedBoolArray> GetDroneEntityLockedSlotsFunc = (drone) => drone.bag?.LockedSlots;
+    public readonly Func<EntityDrone, PackedBoolArray> GetDroneEntityLockedSlotsFunc = (drone) => LootableHandler.GetLootableLockedSlots(drone.lootContainer);
     public readonly Action<EntityDrone> MarkDroneEntityModifiedFunc = drone => LootableHandler.MarkLootableModified(drone.lootContainer);
     public readonly Func<EntityDrone, string> GetDroneEntityNameFunc = drone => EntityHandler.GetEntityName(drone);
 
