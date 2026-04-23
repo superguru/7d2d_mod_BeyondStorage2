@@ -8,6 +8,9 @@ This version is for 7 Days to Die v2, which is why the mod is called 'Beyond Sto
 
 The current source repository is located at https://github.com/superguru/7d2d_mod_BeyondStorage2.
 
+* In v2.6.9:
+   * remove pullFromCollectors and pullFromWorkstationOutputs config settings as they have no use case
+   * rename pullFromXXX config settings to consumeFromXXX to avoid confusion with the Smart Pull and Smart Push functionality
 * In v2.6.5, add smart pull to top up the loadout slots (locked inventory slots) of Vehicles, Drones, Players from nearby storages
 * In v2.6.3, add smart push to Player Backpack, Dew Collectors, Apiaries, and Workstations (campfires, forges, chem stations, etc.)
 * In v2.6.2, compatibility with v2.6 of the game, as well as UI fixes for the smart loot button
@@ -72,4 +75,4 @@ This mod is licensed under the MIT License. See the LICENSE file in the root of 
 - For v2.5.x mod series: Compatibility code copied (with permission) from Jakmeister999's Enhanced HUD (V2.3) mod
 - The 7 Days to Die community for their support and contributions
 
-*** MAIN REPO `README.md` EOF ***
+*** GITHUB REPO PAGE aka SOLUTION `README.md` EOF ***

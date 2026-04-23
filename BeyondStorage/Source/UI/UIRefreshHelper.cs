@@ -238,16 +238,6 @@ public static class UIRefreshHelper
     {
         var methodName = StackOperation.GetStackOpName(operation);
 
-#if DEBUG
-        //string callStr = " ";
-        //if (callCount > 0)
-        //{
-        //    callStr = $"call #{callCount} ";
-        //}
-
-        //ModLogger.DebugLog($"{methodName}:{callStr} REFRESH_UI for {ItemX.Info(itemStack)}");
-#endif
-
         RefreshAllWindows(methodName, isStackOperation: true, includeViewComponents: true);
 
         HandleCurrencyStackOp(operation, itemStack, playerInventory);

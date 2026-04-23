@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Infrastructure;
 using BeyondStorage.Source.HarmonyCommands;
+using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Source.UI;
 
 public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
 {
@@ -129,6 +130,8 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
             }
 
             SaveConfigAndConfirm(propertyInfo, propertyValue);
+
+            UIRefreshHelper.RefreshAllWindows(GetCommands().FirstOrDefault(), isStackOperation: false, includeViewComponents: true);
         }
         catch (ArgumentException ex)
         {
@@ -271,10 +274,10 @@ public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
 
     public override string[] getCommands()
     {
-        return new[]
-        {
+        return
+        [
             "bssetconfig"
-        };
+        ];
     }
 
     public override string getDescription()

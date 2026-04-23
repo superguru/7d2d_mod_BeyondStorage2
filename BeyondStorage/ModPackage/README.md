@@ -89,7 +89,7 @@ Basic troubleshooting for mods
 
 ## 📻Features and configuration
 
-### ➡️Consumption aka Pull
+### ➡️Consume from nearby storages
 
 Everything you can Consume from your inventory can now also be Consumed from, in order of precedence:
 1. Player Backpack (as per base game)
@@ -116,9 +116,9 @@ What is considered Consuming?
 
 _**Note:** In versions of the mod prior to 2.6.3, a locked slot - except for the Player Backpack - would not be eligible for pulling for consumption (recipes, painting, etc.)._
 
-### ⬅️Smart Push
+### ⏪Smart Push
 
-All sources listed in the Pull section, aside from the Toolbelt, has a Smart Push button added to the appropriate window.
+All sources listed in the Consume section, aside from the Toolbelt, has a Smart Push button added to the appropriate window.
 
 This will push items from the source window into nearby Containers that already contain that item.
 
@@ -128,13 +128,23 @@ If all Containers with the same kind of item are full, then you will have to cho
 
 💡This functionality only pushes to loot Containers the player crafted, like Wooden/Iron/Steel Crates, etc. Any Desk Safes, Refrigerators, Lockers, etc. you crafted are also Containers.
 
-### ⬅️Smart Pull aka Loadout Top Up
+### ⏩Smart Pull aka top up your load out
 
 You can use the Smart Pull button on Vehicles, Drones, Players to top up whatever items are in the locked slots of that inventory from nearby storages.
 
-Items that are un non-locked slots are not affected by this.
+Items that are unlocked slots are not affected by this.
 
-💡You can Top Up your Loadout from Containers and Workstations only.
+💡You can top op your load out from Containers and Workstations only.
+
+### 🏹On Mission Smart Push
+
+If the only storages available when you are doing a Smart Push from your Backpack are Drones and Vehicles, then you are On Mission.
+
+In that case your unlocked inventory slots will be pushed to the Drone(s) and Vehicle(s) near you **that you own**.
+
+You still need to place some items in the Drone or Vehicle first, so that Smart Push can then push to those types of items to there as needed. 
+
+This is because the mod doesn't want to push items to a Drone or Vehicle that you don't own, which could be the case if you are playing multiplayer and there are other players' Drones or Vehicles nearby.
 
 ## Console and Config
 
@@ -155,12 +165,10 @@ The mod can also be configured by editing the `Mods/BeyondStorage2/config.json` 
 
 |Setting|Default|Description|
 |:----|:----|:----|
-| range | -1.0 | Distance in metres to Pull from or Push to. Less than 0 means everything loaded by the game. |
-| pullFromDrones | true | |
-| pullFromCollectors | true | |
-| pullFromWorkstationOutputs | true | |
-| pullFromVehicleStorage | true | |
-| serverSyncConfig | true |Force clients to load the mod config settings from the server when a player connects |
+| range | -1.0 | Distance in metres for Consume, Smart Push, or SmartPull. Less than 0 means everything loaded by the game, which is effectively around 200m. |
+| consumeFromDrones | true | |
+| consumeFromVehicles | true | |
+| serverSyncConfig | true | Force clients to load the mod config settings from the server when a player connects |
 | isDebug | false | Logs additional information that might be useful for troubleshooting problems. You can generally leave this turned off. |
 
 Any setting not listed here is either old, or otherwise is for mod development purposes. It's best to leave them alone.
@@ -227,4 +235,4 @@ I would recommend Beyond Storage 2 over other "craft from container" type mods, 
 
 The UI and game functionality integration is exceptional, and the mod is very stable and ⚡⚡⚡lightning⚡⚡⚡ fast.
 
-*** PACKAGED / MOD FRONT PAGE `README.md` EOF ***
+*** PACKAGED aka MOD FRONT PAGE `README.md` EOF ***
