@@ -335,7 +335,6 @@
     <None Include="ModPackage\README.md" />
     <None Include="packages.config" />
     <None Include="README.md" />
-    <None Include="Source\HarmonyPatches\BeyondStorage_Init.cs %28line 38 — change only the call site%29" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.5.3.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
