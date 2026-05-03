@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
+using BeyondStorage.Infrastructure;
+using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 /// <summary>
 /// Stores (storage, distance) pairs with on-demand distance sorting.

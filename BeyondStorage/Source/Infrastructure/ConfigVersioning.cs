@@ -1,9 +1,9 @@
 ﻿using System;
-using BeyondStorage.Source.Configuration;
+using BeyondStorage.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 /// <summary>
 /// Handles config versioning, migration, and backwards compatibility

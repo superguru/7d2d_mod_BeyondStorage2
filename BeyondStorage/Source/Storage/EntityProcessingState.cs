@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Game;
+﻿using BeyondStorage.Configuration;
+using BeyondStorage.Game;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Helper class to encapsulate entity processing state and reduce parameter passing.

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 using static ItemActionTextureBlock;
 
-namespace BeyondStorage.Source.Game.Item;
+namespace BeyondStorage.Game.Item;
 
 /// <summary>
 /// Context class that tracks the state of a paint operation including resource counting and execution phases.

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 public interface IStorageSource : IEquatable<IStorageSource>
 {

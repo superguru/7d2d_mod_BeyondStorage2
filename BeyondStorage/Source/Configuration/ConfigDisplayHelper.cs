@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Configuration;
+namespace BeyondStorage.Configuration;
 
 /// <summary>
 /// Helper class for displaying configuration information to the console.

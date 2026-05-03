@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Provides immutable allowed source lists for each storage operation type.

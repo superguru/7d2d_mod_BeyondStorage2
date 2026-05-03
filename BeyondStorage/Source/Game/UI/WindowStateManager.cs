@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace BeyondStorage.Source.Game.UI;
+namespace BeyondStorage.Game.UI;
 
 /// <summary>
 /// Manages the state of various UI windows for tracking open containers and storage interfaces

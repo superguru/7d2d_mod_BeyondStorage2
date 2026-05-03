@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Entities;
+namespace BeyondStorage.Entities;
 
 /// <summary>
 /// Handles processing and filtering of items from entities and tile entities with slot lock support.

@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Configuration;
+namespace BeyondStorage.Configuration;
 
 /// <summary>
 /// Configuration class for Beyond Storage mod settings

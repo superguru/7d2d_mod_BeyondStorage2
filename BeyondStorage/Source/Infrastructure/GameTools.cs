@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 public static class GameTools
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BeyondStorage.Source.Entities;
+namespace BeyondStorage.Entities;
 
 /// <summary>
 /// Caches resolved names for entities to avoid repeated localization lookups.

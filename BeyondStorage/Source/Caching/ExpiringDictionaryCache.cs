@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Caching;
+namespace BeyondStorage.Caching;
 
 /// <summary>
 /// A generic time-based dictionary cache that stores multiple items of type TValue keyed by TKey with configurable expiration.

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Data;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Service responsible for querying storage sources for item availability and counts.

@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Game.UI;
+﻿namespace BeyondStorage.Game.UI;
 
 /// <summary>
 /// Helper class for finding and working with UI controls in the game's XUI system.

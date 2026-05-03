@@ -2,10 +2,10 @@
 using System.IO;
 
 #if DEBUG
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 #endif
 
-namespace BeyondStorage.Source.Multiplayer;
+namespace BeyondStorage.Multiplayer;
 
 public class NetPackageLockedTEs : NetPackage
 {

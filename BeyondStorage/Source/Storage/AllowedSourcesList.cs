@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Source.Diagnostics;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Diagnostics;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Captures the allowed storage source types for a given configuration snapshot.

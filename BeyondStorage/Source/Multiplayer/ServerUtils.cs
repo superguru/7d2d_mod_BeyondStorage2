@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Configuration;
+using BeyondStorage.Infrastructure;
 
 using static ModEvents;
 
-namespace BeyondStorage.Source.Multiplayer;
+namespace BeyondStorage.Multiplayer;
 
 public static class ServerUtils
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 public static class ListExtensions
 {

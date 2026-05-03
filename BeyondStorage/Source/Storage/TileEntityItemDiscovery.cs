@@ -1,8 +1,8 @@
-﻿using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Multiplayer;
+﻿using BeyondStorage.Data;
+using BeyondStorage.Infrastructure;
+using BeyondStorage.Multiplayer;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Handles finding and processing items from tile entity storage sources.

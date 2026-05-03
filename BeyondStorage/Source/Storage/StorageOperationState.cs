@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Data;
+using BeyondStorage.Data;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Tracks the state of smart storage operations (push/pull), including items transferred and containers affected.

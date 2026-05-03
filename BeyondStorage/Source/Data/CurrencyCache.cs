@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 internal static class CurrencyCache
 {

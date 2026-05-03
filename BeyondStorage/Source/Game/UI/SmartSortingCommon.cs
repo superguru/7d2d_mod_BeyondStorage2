@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Source.Storage;
+﻿using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Game.UI;
+namespace BeyondStorage.Game.UI;
 
 public class SmartSortingCommon
 {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 /// <summary>
 /// Pre-classified slot maps built once at registration and cloned per operation.

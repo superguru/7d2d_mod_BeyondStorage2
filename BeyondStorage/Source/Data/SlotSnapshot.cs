@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Data;
+﻿namespace BeyondStorage.Data;
 
 /// <summary>
 /// Immutable snapshot of an XUiC_ItemStack slot state at a specific point in time.

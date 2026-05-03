@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 /// <summary>
 /// Reference-based equality comparer for ItemStack objects.

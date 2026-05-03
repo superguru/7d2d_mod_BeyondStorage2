@@ -1,6 +1,6 @@
-﻿using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Service responsible for discovering storage sources (tile entities and entities) based on configuration and accessibility.

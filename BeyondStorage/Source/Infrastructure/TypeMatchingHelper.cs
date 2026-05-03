@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 /// <summary>
 /// Helper class for inheritance-aware type matching operations.

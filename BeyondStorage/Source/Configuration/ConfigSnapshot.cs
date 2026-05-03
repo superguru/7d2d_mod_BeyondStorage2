@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BeyondStorage.Source.Configuration;
+namespace BeyondStorage.Configuration;
 
 /// <summary>
 /// Configuration snapshot that captures all relevant settings at a single point in time

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 internal class StorageTargetAdapter : IEquatable<StorageTargetAdapter>
 {

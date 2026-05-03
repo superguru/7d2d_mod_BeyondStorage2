@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Caching;
-using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Game;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Caching;
+using BeyondStorage.Configuration;
+using BeyondStorage.Data;
+using BeyondStorage.Game;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Factory responsible for creating and caching StorageContext instances.

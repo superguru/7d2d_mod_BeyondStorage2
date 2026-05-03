@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Configuration;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Multiplayer;
+namespace BeyondStorage.Multiplayer;
 
 public class NetPackageBeyondStorageConfig : NetPackage
 {

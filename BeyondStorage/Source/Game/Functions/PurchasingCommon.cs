@@ -1,9 +1,9 @@
 ﻿using System;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
+using BeyondStorage.Data;
+using BeyondStorage.Infrastructure;
+using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Game.Functions;
+namespace BeyondStorage.Game.Functions;
 
 public class PurchasingCommon
 {

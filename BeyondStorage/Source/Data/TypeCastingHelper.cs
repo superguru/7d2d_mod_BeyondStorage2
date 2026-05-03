@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 public static class TypeCastingHelper
 {

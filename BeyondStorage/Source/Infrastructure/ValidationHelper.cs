@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Storage;
+﻿using BeyondStorage.Configuration;
+using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 /// <summary>
 /// Provides common validation methods used across multiple game feature classes.

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Caching;
+namespace BeyondStorage.Caching;
 
 /// <summary>
 /// A generic time-based cache that stores a single item of type T with configurable expiration.

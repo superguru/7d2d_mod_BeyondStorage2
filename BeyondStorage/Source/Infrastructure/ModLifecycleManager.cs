@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Multiplayer;
+﻿using BeyondStorage.Multiplayer;
 using static ModEvents;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 public static class ModLifecycleManager
 {

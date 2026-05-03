@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Data;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Diagnostics;
+namespace BeyondStorage.Diagnostics;
 
 /// <summary>
 /// Provides diagnostic utility methods for inspecting game storage state.

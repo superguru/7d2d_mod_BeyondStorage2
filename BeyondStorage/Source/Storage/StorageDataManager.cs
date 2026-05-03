@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Entities;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Data;
+using BeyondStorage.Entities;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Holds and manages collections of storage sources and their associated ItemStacks.

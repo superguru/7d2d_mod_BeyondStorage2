@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Multiplayer;
+namespace BeyondStorage.Multiplayer;
 
 public static class TileEntityLockManager
 {

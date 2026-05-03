@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
+﻿using BeyondStorage.Infrastructure;
+using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Game.PowerSource;
+namespace BeyondStorage.Game.PowerSource;
 
 public static class PowerSourceRefuel
 {

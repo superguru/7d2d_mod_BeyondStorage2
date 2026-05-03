@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BeyondStorage.Source.Storage;
+using BeyondStorage.Storage;
 
-namespace BeyondStorage.Source.Data;
+namespace BeyondStorage.Data;
 
 /// <summary>
 /// Utility class providing helper methods for ItemStack operations, validation, and formatting.

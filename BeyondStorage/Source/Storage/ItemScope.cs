@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Storage;
+﻿namespace BeyondStorage.Storage;
 
 public enum ItemScope
 {

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.Storage;
-using BeyondStorage.Source.UI;
+using BeyondStorage.Data;
+using BeyondStorage.Infrastructure;
+using BeyondStorage.Storage;
+using BeyondStorage.UI;
 
-namespace BeyondStorage.Source.Game.Item;
+namespace BeyondStorage.Game.Item;
 
 public static class ItemCommon
 {

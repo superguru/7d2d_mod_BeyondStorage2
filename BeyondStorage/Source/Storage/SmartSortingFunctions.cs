@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Data;
-using BeyondStorage.Source.Game.UI;
-using BeyondStorage.Source.Infrastructure;
-using BeyondStorage.Source.UI;
+using BeyondStorage.Data;
+using BeyondStorage.Game.UI;
+using BeyondStorage.Infrastructure;
+using BeyondStorage.UI;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 public class SmartSortingFunctions
 {

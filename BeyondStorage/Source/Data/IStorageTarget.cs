@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Data;
+﻿namespace BeyondStorage.Data;
 
 /// <summary>
 /// Non-generic contract for <see cref="StorageSourceAdapter{T}"/> as consumed by <see cref="StorageTargetAdapter"/>.

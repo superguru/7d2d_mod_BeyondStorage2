@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Storage;
+﻿namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Specifies how to filter storage items based on slot lock status.

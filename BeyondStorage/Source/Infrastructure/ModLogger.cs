@@ -1,8 +1,8 @@
 ﻿using System;
-using BeyondStorage.Source.Configuration;
-using BeyondStorage.Source.Diagnostics;
+using BeyondStorage.Configuration;
+using BeyondStorage.Diagnostics;
 
-namespace BeyondStorage.Source.Infrastructure;
+namespace BeyondStorage.Infrastructure;
 
 public static class ModLogger
 {

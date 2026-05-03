@@ -1,7 +1,7 @@
-﻿using BeyondStorage.Source.Game.UI;
-using BeyondStorage.Source.Infrastructure;
+﻿using BeyondStorage.Game.UI;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Entities;
+namespace BeyondStorage.Entities;
 
 public static class EntityHandler
 {

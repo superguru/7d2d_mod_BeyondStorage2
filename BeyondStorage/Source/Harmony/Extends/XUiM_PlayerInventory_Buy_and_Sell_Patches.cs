@@ -1,0 +1,30 @@
+﻿using BeyondStorage.Game.Functions;
+using HarmonyLib;
+
+namespace BeyondStorage.Harmony.Extends;
+
+[HarmonyPatch(typeof(XUiM_PlayerInventory))]
+internal static class XUiM_PlayerInventory_Buy_and_Sell_Patches
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(XUiM_PlayerInventory.CanSwapItems), [typeof(ItemStack), typeof(ItemStack), typeof(int)])]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static bool XUiM_PlayerInventory_CanSwapItems_Prefix(XUiM_PlayerInventory __instance, ItemStack _removedStack, ItemStack _addedStack, int _slotNumber, ref bool __result)
+    {
+        __result = PurchasingCommon.CanSwapItems(__instance, _removedStack, _addedStack, _slotNumber);
+        return false; // Skip original method
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(XUiM_PlayerInventory.CountAvailableSpaceForItem), [typeof(ItemValue), typeof(bool)])]
+#if DEBUG
+    [HarmonyDebug]
+#endif
+    private static void XUiM_PlayerInventory_CountAvailableSpaceForItem_Postfix(XUiM_PlayerInventory __instance, ItemValue itemValue, bool limitToOneStack, ref int __result)
+    {
+        // Use PurchasingCommon calculation
+        __result = PurchasingCommon.GetEnhancedAvailableSpace(itemValue, __result, limitToOneStack, nameof(PurchasingCommon.GetEnhancedAvailableSpace));
+    }
+}

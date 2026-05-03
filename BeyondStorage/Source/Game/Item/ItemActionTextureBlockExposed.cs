@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static ItemActionTextureBlock;
 
-namespace BeyondStorage.Source.Game.Item;
+namespace BeyondStorage.Game.Item;
 
 // Face data structure to store painting information
 public struct PaintFaceData

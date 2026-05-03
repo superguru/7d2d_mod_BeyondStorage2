@@ -1,7 +1,7 @@
 ﻿using System;
-using BeyondStorage.Source.Data;
+using BeyondStorage.Data;
 
-namespace BeyondStorage.Source.Storage;
+namespace BeyondStorage.Storage;
 
 /// <summary>
 /// Manages timing and validation for the master ItemStack cache.

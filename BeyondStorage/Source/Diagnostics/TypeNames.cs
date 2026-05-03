@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Infrastructure;
 
-namespace BeyondStorage.Source.Diagnostics;
+namespace BeyondStorage.Diagnostics;
 internal static class TypeNames
 {
     public readonly struct TypeNameInfo(string abbrev, string name)

@@ -1,4 +1,4 @@
-﻿namespace BeyondStorage.Source.Data;
+﻿namespace BeyondStorage.Data;
 
 /// <summary>
 /// Raw slot data extracted from a storage source in a single read.

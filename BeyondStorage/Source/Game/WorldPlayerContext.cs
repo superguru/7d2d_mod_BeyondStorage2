@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using BeyondStorage.Source.Caching;
-using BeyondStorage.Source.Infrastructure;
+using BeyondStorage.Caching;
+using BeyondStorage.Infrastructure;
 using Platform;
 using UnityEngine;
 
-namespace BeyondStorage.Source.Game;
+namespace BeyondStorage.Game;
 
 /// <summary>
 /// Encapsulates world and player context information needed for tile entity operations.
