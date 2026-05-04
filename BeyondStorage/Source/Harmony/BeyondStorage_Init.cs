@@ -19,8 +19,7 @@ namespace BeyondStorage;
 
 public class BeyondStorageMod : IModApi
 {
-    private static BeyondStorageMod s_context;
-    public static BeyondStorageMod Context { get => s_context; set => s_context = value; }
+    public static BeyondStorageMod Context { get; set; }
 
     internal static Mod s_modInstance;
     private static string s_mod_assembly_path = "";
@@ -32,7 +31,7 @@ public class BeyondStorageMod : IModApi
 
     public void InitMod(Mod modInstance)
     {
-        s_context = this;
+        Context = this;
         s_mod_assembly_path = modInstance.Path;
         ModConfig.LoadConfig();
         s_modInstance = modInstance;
@@ -78,8 +77,8 @@ public class BeyondStorageMod : IModApi
             $"{StackOps.Stack_LockStateChange_Operation}",
             
             // Method-specific suppressions
-            nameof(XUiCItemActionListPatches.ActionList_UpdateVisibleActions),
-            //nameof(XUiMPlayerInventoryCraftPatches.)
+            nameof(XUiC_ItemActionList_Ext.ActionList_UpdateVisibleActions),
+            //nameof(XUiM_PlayerInventory_Patch.)
 
             nameof(ItemCommon.HasItemInStorage),
             nameof(ItemCommon.ItemCommon_GetStorageItemCount),
