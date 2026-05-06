@@ -16,6 +16,7 @@ internal class StorageSourceItemDataStore
     private readonly Dictionary<Type, List<IStorageSource>> _sourcesByType = [];
     private readonly FilterStacksStore _collectionStore = new();
     private readonly TargetDistanceStore _distanceStore = new();
+    private readonly HashSet<IStorageSource> _registeredSources = [];
 
     internal AllowedSourcesList AllowedSourcesSnapshot { get; }
 
@@ -58,6 +59,7 @@ internal class StorageSourceItemDataStore
         _itemStacksBySource.Clear();
         _sourcesByItemStack.Clear();
         _sourcesByType.Clear();
+        _registeredSources.Clear();
         _collectionStore.Clear();
         _distanceStore.Clear();
     }
@@ -72,10 +74,21 @@ internal class StorageSourceItemDataStore
     /// <param name="consumableStacksRegistered">Number of non-empty stacks successfully registered for pull operations</param>
     public void RegisterSource(IStorageSource source, float distance, out int consumableStacksRegistered)
     {
+#if DEBUG
+        const string d_MethodName = nameof(RegisterSource);
+#endif
         consumableStacksRegistered = 0;
 
         if (!ValidateSource(source))
         {
+            return;
+        }
+
+        if (!_registeredSources.Add(source))
+        {
+#if DEBUG
+            ModLogger.DebugLog($"{d_MethodName}: Source '{TypeNames.GetName(source.GetSourceType())}' already registered, skipping");
+#endif
             return;
         }
 
@@ -188,8 +201,9 @@ internal class StorageSourceItemDataStore
     /// </summary>
     private void RegisterConsumableStack(IStorageSource source, ItemStack stack)
     {
+#if DEBUG
         const string d_MethodName = nameof(RegisterConsumableStack);
-
+#endif
         // All stack validation is done in the caller, so we assume stack is valid here
 
         // Check if this stack is already in the data store
@@ -197,7 +211,6 @@ internal class StorageSourceItemDataStore
         {
             var sourceTypeName = TypeNames.GetName(source.GetSourceType());
             var itemName = stack?.itemValue?.ItemClass?.Name ?? "Unknown";
-
 #if DEBUG
             // Log the duplicate registration attempt
             if (existingStorageSource.Equals(source))
@@ -209,7 +222,6 @@ internal class StorageSourceItemDataStore
                 ModLogger.DebugLog($"{d_MethodName}: ItemStack '{itemName}' is already associated with a different source");
             }
 #endif
-
             return;
         }
 
