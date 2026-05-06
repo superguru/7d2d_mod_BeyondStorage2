@@ -28,6 +28,7 @@ internal static class StorageSourcePolicy
 
         return new AllowedSourcesList(types);
     }
+
     private static AllowedSourcesList BuildSmartOnMissionPushSources()
     {
         var types = new List<Type>

@@ -55,7 +55,7 @@ public class StorageDataManager
 
     // ── Player ───────────────────────────────────────────────────────────────
     public readonly Func<EntityPlayerLocal, EntityPlayerLocal, bool> EqualsPlayerLootableFunc = (a, b) => ReferenceEquals(a, b);
-    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerAllItemsFunc = player => EntityHandler.GetAllSlotItems(player);
+    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerBackpackAllItemsFunc = player => EntityHandler.GetAllSlotItems(player);
     public readonly Func<EntityPlayerLocal, PackedBoolArray> GetPlayerLockedSlotsFunc = player => player.bag?.LockedSlots;
     public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => EntityHandler.MarkPlayerInventoryModified(player);
     public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = player => EntityHandler.GetPlayerName(player);

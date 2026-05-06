@@ -133,7 +133,7 @@ public class SmartSortingFunctions
             return;
         }
 
-        var loadout = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
+        var loadout = StorageSourceAdapterFactory.CreatePlayerBackpackSourceAdapter(context, context.Player);
         var sources = GetSmartLoadoutPullSources(context);
 
         PerformSmartLoadoutPull(d_MethodName, context, loadout, sources);
@@ -149,7 +149,7 @@ public class SmartSortingFunctions
             return;
         }
 
-        var source = StorageSourceAdapterFactory.CreatePlayerLootableSourceAdapter(context, context.Player);
+        var source = StorageSourceAdapterFactory.CreatePlayerBackpackSourceAdapter(context, context.Player);
         var targets = GetSmartPushTargets(context);
 
         PerformSmartPush(d_MethodName, context, source, targets);

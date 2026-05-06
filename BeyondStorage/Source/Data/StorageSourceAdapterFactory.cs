@@ -46,13 +46,13 @@ internal static class StorageSourceAdapterFactory
         );
     }
 
-    internal static StorageSourceAdapter<EntityPlayerLocal> CreatePlayerLootableSourceAdapter(StorageContext context, EntityPlayerLocal player)
+    internal static StorageSourceAdapter<EntityPlayerLocal> CreatePlayerBackpackSourceAdapter(StorageContext context, EntityPlayerLocal player)
     {
         var sources = context.Sources;
         return new StorageSourceAdapter<EntityPlayerLocal>(
             player,
             sources.EqualsPlayerLootableFunc,
-            sources.GetPlayerAllItemsFunc,
+            sources.GetPlayerBackpackAllItemsFunc,
             sources.GetPlayerLockedSlotsFunc,
             sources.MarkPlayerLootableModifiedFunc,
             sources.GetPlayerLootableNameFunc
