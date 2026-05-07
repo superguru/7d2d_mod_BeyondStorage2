@@ -7,7 +7,7 @@ using HarmonyLib;
 using BeyondStorage.Infrastructure;
 #endif
 
-namespace BeyondStorage.Harmony.Patch.Multiplayer;
+namespace BeyondStorage.Harmony.Servers;
 
 [HarmonyPatch]
 internal static class GameManagerPatches

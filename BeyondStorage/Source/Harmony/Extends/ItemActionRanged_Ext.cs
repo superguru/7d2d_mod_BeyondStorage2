@@ -1,7 +1,7 @@
 ﻿using BeyondStorage.Game.Item;
 using HarmonyLib;
 
-namespace BeyondStorage.HarmonyPatches.Reload;
+namespace BeyondStorage.Harmony.Extends;
 
 [HarmonyPatch(typeof(ItemActionRanged))]
 internal static class ItemActionRanged_Ext

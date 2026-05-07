@@ -1,8 +1,7 @@
 ﻿using BeyondStorage.Entities;
 using HarmonyLib;
 
-namespace BeyondStorage.Harmony.Extend;
-
+namespace BeyondStorage.Harmony.Extends;
 
 [HarmonyPatch(typeof(TEFeatureSignable))]
 #if DEBUG

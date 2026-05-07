@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BeyondStorage.Configuration;
-using BeyondStorage.Harmony.Commands;
 using BeyondStorage.Infrastructure;
 using BeyondStorage.UI;
+
+namespace BeyondStorage.Harmony.Commands;
 
 public class ConsoleCmdBsSetConfig : ConsoleCmdAbstract
 {

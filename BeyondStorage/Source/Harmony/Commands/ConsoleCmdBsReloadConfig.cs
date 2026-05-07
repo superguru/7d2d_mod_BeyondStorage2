@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using BeyondStorage.Configuration;
 using BeyondStorage.Infrastructure;
 using BeyondStorage.Storage;
-using BeyondStorage.Harmony.Commands;
+
+namespace BeyondStorage.Harmony.Commands;
 
 public class ConsoleCmdBsReloadConfig : ConsoleCmdAbstract
 {

@@ -118,7 +118,7 @@
     <Compile Include="Source\Harmony\Patches\XUiC_PowerSourceStats_Patch.cs" />
     <Compile Include="Source\Harmony\Extends\Animator3PRangedReloadState_Ext.cs" />
     <Compile Include="Source\Harmony\Extends\AnimatorRangedReloadState_Ext.cs" />
-    <Compile Include="Source\Harmony\Server\GameManager_Patches.cs" />
+    <Compile Include="Source\Harmony\Servers\GameManager_Patches.cs" />
     <Compile Include="Source\Harmony\Extends\XUiC_LootWindow_Ext.cs" />
     <Compile Include="Source\Harmony\Extends\XUiC_WorkstationOutputWindow_Ext.cs" />
     <Compile Include="Source\Harmony\Extends\XUiC_DewCollectorWindow_Ext.cs" />

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using BeyondStorage.Infrastructure;
-using BeyondStorage.Harmony.Commands;
+
+namespace BeyondStorage.Harmony.Commands;
 
 public class ConsoleCmdBsHelp : ConsoleCmdAbstract
 {

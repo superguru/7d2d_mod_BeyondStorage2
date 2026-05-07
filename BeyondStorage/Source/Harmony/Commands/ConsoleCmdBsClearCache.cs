@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using BeyondStorage.Harmony.Commands;
 using BeyondStorage.Infrastructure;
 using BeyondStorage.Storage;
+
+namespace BeyondStorage.Harmony.Commands;
 
 public class ConsoleCmdBsClearCache : ConsoleCmdAbstract
 {
