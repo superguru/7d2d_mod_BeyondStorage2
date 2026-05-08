@@ -53,9 +53,9 @@ internal static class StorageSourceAdapterFactory
             player,
             sources.EqualsPlayerLootableFunc,
             sources.GetPlayerBackpackAllItemsFunc,
-            sources.GetPlayerLockedSlotsFunc,
-            sources.MarkPlayerLootableModifiedFunc,
-            sources.GetPlayerLootableNameFunc
+            sources.GetPlayerBackpackLockedSlotsFunc,
+            sources.MarkPlayerInventoryModifiedFunc,
+            sources.GetPlayerNameFunc
         );
     }
 

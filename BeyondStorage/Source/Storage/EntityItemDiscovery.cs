@@ -13,8 +13,9 @@ internal static class EntityItemDiscovery
     public static void FindItems(StorageContext context)
     {
 #if DEBUG
+        const string d_MethodName = nameof(FindItems);
 #endif
-        if (!ValidateWorldEntityList())
+        if (!ValidateWorldEntityList(d_MethodName))
         {
             return;
         }
@@ -37,13 +38,13 @@ internal static class EntityItemDiscovery
 #endif
     }
 
-    private static bool ValidateWorldEntityList()
+    private static bool ValidateWorldEntityList(string methodName)
     {
         var world = GameManager.Instance?.World;
         if (world == null)
         {
             var diagnosticState = WorldTools.GetWorldDiagnosticState();
-            ModLogger.DebugLog($"{nameof(FindItems)}: GameManager.Instance.World is null, aborting. {diagnosticState}");
+            ModLogger.DebugLog($"{methodName}: GameManager.Instance.World is null, aborting. {diagnosticState}");
             return false;
         }
 
@@ -51,7 +52,7 @@ internal static class EntityItemDiscovery
         if (entities == null)
         {
             var diagnosticState = WorldTools.GetWorldDiagnosticState();
-            ModLogger.DebugLog($"{nameof(FindItems)}: World.Entities is null, aborting. {diagnosticState}");
+            ModLogger.DebugLog($"{methodName}: World.Entities is null, aborting. {diagnosticState}");
             return false;
         }
 
@@ -59,7 +60,7 @@ internal static class EntityItemDiscovery
         if (entityList == null)
         {
             var diagnosticState = WorldTools.GetWorldDiagnosticState();
-            ModLogger.DebugLog($"{nameof(FindItems)}: World.Entities.list is null, aborting. {diagnosticState}");
+            ModLogger.DebugLog($"{methodName}: World.Entities.list is null, aborting. {diagnosticState}");
             return false;
         }
 

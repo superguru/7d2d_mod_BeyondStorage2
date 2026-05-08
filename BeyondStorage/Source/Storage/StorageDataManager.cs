@@ -55,10 +55,15 @@ public class StorageDataManager
 
     // ── Player ───────────────────────────────────────────────────────────────
     public readonly Func<EntityPlayerLocal, EntityPlayerLocal, bool> EqualsPlayerLootableFunc = (a, b) => ReferenceEquals(a, b);
+
     public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerBackpackAllItemsFunc = player => EntityHandler.GetAllSlotItems(player);
-    public readonly Func<EntityPlayerLocal, PackedBoolArray> GetPlayerLockedSlotsFunc = player => player.bag?.LockedSlots;
-    public Action<EntityPlayerLocal> MarkPlayerLootableModifiedFunc = player => EntityHandler.MarkPlayerInventoryModified(player);
-    public readonly Func<EntityPlayerLocal, string> GetPlayerLootableNameFunc = player => EntityHandler.GetPlayerName(player);
+    public readonly Func<EntityPlayerLocal, PackedBoolArray> GetPlayerBackpackLockedSlotsFunc = player => player.bag?.LockedSlots;
+
+    public readonly Func<EntityPlayerLocal, ItemStack[]> GetPlayerToolbeltAllItemsFunc = player => EntityHandler.GetPlayerToolbeltAllSlotItems(player);
+    public readonly Func<EntityPlayerLocal, PackedBoolArray> GetPlayerToolbeltLockedSlotsFunc = _ => null; // Toolbelt has no lock slots
+
+    public Action<EntityPlayerLocal> MarkPlayerInventoryModifiedFunc = player => EntityHandler.MarkPlayerInventoryModified(player);
+    public readonly Func<EntityPlayerLocal, string> GetPlayerNameFunc = player => EntityHandler.GetPlayerName(player);
 
     internal StorageDataManager(StorageSourceItemDataStore dataStore)
     {

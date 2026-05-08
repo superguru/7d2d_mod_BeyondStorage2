@@ -1,4 +1,5 @@
-﻿using BeyondStorage.Game.UI;
+﻿using System.Linq;
+using BeyondStorage.Game.UI;
 using BeyondStorage.Infrastructure;
 
 namespace BeyondStorage.Entities;
@@ -68,6 +69,12 @@ public static class EntityHandler
         }
 
         return items;
+    }
+
+    public static ItemStack[] GetPlayerToolbeltAllSlotItems(EntityPlayerLocal player)
+    {
+        ItemStack[] result = player.inventory?.slots?.Select(slot => slot?.itemStack).ToArray() ?? [];
+        return result;
     }
 
     /// <summary>
