@@ -1,6 +1,6 @@
 {
     "metaDescription": "RELEASE Configuration file for Beyond Storage mod package",
-    "version": "2.6.9",
+    "version": "2.6.10",
     "range": -1.0,
     "consumeFromDrones": true,
     "consumeFromVehicles": true,
