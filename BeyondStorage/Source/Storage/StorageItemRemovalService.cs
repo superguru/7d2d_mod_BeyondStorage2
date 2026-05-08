@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BeyondStorage.Caching;
 using BeyondStorage.Data;
 using BeyondStorage.Diagnostics;
+using BeyondStorage.Infrastructure;
 
 namespace BeyondStorage.Storage;
 
@@ -117,9 +118,16 @@ public static class StorageItemRemovalService
                 continue;
             }
 
+            var countToRemove = Math.Min(stack.count, stillNeeded);
+            if (countToRemove <= 0)
+            {
+                ModLogger.DebugLog($"{methodName}: calculated countToRemove {countToRemove} is not positive for stack {ItemX.Info(stack)} and stillNeeded {stillNeeded}, stopping removal");
+                break;
+            }
+
             if (itemCanStack)
             {
-                var countToRemove = Math.Min(stack.count, stillNeeded);
+                gameTrackedRemovedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
 
                 stack.count -= countToRemove;
                 stillNeeded -= countToRemove;
@@ -128,17 +136,13 @@ public static class StorageItemRemovalService
                 {
                     stack.Clear();
                 }
-
-                // This Clone operation is expensive, but in 7d2d 2.x gameTrackedRemovedItems is always null, so leaving it in for those edge cases
-                gameTrackedRemovedItems?.Add(new ItemStack(itemValue.Clone(), countToRemove));
             }
             else
             {
+                gameTrackedRemovedItems?.Add(new ItemStack(itemValue.Clone(), 1));
+
                 stack.Clear();
                 --stillNeeded;
-
-                // This Clone operation is expensive, but in 7d2d 2.x gameTrackedRemovedItems is always null, so leaving it in for those edge cases
-                gameTrackedRemovedItems?.Add(stack.Clone());
             }
         }
 

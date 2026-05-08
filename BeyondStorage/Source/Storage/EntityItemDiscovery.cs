@@ -12,9 +12,8 @@ internal static class EntityItemDiscovery
 {
     public static void FindItems(StorageContext context)
     {
-#if DEBUG
         const string d_MethodName = nameof(FindItems);
-#endif
+
         if (!ValidateWorldEntityList(d_MethodName))
         {
             return;
