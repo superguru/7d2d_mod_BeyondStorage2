@@ -1,3 +1,8 @@
+# ⚠ $\color{red}\ Superseded\ by\ Beyond\ Storage\ 3$
+
+[![No longer in active development. Click here for Beyond Storage 3.](https://img.shields.io/badge/⚠_Superseded-Go_to_Beyond_Storage_3-red)](https://github.com/superguru/7d2d_mod_BeyondStorage3)
+
+---
 # Beyond Storage 2
 
 If you can do it using items in your inventory, you can now also do it by PULLING from items in nearby storage crates, vehicles, drones, workstations, collectors, etc.
@@ -54,7 +59,8 @@ The mod can be configured by editing the `config.json` file in the `Mods/BeyondS
 Please refer to the mod description on Nexus Mods for details of the configuration options.
 
 ## License
-This mod is licensed under the MIT License. See the LICENSE file in the root of the repository for details.
+
+This mod is licensed under the Apache-2.0 License. See the LICENSE file in the root of the repository for details.
 
 ## ⌛History
 
